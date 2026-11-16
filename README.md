@@ -27,7 +27,7 @@ themes, gestures beyond drawer open/close. See [PRODUCT.md](PRODUCT.md) for the 
 
 ## Build
 
-Requirements: JDK 17+, Android SDK with platform 36.
+Requirements: JDK 17+, Android SDK with platform 37.
 
 ```bash
 ./gradlew assembleDebug          # debug APK in app/build/outputs/apk/debug/
@@ -36,9 +36,15 @@ Requirements: JDK 17+, Android SDK with platform 36.
 ./gradlew lintDebug              # Android Lint
 ```
 
+On Windows shells (Git Bash/PowerShell) invoke `gradlew.bat` with an explicit
+`JAVA_HOME`, for example:
+`JAVA_HOME='C:\Program Files\Microsoft\jdk-21' ./gradlew.bat assembleDebug`.
+
 Every push and pull request is built and tested by GitHub Actions
-([.github/workflows/android.yml](.github/workflows/android.yml)). Release APKs are
-produced by CI and attached to GitHub Releases; no build artifacts are committed.
+([.github/workflows/android.yml](.github/workflows/android.yml)). Pushing a `v*`
+tag runs the release job, which attaches the APK to a GitHub Release (until 1.0
+this is the debug build; release signing arrives with 1.0). No build artifacts
+are committed to the repository.
 
 ## Documentation
 
