@@ -6,8 +6,8 @@ import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.HomeRoleChecker
+import dev.vladon.vesna.launcher.platform.LauncherAppsAppDiscovery
 import dev.vladon.vesna.launcher.platform.PackageChangeMonitor
-import dev.vladon.vesna.launcher.platform.PackageManagerAppDiscovery
 import dev.vladon.vesna.launcher.workspace.LauncherController
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository
 import kotlinx.coroutines.CoroutineScope
@@ -31,7 +31,7 @@ class LauncherGraph(appContext: Context) {
             prefs = appContext.getSharedPreferences("vesna_launcher", Context.MODE_PRIVATE),
         )
 
-    val discovery: AppDiscovery = PackageManagerAppDiscovery(appContext)
+    val discovery: AppDiscovery = LauncherAppsAppDiscovery(appContext)
 
     val appLauncher: AppLauncher = AppLauncher(appContext)
 

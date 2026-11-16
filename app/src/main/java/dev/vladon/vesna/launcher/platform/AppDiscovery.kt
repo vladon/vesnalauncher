@@ -1,15 +1,20 @@
 package dev.vladon.vesna.launcher.platform
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
+import android.os.UserManager
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import java.util.Locale
 
 /**
- * Discovers launchable applications using public PackageManager APIs.
+ * Discovers launchable applications using [LauncherApps], the public API designed
+ * for home apps: one call enumerates the calling user's apps plus every managed
+ * profile (for example the work profile), already badged for the profile.
  *
  * Package visibility on Android 10+ is granted by the single `<queries>` intent
  * declaration in the manifest; the app deliberately does not request
@@ -21,25 +26,32 @@ interface AppDiscovery {
     fun discover(): List<LauncherApp>
 }
 
-class PackageManagerAppDiscovery(private val appContext: Context) : AppDiscovery {
+class LauncherAppsAppDiscovery(private val appContext: Context) : AppDiscovery {
+
+    private val launcherApps = appContext.getSystemService(LauncherApps::class.java)
+    private val userManager = appContext.getSystemService(UserManager::class.java)
+
+    init {
+        check(launcherApps != null) { "LauncherApps system service is unavailable" }
+    }
 
     override fun discover(): List<LauncherApp> {
-        val pm = appContext.packageManager
-        val mainIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        val self = appContext.packageName
         val result = ArrayList<LauncherApp>()
-        for (info in pm.queryIntentActivities(mainIntent, 0)) {
-            val packageName = info.activityInfo.packageName
-            // Vesna's own settings entry is reachable from the workspace menu; it does
-            // not belong in the drawer.
-            if (packageName == self || info.activityInfo.name == null) continue
-            result.add(
-                LauncherApp(
-                    key = AppKey(packageName, info.activityInfo.name),
-                    label = info.loadLabel(pm).toString().ifBlank { packageName },
-                    icon = info.loadIcon(pm),
-                ),
-            )
+        for (profile in launcherApps.profiles) {
+            val userSerial = userManager.getSerialNumberForUser(profile)
+            for (activity in launcherApps.getActivityList(null, profile)) {
+                val component = activity.componentName
+                // Vesna's own settings entry is reachable from the workspace menu; it
+                // does not belong in the drawer.
+                if (component.packageName == appContext.packageName) continue
+                result.add(
+                    LauncherApp(
+                        key = AppKey(component.packageName, component.className, userSerial),
+                        label = activity.label.toString().ifBlank { component.packageName },
+                        icon = activity.getBadgedIcon(appContext.resources.displayMetrics.densityDpi),
+                    ),
+                )
+            }
         }
         result.sortBy { it.label.lowercase(Locale.ROOT) }
         return result
@@ -47,26 +59,51 @@ class PackageManagerAppDiscovery(private val appContext: Context) : AppDiscovery
 }
 
 /**
- * Starts a launchable activity through the standard public intent mechanism, which
- * works regardless of whether Vesna currently holds the default-home role.
+ * Starts launchable activities through public APIs. Main-profile apps launch via
+ * the classic intent path, which works regardless of whether Vesna holds the
+ * default-home role; work-profile apps must go through
+ * [LauncherApps.startMainActivity] because their components are not resolvable
+ * from the main-profile context.
  */
 class AppLauncher(private val appContext: Context) {
 
+    private val launcherApps = appContext.getSystemService(LauncherApps::class.java)
+    private val userManager = appContext.getSystemService(UserManager::class.java)
+
     /**
      * @return false when the activity no longer exists (disabled or uninstalled since
-     * the last discovery pass); the caller should refresh its app list.
+     * the last discovery pass); the caller should refresh its app list. Failures that
+     * leave the app installed (for example a locked work profile) also return false
+     * without crashing, but the list itself is still correct.
      */
     fun launch(app: LauncherApp): Boolean {
-        val intent = Intent(Intent.ACTION_MAIN)
+        return try {
+            if (app.key.userSerial == MAIN_PROFILE_SERIAL || launcherApps == null) {
+                appContext.startActivity(mainProfileIntent(app))
+            } else {
+                val user = userManager.getUserForSerialNumber(app.key.userSerial) ?: return false
+                launcherApps.startMainActivity(ComponentName(app.key.packageName, app.key.className), user, null, null)
+            }
+            true
+        } catch (e: ActivityNotFoundException) {
+            // Stale entry: activity was disabled or removed since the last discovery pass.
+            false
+        } catch (e: SecurityException) {
+            // Profile access was revoked or the profile is in restricted mode.
+            false
+        } catch (e: IllegalStateException) {
+            // Work profile is turned off or in quiet mode.
+            false
+        }
+    }
+
+    private fun mainProfileIntent(app: LauncherApp): Intent =
+        Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_LAUNCHER)
             .setClassName(app.key.packageName, app.key.className)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        return try {
-            appContext.startActivity(intent)
-            true
-        } catch (e: ActivityNotFoundException) {
-            // Stale entry: do not crash the home screen; the list refresh will remove it.
-            false
-        }
+
+    private companion object {
+        const val MAIN_PROFILE_SERIAL = 0L
     }
 }

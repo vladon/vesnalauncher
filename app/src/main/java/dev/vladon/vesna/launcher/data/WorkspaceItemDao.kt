@@ -20,17 +20,20 @@ interface WorkspaceItemDao {
     @Insert
     suspend fun insertAll(items: List<WorkspaceItemEntity>)
 
+    @Query("UPDATE workspace_items SET cellIndex = :cellIndex WHERE id = :id")
+    suspend fun updateCellIndex(id: Long, cellIndex: Int)
+
     @Query("DELETE FROM workspace_items WHERE id = :id")
     suspend fun deleteById(id: Long)
 
     @Query(
         "DELETE FROM workspace_items WHERE packageName = :packageName " +
-            "AND className = :className AND container = :container",
+            "AND className = :className AND container = :container AND userSerial = :userSerial",
     )
-    suspend fun deleteByKey(packageName: String, className: String, container: String)
+    suspend fun deleteByKey(packageName: String, className: String, container: String, userSerial: Long)
 
-    @Query("DELETE FROM workspace_items WHERE packageName = :packageName")
-    suspend fun deleteByPackage(packageName: String)
+    @Query("DELETE FROM workspace_items WHERE packageName = :packageName AND userSerial = :userSerial")
+    suspend fun deleteByPackage(packageName: String, userSerial: Long)
 
     @Query("DELETE FROM workspace_items")
     suspend fun deleteAll()
