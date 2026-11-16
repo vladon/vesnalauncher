@@ -1,5 +1,6 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -30,8 +31,13 @@ class DrawerAppsAdapter(
             override fun areItemsTheSame(oldItem: LauncherApp, newItem: LauncherApp): Boolean =
                 oldItem.key == newItem.key
 
+            // Comparing ConstantState by identity is intentional: drawables loaded
+            // from the same unchanged app resource share one ConstantState instance,
+            // while an app update produces a new one. Lint cannot see that intent.
+            @SuppressLint("DiffUtilEquals")
             override fun areContentsTheSame(oldItem: LauncherApp, newItem: LauncherApp): Boolean =
-                oldItem.label == newItem.label
+                oldItem.label == newItem.label &&
+                    oldItem.icon?.constantState == newItem.icon?.constantState
         }
     }
 }

@@ -1,5 +1,6 @@
 package dev.vladon.vesna.launcher.platform
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -51,11 +52,21 @@ class PackageManagerAppDiscovery(private val appContext: Context) : AppDiscovery
  */
 class AppLauncher(private val appContext: Context) {
 
-    fun launch(app: LauncherApp) {
+    /**
+     * @return false when the activity no longer exists (disabled or uninstalled since
+     * the last discovery pass); the caller should refresh its app list.
+     */
+    fun launch(app: LauncherApp): Boolean {
         val intent = Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_LAUNCHER)
             .setClassName(app.key.packageName, app.key.className)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-        appContext.startActivity(intent)
+        return try {
+            appContext.startActivity(intent)
+            true
+        } catch (e: ActivityNotFoundException) {
+            // Stale entry: do not crash the home screen; the list refresh will remove it.
+            false
+        }
     }
 }
