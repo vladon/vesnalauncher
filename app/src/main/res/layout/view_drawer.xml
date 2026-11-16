@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <LinearLayout
+        android:id="@+id/drawer_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:id="@+id/drawer_handle"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:contentDescription="@string/drawer_handle_hint">
+
+            <View
+                android:id="@+id/handle_bar"
+                android:layout_width="64dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center"
+                android:background="@drawable/handle_bar" />
+        </FrameLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/drawer_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+    </LinearLayout>
+</merge>
