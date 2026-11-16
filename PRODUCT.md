@@ -49,6 +49,8 @@ Explicitly out of scope for 0.1.0 (and deferred, not abandoned):
 - Work profile / multi-user support.
 - Search in the drawer.
 
+Status note: drag-and-drop and work-profile support shipped in 0.2.0.
+
 ## Target users
 
 Anyone who wants a clean, fast, private home screen. No account, no network
