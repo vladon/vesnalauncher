@@ -25,7 +25,11 @@ class LauncherGraph(appContext: Context) {
     val database: LauncherDatabase = LauncherDatabase.build(appContext)
 
     val workspaceRepository: WorkspaceRepository =
-        WorkspaceRepository(database.workspaceItemDao(), database)
+        WorkspaceRepository(
+            dao = database.workspaceItemDao(),
+            db = database,
+            prefs = appContext.getSharedPreferences("vesna_launcher", Context.MODE_PRIVATE),
+        )
 
     val discovery: AppDiscovery = PackageManagerAppDiscovery(appContext)
 

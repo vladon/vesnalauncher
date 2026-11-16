@@ -76,7 +76,11 @@ class LauncherController(
     }
 
     fun launch(app: LauncherApp) {
-        appLauncher.launch(app)
+        if (!appLauncher.launch(app)) {
+            // The icon was stale (app disabled/removed since the last discovery);
+            // recover the list instead of leaving a dead icon around.
+            scope.launch { refresh() }
+        }
     }
 
     fun addToWorkspace(app: LauncherApp) {
@@ -107,8 +111,13 @@ class LauncherController(
     private suspend fun refresh() = refreshMutex.withLock {
         val apps = withContext(Dispatchers.IO) { discovery.discover() }
         _apps.value = apps
-        if (workspaceRepository.isEmpty() && apps.isNotEmpty()) {
-            workspaceRepository.seed(SeedPlanner.plan(apps))
+        if (!workspaceRepository.isSeeded() && apps.isNotEmpty()) {
+            if (workspaceRepository.isEmpty()) {
+                workspaceRepository.seed(SeedPlanner.plan(apps))
+            } else {
+                // A pre-existing layout (upgrading install): keep it, just adopt it.
+                workspaceRepository.markSeeded()
+            }
         }
         workspaceRepository.pruneStale(apps.map { it.key }.toSet())
     }
