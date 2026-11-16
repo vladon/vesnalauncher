@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Vesna Launcher</string>
+
+    <!-- Выбор лаунчера по умолчанию -->
+    <string name="banner_set_default_home">Сделать Vesna лаунчером по умолчанию</string>
+    <string name="menu_set_default_home">Установить основным лаунчером</string>
+
+    <!-- Меню рабочего стола и дока -->
+    <string name="menu_add_to_workspace">Добавить на рабочий стол</string>
+    <string name="menu_remove_from_workspace">Убрать с рабочего стола</string>
+    <string name="menu_add_to_dock">Добавить в док</string>
+    <string name="menu_remove_from_dock">Убрать из дока</string>
+    <string name="menu_app_info">О приложении</string>
+    <string name="menu_launcher_settings">Настройки Vesna</string>
+    <string name="menu_wallpaper">Сменить обои</string>
+
+    <string name="workspace_empty_hint">Долгое нажатие откроет меню</string>
+    <string name="toast_workspace_full">Рабочий стол заполнен</string>
+    <string name="toast_dock_full">Док заполнен</string>
+
+    <!-- Специальные возможности шторки приложений -->
+    <string name="drawer_handle_hint">Открыть или закрыть список приложений</string>
+
+    <!-- О программе / настройки -->
+    <string name="about_version_fmt">Версия %1$s</string>
+    <string name="about_tagline">Быстрый, бесплатный Android-лаунчер с открытым исходным кодом.</string>
+    <string name="about_license">Распространяется по лицензии MIT.</string>
+    <string name="about_github">Исходный код на GitHub</string>
+</resources>

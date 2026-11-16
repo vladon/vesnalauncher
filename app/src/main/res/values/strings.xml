@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Vesna Launcher</string>
+
+    <!-- Default launcher prompt -->
+    <string name="banner_set_default_home">Set Vesna as your default launcher</string>
+    <string name="menu_set_default_home">Set as default launcher</string>
+
+    <!-- Workspace / dock context menus -->
+    <string name="menu_add_to_workspace">Add to workspace</string>
+    <string name="menu_remove_from_workspace">Remove from workspace</string>
+    <string name="menu_add_to_dock">Add to dock</string>
+    <string name="menu_remove_from_dock">Remove from dock</string>
+    <string name="menu_app_info">App info</string>
+    <string name="menu_launcher_settings">Vesna settings</string>
+    <string name="menu_wallpaper">Set wallpaper</string>
+
+    <string name="workspace_empty_hint">Long-press here for options</string>
+    <string name="toast_workspace_full">The workspace is full</string>
+    <string name="toast_dock_full">The dock is full</string>
+
+    <!-- Drawer accessibility -->
+    <string name="drawer_handle_hint">Open or close the app drawer</string>
+
+    <!-- About / settings -->
+    <string name="about_version_fmt">Version %1$s</string>
+    <string name="about_tagline">A fast, free, and open-source Android launcher.</string>
+    <string name="about_license">Distributed under the MIT license.</string>
+    <string name="about_github">Source code on GitHub</string>
+</resources>
