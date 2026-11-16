@@ -69,6 +69,7 @@ class HomeActivity : ComponentActivity() {
         }
         workspace.onEmptyAreaLongClick = { showLauncherMenu() }
         workspace.onSwipeUp = { drawer.open() }
+        workspace.onItemMove = { app, cell -> controller.moveWithinWorkspace(app, cell) }
 
         dock.onAppClick = { controller.launch(it) }
         dock.onAppLongClick = { anchor, app ->

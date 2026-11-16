@@ -52,4 +52,34 @@ class GridCanvasTest {
     fun `dock aligns with workspace columns`() {
         assertEquals(GridCanvas.COLUMNS, GridCanvas.DOCK_CAPACITY)
     }
+
+    @Test
+    fun `cellAtPoint maps coordinates onto cells`() {
+        val cellW = 100f
+        val cellH = 120f
+        // Cell (row 1, col 2) starts at (200, 120).
+        assertEquals(6, GridCanvas.cellAtPoint(205f, 125f, 0f, 0f, cellW, cellH))
+        assertEquals(6, GridCanvas.cellAtPoint(250f, 200f, 0f, 0f, cellW, cellH))
+    }
+
+    @Test
+    fun `cellAtPoint respects grid origin offset`() {
+        assertEquals(
+            0,
+            GridCanvas.cellAtPoint(505f, 610f, 500f, 600f, 100f, 120f),
+        )
+    }
+
+    @Test
+    fun `cellAtPoint returns null outside the grid`() {
+        assertNull(GridCanvas.cellAtPoint(-1f, 10f, 0f, 0f, 100f, 100f))
+        assertNull(GridCanvas.cellAtPoint(100 * GridCanvas.COLUMNS + 1f, 10f, 0f, 0f, 100f, 100f))
+        assertNull(GridCanvas.cellAtPoint(10f, 100 * GridCanvas.ROWS + 1f, 0f, 0f, 100f, 100f))
+    }
+
+    @Test
+    fun `cellAtPoint returns null for degenerate cell sizes`() {
+        assertNull(GridCanvas.cellAtPoint(10f, 10f, 0f, 0f, 0f, 100f))
+        assertNull(GridCanvas.cellAtPoint(10f, 10f, 0f, 0f, 100f, -1f))
+    }
 }
