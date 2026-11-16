@@ -83,20 +83,23 @@ class WorkspaceView @JvmOverloads constructor(
     }
 
     // Touch-event plumbing: a child (icon) holding the gesture routes MOVE/UP through
-    // onInterceptTouchEvent, while empty-area gestures (no child target) go straight
-    // to onTouchEvent. Feeding the detector from both covers flings starting anywhere
-    // without double-feeding any single event.
+    // onInterceptTouchEvent, while empty-area gestures (no child target) reach both
+    // hooks with the same MotionEvent instance. Feeding from both hooks covers all
+    // paths; the identity check prevents feeding any single event twice.
+    private var lastIntercepted: MotionEvent? = null
+
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         if (dragSourceApp != null) {
-            // An active drag takes the gesture over from the icon (which receives
-            // ACTION_CANCEL); subsequent events arrive in onTouchEvent.
             return true
         }
         when (ev.actionMasked) {
             MotionEvent.ACTION_MOVE,
             MotionEvent.ACTION_UP,
             MotionEvent.ACTION_CANCEL,
-            -> gestureDetector.onTouchEvent(ev)
+            -> {
+                lastIntercepted = ev
+                gestureDetector.onTouchEvent(ev)
+            }
         }
         return false
     }
@@ -106,7 +109,10 @@ class WorkspaceView @JvmOverloads constructor(
             handleDragTouch(ev)
             return true
         }
-        gestureDetector.onTouchEvent(ev)
+        if (ev !== lastIntercepted) {
+            gestureDetector.onTouchEvent(ev)
+        }
+        lastIntercepted = null
         return super.onTouchEvent(ev)
     }
 
