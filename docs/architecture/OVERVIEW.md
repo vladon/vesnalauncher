@@ -49,7 +49,7 @@ flowchart TB
 
 | Package | Concern | Contents |
 |---|---|---|
-| `platform` | Android system integration | `AppDiscovery` (installed launchable apps via `PackageManager`), `AppLauncher` (start activities), `PackageChangeMonitor` (install/update/uninstall broadcasts), `HomeRoleChecker` (default-home detection and request intents) |
+| `platform` | Android system integration | `AppDiscovery` (launchable apps across all profiles via `LauncherApps`), `AppLauncher` (profile-aware launching), `PackageChangeMonitor` (install/update/uninstall events for all profiles), `HomeRoleChecker` (default-home detection and request intents) |
 | `apps` | Application discovery model | `AppKey`, `LauncherApp` |
 | `workspace` | Workspace state | `LauncherController` (UI state + actions), `WorkspaceRepository` (Room-backed layout store), pure logic in `GridCanvas`, `SeedPlanner`, `WorkspaceResolver`, `WorkspaceItem` |
 | `data` | Persistence | Room database, DAO, entity, mappers |
@@ -66,7 +66,7 @@ flowchart TB
 | 4 | App-scoped state holder (`LauncherController`), not per-activity ViewModels | A launcher process is long-lived; layout state must survive activity recreation (rotation, theme change). State lives in `Application`. |
 | 5 | Room for layout persistence | Structured storage of cell placement with flows; restores state after process death and reboot. |
 | 6 | Manual dependency graph (`LauncherGraph`) | Three singletons do not justify a DI framework. |
-| 7 | PackageManager + `<queries>` manifest entry for app visibility | Public API that works without the restricted `QUERY_ALL_PACKAGES` permission; discovery is isolated behind `AppDiscovery` so a later `LauncherApps` (work profile) implementation can be swapped in. |
+| 7 | `LauncherApps` for discovery, `PackageManager` intents for launching | Public API designed for home apps: enumerates the main profile **and managed profiles** (work apps appear badged) and exposes package change events for all profiles. Visibility is granted by the single `<queries>` manifest entry — no `QUERY_ALL_PACKAGES`. Work-profile components launch through `LauncherApps.startMainActivity`; main-profile apps use classic intents so launching works even while Vesna is not the default home. |
 | 8 | 4-column grid, 5 workspace rows, 4 dock slots | Dock slots align with workspace columns; grid rules are pure and unit tested. |
 
 ## Data flow
@@ -99,8 +99,10 @@ flowchart TB
 - Icons are `Drawable`s shared by `ConstantState` (`newDrawable()` per bind), so
   views never share one mutable `Drawable` instance.
 
-## Known limitations (0.1.0)
+## Known limitations (0.2.0)
 
 - Fixed 4×5 grid in all orientations; on small landscape heights icons shrink.
-- No drag-and-drop rearrangement; placement is add/remove via long-press menus.
-- Work-profile apps are not listed (single-user `PackageManager` discovery).
+- Drag-and-drop covers the workspace grid (move to an empty cell or swap with the
+  occupant); dragging between workspace, dock, and drawer is not supported yet —
+  long-press menus handle cross-container moves.
+- Icon packs, widgets, and drawer search are not implemented.

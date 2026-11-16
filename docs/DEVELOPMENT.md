@@ -55,10 +55,12 @@ A pull request is mergeable only when all three gates pass.
   `app/build.gradle.kts` and change in the commit that cuts a release.
 - Releases are tagged directly on `main` (`v0.1.0`, `v0.2.0`, …). No permanent
   release branches or maintenance branches.
-- Pushing a `v*` tag triggers the CI release job, which builds the APK and
-  attaches it to the GitHub Release. Until 1.0 the distributed artifact is the
-  debug build; release-signed builds are introduced with 1.0. Never push APK
-  files to the repository.
+- Pushing a `v*` tag triggers the CI release job, which builds the **signed**
+  release APK, verifies the signature with `apksigner`, and attaches it to the
+  GitHub Release. Signing material lives only in repository secrets
+  (`RELEASE_KEYSTORE_B64`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`,
+  `RELEASE_KEY_PASSWORD`); the keystore never enters the repository or CI logs.
+  Never push APK files to the repository.
 - Pre-1.0 versions may break layout compatibility between releases; starting
   with 1.0, breaking changes require a major version bump.
 

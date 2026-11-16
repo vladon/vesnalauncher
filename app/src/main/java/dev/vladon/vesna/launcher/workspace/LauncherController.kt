@@ -68,7 +68,7 @@ class LauncherController(
         scope.launch {
             packageEvents.collect { event ->
                 if (event is PackageEvent.Removed) {
-                    workspaceRepository.removeAllForPackage(event.packageName)
+                    workspaceRepository.removeAllForPackage(event.packageName, event.userSerial)
                 }
                 refresh()
             }
@@ -81,6 +81,11 @@ class LauncherController(
             // recover the list instead of leaving a dead icon around.
             scope.launch { refresh() }
         }
+    }
+
+    /** Persists a drag-and-drop result: move to an empty cell or swap with its occupant. */
+    fun moveWithinWorkspace(app: LauncherApp, toCell: Int) {
+        scope.launch { workspaceRepository.moveWithinWorkspace(app, toCell) }
     }
 
     fun addToWorkspace(app: LauncherApp) {

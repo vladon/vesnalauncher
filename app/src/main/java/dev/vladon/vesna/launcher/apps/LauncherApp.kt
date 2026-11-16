@@ -3,11 +3,6 @@ package dev.vladon.vesna.launcher.apps
 import android.graphics.drawable.Drawable
 
 /**
- * Stable identifier of a launchable activity: package name plus activity class name.
- */
-data class AppKey(val packageName: String, val className: String)
-
-/**
  * A launchable application entry shown in the drawer, workspace, and dock.
  *
  * [icon] is a framework [android.graphics.drawable.Drawable]; views that render it

@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
 /**
  * Persisted launcher layout entry. `container` holds the name of
  * [dev.vladon.vesna.launcher.workspace.Container]; for WORKSPACE rows `cellIndex`
- * is the grid cell, for DOCK rows it is the position order.
+ * is the grid cell, for DOCK rows it is the position order. `userSerial` is the
+ * serial number of the owning Android profile (`0` = main profile).
  */
 @Entity(
     tableName = "workspace_items",
@@ -19,4 +20,5 @@ data class WorkspaceItemEntity(
     val className: String,
     val container: String,
     val cellIndex: Int,
+    val userSerial: Long = 0,
 )

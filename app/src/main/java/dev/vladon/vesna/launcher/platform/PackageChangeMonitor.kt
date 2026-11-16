@@ -1,32 +1,40 @@
 package dev.vladon.vesna.launcher.platform
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import androidx.core.content.ContextCompat
+import android.content.pm.LauncherApps
+import android.os.Handler
+import android.os.Looper
+import android.os.UserHandle
+import android.os.UserManager
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-/** A change affecting an installed application package. */
+/**
+ * A change affecting an installed application package in a specific Android
+ * profile ([userSerial] follows the UserManager serial convention, `0` = main).
+ */
 sealed interface PackageEvent {
-    data class Added(val packageName: String) : PackageEvent
-    data class Removed(val packageName: String) : PackageEvent
+    data class Added(val packageName: String, val userSerial: Long) : PackageEvent
+    data class Removed(val packageName: String, val userSerial: Long) : PackageEvent
 
-    /** The package was updated in place; identifiers survive but metadata may change. */
-    data class Replaced(val packageName: String) : PackageEvent
+    /**
+     * The package was updated or changed in place (enabled/disabled); identifiers
+     * survive but metadata may change.
+     */
+    data class Replaced(val packageName: String, val userSerial: Long) : PackageEvent
 }
 
 /**
- * Observes install, update, and uninstall broadcasts for the lifetime of the
- * launcher process.
- *
- * Registered with [ContextCompat.RECEIVER_NOT_EXPORTED]: protected system package
- * broadcasts are still delivered, while other apps cannot target this receiver.
+ * Observes install, update, and uninstall events for the launcher process across
+ * all accessible Android profiles via [LauncherApps.registerPackageCallback], which
+ * supersedes the single-profile PACKAGE_* broadcasts.
  */
 class PackageChangeMonitor(private val appContext: Context) {
+
+    private val launcherApps = appContext.getSystemService(LauncherApps::class.java)
+    private val userManager = appContext.getSystemService(UserManager::class.java)
 
     private val _events = MutableSharedFlow<PackageEvent>(
         extraBufferCapacity = 32,
@@ -34,34 +42,68 @@ class PackageChangeMonitor(private val appContext: Context) {
     )
     val events: SharedFlow<PackageEvent> = _events.asSharedFlow()
 
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val packageName = intent.data?.schemeSpecificPart ?: return
-            val replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
-            val event = when (intent.action) {
-                Intent.ACTION_PACKAGE_ADDED ->
-                    if (replacing) PackageEvent.Replaced(packageName) else PackageEvent.Added(packageName)
-                Intent.ACTION_PACKAGE_REMOVED ->
-                    // An update reports removal first; the Replaced event covers it.
-                    if (replacing) null else PackageEvent.Removed(packageName)
-                Intent.ACTION_PACKAGE_REPLACED -> PackageEvent.Replaced(packageName)
-                else -> null
-            } ?: return
-            _events.tryEmit(event)
+    private val callback = object : LauncherApps.Callback() {
+        override fun onPackageAdded(packageName: String, user: UserHandle) {
+            emit(PackageEvent.Added(packageName, serialOf(user)))
         }
+
+        override fun onPackageRemoved(packageName: String, user: UserHandle) {
+            emit(PackageEvent.Removed(packageName, serialOf(user)))
+        }
+
+        override fun onPackageChanged(packageName: String, user: UserHandle) {
+            // Covers updates (replacing install) and enable/disable state changes.
+            emit(PackageEvent.Replaced(packageName, serialOf(user)))
+        }
+
+        override fun onPackagesAvailable(
+            packageNames: Array<out String?>,
+            user: UserHandle,
+            replacing: Boolean,
+        ) {
+            // A package became launchable again (for example its storage returned).
+            emitAll(packageNames, user, replacing) { name, serial ->
+                PackageEvent.Added(name, serial)
+            }
+        }
+
+        override fun onPackagesUnavailable(
+            packageNames: Array<out String?>,
+            user: UserHandle,
+            replacing: Boolean,
+        ) {
+            // A package became temporarily unlaunchable (for example removable
+            // storage was removed); treat it like a removal so dead icons clear.
+            emitAll(packageNames, user, replacing) { name, serial ->
+                PackageEvent.Removed(name, serial)
+            }
+        }
+    }
+
+    private fun emitAll(
+        packageNames: Array<out String?>,
+        user: UserHandle,
+        replacing: Boolean,
+        build: (String, Long) -> PackageEvent,
+    ) {
+        val serial = serialOf(user)
+        for (name in packageNames) {
+            if (name == null) continue
+            emit(if (replacing) PackageEvent.Replaced(name, serial) else build(name, serial))
+        }
+    }
+
+    private fun serialOf(user: UserHandle): Long = userManager.getSerialNumberForUser(user)
+
+    private fun emit(event: PackageEvent) {
+        _events.tryEmit(event)
     }
 
     fun start() {
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_PACKAGE_ADDED)
-            addAction(Intent.ACTION_PACKAGE_REMOVED)
-            addAction(Intent.ACTION_PACKAGE_REPLACED)
-            addDataScheme("package")
-        }
-        ContextCompat.registerReceiver(appContext, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        launcherApps?.registerCallback(callback, Handler(Looper.getMainLooper()))
     }
 
     fun stop() {
-        appContext.unregisterReceiver(receiver)
+        launcherApps?.unregisterCallback(callback)
     }
 }

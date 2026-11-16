@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -12,8 +14,22 @@ android {
         applicationId = "dev.vladon.vesna.launcher"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
+    }
+
+    signingConfigs {
+        create("release") {
+            // Signing material comes from CI secrets; local release builds stay
+            // unsigned unless the environment provides the keystore.
+            val keystorePath = System.getenv("VESNA_RELEASE_KEYSTORE")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = File(keystorePath)
+                storePassword = System.getenv("VESNA_RELEASE_STORE_PASSWORD")
+                keyAlias = System.getenv("VESNA_RELEASE_KEY_ALIAS") ?: "vesna"
+                keyPassword = System.getenv("VESNA_RELEASE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -24,6 +40,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            if (!System.getenv("VESNA_RELEASE_KEYSTORE").isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

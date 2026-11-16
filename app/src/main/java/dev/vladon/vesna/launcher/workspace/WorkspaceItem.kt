@@ -8,10 +8,12 @@ enum class Container { WORKSPACE, DOCK }
 /**
  * One persisted entry of the launcher layout: an app placed either in a workspace
  * grid cell or at a dock position (docks reuse [cellIndex] as the sort order).
+ * [userSerial] keeps entries of different Android profiles apart.
  */
 data class WorkspaceItem(
     val id: Long,
     val key: AppKey,
     val container: Container,
     val cellIndex: Int,
+    val userSerial: Long = 0,
 )

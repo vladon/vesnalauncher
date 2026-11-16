@@ -76,19 +76,43 @@ class WorkspaceRepository(
 
     suspend fun removeFromDock(app: LauncherApp) = removeFromContainer(app.key, Container.DOCK)
 
-    /** Removes every layout entry of an uninstalled package. */
-    suspend fun removeAllForPackage(packageName: String) = mutationMutex.withLock {
-        dao.deleteByPackage(packageName)
+    /** Removes every layout entry of an uninstalled package in one profile. */
+    suspend fun removeAllForPackage(packageName: String, userSerial: Long) = mutationMutex.withLock {
+        dao.deleteByPackage(packageName, userSerial)
     }
 
     /** Drops persisted items that reference apps no longer installed. */
     suspend fun pruneStale(liveKeys: Set<AppKey>) = mutationMutex.withLock {
-        val stale = dao.getAll().filter { AppKey(it.packageName, it.className) !in liveKeys }
+        val stale = dao.getAll().filter { AppKey(it.packageName, it.className, it.userSerial) !in liveKeys }
         for (item in stale) dao.deleteById(item.id)
     }
 
+    /**
+     * Moves a workspace item to [toCell]; dropping it onto an occupied cell swaps
+     * the two entries, so both icons stay on the grid.
+     */
+    suspend fun moveWithinWorkspace(app: LauncherApp, toCell: Int): Boolean = mutationMutex.withLock {
+        if (!GridCanvas.isValidCell(toCell)) return@withLock false
+        val items = dao.getAll()
+        val source = items.firstOrNull {
+            it.container == Container.WORKSPACE.name &&
+                it.packageName == app.key.packageName &&
+                it.className == app.key.className &&
+                it.userSerial == app.key.userSerial
+        } ?: return@withLock false
+        if (source.cellIndex == toCell) return@withLock true
+        val target = items.firstOrNull {
+            it.container == Container.WORKSPACE.name && it.cellIndex == toCell
+        }
+        db.withTransaction {
+            dao.updateCellIndex(source.id, toCell)
+            target?.let { dao.updateCellIndex(it.id, source.cellIndex) }
+        }
+        true
+    }
+
     private suspend fun removeFromContainer(key: AppKey, container: Container) = mutationMutex.withLock {
-        dao.deleteByKey(key.packageName, key.className, container.name)
+        dao.deleteByKey(key.packageName, key.className, container.name, key.userSerial)
     }
 
     private companion object {
