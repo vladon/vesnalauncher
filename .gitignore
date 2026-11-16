@@ -36,3 +36,4 @@ google-services.json
 keystore/
 keystore/
 keystore/
+.[a-z0-9]*_*.png
