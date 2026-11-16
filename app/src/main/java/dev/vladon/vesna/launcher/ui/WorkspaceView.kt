@@ -2,16 +2,20 @@ package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.GridCanvas
+import kotlin.math.abs
 import kotlin.math.max
 
 /**
  * The workspace: a fixed 4x5 grid of [AppIconView] children, one per occupied cell.
  * Cell geometry comes from [GridCanvas]; taps launch apps, long presses open item
- * menus, and a long press on empty space opens the launcher menu.
+ * menus, a long press on empty space opens the launcher menu, and an upward fling
+ * anywhere opens the drawer.
  */
 class WorkspaceView @JvmOverloads constructor(
     context: Context,
@@ -21,11 +25,32 @@ class WorkspaceView @JvmOverloads constructor(
     var onAppClick: ((LauncherApp) -> Unit)? = null
     var onAppLongClick: ((View, LauncherApp) -> Boolean)? = null
     var onEmptyAreaLongClick: (() -> Unit)? = null
+    var onSwipeUp: (() -> Unit)? = null
 
     private val density = resources.displayMetrics.density
     private val gutterPx = (8 * density).toInt()
     private val cellHPadPx = (4 * density).toInt()
     private val cellVPadPx = (4 * density).toInt()
+
+    // Observes the gesture stream without stealing touches from icon children.
+    private val gestureDetector = GestureDetector(
+        context,
+        object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float,
+            ): Boolean {
+                val dx = abs(e2.x - (e1?.x ?: e2.x))
+                if (velocityY < -FLING_VELOCITY && dx < MAX_FLING_DRIFT_DP * density) {
+                    onSwipeUp?.invoke()
+                    return true
+                }
+                return false
+            }
+        },
+    )
 
     init {
         // Long press on any empty part of the grid.
@@ -34,6 +59,25 @@ class WorkspaceView @JvmOverloads constructor(
             onEmptyAreaLongClick?.invoke()
             true
         }
+    }
+
+    // Touch-event plumbing: a child (icon) holding the gesture routes MOVE/UP through
+    // onInterceptTouchEvent, while empty-area gestures (no child target) go straight
+    // to onTouchEvent. Feeding the detector from both covers flings starting anywhere
+    // without double-feeding any single event.
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_MOVE,
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_CANCEL,
+            -> gestureDetector.onTouchEvent(ev)
+        }
+        return false
+    }
+
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(ev)
+        return super.onTouchEvent(ev)
     }
 
     /** Reconciles children with the current cell-to-app mapping. */
@@ -65,8 +109,10 @@ class WorkspaceView @JvmOverloads constructor(
 
         val cellW = cellWidth(width)
         val cellH = cellHeight(height)
-        val childW = cellW - 2 * cellHPadPx
-        val childH = cellH - 2 * cellVPadPx
+        // Guard against degenerate layouts (tiny windows) where the padding would
+        // exceed the cell.
+        val childW = (cellW - 2 * cellHPadPx).coerceAtLeast(1)
+        val childH = (cellH - 2 * cellVPadPx).coerceAtLeast(1)
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             child.measure(
@@ -104,6 +150,8 @@ class WorkspaceView @JvmOverloads constructor(
     private fun cellHeight(totalHeight: Int): Int =
         (totalHeight - paddingTop - paddingBottom - 2 * gutterPx) / GridCanvas.ROWS
 
-    override fun generateDefaultLayoutParams(): LayoutParams =
-        LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
+    private companion object {
+        const val FLING_VELOCITY = 1200f
+        const val MAX_FLING_DRIFT_DP = 100f
+    }
 }

@@ -1,9 +1,10 @@
 package dev.vladon.vesna.launcher.ui
 
-import android.annotation.SuppressLint
 import android.content.Context
+import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -30,6 +31,10 @@ class DrawerView @JvmOverloads constructor(
     private val handle: ViewGroup
     private val adapter: DrawerAppsAdapter
     private val density = resources.displayMetrics.density
+
+    /** A decisive downward drag travels at least this far (3x touch slop). */
+    private val minFlingDistancePx =
+        3 * ViewConfiguration.get(context).scaledTouchSlop
 
     val isOpen: Boolean get() = visibility == VISIBLE
 
@@ -86,28 +91,48 @@ class DrawerView @JvmOverloads constructor(
         if (!isOpen && animation == null) translationY = h.toFloat()
     }
 
-    @SuppressLint("ClickableViewAccessibility")
+    /**
+     * Closes the drawer on a fast downward drag from the top of the list. Uses wall
+     * time and raw distance instead of VelocityTracker: injected events (and some
+     * RV-dispatched streams) carry identical event times, which makes tracker-based
+     * velocities collapse to zero.
+     */
     private fun installDrawerFlingToClose() {
-        val detector = android.view.GestureDetector(
-            context,
-            object : android.view.GestureDetector.SimpleOnGestureListener() {
-                override fun onFling(
-                    e1: MotionEvent?,
-                    e2: MotionEvent,
-                    velocityX: Float,
-                    velocityY: Float,
-                ): Boolean {
-                    if (velocityY > FLING_VELOCITY) {
-                        close()
-                        return true
-                    }
-                    return false
+        var downY = 0f
+        var downElapsedMs = 0L
+
+        fun handle(e: MotionEvent) {
+            when (e.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downY = e.y
+                    downElapsedMs = SystemClock.uptimeMillis()
                 }
-            },
-        )
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val dy = e.y - downY
+                    val elapsedMs = SystemClock.uptimeMillis() - downElapsedMs
+                    // Only from the top of the list; otherwise the drag is an
+                    // upward scroll gesture and must keep scrolling.
+                    if (elapsedMs in 1..MAX_FLING_DURATION_MS &&
+                        dy > minFlingDistancePx &&
+                        !list.canScrollVertically(-1)
+                    ) {
+                        close()
+                    }
+                }
+            }
+        }
+
         list.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
-            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean =
-                detector.onTouchEvent(e)
+            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                // Returning false keeps RecyclerView scrolling fully intact.
+                handle(e)
+                return false
+            }
+
+            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+                // Events after RecyclerView's own scroll interception arrive here.
+                handle(e)
+            }
         })
     }
 
@@ -133,6 +158,6 @@ class DrawerView @JvmOverloads constructor(
 
     private companion object {
         const val ANIMATION_MS = 250L
-        const val FLING_VELOCITY = 1600f
+        const val MAX_FLING_DURATION_MS = 400L
     }
 }

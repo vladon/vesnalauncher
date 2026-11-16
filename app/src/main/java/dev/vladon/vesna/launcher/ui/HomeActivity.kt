@@ -4,8 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.view.View
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -70,6 +68,7 @@ class HomeActivity : ComponentActivity() {
             true
         }
         workspace.onEmptyAreaLongClick = { showLauncherMenu() }
+        workspace.onSwipeUp = { drawer.open() }
 
         dock.onAppClick = { controller.launch(it) }
         dock.onAppLongClick = { anchor, app ->
@@ -85,7 +84,6 @@ class HomeActivity : ComponentActivity() {
         drawer.onOpenedChanged = { backCallback.isEnabled = it }
 
         onBackPressedDispatcher.addCallback(this, backCallback)
-        installSwipeUpToOpenDrawer()
 
         defaultHomeBanner.setOnClickListener {
             graph.homeRoleChecker.defaultHomeRequestIntent()?.let { intent ->
@@ -144,23 +142,6 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-    /** Swipe up anywhere on the workspace opens the drawer. */
-    @android.annotation.SuppressLint("ClickableViewAccessibility")
-    private fun installSwipeUpToOpenDrawer() {
-        val density = resources.displayMetrics.density
-        val detector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-                val dx = e2.x - (e1?.x ?: e2.x)
-                if (velocityY < -SWIPE_VELOCITY && kotlin.math.abs(dx) < 100 * density) {
-                    drawer.open()
-                    return true
-                }
-                return false
-            }
-        })
-        workspace.setOnTouchListener { _, event -> detector.onTouchEvent(event) }
-    }
-
     private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp) {
         val popup = PopupMenu(this, anchor)
         val controller = VesnaApplication.graph(this).controller
@@ -211,7 +192,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showLauncherMenu() {
-        val popup = PopupMenu(this, workspace)
+        val popup = PopupMenu(this, dock)
         popup.menu.add(0, MENU_SETTINGS, 0, R.string.menu_launcher_settings)
         popup.menu.add(0, MENU_WALLPAPER, 1, R.string.menu_wallpaper)
         val graph = VesnaApplication.graph(this)
@@ -250,7 +231,6 @@ class HomeActivity : ComponentActivity() {
     }
 
     private companion object {
-        const val SWIPE_VELOCITY = 1200f
         const val MENU_ADD_TO_WORKSPACE = 1
         const val MENU_REMOVE = 2
         const val MENU_ADD_TO_DOCK = 3
