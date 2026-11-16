@@ -83,8 +83,9 @@ flowchart TB
    the new state.
 5. Package broadcasts trigger re-discovery and layout cleanup, so installs,
    updates, and uninstalls appear without restarting the launcher.
-6. On first run with an empty database, `SeedPlanner` fills the dock and first
-   workspace page from the alphabetical app list.
+6. On the very first run (a persisted "seeded" flag absent), `SeedPlanner` fills
+   the dock and first workspace page. An upgraded install with an existing
+   layout is adopted as-is; a user-emptied workspace is never re-seeded.
 
 ## Threading and lifecycle
 
