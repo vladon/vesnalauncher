@@ -69,6 +69,18 @@ its feature ID. These describe externally observable behavior only.
 - Then the standard system Contacts permission dialog is shown before any
   contact data is used
 
+## Gestures
+
+### AT-GESTURE-100 — Preset bindings work unconfigured
+- Given the launcher with default gesture settings
+- When the user swipes up from mid-screen
+- Then the app drawer opens
+- When the user swipes down from mid-screen on the workspace
+- Then the notification shade expands
+- When the user long-presses an empty workspace area
+- Then workspace customization opens
+- And all assignment rows in gesture settings show their current bindings
+
 ## Widgets
 
 ### AT-WIDGET-100 — Placement flow
