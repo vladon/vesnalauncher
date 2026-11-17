@@ -13,6 +13,9 @@ Last updated: 2026-11-17 (session 1, Nova 8.9.9 free on ENV-1).
 
 | Feature ID | Area | Discovery | Observation | Specification | Acceptance Tests | Confidence |
 |---|---|---|---|---|---|---|
+| HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
+| DRAWER-100..103 | Open/close, search, contact offer | Completed | Completed/partial (EVI-DRAWER-001) | Completed | Completed | Observed/Partially Observed |
+| FOLDER-100..101 | Folder create, rename, window | Completed | Completed (EVI-FOLDER-001) | Completed | Completed | Observed |
 | SETT-001 | Settings entry points | Completed | In Progress (workspace shortcut observed) | Not Started | Not Started | Partially Observed |
 | SETT-002 | Settings hierarchy | Completed | Completed (full inventory, 16 entries + Style tab) | Not Started | Not Started | Observed |
 | SETT-003 | Settings search | In Progress (field exists) | Not Started | Not Started | Not Started | Not Tested |

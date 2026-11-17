@@ -13,49 +13,49 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | HOME-001 | Home screen page management (add/remove/reorder pages) | pending |
-| HOME-002 | Grid sizing (rows/columns) | pending |
+| HOME-002 | Grid sizing (rows/columns) | discovered (Desktop grid 6×5 picker) |
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
-| HOME-004 | Drag-and-drop rearrangement on workspace | pending |
+| HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
-| HOME-006 | Long-press context menu on workspace items | pending |
-| HOME-007 | Wallpaper interactions (pick, scroll behavior) | pending |
-| HOME-008 | Icon labels (show/hide/edit) | pending |
-| HOME-009 | Page transition effects and scrolling behavior | pending |
-| HOME-010 | Workspace search bar / persistent search | pending |
+| HOME-006 | Long-press context menu on workspace items | discovered (popup: close/widgets/info/edit + shortcuts) |
+| HOME-007 | Wallpaper interactions (pick, scroll behavior) | discovered (Wallpapers button; wallpaper scrolling setting) |
+| HOME-008 | Icon labels (show/hide/edit) | discovered (Label toggle + sub-options) |
+| HOME-009 | Page transition effects and scrolling behavior | discovered (Transition effect, Infinite scroll, Page indicator settings) |
+| HOME-010 | Workspace search bar / persistent search | discovered (Search bar placement: Dock Below icons) |
 | HOME-011 | Empty cell behavior and drop targeting | pending |
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
-| HOME-013 | Lock workspace (prevent changes) | pending |
-| HOME-014 | Orientation/display-size behavior of workspace | pending |
+| HOME-013 | Lock workspace (prevent changes) | discovered (Lock layout toggle in Advanced) |
+| HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
 | HOME-015 | Overview / preview of all pages | pending |
 
 ## DRAWER — App drawer
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DRAWER-001 | Drawer open gesture(s) | pending |
-| DRAWER-002 | Drawer close gesture(s) | pending |
-| DRAWER-003 | Drawer layout: list vs grid modes | pending |
-| DRAWER-004 | Sorting (alphabetical, custom, etc.) | pending |
-| DRAWER-005 | Drawer search | pending |
-| DRAWER-006 | Scrolling and fast-scroll behavior | pending |
-| DRAWER-007 | Drawer grid configuration (columns/rows) | pending |
-| DRAWER-008 | Hidden apps | pending |
-| DRAWER-009 | App categories/tabs/folders in drawer | pending |
+| DRAWER-001 | Drawer open gesture(s) | observed (swipe up; free edition) |
+| DRAWER-002 | Drawer close gesture(s) | partially observed (BACK verified; swipe-down untested) |
+| DRAWER-003 | Drawer layout: list vs grid modes | discovered (App drawer style: Vertical; Horizontal Scroll section) |
+| DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
+| DRAWER-005 | Drawer search | observed (filtering, prefix emphasis, providers, web suggestions) |
+| DRAWER-006 | Scrolling and fast-scroll behavior | discovered (Fast scrollbar toggle on) |
+| DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
+| DRAWER-008 | Hidden apps | discovered (Prime-gated) |
+| DRAWER-009 | App categories/tabs/folders in drawer | discovered (Tab bar placement: None; Drawer groups: Prime) |
 | DRAWER-010 | App context menus in drawer | pending |
 | DRAWER-011 | App launching from drawer | pending |
-| DRAWER-012 | Newly installed app handling | pending |
+| DRAWER-012 | Newly installed app handling | discovered (Add icons to home screen setting) |
 | DRAWER-013 | Uninstalled app handling | pending |
-| DRAWER-014 | Work profile apps | pending |
-| DRAWER-015 | Alphabetical index/scroller | pending |
+| DRAWER-014 | Work profile apps | discovered (Work apps in their own tab setting, checked) |
+| DRAWER-015 | Alphabetical index/scroller | discovered (Fast scrollbar) |
 | DRAWER-016 | Empty and error states | pending |
 
 ## DOCK — Dock / favorites bar
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DOCK-001 | Dock visibility and placement | pending |
+| DOCK-001 | Dock visibility and placement | discovered (Dock subpage under Home screen; 5 icons visible) |
 | DOCK-002 | Dock icon count / paging | pending |
-| DOCK-003 | Dock background styles | pending |
+| DOCK-003 | Dock background styles | discovered (Dock subpage: background setting) |
 | DOCK-004 | Add/remove/reorder dock items | pending |
 | DOCK-005 | Folders in dock | pending |
 | DOCK-006 | Dock across pages (persistent vs per-page) | pending |
@@ -65,22 +65,22 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| FOLDER-001 | Folder creation (drop icon on icon) | pending |
-| FOLDER-002 | Folder naming and rename | pending |
-| FOLDER-003 | Folder open/close behavior | pending |
-| FOLDER-004 | Folder icon appearance (preview grid) | pending |
+| FOLDER-001 | Folder creation (drop icon on icon) | observed |
+| FOLDER-002 | Folder naming and rename | observed |
+| FOLDER-003 | Folder open/close behavior | observed (window mode; BACK closes) |
+| FOLDER-004 | Folder icon appearance (preview grid) | observed (mini previews) |
 | FOLDER-005 | Add/remove apps inside folder | pending |
 | FOLDER-006 | Reorder inside folder | pending |
 | FOLDER-007 | Folder deletion and last-item behavior | pending |
-| FOLDER-008 | Folder layout (grid size inside folder) | pending |
+| FOLDER-008 | Folder layout (grid size inside folder) | discovered (Grid AUTO, Scroll direction Horizontal, Mode Window) |
 
 ## WIDGET — Widgets
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| WIDGET-001 | Widget picker / list | pending |
+| WIDGET-001 | Widget picker / list | observed (full-screen grouped searchable picker) |
 | WIDGET-002 | Widget placement | pending |
-| WIDGET-003 | Widget resizing | pending |
+| WIDGET-003 | Widget resizing | discovered (Widget overlap setting; resize behavior pending) |
 | WIDGET-004 | Widget configuration activity | pending |
 | WIDGET-005 | Widget removal | pending |
 | WIDGET-006 | Widget interaction (taps pass through) | pending |
@@ -91,14 +91,14 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| GESTURE-001 | Swipe up / down on home screen | pending |
-| GESTURE-002 | Double tap | pending |
-| GESTURE-003 | Long press on empty space | pending |
-| GESTURE-004 | Pinch in/out | pending |
-| GESTURE-005 | Two-finger gestures | pending |
-| GESTURE-006 | Assignable gesture actions catalog | pending |
+| GESTURE-001 | Swipe up / down on home screen | discovered (catalog rows; Prime-gated assignment) |
+| GESTURE-002 | Double tap | discovered (Prime-gated) |
+| GESTURE-003 | Long press on empty space | observed (opens customize mode) |
+| GESTURE-004 | Pinch in/out | discovered (Prime-gated rows) |
+| GESTURE-005 | Two-finger gestures | discovered (swipe up/down, rotation CCW/CW rows) |
+| GESTURE-006 | Assignable gesture actions catalog | discovered (bindings visible: Swipe up→App drawer, Swipe down→Expand notifications) |
 | GESTURE-007 | Gesture conflicts with system navigation | pending |
-| GESTURE-008 | Back button behavior in launcher surfaces | pending |
+| GESTURE-008 | Back button behavior in launcher surfaces | partially observed (drawer/settings) |
 
 ## APPPEAR — Appearance and personalization
 
