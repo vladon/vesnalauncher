@@ -57,3 +57,19 @@ scrollbar on.
   predictions/search area and the app grid.
 - Evidence: EVI-DRAWER-001 (drawer-open, drawer-search-ca)
 - Confidence: Observed
+
+## OBS-DRAWER-110 — Drawer tabs in the free edition
+
+- Date / Env: 2026-11-17 / ENV-1
+- Action: App drawer settings ▸ Tab bar placement [None] → selected "Top";
+  opened the drawer.
+- Observed: options are None / Top / Bottom. With Top, the drawer shows a
+  tab bar under the search area containing a single default tab "Apps"
+  (pill-highlighted). Custom tab groups remain Prime ("Drawer groups"
+  greyed) — the free edition gets the tab UI with the automatic Apps tab.
+- State note: the research session was suspended while the device came
+  under active human use (a personal Calendar app was in the foreground);
+  **Tab bar placement was left at "Top" — the revert to None is PENDING**
+  and must be completed at the next session start before other tests.
+- Evidence: EVI-DRAWER-002 (tab-options, tabs-open)
+- Confidence: Observed

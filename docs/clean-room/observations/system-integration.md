@@ -86,3 +86,21 @@ identify controls.
 - Evidence: EVI-SYS-100, EVI-SYS-101 (logcat excerpts, curl outputs,
   screenshots play-after-reboot.png, play-reset1.png, nova-first-run.png)
 - Confidence: Observed
+
+## OBS-SYS-110 — Tapping a Prime-locked row opens the subscription page
+
+- Date / Env: 2026-11-17 / ENV-1
+- Action: tapped the Prime-locked "Notification badges" row in main settings.
+- Observed: opens the full-screen "Manage Subscription — Choose your plan"
+  page (back-arrow page, not a dialog): Nova Prime card ($4.99/year;
+  ad-free, custom gestures & swipe actions, hide apps for privacy,
+  themes/icons/animations) and Nova Plus card ($99.99/year "Save 44%" or
+  $14.99/month radios; adds Personalized AI insights daily + AI assistant on
+  your home screen), each with "Try 3 days free"; close (X) top-right.
+- The same page opened when tapping Settings ▸ Nova AI (earlier
+  OBS-SETT-009, dark themed there) and when tapping "Quick start" (see
+  OBS-BACKUP-110). On ENV-2 the same page rendered with BLANK price amounts
+  (no Play billing availability).
+- Resolves OPEN_QUESTIONS #5.
+- Evidence: EVI-SYS-002 (prime-row-tap)
+- Confidence: Observed

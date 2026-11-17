@@ -280,3 +280,18 @@ Entry points observed:
   subpages in most cases.
 - uiautomator exposes little semantic state for toggles (the app uses a
   Compose UI); screenshots are required as evidence for boolean states.
+
+## OBS-SETT-110 — Settings search field scope and deep-linking
+
+- Date / Env: 2026-11-17 / ENV-1
+- Action: tapped the pinned search field atop main settings, typed "dock".
+- Observed:
+  - results render as cards with a SECTION BREADCRUMB + title + subtitle:
+    "Home screen ▸ Dock — Icon layout, background, pages" and
+    "Home screen ▸ Page indicator — Displays above the dock…" (match on
+    title AND subtitle text).
+  - tapping a result deep-links into the section, pre-scrolled to the
+    highlighted target row (Dock card highlighted at top of Home screen
+    section).
+- Evidence: EVI-SETT-003 (search-results, search-deeplink)
+- Confidence: Observed

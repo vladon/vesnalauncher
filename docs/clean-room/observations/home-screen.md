@@ -139,3 +139,13 @@ Pixel 9a, Android 17, gesture navigation, Nova grid 6×5, icon size 125%.
      per its setting; value unconfirmed).
 - Evidence: EVI-HOME-005 (page2-drop, page2-attempt2, page1-check)
 - Confidence: Observed
+
+## OBS-WALL-002 — Third wallpaper image observed
+
+- The workspace wallpaper changed again during the reset-wizard run
+  (petals ▸ blue glass ▸ swirl variants observed across the session). No
+  launcher wallpaper action was performed at any point. Consistent with a
+  periodic OS/user-level wallpaper rotation on Android 17; not attributable
+  to Nova. (Extends OBS-WALL-001.)
+- Evidence: EVI-BACKUP-003 (after-reset), EVI-CARDS-001 (cards-page)
+- Confidence: Partially Observed (rotation pattern; trigger external)

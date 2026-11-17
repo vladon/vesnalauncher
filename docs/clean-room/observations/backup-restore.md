@@ -69,3 +69,30 @@ Evidence under `EVI-BACKUP-001`.
   be confirmed in a controlled pass.
 - Evidence: EVI-BACKUP-002 (page2-gone-check capture)
 - Confidence: Observed (existence/entry); internals Not Tested
+
+## OBS-BACKUP-110 — Quick start and Reset to default flows (free edition)
+
+- Date / Env: 2026-11-17 / ENV-1. A fresh backup
+  (`2026-11-17_23-11.novabackup`) was created first as a guard rail.
+- Quick start: tapping it opens the subscription page (PAYWALLED in free
+  edition) — the setup re-run is a paid feature.
+- Reset to default: tapping it launches the DARK-THEMED setup wizard
+  directly (no separate confirmation dialog — the wizard itself is the
+  flow; progress-bar steps: Search ▸ App drawer ▸ Icon style ▸ All done).
+  The wizard pre-fills CURRENT values (observed: Mode Immersive, Shortcut
+  Search ON, Contact Search OFF, search placements Dock (Below icons)/Top,
+  icon size 125%). Completing it ("All done ▸ Go home") returned to the
+  workspace with the LAYOUT INTACT (Media folder, Play Store, dock,
+  shortcut all survived).
+- Interpretation (honest limits): in this pass every touched setting was
+  already at its default, so which values the reset actually changed is not
+  measurable; the layout was NOT wiped by the reset (differs from the
+  preconception that reset restores the out-of-box layout). Reset semantics
+  remain partially undetermined.
+- Wizard bonus: the Search page's "Search bar placement" dropdown exposed
+  the full option list: None / Widget / Dock (Above icons) / Dock (Below
+  icons) / Persistent.
+- Evidence: EVI-BACKUP-003 (backup-page2/3, quickstart-flow, reset-flow,
+  reset-wizard1..3, after-reset); fresh backup verified via shell ls
+- Confidence: Observed (flows as far as run); reset semantics Partially
+  Observed
