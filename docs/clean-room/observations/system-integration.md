@@ -104,3 +104,32 @@ identify controls.
 - Resolves OPEN_QUESTIONS #5.
 - Evidence: EVI-SYS-002 (prime-row-tap)
 - Confidence: Observed
+
+## OBS-SYS-111 — Prime license activation (edition change) + badge rendering blocked
+
+- Date / Env: 2026-11-18 / ENV-1
+- Change: the user installed **Nova Prime** (lifetime, `com.teslacoilsw.launcher.prime`
+  versionName 2023, the classic Pro Key unlock app). After a Nova restart:
+  - Settings ▸ Manage Subscription subtitle: "Nova Prime · Activated by Pro
+    Key APK";
+  - the version row re-brands to "Nova Prime 89900 (8.9.9)";
+  - previously Prime-greyed rows (Notification badges, gestures, Hide apps,
+    Drawer groups) are now dark/normal;
+  - the drawer's advertisement banner is GONE (only the divider slot
+    remains) — matching Prime's "ad-free" benefit;
+  - the drawer now also lists the Prime license app icon with a "PRIME"
+    ribbon badge.
+- Badge rendering test could NOT complete: the OS reports Nova's
+  notifications as blocked (`importance=NONE userSet=false`) and Nova was
+  NOT in the enabled notification listeners. Research-side grants applied
+  via adb (listener added to `enabled_notification_listeners`; `POST_NOTIFICATION`
+  appop set to allow) did NOT take effect at runtime — the listener list
+  requires a rebind (Settings-UI toggle or reboot) and the uid-level appop
+  remains `ignore`. The built-in "Test notification badge" button therefore
+  produced no visible badge. Pending user-side action: grant Notification
+  access to Nova (Settings ▸ Notification access) or reboot, then re-test.
+- Evidence: EVI-SYS-002 (prime-active-main, settings-after-prime,
+  badges-page/page2, badge-test-workspace, badge-test2, settings-check),
+  EVI-DRAWER-002 (tabs-reverted — no ad banner)
+- Confidence: Observed (activation effects); badge rendering Blocked
+  (environment grants)

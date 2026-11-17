@@ -53,8 +53,19 @@ All observations cite one of the environments below via an environment ID
 
 | Env | Version | Version code | Edition | Install source | Install date | minSdk / targetSdk |
 |---|---|---|---|---|---|---|
-| ENV-1 | 8.9.9 | 89900 | Free (subscription upsell shown: Prime USD 4.99/yr, Plus USD 99.99/yr or 14.99/mo; no purchase made) | Google Play (`com.android.vending`) | 2026-11-17 | 26 / 36 |
+| ENV-1 | 8.9.9 | 89900 | **Prime** from 2026-11-18 (lifetime; `com.teslacoilsw.launcher.prime` v2023 "Pro Key APK" unlock installed by the user; before that: Free with subscription upsell Prime USD 4.99/yr, Plus USD 99.99/yr or 14.99/mo) | Google Play (launcher + prime unlock) | 2026-11-17 / prime 2026-11-18 | 26 / 36 |
 | ENV-2 (Medium_Phone_API_36.1 AVD) | 8.9.9 | 89900 | Free | APK copied from ENV-1 via `adb pull` + `adb install` (same authorized Play-installed copy moved between the project's own devices; no decompilation, no third-party download; no Google account on the AVD, so Play sign-in was unavailable — auth blocker documented) | 2026-11-17 | 26 / 36 |
+
+### ENV-1 device-config changes made for research (2026-11-18)
+
+- Badge-rendering attempt: added
+  `com.teslacoilsw.launcher/.notificationlistener.NotificationListener` to
+  `enabled_notification_listeners` via `settings put secure` (NOT yet bound
+  by the system — needs Settings-UI toggle or reboot) and set the
+  `POST_NOTIFICATION` appop to allow for Nova (uid-level remains `ignore`).
+  These are standard launcher-setup grants Nova itself would request;
+  reversible. Badge rendering remained unobservable this session (see
+  OBS-SYS-111).
 
 ### ENV-2 notes
 

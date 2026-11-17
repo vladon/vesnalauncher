@@ -69,6 +69,11 @@ its feature ID. These describe externally observable behavior only.
 - Then the standard system Contacts permission dialog is shown before any
   contact data is used
 
+### AT-DRAWER-102b — Swipe-down closes the drawer
+- Given the drawer is open with the keyboard dismissed
+- When the user swipes downward over the app grid
+- Then the drawer closes and the workspace is restored
+
 ## Backup & restore
 
 ### AT-BACKUP-100 — Backup creation

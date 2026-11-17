@@ -73,3 +73,20 @@ scrollbar on.
   and must be completed at the next session start before other tests.
 - Evidence: EVI-DRAWER-002 (tab-options, tabs-open)
 - Confidence: Observed
+
+## OBS-DRAWER-111 — Swipe-down closes the drawer (verified); Tab bar reverted
+
+- Date / Env: 2026-11-18 / ENV-1 (Prime now active)
+- Tab bar revert: Tab bar placement set back to **None** (the pending action
+  from OBS-DRAWER-110); the drawer subsequently shows NO tab bar. The
+  dropdown's live preview also showed the tab bar rendering "Apps" + "Work"
+  tabs while Top was set (the Work tab is the work-profile tab).
+- Swipe-down close: with the keyboard VISIBLE, a mid-grid swipe-down did
+  nothing (the keyboard consumes the gesture). After dismissing the
+  keyboard (BACK), a mid-grid swipe-down (300 ms) CLOSED the drawer and
+  returned to the workspace.
+- Prime delta: with Prime active the drawer's ad banner is gone; the slot
+  shows only a divider between predictions and the grid.
+- Evidence: EVI-DRAWER-002 (tabs-reverted, tabbar-dropdown2 — preview with
+  Apps/Work tabs), EVI-DRAWER-001 (swipe-down-close[2/3])
+- Confidence: Observed

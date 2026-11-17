@@ -62,12 +62,14 @@ behavior, not Vesna requirements (Vesna is ad-free by product definition).
 
 - Description: the drawer closes and returns to the workspace.
 - Trigger (verified): BACK (with search text present, first BACK clears
-  search focus).
+  search focus); **swipe-down over the grid with the keyboard dismissed**
+  (Observed 2026-11-18; with the keyboard up the gesture is consumed by the
+  keyboard and does not close).
 - Expected behavior: drawer dismisses, restoring the workspace page and
   scroll position.
-- Open behaviors (Not Tested): swipe-down close, HOME press while drawer
-  open, auto-close after app launch (setting exists, default off).
-- Evidence: OBS-DRAWER-003 (EVI-DRAWER-001)
+- Open behaviors (Not Tested): HOME press while drawer open, auto-close
+  after app launch (setting exists, default off).
+- Evidence: OBS-DRAWER-003, OBS-DRAWER-111 (EVI-DRAWER-001)
 - Confidence: Partially Observed
 
 ### Vesna requirements
@@ -76,6 +78,9 @@ behavior, not Vesna requirements (Vesna is ad-free by product definition).
   first clears it.
 - R-DRAWER-102.2: After closing, the workspace shows its previous page.
 - R-DRAWER-102.3: Optional "close on app launch" (default off).
+- R-DRAWER-102.4: A downward swipe over the grid closes the drawer when the
+  keyboard is dismissed; while the keyboard is shown, the keyboard consumes
+  the gesture.
 
 ## DRAWER-103 — Contact suggestions bar (permission-gated)
 
