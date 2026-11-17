@@ -1,0 +1,90 @@
+package dev.vladon.vesna.launcher.workspace
+
+import dev.vladon.vesna.launcher.apps.AppKey
+import dev.vladon.vesna.launcher.apps.LauncherApp
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * Folder semantics of [WorkspaceResolver]: folder members must not appear at the
+ * top level, folder cells must render with member counts, and stale members
+ * (uninstalled apps) must not surface.
+ */
+class WorkspaceResolverFolderTest {
+
+    private fun app(key: AppKey) = LauncherApp(key = key, label = key.packageName)
+
+    private val keyA = AppKey("com.a", "com.a.Main")
+    private val keyB = AppKey("com.b", "com.b.Main")
+    private val keyC = AppKey("com.c", "com.c.Main")
+    private val keyD = AppKey("com.d", "com.d.Main")
+
+    private fun item(key: AppKey, cell: Int, folderId: Long? = null) =
+        WorkspaceItem(id = 0, key = key, container = Container.WORKSPACE, cellIndex = cell, folderId = folderId)
+
+    @Test
+    fun `folder members are excluded from top level cells`() {
+        val items = listOf(
+            item(keyA, cell = 0),
+            item(keyB, cell = 1, folderId = 7L),
+        )
+        val resolved = WorkspaceResolver.workspaceApps(items, listOf(app(keyA), app(keyB)))
+        assertEquals(mapOf(0 to app(keyA)), resolved)
+    }
+
+    @Test
+    fun `folder cell renders with member count`() {
+        val folder = Folder(id = 7L, title = "Work", cellIndex = 3)
+        val items = listOf(
+            item(keyA, cell = 3, folderId = 7L),
+            item(keyB, cell = 5, folderId = 7L),
+        )
+        val cells = WorkspaceResolver.workspaceCells(items, listOf(app(keyA), app(keyB)), listOf(folder))
+        val content = cells[3]
+        assertTrue(content is CellContent.FolderCell)
+        assertEquals(2, (content as CellContent.FolderCell).memberCount)
+        assertEquals(folder, content.folder)
+    }
+
+    @Test
+    fun `folder at invalid cell is skipped`() {
+        val folder = Folder(id = 7L, title = "Work", cellIndex = GridCanvas.CAPACITY)
+        val cells = WorkspaceResolver.workspaceCells(emptyList(), emptyList(), listOf(folder))
+        assertTrue(cells.isEmpty())
+    }
+
+    @Test
+    fun `folder does not override an app already at its cell`() {
+        val folder = Folder(id = 7L, title = "Work", cellIndex = 0)
+        val items = listOf(item(keyA, cell = 0))
+        val cells = WorkspaceResolver.workspaceCells(items, listOf(app(keyA)), listOf(folder))
+        assertEquals(CellContent.App::class, cells.getValue(0)::class)
+    }
+
+    @Test
+    fun `folderContents groups members sorted by in folder position`() {
+        val items = listOf(
+            item(keyC, cell = 5, folderId = 7L),
+            item(keyA, cell = 1, folderId = 7L),
+        )
+        val apps = listOf(app(keyA), app(keyC))
+        val contents = WorkspaceResolver.folderContents(items, apps)
+        assertEquals(listOf(keyA, keyC), contents.getValue(7L).map { it.key })
+    }
+
+    @Test
+    fun `folderContents drops stale members`() {
+        val items = listOf(
+            item(keyA, cell = 1, folderId = 7L),
+            item(keyD, cell = 2, folderId = 7L),
+        )
+        val contents = WorkspaceResolver.folderContents(items, listOf(app(keyA)))
+        assertEquals(listOf(keyA), contents.getValue(7L).map { it.key })
+    }
+
+    @Test
+    fun `folderContents is empty without folders`() {
+        assertTrue(WorkspaceResolver.folderContents(emptyList(), emptyList()).isEmpty())
+    }
+}
