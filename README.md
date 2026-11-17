@@ -6,10 +6,19 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 
 - **Package name:** `dev.vladon.vesna.launcher`
 - **License:** [MIT](LICENSE)
-- **Status:** `0.2.0`
+- **Status:** `0.3.0`
 - **Language:** Kotlin, English UI (Russian localization included)
 
 ## Features
+
+### 0.3.0
+
+- Drag-and-drop between containers: drag a workspace icon into the dock (drop
+  onto a slot to insert it there; a full dock rejects with a message) and a dock
+  icon onto an empty workspace cell; dragging sideways inside the dock reorders
+  favorites.
+- Drawer search: a search field above the app grid filters apps by name
+  (case-insensitive substring), with an empty-state message.
 
 ### 0.2.0
 
@@ -33,8 +42,9 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 - Settings screen (Jetpack Compose + Material 3) with app and version info.
 - English and Russian localization.
 
-Not yet implemented: folders, widgets, drag between dock and drawer, icon packs,
-themes, search in the drawer. See [PRODUCT.md](PRODUCT.md) for the roadmap.
+Not yet implemented: folders, widgets, drag between the drawer and other
+containers, icon packs, themes, fuzzy search matching. See [PRODUCT.md](PRODUCT.md)
+for the roadmap.
 
 ## Build
 

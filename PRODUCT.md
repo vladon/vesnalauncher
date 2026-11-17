@@ -49,7 +49,8 @@ Explicitly out of scope for 0.1.0 (and deferred, not abandoned):
 - Work profile / multi-user support.
 - Search in the drawer.
 
-Status note: drag-and-drop and work-profile support shipped in 0.2.0.
+Status notes: drag-and-drop, work-profile support, and drawer search shipped in
+0.2.0–0.3.0.
 
 ## Target users
 
