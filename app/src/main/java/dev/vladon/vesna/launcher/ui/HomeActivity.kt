@@ -130,6 +130,7 @@ class HomeActivity : ComponentActivity() {
             val source = dragSource
             when (ev.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
+                    rootDragMoved = true
                     if (source?.fromDrawer == true && !drawerClosedForDrag) {
                         drawerClosedForDrag = true
                         drawer.close()
@@ -221,19 +222,26 @@ class HomeActivity : ComponentActivity() {
         if (source == null || cancelled) return
 
         if (!moved) {
-            when (container) {
-                Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app)
-                Container.DOCK -> showDockItemMenu(anchor, app)
+            when {
+                source.fromDrawer -> showDrawerItemMenu(app)
+                container == Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app)
+                else -> showDockItemMenu(anchor, app)
             }
             return
         }
 
         val overDock = wy >= dock.top
         when {
+            overDock && source.fromDrawer ->
+                controller.insertIntoDock(app, dock.slotAtLocalX(wx - dock.left))
             overDock && source.container == Container.WORKSPACE ->
                 controller.moveWorkspaceToDock(app, dock.slotAtLocalX(wx - dock.left))
             overDock && source.container == Container.DOCK ->
                 controller.reorderDock(app, dock.slotAtLocalX(wx - dock.left))
+            !overDock && source.fromDrawer ->
+                workspace.cellAtLocal(wx, wy)?.let { cell ->
+                    commitOnCell(source, app, cell)
+                }
             !overDock && source.container == Container.WORKSPACE ->
                 workspace.cellAtLocal(wx, wy)?.let { cell ->
                     if (cell != source.fromCell) commitOnCell(source, app, cell)

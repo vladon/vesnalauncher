@@ -59,11 +59,12 @@ class WorkspaceRepository(
         prefs.edit().putBoolean(KEY_SEEDED, true).apply()
     }
 
-    /** Places the app into the first free workspace cell; false when the grid is full. */
+    /** Places the app into the first free grid cell (folder cells are occupied). */
     suspend fun addToWorkspace(app: LauncherApp): Boolean = mutationMutex.withLock {
         val occupied = dao.getAll()
-            .filter { it.container == Container.WORKSPACE.name }
+            .filter { it.container == Container.WORKSPACE.name && it.folderId == null }
             .mapTo(mutableSetOf()) { it.cellIndex }
+        folderDao.getAll().mapTo(occupied) { it.cellIndex }
         val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
         dao.insert(WorkspaceItem(id = 0, key = app.key, container = Container.WORKSPACE, cellIndex = cell).toEntity())
         true
@@ -195,11 +196,12 @@ class WorkspaceRepository(
         val items = dao.getAll()
         val source = items.firstOrNull {
             it.container == Container.WORKSPACE.name &&
+                it.folderId == null &&
                 it.packageName == app.key.packageName &&
                 it.className == app.key.className &&
                 it.userSerial == app.key.userSerial
         } ?: return@withLock false
-        val dockIds = items.filter { it.container == Container.DOCK.name }
+        val dockIds = items.filter { it.container == Container.DOCK.name && it.folderId == null }
             .sortedBy { it.cellIndex }
             .map { it.id }
         if (dockIds.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
@@ -240,10 +242,11 @@ class WorkspaceRepository(
     /** Reorders a dock entry to [slot] (dragging sideways inside the dock). */
     suspend fun reorderDock(app: LauncherApp, slot: Int): Boolean = mutationMutex.withLock {
         val items = dao.getAll()
-        val dock = items.filter { it.container == Container.DOCK.name }
+        val dock = items.filter { it.container == Container.DOCK.name && it.folderId == null }
             .sortedBy { it.cellIndex }
         val from = dock.indexOfFirst {
-            it.packageName == app.key.packageName &&
+            it.folderId == null &&
+                it.packageName == app.key.packageName &&
                 it.className == app.key.className &&
                 it.userSerial == app.key.userSerial
         }
@@ -300,8 +303,9 @@ class WorkspaceRepository(
 
     /**
      * Returns a folder member to the first free grid cell and dissolves the folder
-     * when fewer than two members remain. Returns false when the app is not a
-     * folder member or no cell is free.
+     * when fewer than two members remain. The folder's own cell counts as occupied
+     * while it persists; returns false (member stays in the folder) when no cell
+     * is free.
      */
     suspend fun removeFromFolder(app: LauncherApp): Boolean = mutationMutex.withLock {
         val items = dao.getAll()
@@ -312,7 +316,7 @@ class WorkspaceRepository(
         val folder = folderDao.getById(entry.folderId!!) ?: return@withLock false
         val occupied = items.filter { it.folderId == null && it.container == Container.WORKSPACE.name }
             .mapTo(mutableSetOf()) { it.cellIndex }
-        occupied += folderDao.getAll().filter { it.id != folder.id }.map { it.cellIndex }
+        folderDao.getAll().mapTo(occupied) { it.cellIndex }
         val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
         db.withTransaction {
             dao.updatePlacement(entry.id, Container.WORKSPACE.name, cell)
@@ -330,8 +334,9 @@ class WorkspaceRepository(
     }
 
     /**
-     * Removes a folder, returning every member to the first free grid cells in
-     * order. Returns false when the folder does not exist.
+     * Removes a folder, returning every member to distinct free grid cells in
+     * order. Returns false without mutating when the folder does not exist or the
+     * grid cannot fit all members.
      */
     suspend fun removeFolder(folderId: Long): Boolean = mutationMutex.withLock {
         val folder = folderDao.getById(folderId) ?: return@withLock false
@@ -340,11 +345,12 @@ class WorkspaceRepository(
         val occupied = items.filter { it.folderId == null && it.container == Container.WORKSPACE.name }
             .mapTo(mutableSetOf()) { it.cellIndex }
         occupied += folderDao.getAll().filter { it.id != folder.id }.map { it.cellIndex }
+        val freeCells = (0 until GridCanvas.CAPACITY).filter { it !in occupied }
+        if (members.size > freeCells.size) return@withLock false
         db.withTransaction {
             folderDao.deleteById(folderId)
-            for (member in members) {
-                val cell = GridCanvas.firstFreeCell(occupied) ?: continue
-                occupied += cell
+            for ((index, member) in members.withIndex()) {
+                val cell = freeCells[index]
                 dao.updatePlacement(member.id, Container.WORKSPACE.name, cell)
                 dao.updateFolder(member.id, null)
             }

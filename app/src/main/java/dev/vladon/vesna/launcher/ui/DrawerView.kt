@@ -37,6 +37,7 @@ class DrawerView @JvmOverloads constructor(
 
     /** Released without moving: the app menu should open for this item. */
     var onItemDragReleased: ((LauncherApp, View) -> Unit)? = null
+    var onItemDragMoved: ((LauncherApp, View) -> Unit)? = null
     var onOpenedChanged: ((Boolean) -> Unit)? = null
 
     private val list: RecyclerView
@@ -68,17 +69,21 @@ class DrawerView @JvmOverloads constructor(
                 hideKeyboard()
                 onItemDragStarted?.invoke(app, anchor)
                 // While armed, the drag layer owns subsequent MOVE events; the UP
-                // (no movement) arrives here and opens the app menu.
-                anchor.setOnTouchListener { _, ev ->
-                    if (ev.actionMasked == MotionEvent.ACTION_UP ||
-                        ev.actionMasked == MotionEvent.ACTION_CANCEL
-                    ) {
-                        if (ev.actionMasked == MotionEvent.ACTION_UP) {
-                            onItemDragReleased?.invoke(app, anchor)
+                // (no movement) arrives here and opens the app menu. The listener
+                // removes itself in both terminal branches, so a recycled holder
+                // never fires it with a stale app.
+                anchor.setOnTouchListener { v, ev ->
+                    when (ev.actionMasked) {
+                        MotionEvent.ACTION_UP -> {
+                            v.setOnTouchListener(null)
+                            onItemDragReleased?.invoke(app, v)
+                            true
                         }
-                        true
-                    } else {
-                        false
+                        MotionEvent.ACTION_CANCEL -> {
+                            v.setOnTouchListener(null)
+                            true
+                        }
+                        else -> false
                     }
                 }
                 true

@@ -60,11 +60,11 @@ object WorkspaceResolver {
             }
     }
 
-    /** Dock apps ordered by position; stale entries are skipped. */
+    /** Dock apps ordered by position; stale entries and folder members are skipped. */
     fun dockApps(items: List<WorkspaceItem>, apps: List<LauncherApp>): List<LauncherApp> {
         val appByKey = apps.associateBy { it.key }
         return items.asSequence()
-            .filter { it.container == Container.DOCK }
+            .filter { it.container == Container.DOCK && it.folderId == null }
             .sortedBy { it.cellIndex }
             .mapNotNull { appByKey[it.key] }
             .toList()
