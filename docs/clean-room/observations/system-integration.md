@@ -50,8 +50,11 @@ identify controls.
   `adb reverse tcp:2080 tcp:2080` then
   `adb shell settings put global http_proxy 127.0.0.1:2080`. Play content
   downloads then completed and Nova 8.9.9 installed from the Play listing.
-- Persistence: proxy mapping active for the research session; required for
-  further Play downloads on this network. App launching/UI unaffected.
+- Persistence: proxy mapping was **removed after installation completed**
+  (`settings put global http_proxy :0`, `adb reverse --remove tcp:2080`;
+  device connectivity verified afterwards). Re-enable temporarily for future
+  Play content downloads per the checklist in TEST_ENVIRONMENTS.md. App
+  launching/UI unaffected either way.
 - Evidence: EVI-SYS-100, EVI-SYS-101 (logcat excerpts, curl outputs,
   screenshots play-after-reboot.png, play-reset1.png, nova-first-run.png)
 - Confidence: Observed

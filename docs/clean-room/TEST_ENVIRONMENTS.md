@@ -62,8 +62,9 @@ All observations cite one of the environments below via an environment ID
   hosts unreachable; API endpoints fine). A device-wide HTTP proxy
   (`adb reverse tcp:2080` + `settings put global http_proxy 127.0.0.1:2080`
   pointing at the host's local proxy) restored Play content downloads and the
-  install completed. The proxy mapping is ACTIVE for this session and required
-  for Play downloads; app UI and launch work regardless.
+  install completed. **The proxy mapping was torn down after installation**
+  (see the session-close checklist below); it must be re-enabled temporarily
+  whenever Play content downloads are needed again.
 - Setup wizard flow observed (free path): Welcome ▸ Get started ▸ system
   default-home-app dialog (radio list: Nova Launcher / Pixel Launcher
   "Current default"; confirm button disabled until a radio is selected) ▸
@@ -89,3 +90,36 @@ Available AVDs on the host (unused so far in this session):
 | arm14 | 34 | shutdown |
 
 These may be booted later for Android-version-difference research.
+
+## Session close / open checklist (ENV-1)
+
+The device is the user's personal phone. Any host-side bridging set up for
+research MUST be reverted at session end — a device-wide proxy that points at
+a dead `adb reverse` port silently kills the phone's internet.
+
+**At session close (mandatory):**
+
+```bash
+adb -s 55021JEBF03248 shell settings put global http_proxy :0
+adb -s 55021JEBF03248 reverse --remove tcp:2080   # ignore error if absent
+adb -s 55021JEBF03248 reverse --list               # must be empty
+```
+
+Verify: `settings get global http_proxy` returns `:0` and the device still
+reaches the network (e.g. `ping -c1 play.googleapis.com` from the device).
+
+**When Play content downloads are needed again (temporary):**
+
+```bash
+adb -s 55021JEBF03248 reverse tcp:2080 tcp:2080
+adb -s 55021JEBF03248 shell settings put global http_proxy 127.0.0.1:2080
+# ... perform downloads ...
+# then re-run the session-close teardown immediately after.
+```
+
+Notes:
+- `adb reverse` is registered per transport; always target the USB serial
+  `55021JEBF03248` explicitly. A WiFi-adb transport (`…:5555`) may
+  auto-reconnect after reboots and would not carry the reverse mapping.
+- Pin `-s 55021JEBF03248` in every adb command while a second transport
+  (`emulator-5554`) is attached.

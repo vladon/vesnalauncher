@@ -106,3 +106,10 @@ integration), NF (nonfunctional).
 - Keep the coverage matrix current so another session can resume from the
   last verified observation.
 - Report blockers precisely (e.g. licensing dialogs, unavailable features).
+- **Tap coordinates must come only from the most recent capture of the
+  CURRENT screen.** Reusing coordinates from an earlier layout risks
+  silently flipping a setting the observations must not corrupt.
+- **Capture helper returns the exact output path** (`P=$(cap.sh …)`); never
+  hand-assemble capture filenames/timestamps.
+- **Device hygiene:** any host-side bridging (e.g. the Play-download proxy)
+  is temporary; see the session-close checklist in TEST_ENVIRONMENTS.md.
