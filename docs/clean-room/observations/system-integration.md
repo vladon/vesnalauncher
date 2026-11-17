@@ -43,17 +43,21 @@ identify controls.
 | Default home layout | Nova Settings shortcut + Gmail/Photos/Play Store + 5-icon dock + search bar | Identical | Match |
 | Drawer grid "6 ✕ 5" | Renders 5 columns | Renders 5 columns | Match — label reads rows × columns |
 | Drawer empty state | Ads + predictions + contact bar | "No Frequent Apps" (fresh), no ads (no billing), no contact bar | Match structurally; ad/account content env-dependent |
-| HOME key on workspace | Opens Nova Search drawer | Stays on workspace | **VERSION DIFFERENCE (observed once each; re-verify)** |
+| HOME key on workspace | Opens Nova Search drawer (REPLICATED ×2 controlled presses on settled workspace) | Stays on workspace (REPLICATED ×2 same protocol) | **VERSION DIFFERENCE — replicated on both sides** |
 | Swipe down (mid-screen) | Notification shade expands | Notification shade expands | Match |
 | Swipe up (mid-screen) | Drawer opens | Drawer opens | Match |
 | Fast scrollbar | Visible thumb slider | Visible thumb slider | Match |
 
-- Caveats: single-run observations on both sides; the HOME-key difference
-  needs a controlled re-test (it may also depend on the AVD's input
-  pipeline). ENV-2 has no Google account, which explains ad/pricing deltas.
-- Evidence: EVI-ENV2-001 (all captures), EVI-SYS-001, EVI-HOME-003,
+- Caveats: HOME-key difference replicated with controlled presses (settled
+  workspace, 3 s gaps, two presses per side — EVI-SYS-001 replicate1/2
+  captures both devices). ENV-2 has no Google account, which explains
+  ad/pricing deltas. AVD wallpaper image also differs from its earlier
+  capture — environment-side wallpaper change on the AVD as well; not
+  launcher-attributed.
+- Evidence: EVI-ENV2-001 (all captures), EVI-SYS-001 (home-from-app,
+  avd-home-replicate1/2, pixel-home-replicate1/2), EVI-HOME-003,
   EVI-DRAWER-001
-- Confidence: Observed per cell (single run)
+- Confidence: Observed per cell; HOME-key row replicated
 
 ## OBS-SYS-101 — Reboot to clear Play queue
 

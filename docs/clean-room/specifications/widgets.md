@@ -20,9 +20,11 @@ Derived from `observations/widgets.md` and settings inventory
      completes directly.
   4. Newly placed widgets enter resize mode automatically (handles shown),
      with an entry point to the widget's settings; tapping elsewhere exits
-     resize mode and keeps the widget.
-- State transitions: picker → dragging → consent → (config) → placed-in-
-  resize-mode → placed.
+     resize mode and keeps the placement.
+  5. After the user once checks the platform consent dialog's "always allow"
+     box, subsequent placements skip the consent dialog (observed).
+- State transitions: picker → dragging → consent (unless pre-approved) →
+  (config) → placed-in-resize-mode → placed.
 - Boundary conditions: dropping over an occupied area must resolve per
   overlap rules ("Overlap when placing", "Widget overlap" settings exist;
   exact behavior Not Tested yet).
