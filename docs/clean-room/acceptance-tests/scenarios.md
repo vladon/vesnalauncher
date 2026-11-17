@@ -69,6 +69,30 @@ its feature ID. These describe externally observable behavior only.
 - Then the standard system Contacts permission dialog is shown before any
   contact data is used
 
+## Backup & restore
+
+### AT-BACKUP-100 — Backup creation
+- Given the Backup & restore settings page
+- When the user taps Backup and confirms the prefilled timestamped filename
+  in the system file picker
+- Then a single backup file is written to the chosen location
+- And canceling the picker leaves all state unchanged
+
+### AT-BACKUP-101 — Destructive actions guard rails
+- Given the Backup & restore settings page
+- When the user taps Restore backup or Reset to default
+- Then an explicit confirmation is required before any configuration change
+
+## Appearance
+
+### AT-APPPEAR-100 — Theme mode applies instantly
+- Given the Style settings tab
+- When the user changes Mode to Dark
+- Then the settings UI, drawer, and workspace chrome re-theme immediately
+  without restart
+- When the user changes Mode back to Follow system
+- Then the previous theme is restored immediately
+
 ## Gestures
 
 ### AT-GESTURE-100 — Preset bindings work unconfigured
