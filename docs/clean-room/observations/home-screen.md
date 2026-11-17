@@ -67,3 +67,33 @@ Pixel 9a, Android 17, gesture navigation, Nova grid 6×5, icon size 125%.
   requirement for Vesna's touch handling; implementation-independent.)
 - Evidence: EVI-FOLDER-001 (drag-onto-icon vs dnd-attempt)
 - Confidence: Observed
+
+## OBS-HOME-005 — Layout persistence across launcher restart
+
+- Action: `am force-stop com.teslacoilsw.launcher`, then press HOME.
+- Observed: workspace restored with the Media folder (both apps, custom
+  label), Play Store position, dock, and search bar exactly as before the
+  restart.
+- Evidence: EVI-HOME-003 (after-restart, workspace-after-restart,
+  back-to-workspace)
+- Confidence: Observed
+
+## OBS-HOME-006 — HOME key while on the workspace opens Nova Search (free default)
+
+- Context: Gestures & inputs ▸ Button actions shows "Home button → Nova
+  Search" with an "Only on main home page" checkbox (checked) as the free
+  edition default.
+- Observed:
+  - HOME pressed while the workspace is showing: the search-focused drawer
+    (Nova Search) opens instead of a no-op; repeated HOME presses keep it
+    open; BACK closes it to the workspace.
+  - HOME pressed from another app (system Settings): returns to the
+    workspace (standard HOME role; binding does not fire from other apps).
+  - HOME pressed while the launcher process is dead: the launcher cold-starts
+    into the search-focused drawer (the binding applies to the incoming HOME
+    intent too).
+- Evidence: EVI-HOME-003 (home-after-back), EVI-SYS-001 (home-from-app)
+- Confidence: Observed
+- Open questions: is this binding present in Prime/Plus editions or only
+  free? Does gesture-navigation HOME (swipe) behave identically to the
+  KEYCODE_HOME event?
