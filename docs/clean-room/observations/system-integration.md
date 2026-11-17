@@ -35,5 +35,23 @@ identify controls.
 
 - Date / Env: 2026-11-17 / ENV-1
 - Action: `adb reboot`, wait for boot completion, unlock.
-- Observed: (pending)
-- Confidence: Not Tested
+- Observed: pending install resumed but still stalled (mainline retry loop
+  persisted; later Nova APK download restarted from 0 and its streamed
+  install session failed with Play internal status 6581; downloads repeatedly
+  failed with 0 bytes while API traffic worked).
+- Follow-up: `pm clear com.android.vending` did not unblock it.
+- Root cause (verified from host): the LAN blocks Google Play CDN edge hosts.
+  API hosts (`play.googleapis.com`, `redirector.gvt1.com`) resolve and
+  respond, but the download edges returned after redirect are unreachable
+  (host curl following the redirect also failed). Evidence: device ping tests,
+  host curl tests, Finsky logs (`onFailed`, `onRedirectReceived`, 0-byte
+  progress).
+- Resolution: device-wide HTTP proxy through the host's local proxy —
+  `adb reverse tcp:2080 tcp:2080` then
+  `adb shell settings put global http_proxy 127.0.0.1:2080`. Play content
+  downloads then completed and Nova 8.9.9 installed from the Play listing.
+- Persistence: proxy mapping active for the research session; required for
+  further Play downloads on this network. App launching/UI unaffected.
+- Evidence: EVI-SYS-100, EVI-SYS-101 (logcat excerpts, curl outputs,
+  screenshots play-after-reboot.png, play-reset1.png, nova-first-run.png)
+- Confidence: Observed

@@ -51,9 +51,32 @@ All observations cite one of the environments below via an environment ID
 
 ## Nova Launcher installations
 
-| Env | Version | Edition | Install source | Install date | Notes |
-|---|---|---|---|---|---|
-| ENV-1 | (recorded after install) | TBD | Google Play | 2026-11-17 | Listing: "Nova Launcher: Home Screen", developer Instabridge Sweden AB, 29 MB, contains ads / in-app purchases |
+| Env | Version | Version code | Edition | Install source | Install date | minSdk / targetSdk |
+|---|---|---|---|---|---|---|
+| ENV-1 | 8.9.9 | 89900 | Free (subscription upsell shown: Prime USD 4.99/yr, Plus USD 99.99/yr or 14.99/mo; no purchase made) | Google Play (`com.android.vending`) | 2026-11-17 | 26 / 36 |
+
+### Install notes (ENV-1, 2026-11-17)
+
+- Play install initially stalled ("Pending...") behind a stuck Google Play
+  mainline module download; Play content downloads fail on this LAN (CDN edge
+  hosts unreachable; API endpoints fine). A device-wide HTTP proxy
+  (`adb reverse tcp:2080` + `settings put global http_proxy 127.0.0.1:2080`
+  pointing at the host's local proxy) restored Play content downloads and the
+  install completed. The proxy mapping is ACTIVE for this session and required
+  for Play downloads; app UI and launch work regardless.
+- Setup wizard flow observed (free path): Welcome ▸ Get started ▸ system
+  default-home-app dialog (radio list: Nova Launcher / Pixel Launcher
+  "Current default"; confirm button disabled until a radio is selected) ▸
+  subscription page (closeable via X) ▸ Search defaults ▸ App drawer defaults ▸
+  Icon style ▸ All done ▸ Go home.
+- Wizard defaults observed (ENV-1, free edition): search Mode "Immersive";
+  Shortcut Search ON; Contact Search OFF; home search bar placement
+  "Dock (Below icons)"; drawer search bar placement "Top"; app drawer style
+  "Vertical"; Show Keyboard ON; Frequently used apps ON; Frequently used
+  shortcuts ON; Smart Folders ON; icon size 125%; icon shape "Round (Default)".
+- After setup, Nova places a "Nova Settings" shortcut on the workspace and a
+  default set of icons (Gmail, Photos, Play Store on the page; Phone, Messages,
+  Maps, Chrome, Camera in the dock).
 
 ## Rotation / secondary environments
 
