@@ -132,4 +132,66 @@ identify controls.
   badges-page/page2, badge-test-workspace, badge-test2, settings-check),
   EVI-DRAWER-002 (tabs-reverted — no ad banner)
 - Confidence: Observed (activation effects); badge rendering Blocked
-  (environment grants)
+  (environment grants). SUPERSEDED by OBS-SYS-112/113 (2026-11-18 later
+  session: enablement completed, root cause found).
+
+## OBS-SYS-112 — Badge pipeline fully enabled; Nova self-badge does not render
+
+- Date / Env: 2026-11-18 / ENV-1 (Nova Prime)
+- Enablement chain (all verified):
+  1. After the user's reboot, Nova's notification listener IS BOUND
+     (`com.teslacoilsw.launcher/.notificationlistener.NotificationListener`
+     in the active listener list with a live binder proxy).
+  2. Via system App info ▸ Notifications, "All Nova Launcher notifications"
+     toggled ON (`AppSettings … importance=DEFAULT userSet=true`; before:
+     `importance=NONE userSet=false` — "Notifications: Off").
+  3. The built-in "Test notification badge" button then posted a LIVE
+     notification (importance=3): "This is a test notification, check the
+     Nova Settings icon for its badge".
+- RESULT: **no badge renders on any Nova Settings icon instance** — the
+  workspace shortcut, the drawer frequently-used icon, and the drawer
+  prediction chip were all zoom-verified (4× nearest-neighbor crops) with
+  the notification live: no corner dot, no content circle.
+- CROSS-EVIDENCE that the badge pipeline itself works: a Play Store
+  notification rendered a dynamic badge (avatar content) on the Play Store
+  icon minutes earlier, and cleared when the notification cleared.
+- Bonus finding: `am start -n com.teslacoilsw.launcher/.NovaSettings` fails
+  with "Error type 3 — Activity does not exist": **the `.NovaSettings`
+  activity is not in the manifest**; earlier am-start attempts silently
+  failed (stderr was suppressed). Reliable settings entries are the
+  workspace "Nova Settings" shortcut and the drawer prediction chip.
+- Evidence: EVI-SYS-002 (post-reboot-state, badges-nav-r3*, badges-page-r3*,
+  badge-test-r3/final/success, drawer-badge-check, badge-zoom, zoom-chip,
+  zoom-frequent, amstart-result)
+- Confidence: Observed (enablement chain + absence); root cause resolved in
+  OBS-SYS-113
+
+## OBS-SYS-113 — Numeric-style re-test and the badge root cause
+
+- Date / Env: 2026-11-18 / ENV-1 (Nova Prime)
+- Action: switched badge style to "Numeric Dots" ("Displays a badge with the
+  number of notifications"), re-posted the Test notification, zoom-verified
+  the Nova Settings drawer icon (4×), then restored the style to "Dynamic
+  badges".
+- Result: still no badge — BUT the decisive evidence was in the dumpsys
+  record: the Test notification carries flags
+  **`LOCAL_ONLY|GROUP_SUMMARY|AUTOGROUP_SUMMARY`** — it is a GROUP SUMMARY.
+  Android never renders group summaries as badges (they are the invisible
+  parents of notification groups); only real child notifications count.
+- Root cause (style-independent): Nova's own "Test notification badge"
+  button posts a group-summary notification, which the badge counter
+  correctly ignores. Other apps' real notifications DO badge (Play Store
+  dynamic badge observed). The badge feature itself works; the self-test
+  button cannot demonstrate it by construction.
+- Vesna spec takeaway (implementation-independent, public platform
+  semantics): badge counting must exclude GROUP_SUMMARY notifications
+  (Android platform behavior); a launcher's "test badge" affordance must
+  post a normal, non-summary notification to be visible.
+- Style options captured: Dynamic badges ("Uses notification content to
+  create a custom badge"), Dots ("Android 8.0+ style badges"), Numeric Dots
+  ("Displays a badge with the number of notifications"). Style restored to
+  Dynamic badges after the test.
+- Evidence: EVI-SYS-002 (style-row, style-options, style-numeric,
+  numeric-drawer-check, numeric-zoom, style-restored), dumpsys excerpt with
+  notification flags
+- Confidence: Observed (flags + absence across two styles)
