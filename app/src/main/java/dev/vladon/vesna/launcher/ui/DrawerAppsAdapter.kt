@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher.ui
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -11,7 +12,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 /** Grid adapter of the app drawer. */
 class DrawerAppsAdapter(
     private val onItemClick: (LauncherApp) -> Unit,
-    private val onItemLongClick: (LauncherApp) -> Boolean,
+    private val onItemLongClick: (LauncherApp, View) -> Boolean,
 ) : ListAdapter<LauncherApp, DrawerAppsAdapter.Holder>(DIFF) {
 
     class Holder(val view: AppIconView) : RecyclerView.ViewHolder(view)
@@ -23,7 +24,7 @@ class DrawerAppsAdapter(
         val app = getItem(position)
         holder.view.bind(app)
         holder.view.setOnClickListener { onItemClick(app) }
-        holder.view.setOnLongClickListener { onItemLongClick(app) }
+        holder.view.setOnLongClickListener { anchor -> onItemLongClick(app, anchor) }
     }
 
     private companion object {

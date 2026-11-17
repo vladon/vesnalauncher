@@ -28,6 +28,9 @@ interface WorkspaceItemDao {
     )
     suspend fun updatePlacement(id: Long, container: String, cellIndex: Int)
 
+    @Query("UPDATE workspace_items SET folderId = :folderId WHERE id = :id")
+    suspend fun updateFolder(id: Long, folderId: Long?)
+
     @Query("DELETE FROM workspace_items WHERE id = :id")
     suspend fun deleteById(id: Long)
 

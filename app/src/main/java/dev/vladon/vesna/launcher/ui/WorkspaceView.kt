@@ -9,8 +9,12 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.workspace.CellContent
+import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
+import androidx.core.content.ContextCompat
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -31,8 +35,14 @@ class WorkspaceView @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
+
+    /** A workspace cell was tapped: an app (launch) or a folder (open). */
+    var onCellClick: ((CellContent) -> Unit)? = null
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
+
+    /** Long press on a folder cell: menu (rename / remove folder). */
+    var onFolderLongClick: ((Folder, View) -> Unit)? = null
 
     /** The user lifted an icon by long-pressing it; a drag session has begun. */
     var onDragStarted: ((cell: Int, app: LauncherApp, anchor: View) -> Unit)? = null
@@ -53,7 +63,7 @@ class WorkspaceView @JvmOverloads constructor(
     private val cellHPadPx = (4 * density).toInt()
     private val cellVPadPx = (4 * density).toInt()
 
-    private var boundApps: Map<Int, LauncherApp> = emptyMap()
+    private var boundContent: Map<Int, CellContent> = emptyMap()
     private var lastCellW = 0
     private var lastCellH = 0
 
@@ -194,7 +204,7 @@ class WorkspaceView @JvmOverloads constructor(
     )
 
     /** Whether a bound icon occupies [cell]. */
-    fun isCellOccupied(cell: Int): Boolean = boundApps.containsKey(cell)
+    fun isCellOccupied(cell: Int): Boolean = boundContent.containsKey(cell)
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -215,29 +225,48 @@ class WorkspaceView @JvmOverloads constructor(
         )
     }
 
-    /** Reconciles children with the current cell-to-app mapping. */
-    fun bind(cells: Map<Int, LauncherApp>) {
-        boundApps = cells
+    /** Reconciles children with the current cell contents. */
+    fun bind(cells: Map<Int, CellContent>) {
+        boundContent = cells
         for (i in childCount - 1 downTo 0) {
             val child = getChildAt(i)
             val cell = child.tag as? Int
             if (cell == null || cell !in cells) removeViewAt(i)
         }
-        for ((cell, app) in cells) {
+        for ((cell, content) in cells) {
             val existing = findChildForCell(cell)
             val view = existing ?: AppIconView(context).also {
                 it.tag = cell
                 addView(it)
             }
-            view.bind(app)
-            view.setOnClickListener { onAppClick?.invoke(app) }
-            view.setOnLongClickListener { anchor ->
-                beginDrag(cell, app, anchor)
-                // The drag (or, without movement, the context menu) handles the rest.
-                true
+            when (content) {
+                is CellContent.App -> {
+                    view.bind(content.app)
+                    view.setOnClickListener { onAppClick?.invoke(content.app) }
+                    view.setOnLongClickListener { anchor ->
+                        beginDrag(cell, content.app, anchor)
+                        // The drag (or, without movement, the context menu) handles the rest.
+                        true
+                    }
+                }
+                is CellContent.FolderCell -> {
+                    view.bindContent(
+                        icon = ContextCompat.getDrawable(context, R.drawable.ic_folder_cell),
+                        label = content.folder.title,
+                        description = content.folder.title,
+                    )
+                    view.setOnClickListener { onCellClick?.invoke(content) }
+                    view.setOnLongClickListener { anchor ->
+                        onFolderLongClick?.invoke(content.folder, anchor)
+                        true
+                    }
+                }
             }
         }
     }
+
+    /** The content bound to [cell], or null when the cell is empty. */
+    fun contentAt(cell: Int): CellContent? = boundContent[cell]
 
     private fun findChildForCell(cell: Int): AppIconView? {
         for (i in 0 until childCount) {

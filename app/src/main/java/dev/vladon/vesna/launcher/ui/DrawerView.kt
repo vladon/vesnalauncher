@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -30,7 +31,12 @@ class DrawerView @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
-    var onAppLongClick: ((LauncherApp) -> Boolean)? = null
+
+    /** Long-press on a drawer item arms a drag from the drawer (drag layer drives). */
+    var onItemDragStarted: ((LauncherApp, View) -> Unit)? = null
+
+    /** Released without moving: the app menu should open for this item. */
+    var onItemDragReleased: ((LauncherApp, View) -> Unit)? = null
     var onOpenedChanged: ((Boolean) -> Unit)? = null
 
     private val list: RecyclerView
@@ -58,7 +64,25 @@ class DrawerView @JvmOverloads constructor(
                 hideKeyboard()
                 onAppClick?.invoke(it)
             },
-            onItemLongClick = { onAppLongClick?.invoke(it) ?: true },
+            onItemLongClick = { app, anchor ->
+                hideKeyboard()
+                onItemDragStarted?.invoke(app, anchor)
+                // While armed, the drag layer owns subsequent MOVE events; the UP
+                // (no movement) arrives here and opens the app menu.
+                anchor.setOnTouchListener { _, ev ->
+                    if (ev.actionMasked == MotionEvent.ACTION_UP ||
+                        ev.actionMasked == MotionEvent.ACTION_CANCEL
+                    ) {
+                        if (ev.actionMasked == MotionEvent.ACTION_UP) {
+                            onItemDragReleased?.invoke(app, anchor)
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                }
+                true
+            },
         )
         list = findViewById(R.id.drawer_list)
         list.layoutManager = GridLayoutManager(context, GridCanvas.COLUMNS)

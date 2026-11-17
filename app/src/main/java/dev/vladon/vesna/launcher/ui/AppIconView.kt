@@ -39,9 +39,18 @@ class AppIconView @JvmOverloads constructor(
     }
 
     fun bind(app: LauncherApp) {
-        iconView.setImageDrawable(freshDrawable(app.icon))
-        labelView.text = app.label
-        contentDescription = app.label
+        bindContent(
+            icon = freshDrawable(app.icon),
+            label = app.label,
+            description = app.label,
+        )
+    }
+
+    /** Low-level bind for non-app content (folders). */
+    fun bindContent(icon: Drawable?, label: String, description: String) {
+        iconView.setImageDrawable(freshDrawable(icon))
+        labelView.text = label
+        contentDescription = description
     }
 
     private fun freshDrawable(drawable: Drawable?): Drawable? =

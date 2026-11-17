@@ -8,7 +8,9 @@ import androidx.room.PrimaryKey
  * Persisted launcher layout entry. `container` holds the name of
  * [dev.vladon.vesna.launcher.workspace.Container]; for WORKSPACE rows `cellIndex`
  * is the grid cell, for DOCK rows it is the position order. `userSerial` is the
- * serial number of the owning Android profile (`0` = main profile).
+ * serial number of the owning Android profile (`0` = main profile). `folderId`
+ * links the entry to a folder: a non-null value means the entry lives inside that
+ * folder and its `cellIndex` is the position within the folder.
  */
 @Entity(
     tableName = "workspace_items",
@@ -21,4 +23,5 @@ data class WorkspaceItemEntity(
     val container: String,
     val cellIndex: Int,
     val userSerial: Long = 0,
+    val folderId: Long? = null,
 )

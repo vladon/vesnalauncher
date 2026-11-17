@@ -18,6 +18,13 @@
     <string name="toast_workspace_full">Рабочий стол заполнен</string>
     <string name="toast_dock_full">Док заполнен</string>
 
+    <!-- Папки -->
+    <string name="folder_default_title">Папка</string>
+    <string name="folder_rename">Переименовать папку</string>
+    <string name="folder_remove_from_folder">Убрать из папки</string>
+    <string name="folder_open_hint">Папка с %1$d приложениями</string>
+    <string name="folder_remove">Удалить папку</string>
+
     <!-- Специальные возможности шторки приложений -->
     <string name="drawer_handle_hint">Открыть или закрыть список приложений</string>
     <string name="drawer_search_hint">Поиск приложений</string>
