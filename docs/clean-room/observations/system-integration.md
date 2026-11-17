@@ -31,6 +31,30 @@ identify controls.
 - Open questions: does device reboot clear the stuck mainline download?
   (tested next)
 
+## OBS-SYS-102 — Cross-version comparison: Android 17 (ENV-1) vs Android 16 (ENV-2)
+
+- Date: 2026-11-17. Same Nova build (8.9.9/89900, free) on both.
+
+| Behavior | ENV-1 (Android 17, Pixel 9a) | ENV-2 (Android 16, AVD) | Verdict |
+|---|---|---|---|
+| Setup wizard flow/defaults | Welcome ▸ dialog ▸ paywall ▸ defaults pages | Same flow; Icon-style page not shown this pass | Match (minor nav variance) |
+| HOME-role dialog | 2 launchers | 3 launchers (Vesna installed) | Environment-dependent list |
+| Subscription page | Full prices ($4.99/$99.99/$14.99) | Blank price amounts | Billing-dependent rendering |
+| Default home layout | Nova Settings shortcut + Gmail/Photos/Play Store + 5-icon dock + search bar | Identical | Match |
+| Drawer grid "6 ✕ 5" | Renders 5 columns | Renders 5 columns | Match — label reads rows × columns |
+| Drawer empty state | Ads + predictions + contact bar | "No Frequent Apps" (fresh), no ads (no billing), no contact bar | Match structurally; ad/account content env-dependent |
+| HOME key on workspace | Opens Nova Search drawer | Stays on workspace | **VERSION DIFFERENCE (observed once each; re-verify)** |
+| Swipe down (mid-screen) | Notification shade expands | Notification shade expands | Match |
+| Swipe up (mid-screen) | Drawer opens | Drawer opens | Match |
+| Fast scrollbar | Visible thumb slider | Visible thumb slider | Match |
+
+- Caveats: single-run observations on both sides; the HOME-key difference
+  needs a controlled re-test (it may also depend on the AVD's input
+  pipeline). ENV-2 has no Google account, which explains ad/pricing deltas.
+- Evidence: EVI-ENV2-001 (all captures), EVI-SYS-001, EVI-HOME-003,
+  EVI-DRAWER-001
+- Confidence: Observed per cell (single run)
+
 ## OBS-SYS-101 — Reboot to clear Play queue
 
 - Date / Env: 2026-11-17 / ENV-1

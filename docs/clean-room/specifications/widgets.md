@@ -83,4 +83,7 @@ Derived from `observations/widgets.md` and settings inventory
 - R-WIDGET-102.2: Removal is immediate (no confirm dialog) and offers an
   undo snackbar for a short period.
 - R-WIDGET-102.3: Undo restores the removed widget with its position, size,
-  and configuration.
+  and configuration. (Verified: restored widget retained a different clock
+  face set during the test, proving full configuration restore.)
+- R-WIDGET-102.4: The undo window is short (a few seconds); after it lapses
+  the removal is final.

@@ -92,6 +92,56 @@ confidence; Vesna requirements are numbered and testable.
 - R-HOME-102.5: Popup item visibility per surface (home vs drawer) is
   user-configurable.
 
+## HOME-104 — Page management via drag (verified)
+
+- Description: workspace pages are created by dragging an item past the
+  screen edge; navigation is horizontal swiping; pages persist and are
+  removed when emptied or via restore.
+- Expected behavior (observed):
+  1. Dragging an item to and holding at the screen edge flips to a new empty
+     page; releasing drops the item there (page created on demand).
+  2. Horizontal swipes navigate between pages; a too-short drag (movement
+     under the drag-engage threshold) does not drag and opens the item popup
+     instead (HOME-103).
+  3. The dock and persistent search bar remain fixed across pages.
+  4. With "wallpaper scrolling" enabled, the wallpaper pans as pages
+     change.
+  5. Pages that become empty disappear (observed indirectly: restore to a
+     single-page backup removed the second page).
+- Boundary conditions: exact edge-zone width and hover dwell time are
+  implementation parameters (Vesna chooses its own values).
+- Evidence: OBS-HOME-007 (EVI-HOME-005), OBS-BACKUP-004 (EVI-BACKUP-002)
+- Confidence: Observed
+
+### Vesna requirements
+
+- R-HOME-104.1: Dragging an item past a screen edge and dwelling flips to a
+  new page; releasing there creates the page containing the item.
+- R-HOME-104.2: Horizontal swipes switch pages; dock/search bar persist
+  across pages.
+- R-HOME-104.3: Wallpaper panning during page changes follows the wallpaper
+  scrolling setting.
+- R-HOME-104.4: An emptied page is removed.
+
+## HOME-105 — Nova Now edge surface (discovered)
+
+- Description: Nova 8.9 provides a full-screen search/cards overlay ("Nova
+  Now") reachable from the workspace's edge; it hosts search, an AI section
+  with enable/disable controls, and card onboarding.
+- Expected behavior: a swipe from the workspace edge zone opens the overlay;
+  BACK dismisses it; the surface exposes the same search bar as the drawer
+  (per Style surface list) plus Nova AI controls and Cards.
+- Confidence: Partially Observed (entry observed once, contents inventoried;
+  exact trigger zone and Cards behavior Not Tested).
+- Evidence: OBS-BACKUP-005 (EVI-BACKUP-002)
+
+### Vesna requirements
+
+- R-HOME-105.1: (Independent Vesna decision, reference recorded) Vesna may
+  implement an edge feed/search surface; Nova's Nova Now is recorded as
+  reference behavior. No requirement is imposed until the product decision
+  is made.
+
 ## HOME-103 — Drag engagement requires stationary hold
 
 - Description: dragging a workspace item requires touching the item and

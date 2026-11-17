@@ -15,9 +15,10 @@ Last updated: 2026-11-17 (session 1, Nova 8.9.9 free on ENV-1).
 |---|---|---|---|---|---|---|
 | HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
 | APPPEAR-100 | Theme mode switch | Completed | Completed (EVI-APPPEAR-001) | Completed | Completed | Observed |
-| BACKUP-100..101 | Backup flows | Completed | Partially (create verified; restore/reset not executed) | Completed | Completed | Partially Observed |
+| BACKUP-100..102 | Backup, share/reset inventory, restore | Completed | Completed (create+restore verified; EVI-BACKUP-001/002) | Completed | Completed | Observed |
+| HOME-104/105 | Page management drag, Nova Now edge surface | Completed | Completed/Partial (EVI-HOME-005, EVI-BACKUP-002) | Completed | Completed | Observed / Partially Observed |
+| WIDGET-100..102 | Placement, resize, popup/removal+undo | Completed | Completed (undo verified, EVI-WIDGET-004) | Completed | Completed | Observed |
 | GESTURE-100 | Preset bindings + catalog | Completed | Completed (EVI-GESTURE-001) | Completed | Completed | Partially Observed (multi-touch untested) |
-| WIDGET-100..102 | Placement, resize, popup/removal | Completed | Completed (EVI-WIDGET-001) | Completed | Completed | Observed (undo restore untested) |
 | DOCK-100 | Dock structure/config | Completed | Completed (EVI-DOCK-001) | Completed | In Progress | Observed (inventory) |
 | DRAWER-100..103 | Open/close, search, contact offer | Completed | Completed/partial (EVI-DRAWER-001) | Completed | Completed | Observed/Partially Observed |
 | FOLDER-100..101 | Folder create, rename, window | Completed | Completed (EVI-FOLDER-001) | Completed | Completed | Observed |

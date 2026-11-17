@@ -92,8 +92,50 @@ Pixel 9a, Android 17, gesture navigation, Nova grid 6×5, icon size 125%.
   - HOME pressed while the launcher process is dead: the launcher cold-starts
     into the search-focused drawer (the binding applies to the incoming HOME
     intent too).
-- Evidence: EVI-HOME-003 (home-after-back), EVI-SYS-001 (home-from-app)
+- Cross-version note: on the Android 16 AVD (ENV-2), the same HOME-press
+  sequence while on the workspace did NOT open Nova Search — the workspace
+  stayed. See OBS-SYS-102 for the comparison.
+- Evidence: EVI-HOME-003 (home-after-back), EVI-SYS-001 (home-from-app),
+  EVI-ENV2-001 (avd-home-test)
 - Confidence: Observed
 - Open questions: is this binding present in Prime/Plus editions or only
   free? Does gesture-navigation HOME (swipe) behave identically to the
   KEYCODE_HOME event?
+
+## OBS-WALL-001 — Wallpaper anomaly resolved (external, not launcher)
+
+- Summary: early-session workspace captures show a Material-style wallpaper;
+  captures from the widget-research phase onward show a stock-style abstract
+  image. The image changed once, mid-session, without any wallpaper UI being
+  invoked by the research (the Wallpapers button was never opened; no
+  wallpaper intent was fired).
+- Forensics: `dumpsys wallpaper` shows the active wallpaper is the platform
+  ImageWallpaper (SystemUI) with a GradientColorWallpaper fallback; the
+  stock-style image is also the default wallpaper of the Android 16 AVD used
+  later in the session (both devices showing stock-style art).
+- Conclusion: the change is external to Nova — an OS/user-level mechanism
+  (e.g. platform wallpaper rotation or another app) altered the image; Nova
+  only renders it. No launcher-side wallpaper write was observed. Marked
+  resolved as "not attributable to Nova"; the exact OS trigger remains
+  unknown (outside clean-room scope).
+- Evidence: EVI-HOME-003 vs EVI-WIDGET-001/EVI-WALL-001 captures; dumpsys
+  wallpaper excerpt
+- Confidence: Partially Observed (change confirmed external; OS trigger
+  unidentified)
+
+## OBS-HOME-007 — Page creation by edge drag and page navigation (verified)
+
+- Action: dragged the Play Store icon from page 1 toward the right screen
+  edge (hold-then-move, ~3 s; release after the page flipped).
+- Observed:
+  1. Hovering the icon at the right edge flipped to a NEW empty page;
+     releasing placed Play Store there — page 2 created by drag.
+  2. "Wallpaper scrolling" visibly panned the wallpaper between pages.
+  3. Swiping horizontally navigates between the two pages; dock and search
+     bar stay fixed across pages.
+  4. A too-short drag (~25 px movement) does not engage drag mode and opens
+     the item popup instead (consistent with OBS-HOME-004).
+  5. No page-indicator dots were visible in either state (indicator style
+     per its setting; value unconfirmed).
+- Evidence: EVI-HOME-005 (page2-drop, page2-attempt2, page1-check)
+- Confidence: Observed

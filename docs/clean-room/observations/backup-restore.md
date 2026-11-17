@@ -32,12 +32,40 @@ Evidence under `EVI-BACKUP-001`.
 - Evidence: EVI-BACKUP-001 (backup-flow, backup-saved; shell listing)
 - Confidence: Observed
 
-## OBS-BACKUP-003 — Restore / Quick start / Reset (inventoried, not executed)
+## OBS-BACKUP-004 — Restore flow verified end to end
 
-- Restore backup, Quick start, and Reset to default were identified but NOT
-  executed on this device (restore would replace the current configuration;
-  reset would wipe customizations — both destructive on the user's personal
-  device). Their flows remain to be tested deliberately, ideally after
-  re-creating a fresh backup, in a later session.
-- Evidence: EVI-BACKUP-001 (backup-page)
-- Confidence: Not Tested (flows); Observed (existence/labels)
+- Date / Env: 2026-11-17 / ENV-1
+- Setup: state was deliberately changed after the 15:48 backup (clock widget
+  placed on page 1; Play Store dragged to a NEW page 2 via edge drag).
+- Action: Settings ▸ Backup & restore ▸ Restore backup ▸ pick
+  `2026-11-17_15-48.novabackup` in the system picker.
+- Observed:
+  1. The system document picker opened (Downloads).
+  2. Selecting the file showed an explicit confirmation dialog:
+     "Overwrite current layout?" / "This will replace your current layout
+     with the one from the backup file" with Cancel/OK.
+  3. After OK, the workspace exactly matched the backup state: the widget
+     added after the backup was GONE, the post-backup page 2 was REMOVED
+     (single-page workspace again), and Play Store returned to its backup
+     position on page 1. The Media folder (present in the backup) remained.
+- Conclusion: restore reproduces the backup state completely, including
+  removing items and pages created afterwards.
+- Evidence: EVI-BACKUP-002 (restore-picker, restore-confirm,
+  restored-workspace, page2-gone-check)
+- Confidence: Observed
+
+## OBS-BACKUP-005 — Nova Now discovery (during post-restore check)
+
+- Action: horizontal swipe starting near the left edge of the workspace
+  (single-page workspace at the time).
+- Observed: a full-screen "Nova Now" overlay opened (the surface referenced
+  in Style and Search settings): top search bar, a "Nova AI" section
+  ("Smart. Personal. Yours to control." / smart-insights bullet / "You
+  control your data. Delete anytime.") with Enable Nova AI / Disable Nova AI
+  controls, a settings chip, and a "Welcome to Nova Now!" bottom sheet
+  introducing Cards onboarding.
+- Attribution note: this matches the "Feed page" setting ("feed pages at the
+  edge of your home screen"); the exact trigger (edge zone vs gesture) is to
+  be confirmed in a controlled pass.
+- Evidence: EVI-BACKUP-002 (page2-gone-check capture)
+- Confidence: Observed (existence/entry); internals Not Tested

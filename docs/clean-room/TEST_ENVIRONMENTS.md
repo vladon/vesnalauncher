@@ -54,6 +54,24 @@ All observations cite one of the environments below via an environment ID
 | Env | Version | Version code | Edition | Install source | Install date | minSdk / targetSdk |
 |---|---|---|---|---|---|---|
 | ENV-1 | 8.9.9 | 89900 | Free (subscription upsell shown: Prime USD 4.99/yr, Plus USD 99.99/yr or 14.99/mo; no purchase made) | Google Play (`com.android.vending`) | 2026-11-17 | 26 / 36 |
+| ENV-2 (Medium_Phone_API_36.1 AVD) | 8.9.9 | 89900 | Free | APK copied from ENV-1 via `adb pull` + `adb install` (same authorized Play-installed copy moved between the project's own devices; no decompilation, no third-party download; no Google account on the AVD, so Play sign-in was unavailable — auth blocker documented) | 2026-11-17 | 26 / 36 |
+
+### ENV-2 notes
+
+- Medium_Phone_API_36.1 AVD: Android 16 (API 36), 1080×2400, gesture
+  navigation. Play Store app present but NOT signed in (no account) — Play
+  installs impossible without credentials (reported, not guessed).
+- Nova's setup wizard ran identically to ENV-1 (Welcome ▸ Get started ▸
+  system default-home dialog ▸ subscription page ▸ App drawer defaults ▸ All
+  done). Differences: the HOME-role dialog listed THREE launchers (Nova,
+  Pixel Launcher, Vesna Launcher as current default — the implementation
+  team's AVD); the subscription page rendered with BLANK price amounts
+  ("/year", "/month" without numbers — billing/price fetch unavailable
+  without Play sign-in); the Icon-style wizard page did not appear in this
+  pass.
+- Vesna Launcher was restored as the AVD default after the comparison
+  (`cmd package set-home-activity`), leaving the implementation team's
+  environment intact.
 
 ### Install notes (ENV-1, 2026-11-17)
 

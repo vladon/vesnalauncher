@@ -48,16 +48,24 @@ Evidence under `EVI-WIDGET-001`. Widget placed during test: system Clock
   Undo was NOT exercised in this pass (to verify: restores widget, position,
   and size).
 - Evidence: EVI-WIDGET-001 (popup-again, removed)
-- Confidence: Observed (removal); undo restore Not Tested
+- Confidence: Observed (removal); undo restore verified separately in
+  OBS-WIDGET-005
 
-## OBS-WIDGET-004 — Wallpaper appearance anomaly during session
+## OBS-WIDGET-005 — Undo restores the removed widget (verified)
 
-- Note: workspace captures from the first half of the session show a
-  different wallpaper than captures after the widget-picker interactions
-  (Material-style vs abstract petals). Cause not yet determined (candidates:
-  wallpaper scrolling/zoom effect during drags, a wallpaper change by another
-  app, or Android 17 wallpaper behavior). No launcher action was taken that
-  intentionally changes the wallpaper.
-- Evidence: compare EVI-HOME-003 workspace captures with EVI-WIDGET-001
-  after-dismiss
-- Confidence: Unexplained anomaly — open question, needs a controlled test.
+- Date / Env: 2026-11-17 / ENV-1
+- Action: placed a Numeral-clock widget at workspace rows 1-2 / cols 1-2,
+  opened its popup, tapped Remove, then tapped Undo on the "Item removed"
+  snackbar within its timeout (the timed sequence had to run in a single
+  scripted step; a first manual attempt missed the snackbar window — the
+  snackbar lifetime is a few seconds).
+- Observed: the widget reappeared at its exact previous position and grid
+  size with its configuration intact (Numeral face — a different face than
+  the earlier placement, proving configuration restore rather than a default
+  re-placement).
+- Additional observation: after checking "Always allow Nova Launcher to
+  create widgets and access their data" in the consent dialog once, a later
+  widget placement skipped the consent dialog entirely.
+- Evidence: EVI-WIDGET-004 (popup-numeral, removed-snackbar, after-undo
+  [failed attempt], re-placed, undo-timed [success])
+- Confidence: Observed
