@@ -14,6 +14,7 @@ Last updated: 2026-11-17 (session 1, Nova 8.9.9 free on ENV-1).
 | Feature ID | Area | Discovery | Observation | Specification | Acceptance Tests | Confidence |
 |---|---|---|---|---|---|---|
 | HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
+| WIDGET-100..102 | Placement, resize, popup/removal | Completed | Completed (EVI-WIDGET-001) | Completed | Completed | Observed (undo restore untested) |
 | DOCK-100 | Dock structure/config | Completed | Completed (EVI-DOCK-001) | Completed | In Progress | Observed (inventory) |
 | DRAWER-100..103 | Open/close, search, contact offer | Completed | Completed/partial (EVI-DRAWER-001) | Completed | Completed | Observed/Partially Observed |
 | FOLDER-100..101 | Folder create, rename, window | Completed | Completed (EVI-FOLDER-001) | Completed | Completed | Observed |

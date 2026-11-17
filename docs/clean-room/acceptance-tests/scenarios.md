@@ -69,6 +69,31 @@ its feature ID. These describe externally observable behavior only.
 - Then the standard system Contacts permission dialog is shown before any
   contact data is used
 
+## Widgets
+
+### AT-WIDGET-100 — Placement flow
+- Given the widget picker is open in workspace customization
+- When the user drags a widget preview onto an empty workspace area
+- Then a preview follows the pointer during the drag
+- And the system widget-consent dialog is shown before binding
+- And a widget that declares a configuration activity opens it before final
+  placement
+- And the placed widget shows resize handles immediately with a settings
+  entry point
+
+### AT-WIDGET-101 — Resize
+- Given a placed widget in resize mode
+- When the user drags an edge or corner handle
+- Then the widget resizes live in grid-cell increments
+- And the final size respects the widget's declared minimum and maximum
+
+### AT-WIDGET-102 — Removal with undo
+- Given a placed widget
+- When the user long-presses it and taps Remove
+- Then the widget is removed immediately without a confirmation dialog
+- And an "item removed" snackbar with an Undo action appears for a short
+  period
+
 ## Dock
 
 ### AT-DOCK-100 — Dock configuration surface
