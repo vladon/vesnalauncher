@@ -92,6 +92,41 @@ behavior, not Vesna requirements (Vesna is ad-free by product definition).
   enable offer, and enabling routes through the standard runtime-permission
   dialog.
 
+## DRAWER-104 — Drawer tab bar (free edition: default Apps tab)
+
+- Description: an optional tab bar above the drawer grid, placed Top or
+  Bottom; the free edition shows a single automatic "Apps" tab, while
+  custom tab groups are a Prime feature.
+- Configuration: Tab bar placement [None (default) / Top / Bottom].
+- Expected behavior (observed): with Top, a pill-shaped "Apps" tab appears
+  between the predictions area and the grid; the grid stays alphabetical.
+  Custom groups ("Drawer groups") remain Prime-locked.
+- Evidence: OBS-DRAWER-110 (EVI-DRAWER-002)
+- Confidence: Observed
+
+### Vesna requirements
+
+- R-DRAWER-104.1: (Independent Vesna decision — reference recorded) Vesna
+  may offer optional drawer tabs with automatic categories; Nova's free
+  edition limits tabs to a single "Apps" tab (custom groups paywalled) —
+  recorded as reference.
+- R-DRAWER-104.2: Tab bar placement (none/top/bottom) is a user setting.
+
+## DRAWER-105 — Nova Now cards surface
+
+- Description: Cards (CARDS-100) render inside the drawer when their
+  conditions are met; the drawer doubles as the "Nova Now" card surface
+  (search + cards).
+- Evidence: OBS-CARDS-110 (EVI-CARDS-001), OBS-BACKUP-005 (EVI-BACKUP-002)
+- Confidence: Observed (architecture statement from the Card details page);
+  rendered card behavior in drawer Not Tested.
+
+### Vesna requirements
+
+- R-DRAWER-103.1: Contact search is opt-in: the drawer presents a discrete
+  enable offer, and enabling routes through the standard runtime-permission
+  dialog.
+
 ## Note on free-edition ads (reference only)
 
 Nova's free edition displays an advertisement banner inside the drawer

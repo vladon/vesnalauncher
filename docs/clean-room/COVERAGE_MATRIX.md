@@ -14,6 +14,10 @@ Last updated: 2026-11-17 (session 1, Nova 8.9.9 free on ENV-1).
 | Feature ID | Area | Discovery | Observation | Specification | Acceptance Tests | Confidence |
 |---|---|---|---|---|---|---|
 | HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
+| CARDS-100 | Condition-gated drawer cards | Completed | Completed (config page; EVI-CARDS-001) | Completed | Not Started | Observed (config); behavior Not Tested |
+| DRAWER-104/105 | Drawer tabs, Nova Now cards surface | Completed | Completed (EVI-DRAWER-002) | Completed | Completed (tabs) | Observed |
+| SETT-110/111 | Settings search, Prime-gate interaction | Completed | Completed (EVI-SETT-003, EVI-SYS-002) | Completed | Completed | Observed |
+| BACKUP-101 flows | Quick start (paywalled) / Reset (wizard, layout kept) | Completed | Completed (EVI-BACKUP-003) | Completed | Completed | Observed/Partially (reset semantics) |
 | APPPEAR-100 | Theme mode switch | Completed | Completed (EVI-APPPEAR-001) | Completed | Completed | Observed |
 | BACKUP-100..102 | Backup, share/reset inventory, restore | Completed | Completed (create+restore verified; EVI-BACKUP-001/002) | Completed | Completed | Observed |
 | HOME-104/105 | Page management drag, Nova Now edge surface | Completed | Completed/Partial (EVI-HOME-005, EVI-BACKUP-002) | Completed | Completed | Observed / Partially Observed |

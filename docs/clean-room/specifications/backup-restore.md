@@ -25,25 +25,31 @@ Derived from `observations/backup-restore.md`.
 - R-BACKUP-100.2: Default filename embeds the creation timestamp.
 - R-BACKUP-100.3: Canceling the picker must not modify any state.
 
-## BACKUP-101 — Share backup, quick start, reset (inventory)
+## BACKUP-101 — Share backup, quick start, reset (verified inventory + flows)
 
 - Description: companion actions around backups.
-- Observed actions: Share backup (create + share in one step, no local
-  copy), Restore backup (see BACKUP-102), Quick start (re-run setup), Reset
-  to default (remove customizations).
-- Expected behavior (Vesna model): equivalent actions exist; destructive
-  actions must present an explicit confirmation and a fresh backup
-  recommendation before executing.
-- Evidence: OBS-BACKUP-001 (EVI-BACKUP-001)
-- Confidence: Observed (existence); Quick start / Reset flows Not Tested
-  (destructive).
+- Observed: Share backup (create + share in one step, no local copy);
+  Restore backup (BACKUP-102, verified); **Quick start is PAYWALLED** in the
+  free edition — tapping it opens the Manage Subscription page;
+  **Reset to default** launches the dark-themed setup wizard directly (no
+  separate confirm dialog); completing the wizard PRESERVED the workspace
+  layout in our pass (all touched settings were already default, so which
+  values reset actually changes is undetermined — see OBS-BACKUP-110).
+- Evidence: OBS-BACKUP-110, OBS-SYS-110 (EVI-BACKUP-003, EVI-SYS-002)
+- Confidence: Observed (existence + gating); reset semantics Partially
+  Observed.
 
 ### Vesna requirements
 
 - R-BACKUP-101.1: Provide share-in-one-step backup (no local copy).
-- R-BACKUP-101.2: Provide quick-start (re-run setup) and reset-to-default.
-- R-BACKUP-101.3: Destructive operations require explicit confirmation and
-  must offer creating a fresh backup first.
+- R-BACKUP-101.2: Provide quick-start (re-run setup) and reset-to-default
+  as FREE features (Vesna independent decision — Nova gates Quick start
+  behind its paywall; recorded as reference).
+- R-BACKUP-101.3: Reset offers an explicit confirmation and states its
+  scope (settings vs layout) before executing; layout-wiping resets must
+  offer a fresh backup first.
+- R-BACKUP-101.4: Destructive operations must offer creating a fresh
+  backup first.
 
 ## BACKUP-102 — Restore operation (verified)
 
