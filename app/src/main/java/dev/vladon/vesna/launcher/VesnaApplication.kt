@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher
 
 import android.app.Application
 import android.content.Context
+import dev.vladon.vesna.launcher.data.FolderDao
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
@@ -28,6 +29,7 @@ class LauncherGraph(appContext: Context) {
         WorkspaceRepository(
             dao = database.workspaceItemDao(),
             db = database,
+            folderDao = database.folderDao(),
             prefs = appContext.getSharedPreferences("vesna_launcher", Context.MODE_PRIVATE),
         )
 

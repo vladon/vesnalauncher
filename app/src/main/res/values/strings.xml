@@ -18,6 +18,13 @@
     <string name="toast_workspace_full">The workspace is full</string>
     <string name="toast_dock_full">The dock is full</string>
 
+    <!-- Folders -->
+    <string name="folder_default_title">Folder</string>
+    <string name="folder_rename">Rename folder</string>
+    <string name="folder_remove_from_folder">Remove from folder</string>
+    <string name="folder_open_hint">Folder with %1$d apps</string>
+    <string name="folder_remove">Remove folder</string>
+
     <!-- Drawer accessibility -->
     <string name="drawer_handle_hint">Open or close the app drawer</string>
     <string name="drawer_search_hint">Search apps</string>

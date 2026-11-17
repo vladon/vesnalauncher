@@ -10,10 +10,12 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.workspace.Container
 import dev.vladon.vesna.launcher.workspace.WorkspaceItem
 
-@Database(entities = [WorkspaceItemEntity::class], version = 2, exportSchema = false)
+@Database(entities = [WorkspaceItemEntity::class, FolderEntity::class], version = 3, exportSchema = false)
 abstract class LauncherDatabase : RoomDatabase() {
 
     abstract fun workspaceItemDao(): WorkspaceItemDao
+
+    abstract fun folderDao(): FolderDao
 
     companion object {
         /** 1 → 2: added per-profile ownership of layout entries. */
@@ -23,9 +25,20 @@ abstract class LauncherDatabase : RoomDatabase() {
             }
         }
 
+        /** 2 → 3: added folders and per-entry folder membership. */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `folders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`title` TEXT NOT NULL, `cellIndex` INTEGER NOT NULL)",
+                )
+                db.execSQL("ALTER TABLE workspace_items ADD COLUMN folderId INTEGER")
+            }
+        }
+
         fun build(appContext: Context): LauncherDatabase =
             Room.databaseBuilder(appContext, LauncherDatabase::class.java, "vesna-launcher.db")
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }
@@ -38,6 +51,7 @@ fun WorkspaceItemEntity.toDomain(): WorkspaceItem =
         container = Container.entries.firstOrNull { it.name == container } ?: Container.WORKSPACE,
         cellIndex = cellIndex,
         userSerial = userSerial,
+        folderId = folderId,
     )
 
 /** Domain to entity mapping (used for inserts; `id = 0` lets Room autogenerate). */
@@ -49,4 +63,5 @@ fun WorkspaceItem.toEntity(): WorkspaceItemEntity =
         container = container.name,
         cellIndex = cellIndex,
         userSerial = key.userSerial,
+        folderId = folderId,
     )

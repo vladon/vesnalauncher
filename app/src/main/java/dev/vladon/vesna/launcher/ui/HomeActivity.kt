@@ -1,10 +1,14 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
+import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
@@ -21,10 +25,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
+import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -45,9 +52,14 @@ class HomeActivity : ComponentActivity() {
         val container: Container,
         val fromCell: Int,
         val anchor: View,
+        val fromDrawer: Boolean,
     )
 
     private var dragSource: DragSource? = null
+    private var drawerClosedForDrag = false
+    private var rootDragMoved = false
+    private var folderDialog: FolderDialog? = null
+    private var folderDialogJob: Job? = null
 
     private val controller
         get() = VesnaApplication.graph(this).controller
@@ -78,10 +90,14 @@ class HomeActivity : ComponentActivity() {
         val controller = graph.controller
 
         workspace.onAppClick = { controller.launch(it) }
+        workspace.onCellClick = { content ->
+            if (content is CellContent.FolderCell) showFolderDialog(content.folder)
+        }
+        workspace.onFolderLongClick = { folder, anchor -> showFolderMenu(folder, anchor) }
         workspace.onEmptyAreaLongClick = { showLauncherMenu() }
         workspace.onSwipeUp = { drawer.open() }
         workspace.onDragStarted = { cell, app, anchor ->
-            dragSource = DragSource(app, Container.WORKSPACE, cell, anchor)
+            dragSource = DragSource(app, Container.WORKSPACE, cell, anchor, fromDrawer = false)
         }
         workspace.onDragProgress = { x, y -> updateDragTarget(Container.WORKSPACE, x, y) }
         workspace.onDragReleased = { x, y, moved, cancelled, app, anchor ->
@@ -90,7 +106,7 @@ class HomeActivity : ComponentActivity() {
 
         dock.onAppClick = { controller.launch(it) }
         dock.onDragStarted = { slot, app, anchor ->
-            dragSource = DragSource(app, Container.DOCK, slot, anchor)
+            dragSource = DragSource(app, Container.DOCK, slot, anchor, fromDrawer = false)
         }
         dock.onDragProgress = { x, y -> updateDragTarget(Container.DOCK, x + dock.left, y + dock.top) }
         dock.onDragReleased = { x, y, moved, cancelled, app, anchor ->
@@ -98,11 +114,32 @@ class HomeActivity : ComponentActivity() {
         }
 
         drawer.onAppClick = { controller.launch(it) }
-        drawer.onAppLongClick = { app ->
-            showDrawerItemMenu(app)
-            true
+        drawer.onItemDragStarted = { app, anchor ->
+            dragSource = DragSource(app, Container.WORKSPACE, fromCell = -1, anchor, fromDrawer = true)
+        }
+        drawer.onItemDragReleased = { app, anchor ->
+            onDragReleased(Container.WORKSPACE, anchor.left.toFloat(), anchor.top.toFloat(), moved = false, cancelled = false, app, anchor)
         }
         drawer.onOpenedChanged = { backCallback.isEnabled = it }
+
+        val dragLayer = findViewById<LauncherDragLayer>(R.id.launcher_root)
+        dragLayer.dragInterceptor = { ev ->
+            dragSource?.fromDrawer == true && ev.actionMasked == MotionEvent.ACTION_MOVE
+        }
+        dragLayer.dragTouchHandler = { ev ->
+            val source = dragSource
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_MOVE -> {
+                    if (source?.fromDrawer == true && !drawerClosedForDrag) {
+                        drawerClosedForDrag = true
+                        drawer.close()
+                    }
+                    updateDragTarget(Container.WORKSPACE, ev.x, ev.y)
+                }
+                MotionEvent.ACTION_UP -> onRootDragReleased(ev.x, ev.y)
+                MotionEvent.ACTION_CANCEL -> onRootDragCancelled()
+            }
+        }
 
         onBackPressedDispatcher.addCallback(this, backCallback)
 
@@ -138,7 +175,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun render(state: LauncherUiState) {
-        workspace.bind(state.workspaceApps)
+        workspace.bind(state.workspaceCells)
         dock.bind(state.dockApps)
         drawer.submitApps(state.apps)
         emptyHint.isVisible = state.isWorkspaceEmpty
@@ -161,11 +198,9 @@ class HomeActivity : ComponentActivity() {
         }
         dock.showSlotHighlight(null)
         val cell = workspace.cellAtLocal(wx, wy)
-        // Own source cell is a no-op drop (no highlight); occupied cells are fine
-        // for workspace sources (swap) and rejected for dock sources.
-        val acceptable = cell != null &&
-            (container == Container.WORKSPACE || !workspace.isCellOccupied(cell)) &&
-            cell != source.fromCell
+        // Occupied cells accept the drop as folder creation / folder addition, so
+        // any cell except the drag's own source cell is a valid target.
+        val acceptable = cell != null && cell != source.fromCell
         workspace.showDropHighlight(if (acceptable) cell else null)
     }
 
@@ -199,16 +234,127 @@ class HomeActivity : ComponentActivity() {
                 controller.moveWorkspaceToDock(app, dock.slotAtLocalX(wx - dock.left))
             overDock && source.container == Container.DOCK ->
                 controller.reorderDock(app, dock.slotAtLocalX(wx - dock.left))
-            !overDock && source.container == Container.WORKSPACE -> {
+            !overDock && source.container == Container.WORKSPACE ->
                 workspace.cellAtLocal(wx, wy)?.let { cell ->
-                    if (cell != source.fromCell) controller.moveWithinWorkspace(app, cell)
+                    if (cell != source.fromCell) commitOnCell(source, app, cell)
                 }
-            }
-            !overDock && source.container == Container.DOCK -> {
+            !overDock && source.container == Container.DOCK ->
                 workspace.cellAtLocal(wx, wy)?.let { cell ->
-                    if (!workspace.isCellOccupied(cell)) controller.moveDockToWorkspace(app, cell)
+                    commitOnCell(source, app, cell)
                 }
+        }
+    }
+
+    /** Root-driven drag release (drawer sources; the drawer closes mid-gesture). */
+    private fun onRootDragReleased(x: Float, y: Float) {
+        val source = dragSource
+        workspace.showDropHighlight(null)
+        dock.showSlotHighlight(null)
+        dragSource = null
+        drawerClosedForDrag = false
+        if (source == null) return
+        if (rootDragMoved) commitGridDrop(source, x, y, overDock = y >= dock.top)
+        rootDragMoved = false
+    }
+
+    private fun onRootDragCancelled() {
+        rootDragMoved = false
+        drawerClosedForDrag = false
+    }
+
+    /** Commits a grid drop: relocate to an empty cell, or create/extend a folder. */
+    private fun commitGridDrop(source: DragSource, x: Float, y: Float, overDock: Boolean) {
+        val app = source.app
+        if (overDock) {
+            when (source.container) {
+                Container.WORKSPACE -> controller.moveWorkspaceToDock(app, dock.slotAtLocalX(x))
+                else -> controller.insertIntoDock(app, dock.slotAtLocalX(x))
             }
+            return
+        }
+        val cell = workspace.cellAtLocal(x, y) ?: return
+        when (val content = workspace.contentAt(cell)) {
+            null -> when (source.container) {
+                Container.WORKSPACE -> controller.moveWithinWorkspace(app, cell)
+                Container.DOCK -> controller.moveDockToWorkspace(app, cell)
+                else -> controller.insertWorkspaceAt(app, cell)
+            }
+            is CellContent.App -> controller.createFolderFromDrop(
+                app,
+                cell,
+                getString(R.string.folder_default_title),
+            )
+            is CellContent.FolderCell -> controller.addToFolder(app, content.folder.id)
+        }
+    }
+
+    private fun showFolderDialog(folder: Folder) {
+        folderDialog?.dismiss()
+        val dialog = FolderDialog(
+            context = this,
+            folder = folder,
+            onLaunch = { controller.launch(it) },
+            onRemoveFromFolder = { controller.removeFromFolder(it) },
+            onRename = { f, title -> controller.renameFolder(f.id, title) },
+            onRemoveFolder = { controller.removeFolder(folder.id) },
+            onDismissed = {
+                folderDialogJob?.cancel()
+                folderDialog = null
+            },
+        )
+        folderDialog = dialog
+        folderDialogJob = lifecycleScope.launch {
+            controller.state.collect { state ->
+                folderDialog?.update(state)
+                if (state.folders[folder.id] == null) folderDialog?.dismiss()
+            }
+        }
+        dialog.show()
+    }
+
+    private fun showFolderMenu(folder: Folder, anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.menu.add(0, MENU_FOLDER_RENAME, 0, R.string.folder_rename)
+        popup.menu.add(0, MENU_FOLDER_REMOVE, 1, R.string.folder_remove)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                MENU_FOLDER_RENAME -> promptFolderRename(folder)
+                MENU_FOLDER_REMOVE -> controller.removeFolder(folder.id)
+            }
+            true
+        }
+        popup.show()
+    }
+
+    private fun promptFolderRename(folder: Folder) {
+        val input = EditText(this)
+        input.setText(folder.title)
+        input.setSelection(input.text.length)
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.folder_rename))
+            .setView(input)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val newTitle = input.text.toString().trim()
+                if (newTitle.isNotEmpty()) controller.renameFolder(folder.id, newTitle)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /** Commits a grid drop: relocate to an empty cell, or create/extend a folder. */
+    private fun commitOnCell(source: DragSource, app: LauncherApp, cell: Int) {
+        when (val content = workspace.contentAt(cell)) {
+            null -> when (source.container) {
+                Container.WORKSPACE -> controller.moveWithinWorkspace(app, cell)
+                Container.DOCK -> controller.moveDockToWorkspace(app, cell)
+                else -> controller.insertWorkspaceAt(app, cell)
+            }
+            is CellContent.App -> controller.createFolderFromDrop(
+                app,
+                cell,
+                getString(R.string.folder_default_title),
+            )
+            is CellContent.FolderCell -> controller.addToFolder(app, content.folder.id)
         }
     }
 
@@ -327,5 +473,7 @@ class HomeActivity : ComponentActivity() {
         const val MENU_SETTINGS = 5
         const val MENU_WALLPAPER = 6
         const val MENU_SET_DEFAULT = 7
+        const val MENU_FOLDER_RENAME = 8
+        const val MENU_FOLDER_REMOVE = 9
     }
 }

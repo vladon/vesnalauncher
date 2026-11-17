@@ -26,10 +26,12 @@ enum class LauncherMessage { WORKSPACE_FULL, DOCK_FULL }
 /** Everything the launcher UI renders. */
 data class LauncherUiState(
     val apps: List<LauncherApp> = emptyList(),
-    val workspaceApps: Map<Int, LauncherApp> = emptyMap(),
+    val workspaceCells: Map<Int, CellContent> = emptyMap(),
     val dockApps: List<LauncherApp> = emptyList(),
+    val folders: Map<Long, Folder> = emptyMap(),
+    val folderContents: Map<Long, List<LauncherApp>> = emptyMap(),
 ) {
-    val isWorkspaceEmpty: Boolean get() = workspaceApps.isEmpty()
+    val isWorkspaceEmpty: Boolean get() = workspaceCells.isEmpty()
 }
 
 /**
@@ -55,11 +57,17 @@ class LauncherController(
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
 
     val state: StateFlow<LauncherUiState> =
-        combine(_apps, workspaceRepository.items) { apps, items ->
+        combine<List<LauncherApp>, List<WorkspaceItem>, List<Folder>, LauncherUiState>(
+            _apps,
+            workspaceRepository.items,
+            workspaceRepository.folders,
+        ) { apps, items, folders ->
             LauncherUiState(
                 apps = apps,
-                workspaceApps = WorkspaceResolver.workspaceApps(items, apps),
+                workspaceCells = WorkspaceResolver.workspaceCells(items, apps, folders),
                 dockApps = WorkspaceResolver.dockApps(items, apps),
+                folders = folders.associateBy { it.id },
+                folderContents = WorkspaceResolver.folderContents(items, apps),
             )
         }.stateIn(scope, SharingStarted.Eagerly, LauncherUiState())
 
@@ -83,9 +91,43 @@ class LauncherController(
         }
     }
 
-    /** Persists a drag-and-drop result: move to an empty cell or swap with its occupant. */
-    fun moveWithinWorkspace(app: LauncherApp, toCell: Int) {
-        scope.launch { workspaceRepository.moveWithinWorkspace(app, toCell) }
+    /** Drawer/app-source insert into an empty workspace [cell]. */
+    fun insertWorkspaceAt(app: LauncherApp, cell: Int) {
+        scope.launch { workspaceRepository.insertWorkspaceAt(app, cell) }
+    }
+
+    /** Drawer-source insert into the dock at [slot]; emits DOCK_FULL when full. */
+    fun insertIntoDock(app: LauncherApp, slot: Int) {
+        scope.launch {
+            if (!workspaceRepository.insertIntoDock(app, slot)) {
+                _messages.tryEmit(LauncherMessage.DOCK_FULL)
+            }
+        }
+    }
+
+    /** Creates a folder at [targetCell] from a drop of [dragged] onto its occupant. */
+    fun createFolderFromDrop(dragged: LauncherApp, targetCell: Int, defaultTitle: String) {
+        scope.launch { workspaceRepository.createFolderFromDrop(dragged, targetCell, defaultTitle) }
+    }
+
+    /** Adds a dragged app into an existing folder. */
+    fun addToFolder(app: LauncherApp, folderId: Long) {
+        scope.launch { workspaceRepository.addToFolder(app, folderId) }
+    }
+
+    /** Returns a folder member to the first free grid cell (dissolves sparse folders). */
+    fun removeFromFolder(app: LauncherApp) {
+        scope.launch { workspaceRepository.removeFromFolder(app) }
+    }
+
+    /** Renames a folder. */
+    fun renameFolder(folderId: Long, title: String) {
+        scope.launch { workspaceRepository.renameFolder(folderId, title) }
+    }
+
+    /** Removes a folder, returning members to free grid cells. */
+    fun removeFolder(folderId: Long) {
+        scope.launch { workspaceRepository.removeFolder(folderId) }
     }
 
     /** Workspace → dock drag at [slot]; emits [LauncherMessage.DOCK_FULL] when full. */
@@ -100,6 +142,11 @@ class LauncherController(
     /** Dock → workspace drag onto an empty [cell]; no-op when the cell is occupied. */
     fun moveDockToWorkspace(app: LauncherApp, cell: Int) {
         scope.launch { workspaceRepository.moveDockToWorkspace(app, cell) }
+    }
+
+    /** Persists a drag-and-drop result: move to an empty cell (occupied → folder flow). */
+    fun moveWithinWorkspace(app: LauncherApp, toCell: Int) {
+        scope.launch { workspaceRepository.moveWithinWorkspace(app, toCell) }
     }
 
     /** Dock-internal reorder to [slot]. */

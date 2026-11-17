@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import androidx.room.withTransaction
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.data.FolderDao
+import dev.vladon.vesna.launcher.data.FolderEntity
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
 import dev.vladon.vesna.launcher.data.toDomain
@@ -20,6 +22,7 @@ import kotlinx.coroutines.sync.withLock
 class WorkspaceRepository(
     private val dao: WorkspaceItemDao,
     private val db: LauncherDatabase,
+    private val folderDao: FolderDao,
     private val prefs: SharedPreferences,
 ) {
 
@@ -28,6 +31,9 @@ class WorkspaceRepository(
     private val mutationMutex = Mutex()
 
     val items: Flow<List<WorkspaceItem>> = dao.observeAll().map { list -> list.map { it.toDomain() } }
+
+    val folders: Flow<List<Folder>> =
+        folderDao.observeAll().map { list -> list.map { Folder(it.id, it.title, it.cellIndex) } }
 
     /**
      * Whether the initial seeding already happened. Deliberately not derived from
@@ -81,32 +87,102 @@ class WorkspaceRepository(
         dao.deleteByPackage(packageName, userSerial)
     }
 
-    /** Drops persisted items that reference apps no longer installed. */
+    /** Drops persisted items that reference apps no longer installed, then dissolves sparse folders. */
     suspend fun pruneStale(liveKeys: Set<AppKey>) = mutationMutex.withLock {
         val stale = dao.getAll().filter { AppKey(it.packageName, it.className, it.userSerial) !in liveKeys }
         for (item in stale) dao.deleteById(item.id)
+        stale.mapNotNull { it.folderId }.toSet().forEach { dissolveIfSparse(it) }
+        normalizeFolders()
+    }
+
+    /** Dissolves folders that hold fewer than two members. */
+    private suspend fun normalizeFolders() {
+        for (folder in folderDao.getAll()) dissolveIfSparse(folder.id)
     }
 
     /**
-     * Moves a workspace item to [toCell]; dropping it onto an occupied cell swaps
-     * the two entries, so both icons stay on the grid.
+     * Moves a workspace item to an EMPTY [toCell]. In 0.3.x this swapped with the
+     * occupant; since 0.4.0 drops onto occupied cells create folders instead, so
+     * this op only relocates. Returns false when the cell is occupied.
      */
     suspend fun moveWithinWorkspace(app: LauncherApp, toCell: Int): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(toCell)) return@withLock false
         val items = dao.getAll()
         val source = items.firstOrNull {
             it.container == Container.WORKSPACE.name &&
+                it.folderId == null &&
                 it.packageName == app.key.packageName &&
                 it.className == app.key.className &&
                 it.userSerial == app.key.userSerial
         } ?: return@withLock false
         if (source.cellIndex == toCell) return@withLock true
-        val target = items.firstOrNull {
-            it.container == Container.WORKSPACE.name && it.cellIndex == toCell
+        if (items.any {
+                it.container == Container.WORKSPACE.name && it.folderId == null && it.cellIndex == toCell
+            }
+        ) {
+            return@withLock false
         }
+        if (folderAtCell(toCell) != null) return@withLock false
         db.withTransaction {
             dao.updateCellIndex(source.id, toCell)
-            target?.let { dao.updateCellIndex(it.id, source.cellIndex) }
+        }
+        true
+    }
+
+    private suspend fun folderAtCell(cellIndex: Int): FolderEntity? =
+        folderDao.getAll().firstOrNull { it.cellIndex == cellIndex }
+
+    /**
+     * Inserts a top-level app (for example dragged from the drawer) into an empty
+     * workspace [cell]. Returns false when the cell is occupied by an app or folder.
+     */
+    suspend fun insertWorkspaceAt(app: LauncherApp, cell: Int): Boolean = mutationMutex.withLock {
+        if (!GridCanvas.isValidCell(cell)) return@withLock false
+        val items = dao.getAll()
+        if (items.any {
+                it.container == Container.WORKSPACE.name &&
+                    it.folderId == null && it.cellIndex == cell
+            }
+        ) {
+            return@withLock false
+        }
+        if (folderAtCell(cell) != null) return@withLock false
+        dao.insert(
+            WorkspaceItem(
+                id = 0,
+                key = app.key,
+                container = Container.WORKSPACE,
+                cellIndex = cell,
+                userSerial = app.key.userSerial,
+            ).toEntity(),
+        )
+        true
+    }
+
+    /**
+     * Inserts a top-level app (for example dragged from the drawer) into the dock
+     * at [slot]; dock entries at or after the slot shift right. Returns false when
+     * the dock is full.
+     */
+    suspend fun insertIntoDock(app: LauncherApp, slot: Int): Boolean = mutationMutex.withLock {
+        val dockIds = dao.getAll().filter { it.container == Container.DOCK.name && it.folderId == null }
+            .sortedBy { it.cellIndex }
+            .map { it.id }
+        if (dockIds.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
+        val order = DockOrdering.insertAt(dockIds, 0L, slot)
+        val newId = dao.insert(
+            WorkspaceItem(
+                id = 0,
+                key = app.key,
+                container = Container.DOCK,
+                cellIndex = 0,
+                userSerial = app.key.userSerial,
+            ).toEntity(),
+        )
+        // Replace the placeholder id with the generated one and normalize slots.
+        val finalOrder = order.map { if (it == 0L) newId else it }
+        db.withTransaction {
+            finalOrder.forEachIndexed { index, id -> dao.updatePlacement(id, Container.DOCK.name, index) }
         }
         true
     }
@@ -147,9 +223,14 @@ class WorkspaceRepository(
                 it.className == app.key.className &&
                 it.userSerial == app.key.userSerial
         } ?: return@withLock false
-        if (items.any { it.container == Container.WORKSPACE.name && it.cellIndex == cell }) {
+        if (items.any {
+                it.container == Container.WORKSPACE.name &&
+                    it.folderId == null && it.cellIndex == cell
+            }
+        ) {
             return@withLock false
         }
+        if (folderAtCell(cell) != null) return@withLock false
         db.withTransaction {
             dao.updatePlacement(source.id, Container.WORKSPACE.name, cell)
         }
@@ -172,6 +253,121 @@ class WorkspaceRepository(
             order.forEachIndexed { index, id -> dao.updateCellIndex(id, index) }
         }
         true
+    }
+
+    // Folders -------------------------------------------------------------------
+
+    /**
+     * Creates a folder at [targetCell] from a drop of [dragged] onto the app that
+     * currently occupies the cell. Both entries become folder members. Returns
+     * false when either entry is missing or a folder already occupies the cell
+     * (the caller should use [addToFolder] instead).
+     */
+    suspend fun createFolderFromDrop(
+        dragged: LauncherApp,
+        targetCell: Int,
+        defaultTitle: String,
+    ): Boolean = mutationMutex.withLock {
+        val items = dao.getAll()
+        val draggedItem = items.firstOrNull {
+            it.folderId == null && it.packageName == dragged.key.packageName &&
+                it.className == dragged.key.className && it.userSerial == dragged.key.userSerial
+        } ?: return@withLock false
+        val target = items.firstOrNull {
+            it.container == Container.WORKSPACE.name && it.folderId == null && it.cellIndex == targetCell
+        } ?: return@withLock false
+        val foldersHere = folderDao.getAll().any { it.cellIndex == targetCell }
+        if (foldersHere) return@withLock false
+        val folderId = folderDao.insert(FolderEntity(title = defaultTitle, cellIndex = targetCell))
+        db.withTransaction {
+            dao.updateFolder(target.id, folderId)
+            dao.updateFolder(draggedItem.id, folderId)
+        }
+        true
+    }
+
+    /** Adds a top-level app (workspace or dock) into an existing folder. */
+    suspend fun addToFolder(app: LauncherApp, folderId: Long): Boolean = mutationMutex.withLock {
+        if (folderDao.getById(folderId) == null) return@withLock false
+        val items = dao.getAll()
+        val entry = items.firstOrNull {
+            it.folderId == null && it.packageName == app.key.packageName &&
+                it.className == app.key.className && it.userSerial == app.key.userSerial
+        } ?: return@withLock false
+        dao.updateFolder(entry.id, folderId)
+        true
+    }
+
+    /**
+     * Returns a folder member to the first free grid cell and dissolves the folder
+     * when fewer than two members remain. Returns false when the app is not a
+     * folder member or no cell is free.
+     */
+    suspend fun removeFromFolder(app: LauncherApp): Boolean = mutationMutex.withLock {
+        val items = dao.getAll()
+        val entry = items.firstOrNull {
+            it.folderId != null && it.packageName == app.key.packageName &&
+                it.className == app.key.className && it.userSerial == app.key.userSerial
+        } ?: return@withLock false
+        val folder = folderDao.getById(entry.folderId!!) ?: return@withLock false
+        val occupied = items.filter { it.folderId == null && it.container == Container.WORKSPACE.name }
+            .mapTo(mutableSetOf()) { it.cellIndex }
+        occupied += folderDao.getAll().filter { it.id != folder.id }.map { it.cellIndex }
+        val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
+        db.withTransaction {
+            dao.updatePlacement(entry.id, Container.WORKSPACE.name, cell)
+            dao.updateFolder(entry.id, null)
+        }
+        dissolveIfSparse(folder.id)
+        true
+    }
+
+    /** Renames a folder. Returns false when the folder does not exist. */
+    suspend fun renameFolder(folderId: Long, title: String): Boolean = mutationMutex.withLock {
+        val folder = folderDao.getById(folderId) ?: return@withLock false
+        folderDao.update(folder.copy(title = title))
+        true
+    }
+
+    /**
+     * Removes a folder, returning every member to the first free grid cells in
+     * order. Returns false when the folder does not exist.
+     */
+    suspend fun removeFolder(folderId: Long): Boolean = mutationMutex.withLock {
+        val folder = folderDao.getById(folderId) ?: return@withLock false
+        val members = dao.getAll().filter { it.folderId == folderId }.sortedBy { it.cellIndex }
+        val items = dao.getAll()
+        val occupied = items.filter { it.folderId == null && it.container == Container.WORKSPACE.name }
+            .mapTo(mutableSetOf()) { it.cellIndex }
+        occupied += folderDao.getAll().filter { it.id != folder.id }.map { it.cellIndex }
+        db.withTransaction {
+            folderDao.deleteById(folderId)
+            for (member in members) {
+                val cell = GridCanvas.firstFreeCell(occupied) ?: continue
+                occupied += cell
+                dao.updatePlacement(member.id, Container.WORKSPACE.name, cell)
+                dao.updateFolder(member.id, null)
+            }
+        }
+        true
+    }
+
+    /**
+     * Dissolves a folder that holds fewer than two members: the sole member returns
+     * to the folder's grid cell, an empty folder is deleted.
+     */
+    private suspend fun dissolveIfSparse(folderId: Long) {
+        val members = dao.getAll().filter { it.folderId == folderId }
+        when (members.size) {
+            0 -> folderDao.deleteById(folderId)
+            1 -> {
+                val only = members.first()
+                val folder = folderDao.getById(folderId) ?: return
+                dao.updatePlacement(only.id, Container.WORKSPACE.name, folder.cellIndex)
+                dao.updateFolder(only.id, null)
+                folderDao.deleteById(folderId)
+            }
+        }
     }
 
     private suspend fun removeFromContainer(key: AppKey, container: Container) = mutationMutex.withLock {

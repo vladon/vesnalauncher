@@ -1,0 +1,29 @@
+package dev.vladon.vesna.launcher.data
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface FolderDao {
+
+    @Query("SELECT * FROM folders")
+    fun observeAll(): Flow<List<FolderEntity>>
+
+    @Query("SELECT * FROM folders")
+    suspend fun getAll(): List<FolderEntity>
+
+    @Query("SELECT * FROM folders WHERE id = :id")
+    suspend fun getById(id: Long): FolderEntity?
+
+    @Insert
+    suspend fun insert(folder: FolderEntity): Long
+
+    @Update
+    suspend fun update(folder: FolderEntity)
+
+    @Query("DELETE FROM folders WHERE id = :id")
+    suspend fun deleteById(id: Long)
+}
