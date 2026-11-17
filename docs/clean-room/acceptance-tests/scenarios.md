@@ -69,6 +69,23 @@ its feature ID. These describe externally observable behavior only.
 - Then the standard system Contacts permission dialog is shown before any
   contact data is used
 
+## Dock
+
+### AT-DOCK-100 — Dock configuration surface
+- Given the dock settings page
+- When the user inspects the dock controls
+- Then the dock can be enabled/disabled, its icon count set via a discrete
+  selector, and pages/infinite-scroll configured
+- And enabling "match desktop size" disables the independent icon-size
+  control
+- And labels and the background plate default to off
+
+### AT-DOCK-101 — Dock rendering defaults
+- Given the dock is enabled with default settings
+- When the workspace is shown
+- Then the dock renders as a single row of icons without labels or a
+  background plate, above the search bar
+
 ## Folders
 
 ### AT-FOLDER-100 — Folder creation
