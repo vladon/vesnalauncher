@@ -119,15 +119,13 @@ identify controls.
     remains) — matching Prime's "ad-free" benefit;
   - the drawer now also lists the Prime license app icon with a "PRIME"
     ribbon badge.
-- Badge rendering test could NOT complete: the OS reports Nova's
-  notifications as blocked (`importance=NONE userSet=false`) and Nova was
-  NOT in the enabled notification listeners. Research-side grants applied
-  via adb (listener added to `enabled_notification_listeners`; `POST_NOTIFICATION`
-  appop set to allow) did NOT take effect at runtime — the listener list
-  requires a rebind (Settings-UI toggle or reboot) and the uid-level appop
-  remains `ignore`. The built-in "Test notification badge" button therefore
-  produced no visible badge. Pending user-side action: grant Notification
-  access to Nova (Settings ▸ Notification access) or reboot, then re-test.
+- Badge rendering test could NOT complete at the time: the OS reported
+  Nova's notifications as blocked (`importance=NONE userSet=false`) and Nova
+  was NOT in the enabled notification listeners. RESOLVED LATER (see
+  OBS-SYS-112/113): the user granted Notification access and rebooted — the
+  listener bound, notifications were allowed via App info, and the badge
+  root cause was found (Nova's test button posts a group summary, which
+  Android never badges).
 - Evidence: EVI-SYS-002 (prime-active-main, settings-after-prime,
   badges-page/page2, badge-test-workspace, badge-test2, settings-check),
   EVI-DRAWER-002 (tabs-reverted — no ad banner)
@@ -195,3 +193,28 @@ identify controls.
   numeric-drawer-check, numeric-zoom, style-restored), dumpsys excerpt with
   notification flags
 - Confidence: Observed (flags + absence across two styles)
+
+## OBS-SYS-114 — Third-party badge matrix attempts (inconclusive)
+
+- Date / Env: 2026-11-18 / ENV-1 (Nova Prime)
+- Goal: badge a THIRD-PARTY app icon (Nova's self-test cannot badge —
+  OBS-SYS-113) and then exercise the popup-menu notification content.
+- Attempt A — Calendar event + reminder (content provider insert; event
+  1120 "BadgeTest", reminder minute 0): the event fired at 02:04:19 but NO
+  Calendar notification record ever appeared in `dumpsys notification`
+  (adb-inserted events without full reminder sync may not schedule). Event
+  deleted after the test.
+- Attempt B — Clock SET_ALARM intent (02:10 "BadgeTest", SKIP_UI):
+  inconclusive — no deskclock notification record appeared at/after the
+  fire time; whether the alarm was created could not be confirmed.
+- Live records at test time (for the record): 2× android, com.android.vending
+  (imp=2, silent), com.github.dyhkwong.sagernet (imp=2, persistent proxy
+  service), 3× com.teslacoilsw.launcher (imp=3, group summaries).
+- Popup-menu notification content: NOT TESTED — it requires an app whose
+  notification actually BADGES; no such third-party notification could be
+  generated in this session. Next session: trigger a real notification from
+  an installed messaging/play app (e.g. ask Play to update an app, or send a
+  test message), then long-press its icon and capture the popup.
+- Evidence: EVI-SYS-002 (calendar-badge-check, calendar-zoom,
+  playstore-popup-notif, clock-badge-check/2), dumpsys summaries
+- Confidence: Observed (attempts + absence); feature status Not Tested

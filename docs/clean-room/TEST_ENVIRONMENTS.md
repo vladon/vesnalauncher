@@ -58,14 +58,15 @@ All observations cite one of the environments below via an environment ID
 
 ### ENV-1 device-config changes made for research (2026-11-18)
 
-- Badge-rendering attempt: added
+- Badge-rendering enablement: added
   `com.teslacoilsw.launcher/.notificationlistener.NotificationListener` to
-  `enabled_notification_listeners` via `settings put secure` (NOT yet bound
-  by the system — needs Settings-UI toggle or reboot) and set the
-  `POST_NOTIFICATION` appop to allow for Nova (uid-level remains `ignore`).
-  These are standard launcher-setup grants Nova itself would request;
-  reversible. Badge rendering remained unobservable this session (see
-  OBS-SYS-111).
+  `enabled_notification_listeners` via `settings put secure`, set the
+  `POST_NOTIFICATION` appop to allow, and toggled "All Nova Launcher
+  notifications" ON via the system App-info UI. The user then granted
+  Notification access and rebooted — the listener is BOUND and badge
+  rendering verified working for third-party notifications (see
+  OBS-SYS-112/113). Grants remain in place (standard launcher setup Nova
+  itself would request).
 
 ### ENV-2 notes
 

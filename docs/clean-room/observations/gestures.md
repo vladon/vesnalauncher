@@ -32,3 +32,28 @@ observations/settings.md OBS-SETT-008.
   tested cases.
 - Evidence: EVI-DRAWER-001, EVI-GESTURE-001
 - Confidence: Partially Observed
+
+## OBS-GESTURE-112 — Prime-unlocked gesture assignment catalog (verified)
+
+- Date / Env: 2026-11-18 / ENV-1 (Nova Prime)
+- Action: Gestures & inputs ▸ tapped "Swipe up".
+- Observed: with Prime, the assignment dialogs are unlocked and reveal the
+  full action catalog as a tabbed list: tabs **NOVA / APPS / SHORTCUTS**
+  (APPS = launch any installed app; SHORTCUTS = launch any app shortcut).
+  The NOVA tab (scrolled) exposes at least: None, App drawer, Expand
+  notifications, Expand quick settings, Recent apps, Screen lock, Nova
+  Search, Nova Now, Assistant, Toggle notification bar, Toggle dock,
+  Default page, Jump to page, Desktop previews, Nova Settings.
+- Prime-era binding rows observed on the section page: Home button →
+  Nova Search with an "Only on main home page" checkbox below it; and the
+  "Swipe up" row's value line read "Expand quick settings" (round 1, free
+  edition, read "App drawer") — see the caveat below.
+- Caveat: the Swipe-up value reading needs a controlled re-check — a
+  swipe-up at 00:33 (after the Prime restart) still opened the drawer, and
+  swipe-up also opened the drawer during later tests, so either the binding
+  changed mid-session (e.g. via the Prime profile import) or the subtitle
+  mapping differs when rows are expanded. Do not treat either reading as
+  final without a fresh controlled observation.
+- Evidence: EVI-GESTURE-002 (gestures-prime, swipeup-actions,
+  swipeup-actions-scrolled, apps-tab, gestures-find)
+- Confidence: Observed (catalog); binding values need re-check
