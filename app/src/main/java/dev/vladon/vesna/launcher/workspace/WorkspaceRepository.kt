@@ -111,6 +111,69 @@ class WorkspaceRepository(
         true
     }
 
+    /**
+     * Drag-and-drop from the workspace into the dock at [slot]. Existing dock
+     * entries at or after the slot shift right. Returns false when the dock is full.
+     */
+    suspend fun moveWorkspaceToDock(app: LauncherApp, slot: Int): Boolean = mutationMutex.withLock {
+        val items = dao.getAll()
+        val source = items.firstOrNull {
+            it.container == Container.WORKSPACE.name &&
+                it.packageName == app.key.packageName &&
+                it.className == app.key.className &&
+                it.userSerial == app.key.userSerial
+        } ?: return@withLock false
+        val dockIds = items.filter { it.container == Container.DOCK.name }
+            .sortedBy { it.cellIndex }
+            .map { it.id }
+        if (dockIds.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
+        val order = DockOrdering.insertAt(dockIds, source.id, slot)
+        db.withTransaction {
+            order.forEachIndexed { index, id -> dao.updatePlacement(id, Container.DOCK.name, index) }
+        }
+        true
+    }
+
+    /**
+     * Drag-and-drop from the dock into the workspace grid at [cell]. Returns false
+     * when the cell is occupied (the icon returns home).
+     */
+    suspend fun moveDockToWorkspace(app: LauncherApp, cell: Int): Boolean = mutationMutex.withLock {
+        if (!GridCanvas.isValidCell(cell)) return@withLock false
+        val items = dao.getAll()
+        val source = items.firstOrNull {
+            it.container == Container.DOCK.name &&
+                it.packageName == app.key.packageName &&
+                it.className == app.key.className &&
+                it.userSerial == app.key.userSerial
+        } ?: return@withLock false
+        if (items.any { it.container == Container.WORKSPACE.name && it.cellIndex == cell }) {
+            return@withLock false
+        }
+        db.withTransaction {
+            dao.updatePlacement(source.id, Container.WORKSPACE.name, cell)
+        }
+        true
+    }
+
+    /** Reorders a dock entry to [slot] (dragging sideways inside the dock). */
+    suspend fun reorderDock(app: LauncherApp, slot: Int): Boolean = mutationMutex.withLock {
+        val items = dao.getAll()
+        val dock = items.filter { it.container == Container.DOCK.name }
+            .sortedBy { it.cellIndex }
+        val from = dock.indexOfFirst {
+            it.packageName == app.key.packageName &&
+                it.className == app.key.className &&
+                it.userSerial == app.key.userSerial
+        }
+        if (from < 0) return@withLock false
+        val order = DockOrdering.moveTo(dock.map { it.id }, from, slot)
+        db.withTransaction {
+            order.forEachIndexed { index, id -> dao.updateCellIndex(id, index) }
+        }
+        true
+    }
+
     private suspend fun removeFromContainer(key: AppKey, container: Container) = mutationMutex.withLock {
         dao.deleteByKey(key.packageName, key.className, container.name, key.userSerial)
     }

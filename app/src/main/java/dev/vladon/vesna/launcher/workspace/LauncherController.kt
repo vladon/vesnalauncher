@@ -88,6 +88,25 @@ class LauncherController(
         scope.launch { workspaceRepository.moveWithinWorkspace(app, toCell) }
     }
 
+    /** Workspace → dock drag at [slot]; emits [LauncherMessage.DOCK_FULL] when full. */
+    fun moveWorkspaceToDock(app: LauncherApp, slot: Int) {
+        scope.launch {
+            if (!workspaceRepository.moveWorkspaceToDock(app, slot)) {
+                _messages.tryEmit(LauncherMessage.DOCK_FULL)
+            }
+        }
+    }
+
+    /** Dock → workspace drag onto an empty [cell]; no-op when the cell is occupied. */
+    fun moveDockToWorkspace(app: LauncherApp, cell: Int) {
+        scope.launch { workspaceRepository.moveDockToWorkspace(app, cell) }
+    }
+
+    /** Dock-internal reorder to [slot]. */
+    fun reorderDock(app: LauncherApp, slot: Int) {
+        scope.launch { workspaceRepository.reorderDock(app, slot) }
+    }
+
     fun addToWorkspace(app: LauncherApp) {
         scope.launch {
             if (!workspaceRepository.addToWorkspace(app)) _messages.tryEmit(LauncherMessage.WORKSPACE_FULL)

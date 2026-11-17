@@ -51,7 +51,7 @@ flowchart TB
 |---|---|---|
 | `platform` | Android system integration | `AppDiscovery` (launchable apps across all profiles via `LauncherApps`), `AppLauncher` (profile-aware launching), `PackageChangeMonitor` (install/update/uninstall events for all profiles), `HomeRoleChecker` (default-home detection and request intents) |
 | `apps` | Application discovery model | `AppKey`, `LauncherApp` |
-| `workspace` | Workspace state | `LauncherController` (UI state + actions), `WorkspaceRepository` (Room-backed layout store), pure logic in `GridCanvas`, `SeedPlanner`, `WorkspaceResolver`, `WorkspaceItem` |
+| `workspace` | Workspace state | `LauncherController` (UI state + actions), `WorkspaceRepository` (Room-backed layout store), pure logic in `GridCanvas`, `DockOrdering`, `SeedPlanner`, `WorkspaceResolver`, `WorkspaceItem` |
 | `data` | Persistence | Room database, DAO, entity, mappers |
 | `ui` | Rendering | `HomeActivity`, `WorkspaceView`, `DockView`, `DrawerView`, `AppIconView`, `DrawerAppsAdapter` |
 | `settings` | Settings | `SettingsActivity`, Compose `AboutScreen`, `VesnaTheme` |
@@ -99,10 +99,9 @@ flowchart TB
 - Icons are `Drawable`s shared by `ConstantState` (`newDrawable()` per bind), so
   views never share one mutable `Drawable` instance.
 
-## Known limitations (0.2.0)
+## Known limitations (0.3.0)
 
 - Fixed 4×5 grid in all orientations; on small landscape heights icons shrink.
-- Drag-and-drop covers the workspace grid (move to an empty cell or swap with the
-  occupant); dragging between workspace, dock, and drawer is not supported yet —
-  long-press menus handle cross-container moves.
-- Icon packs, widgets, and drawer search are not implemented.
+- Drag-and-drop covers the workspace grid, the dock, and moves between them;
+  dragging from the drawer is not supported yet (long-press menus handle it).
+- Icon packs, widgets, and fuzzy search matching are not implemented.

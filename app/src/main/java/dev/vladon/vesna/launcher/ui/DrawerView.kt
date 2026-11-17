@@ -6,10 +6,16 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
+import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.apps.AppSearch
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 
@@ -29,12 +35,16 @@ class DrawerView @JvmOverloads constructor(
 
     private val list: RecyclerView
     private val handle: ViewGroup
+    private val searchField: EditText
+    private val noResultsView: TextView
     private val adapter: DrawerAppsAdapter
     private val density = resources.displayMetrics.density
 
     /** A decisive downward drag travels at least this far (3x touch slop). */
     private val minFlingDistancePx =
         3 * ViewConfiguration.get(context).scaledTouchSlop
+
+    private var allApps: List<LauncherApp> = emptyList()
 
     val isOpen: Boolean get() = visibility == VISIBLE
 
@@ -44,13 +54,35 @@ class DrawerView @JvmOverloads constructor(
         elevation = 8 * density
 
         adapter = DrawerAppsAdapter(
-            onItemClick = { onAppClick?.invoke(it) },
+            onItemClick = {
+                hideKeyboard()
+                onAppClick?.invoke(it)
+            },
             onItemLongClick = { onAppLongClick?.invoke(it) ?: true },
         )
         list = findViewById(R.id.drawer_list)
         list.layoutManager = GridLayoutManager(context, GridCanvas.COLUMNS)
         list.adapter = adapter
         installDrawerFlingToClose()
+
+        noResultsView = findViewById(R.id.drawer_no_results)
+        searchField = findViewById(R.id.drawer_search)
+        searchField.addTextChangedListener(
+            object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun afterTextChanged(s: android.text.Editable?) = applyFilter()
+            },
+        )
+        searchField.setOnEditorActionListener { field, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                field.clearFocus()
+                hideKeyboard()
+                true
+            } else {
+                false
+            }
+        }
 
         handle = findViewById(R.id.drawer_handle)
         handle.setOnClickListener { if (isOpen) close() else open() }
@@ -59,8 +91,22 @@ class DrawerView @JvmOverloads constructor(
         translationY = height.toFloat()
     }
 
+    private fun applyFilter() {
+        val query = searchField.text?.toString().orEmpty()
+        val filtered = AppSearch.filter(allApps, query)
+        adapter.submitList(filtered)
+        noResultsView.isVisible = filtered.isEmpty()
+        list.scrollToPosition(0)
+    }
+
+    private fun hideKeyboard() {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(searchField.windowToken, 0)
+    }
+
     fun submitApps(apps: List<LauncherApp>) {
-        adapter.submitList(apps)
+        allApps = apps
+        applyFilter()
     }
 
     /** Pads the drawer content so handle and list clear the system bars. */
@@ -78,6 +124,9 @@ class DrawerView @JvmOverloads constructor(
 
     fun close() {
         if (!isOpen) return
+        searchField.setText("")
+        searchField.clearFocus()
+        hideKeyboard()
         animate().translationY(height.toFloat())
             .setDuration(ANIMATION_MS)
             .withEndAction { visibility = GONE }

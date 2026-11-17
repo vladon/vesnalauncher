@@ -21,6 +21,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.workspace.Container
+import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
 import kotlinx.coroutines.launch
@@ -36,6 +38,19 @@ class HomeActivity : ComponentActivity() {
     private lateinit var drawer: DrawerView
     private lateinit var emptyHint: TextView
     private lateinit var defaultHomeBanner: TextView
+
+    /** The icon currently being dragged across workspace and dock. */
+    private data class DragSource(
+        val app: LauncherApp,
+        val container: Container,
+        val fromCell: Int,
+        val anchor: View,
+    )
+
+    private var dragSource: DragSource? = null
+
+    private val controller
+        get() = VesnaApplication.graph(this).controller
 
     private val backCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
@@ -63,18 +78,23 @@ class HomeActivity : ComponentActivity() {
         val controller = graph.controller
 
         workspace.onAppClick = { controller.launch(it) }
-        workspace.onAppLongClick = { anchor, app ->
-            showWorkspaceItemMenu(anchor, app)
-            true
-        }
         workspace.onEmptyAreaLongClick = { showLauncherMenu() }
         workspace.onSwipeUp = { drawer.open() }
-        workspace.onItemMove = { app, cell -> controller.moveWithinWorkspace(app, cell) }
+        workspace.onDragStarted = { cell, app, anchor ->
+            dragSource = DragSource(app, Container.WORKSPACE, cell, anchor)
+        }
+        workspace.onDragProgress = { x, y -> updateDragTarget(Container.WORKSPACE, x, y) }
+        workspace.onDragReleased = { x, y, moved, cancelled, app, anchor ->
+            onDragReleased(Container.WORKSPACE, x, y, moved, cancelled, app, anchor)
+        }
 
         dock.onAppClick = { controller.launch(it) }
-        dock.onAppLongClick = { anchor, app ->
-            showDockItemMenu(anchor, app)
-            true
+        dock.onDragStarted = { slot, app, anchor ->
+            dragSource = DragSource(app, Container.DOCK, slot, anchor)
+        }
+        dock.onDragProgress = { x, y -> updateDragTarget(Container.DOCK, x + dock.left, y + dock.top) }
+        dock.onDragReleased = { x, y, moved, cancelled, app, anchor ->
+            onDragReleased(Container.DOCK, x + dock.left, y + dock.top, moved, cancelled, app, anchor)
         }
 
         drawer.onAppClick = { controller.launch(it) }
@@ -122,6 +142,74 @@ class HomeActivity : ComponentActivity() {
         dock.bind(state.dockApps)
         drawer.submitApps(state.apps)
         emptyHint.isVisible = state.isWorkspaceEmpty
+    }
+
+    /**
+     * Computes and previews the drop target for the active drag. Coordinates are
+     * workspace-local for both containers (dock coordinates are converted by the
+     * caller). The dock zone wins when the finger is over it; elsewhere the grid
+     * cell decides. Unacceptable targets show no highlight (drop returns home).
+     */
+    private fun updateDragTarget(container: Container, wx: Float, wy: Float) {
+        val source = dragSource ?: return
+        if (wy >= dock.top) {
+            workspace.showDropHighlight(null)
+            val canAccept = source.container == Container.DOCK ||
+                dock.boundCount < GridCanvas.DOCK_CAPACITY
+            dock.showSlotHighlight(if (canAccept) dock.slotAtLocalX(wx - dock.left) else null)
+            return
+        }
+        dock.showSlotHighlight(null)
+        val cell = workspace.cellAtLocal(wx, wy)
+        // Own source cell is a no-op drop (no highlight); occupied cells are fine
+        // for workspace sources (swap) and rejected for dock sources.
+        val acceptable = cell != null &&
+            (container == Container.WORKSPACE || !workspace.isCellOccupied(cell)) &&
+            cell != source.fromCell
+        workspace.showDropHighlight(if (acceptable) cell else null)
+    }
+
+    /** Commits the drag result, or falls back to the context menu without movement. */
+    private fun onDragReleased(
+        container: Container,
+        wx: Float,
+        wy: Float,
+        moved: Boolean,
+        cancelled: Boolean,
+        app: LauncherApp,
+        anchor: View,
+    ) {
+        val source = dragSource
+        workspace.showDropHighlight(null)
+        dock.showSlotHighlight(null)
+        dragSource = null
+        if (source == null || cancelled) return
+
+        if (!moved) {
+            when (container) {
+                Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app)
+                Container.DOCK -> showDockItemMenu(anchor, app)
+            }
+            return
+        }
+
+        val overDock = wy >= dock.top
+        when {
+            overDock && source.container == Container.WORKSPACE ->
+                controller.moveWorkspaceToDock(app, dock.slotAtLocalX(wx - dock.left))
+            overDock && source.container == Container.DOCK ->
+                controller.reorderDock(app, dock.slotAtLocalX(wx - dock.left))
+            !overDock && source.container == Container.WORKSPACE -> {
+                workspace.cellAtLocal(wx, wy)?.let { cell ->
+                    if (cell != source.fromCell) controller.moveWithinWorkspace(app, cell)
+                }
+            }
+            !overDock && source.container == Container.DOCK -> {
+                workspace.cellAtLocal(wx, wy)?.let { cell ->
+                    if (!workspace.isCellOccupied(cell)) controller.moveDockToWorkspace(app, cell)
+                }
+            }
+        }
     }
 
     private fun showMessage(message: LauncherMessage) {

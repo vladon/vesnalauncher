@@ -23,6 +23,11 @@ interface WorkspaceItemDao {
     @Query("UPDATE workspace_items SET cellIndex = :cellIndex WHERE id = :id")
     suspend fun updateCellIndex(id: Long, cellIndex: Int)
 
+    @Query(
+        "UPDATE workspace_items SET container = :container, cellIndex = :cellIndex WHERE id = :id",
+    )
+    suspend fun updatePlacement(id: Long, container: String, cellIndex: Int)
+
     @Query("DELETE FROM workspace_items WHERE id = :id")
     suspend fun deleteById(id: Long)
 

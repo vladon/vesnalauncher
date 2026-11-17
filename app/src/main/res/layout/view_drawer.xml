@@ -12,7 +12,7 @@
         <FrameLayout
             android:id="@+id/drawer_handle"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="40dp"
             android:contentDescription="@string/drawer_handle_hint">
 
             <View
@@ -22,6 +22,37 @@
                 android:layout_gravity="center"
                 android:background="@drawable/handle_bar" />
         </FrameLayout>
+
+        <EditText
+            android:id="@+id/drawer_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/search_field_background"
+            android:drawableStart="@drawable/ic_search"
+            android:drawablePadding="10dp"
+            android:hint="@string/drawer_search_hint"
+            android:imeOptions="actionDone"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:textColor="@color/icon_label_color"
+            android:textColorHint="#66FFFFFF"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/drawer_no_results"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/drawer_no_results"
+            android:textColor="@color/hint_color"
+            android:textSize="15sp"
+            android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/drawer_list"

@@ -20,6 +20,8 @@
 
     <!-- Drawer accessibility -->
     <string name="drawer_handle_hint">Open or close the app drawer</string>
+    <string name="drawer_search_hint">Search apps</string>
+    <string name="drawer_no_results">Nothing found</string>
 
     <!-- About / settings -->
     <string name="about_version_fmt">Version %1$s</string>
