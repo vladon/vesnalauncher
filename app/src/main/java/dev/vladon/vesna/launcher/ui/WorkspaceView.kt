@@ -16,9 +16,14 @@ import kotlin.math.max
 
 /**
  * The workspace: a fixed 4x5 grid of [AppIconView] children, one per occupied cell.
- * Cell geometry comes from [GridCanvas]; taps launch apps, long presses open item
- * menus, a long press on empty space opens the launcher menu, and an upward fling
- * anywhere opens the drawer.
+ * Cell geometry comes from [GridCanvas].
+ *
+ * Touch model:
+ * - tap launches, a long press on empty space opens the launcher menu, an upward
+ *   fling anywhere opens the drawer;
+ * - long-pressing an icon starts a drag session: the view dims the icon, reports
+ *   progress in workspace-local coordinates and lets [HomeActivity] decide the drop
+ *   target (grid cell or dock); highlights are drawn via [showDropHighlight].
  */
 class WorkspaceView @JvmOverloads constructor(
     context: Context,
@@ -26,34 +31,50 @@ class WorkspaceView @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
-    var onAppLongClick: ((View, LauncherApp) -> Boolean)? = null
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
 
-    /** Persisted after a drag-and-drop: move the app to the target cell (or swap). */
-    var onItemMove: ((LauncherApp, Int) -> Unit)? = null
+    /** The user lifted an icon by long-pressing it; a drag session has begun. */
+    var onDragStarted: ((cell: Int, app: LauncherApp, anchor: View) -> Unit)? = null
+
+    /** Drag progress in workspace-local coordinates. */
+    var onDragProgress: ((Float, Float) -> Unit)? = null
+
+    /**
+     * The finger was released: [moved] is false when it never left the touch slop
+     * (the item menu should open, anchored at [anchor]); [cancelled] is true when
+     * the system cancelled the gesture (no commit, no menu).
+     */
+    var onDragReleased: ((x: Float, y: Float, moved: Boolean, cancelled: Boolean, app: LauncherApp, anchor: View) -> Unit)? =
+        null
 
     private val density = resources.displayMetrics.density
     private val gutterPx = (8 * density).toInt()
     private val cellHPadPx = (4 * density).toInt()
     private val cellVPadPx = (4 * density).toInt()
 
-    // Active drag-and-drop state (see beginDrag). While a drag is running the grid
-    // intercepts the gesture and the swipe-up detector is bypassed.
-    private var dragSourceCell = -1
+    private var boundApps: Map<Int, LauncherApp> = emptyMap()
+    private var lastCellW = 0
+    private var lastCellH = 0
+
+    // Active drag-and-drop state. While a drag is running the grid intercepts the
+    // gesture and the swipe-up detector is bypassed.
     private var dragSourceApp: LauncherApp? = null
     private var dragAnchor: View? = null
     private var dragTargetCell: Int? = null
     private var dragMoved = false
-    private var lastCellW = 0
-    private var lastCellH = 0
 
     private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = HIGHLIGHT_COLOR
         style = Paint.Style.FILL
     }
 
-    // Observes the gesture stream without stealing touches from icon children.
+    // Touch-event plumbing: a child (icon) holding the gesture routes MOVE/UP through
+    // onInterceptTouchEvent, while empty-area gestures (no child target) reach both
+    // hooks with the same MotionEvent instance. Feeding from both hooks covers all
+    // paths; the identity check prevents feeding any single event twice.
+    private var lastIntercepted: MotionEvent? = null
+
     private val gestureDetector = GestureDetector(
         context,
         object : GestureDetector.SimpleOnGestureListener() {
@@ -82,14 +103,10 @@ class WorkspaceView @JvmOverloads constructor(
         }
     }
 
-    // Touch-event plumbing: a child (icon) holding the gesture routes MOVE/UP through
-    // onInterceptTouchEvent, while empty-area gestures (no child target) reach both
-    // hooks with the same MotionEvent instance. Feeding from both hooks covers all
-    // paths; the identity check prevents feeding any single event twice.
-    private var lastIntercepted: MotionEvent? = null
-
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         if (dragSourceApp != null) {
+            // An active drag takes the gesture over from the icon (which receives
+            // ACTION_CANCEL); subsequent events arrive in onTouchEvent.
             return true
         }
         when (ev.actionMasked) {
@@ -116,64 +133,63 @@ class WorkspaceView @JvmOverloads constructor(
         return super.onTouchEvent(ev)
     }
 
-    /** Starts a drag for the item at [cell]; the item dims until it is dropped. */
+    /** Starts a drag for the icon at [cell]; the item dims until it is dropped. */
     private fun beginDrag(cell: Int, app: LauncherApp, anchor: View) {
-        dragSourceCell = cell
         dragSourceApp = app
         dragAnchor = anchor
         dragMoved = false
         dragTargetCell = null
         anchor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         anchor.alpha = DRAGGED_ALPHA
+        onDragStarted?.invoke(cell, app, anchor)
     }
 
     private fun handleDragTouch(ev: MotionEvent) {
         when (ev.actionMasked) {
             MotionEvent.ACTION_MOVE -> {
                 dragMoved = true
-                val cell = GridCanvas.cellAtPoint(
-                    ev.x,
-                    ev.y,
-                    paddingLeft + gutterPx.toFloat(),
-                    paddingTop + gutterPx.toFloat(),
-                    lastCellW.toFloat(),
-                    lastCellH.toFloat(),
-                )
-                if (cell != dragTargetCell) {
-                    dragTargetCell = cell
-                    invalidate()
-                }
+                onDragProgress?.invoke(ev.x, ev.y)
             }
-            MotionEvent.ACTION_UP -> finishDrag(cancelled = false)
-            MotionEvent.ACTION_CANCEL -> finishDrag(cancelled = true)
+            MotionEvent.ACTION_UP -> endDrag(ev.x, ev.y, cancelled = false)
+            MotionEvent.ACTION_CANCEL -> endDrag(ev.x, ev.y, cancelled = true)
         }
     }
 
-    private fun finishDrag(cancelled: Boolean) {
-        val anchor = dragAnchor
+    /** Ends the drag session: restores the icon, clears highlights, reports release. */
+    private fun endDrag(x: Float, y: Float, cancelled: Boolean) {
         val app = dragSourceApp
-        val from = dragSourceCell
-        val target = if (cancelled) null else dragTargetCell
+        val anchor = dragAnchor
         val moved = dragMoved
-        resetDrag()
+        dragSourceApp = null
+        dragAnchor = null
+        dragTargetCell = null
+        dragMoved = false
         anchor?.alpha = 1f
         invalidate()
         if (app == null || anchor == null) return
-        if (!cancelled && moved && target != null && target != from) {
-            onItemMove?.invoke(app, target)
-        } else if (!moved) {
-            // A long press without movement keeps the context menu behavior.
-            onAppLongClick?.invoke(anchor, app)
+        onDragReleased?.invoke(x, y, moved, cancelled, app, anchor)
+    }
+
+    /** Shows (cell != null) or hides the drop-target highlight for drag sessions. */
+    fun showDropHighlight(cell: Int?) {
+        if (cell != dragTargetCell) {
+            dragTargetCell = cell
+            invalidate()
         }
     }
 
-    private fun resetDrag() {
-        dragSourceApp = null
-        dragAnchor = null
-        dragSourceCell = -1
-        dragTargetCell = null
-        dragMoved = false
-    }
+    /** The grid cell containing the point, or null when outside the grid. */
+    fun cellAtLocal(x: Float, y: Float): Int? = GridCanvas.cellAtPoint(
+        x,
+        y,
+        paddingLeft + gutterPx.toFloat(),
+        paddingTop + gutterPx.toFloat(),
+        lastCellW.toFloat(),
+        lastCellH.toFloat(),
+    )
+
+    /** Whether a bound icon occupies [cell]. */
+    fun isCellOccupied(cell: Int): Boolean = boundApps.containsKey(cell)
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -196,6 +212,7 @@ class WorkspaceView @JvmOverloads constructor(
 
     /** Reconciles children with the current cell-to-app mapping. */
     fun bind(cells: Map<Int, LauncherApp>) {
+        boundApps = cells
         for (i in childCount - 1 downTo 0) {
             val child = getChildAt(i)
             val cell = child.tag as? Int
@@ -215,6 +232,14 @@ class WorkspaceView @JvmOverloads constructor(
                 true
             }
         }
+    }
+
+    private fun findChildForCell(cell: Int): AppIconView? {
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            if ((child.tag as? Int) == cell) return child as AppIconView
+        }
+        return null
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -253,19 +278,14 @@ class WorkspaceView @JvmOverloads constructor(
         }
     }
 
-    private fun findChildForCell(cell: Int): AppIconView? {
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-            if ((child.tag as? Int) == cell) return child as AppIconView
-        }
-        return null
-    }
-
     private fun cellWidth(totalWidth: Int): Int =
         (totalWidth - paddingLeft - paddingRight - 2 * gutterPx) / GridCanvas.COLUMNS
 
     private fun cellHeight(totalHeight: Int): Int =
         (totalHeight - paddingTop - paddingBottom - 2 * gutterPx) / GridCanvas.ROWS
+
+    override fun generateDefaultLayoutParams(): LayoutParams =
+        LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
 
     private companion object {
         const val FLING_VELOCITY = 1200f

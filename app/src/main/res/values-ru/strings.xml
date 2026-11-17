@@ -20,6 +20,8 @@
 
     <!-- Специальные возможности шторки приложений -->
     <string name="drawer_handle_hint">Открыть или закрыть список приложений</string>
+    <string name="drawer_search_hint">Поиск приложений</string>
+    <string name="drawer_no_results">Ничего не найдено</string>
 
     <!-- О программе / настройки -->
     <string name="about_version_fmt">Версия %1$s</string>
