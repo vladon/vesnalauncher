@@ -6,6 +6,7 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
+import android.view.View
 import android.widget.LinearLayout
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
@@ -63,37 +64,38 @@ class DockView @JvmOverloads constructor(
         setPadding(pad, pad, pad, pad)
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (dragSourceApp != null) {
-            // An active drag takes the gesture over from the icon.
-            return true
-        }
-        return super.onInterceptTouchEvent(ev)
-    }
-
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (dragSourceApp != null) {
-            when (ev.actionMasked) {
+    // The dragged dock icon keeps the touch stream; observed via an OnTouchListener
+    // installed on the anchor. Intercepting on UP would swallow the event.
+    private val dragTouchListener =
+        View.OnTouchListener { view, event ->
+            if (dragSourceApp == null) return@OnTouchListener false
+            val dockX = view.left + event.x
+            val dockY = view.top + event.y
+            when (event.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
                     dragMoved = true
-                    onDragProgress?.invoke(ev.x, ev.y)
+                    onDragProgress?.invoke(dockX, dockY)
                 }
-                MotionEvent.ACTION_UP -> endDrag(ev.x, ev.y, cancelled = false)
-                MotionEvent.ACTION_CANCEL -> endDrag(ev.x, ev.y, cancelled = true)
+                MotionEvent.ACTION_UP -> endDrag(dockX, dockY, cancelled = false, anchor = view)
+                MotionEvent.ACTION_CANCEL -> endDrag(dockX, dockY, cancelled = true, anchor = view)
             }
-            return true
+            true
         }
-        return super.onTouchEvent(ev)
-    }
 
     /** Starts a drag for the dock icon at [slot]; the item dims until it is dropped. */
-    private fun beginDrag(slot: Int, app: LauncherApp, anchor: android.view.View) {
+    private fun beginDrag(slot: Int, app: LauncherApp, anchor: View) {
         dragSourceApp = app
         dragAnchor = anchor
         dragMoved = false
         dragTargetSlot = null
         anchor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         anchor.alpha = 0.45f
+        // The parent takes the gesture over: deliver a synthetic CANCEL so the
+        // child clears its pressed/ripple state, then install the drag listener.
+        anchor.dispatchTouchEvent(
+            MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0),
+        )
+        anchor.setOnTouchListener(dragTouchListener)
         onDragStarted?.invoke(slot, app, anchor)
     }
 
@@ -151,17 +153,17 @@ class DockView @JvmOverloads constructor(
         }
     }
 
-    private fun endDrag(x: Float, y: Float, cancelled: Boolean) {
+    private fun endDrag(x: Float, y: Float, cancelled: Boolean, anchor: View) {
         val app = dragSourceApp
-        val anchor = dragAnchor
         val moved = dragMoved
         dragSourceApp = null
         dragAnchor = null
         dragTargetSlot = null
         dragMoved = false
-        anchor?.alpha = 1f
+        anchor.setOnTouchListener(null)
+        anchor.alpha = 1f
         invalidate()
-        if (app == null || anchor == null) return
+        if (app == null) return
         onDragReleased?.invoke(x, y, moved, cancelled, app, anchor)
     }
 }

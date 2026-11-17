@@ -104,11 +104,6 @@ class WorkspaceView @JvmOverloads constructor(
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (dragSourceApp != null) {
-            // An active drag takes the gesture over from the icon (which receives
-            // ACTION_CANCEL); subsequent events arrive in onTouchEvent.
-            return true
-        }
         when (ev.actionMasked) {
             MotionEvent.ACTION_MOVE,
             MotionEvent.ACTION_UP,
@@ -122,16 +117,31 @@ class WorkspaceView @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (dragSourceApp != null) {
-            handleDragTouch(ev)
-            return true
-        }
         if (ev !== lastIntercepted) {
             gestureDetector.onTouchEvent(ev)
         }
         lastIntercepted = null
         return super.onTouchEvent(ev)
     }
+
+    // The dragged icon keeps the touch stream, so the drag itself is observed by an
+    // OnTouchListener installed on the anchor for the duration of the session.
+    // Intercepting on UP would swallow the event (the parent never receives it).
+    private val dragTouchListener =
+        View.OnTouchListener { view, event ->
+            if (dragSourceApp == null) return@OnTouchListener false
+            val workspaceX = view.left + event.x
+            val workspaceY = view.top + event.y
+            when (event.actionMasked) {
+                MotionEvent.ACTION_MOVE -> {
+                    dragMoved = true
+                    onDragProgress?.invoke(workspaceX, workspaceY)
+                }
+                MotionEvent.ACTION_UP -> endDrag(workspaceX, workspaceY, cancelled = false, anchor = view)
+                MotionEvent.ACTION_CANCEL -> endDrag(workspaceX, workspaceY, cancelled = true, anchor = view)
+            }
+            true
+        }
 
     /** Starts a drag for the icon at [cell]; the item dims until it is dropped. */
     private fun beginDrag(cell: Int, app: LauncherApp, anchor: View) {
@@ -141,32 +151,27 @@ class WorkspaceView @JvmOverloads constructor(
         dragTargetCell = null
         anchor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         anchor.alpha = DRAGGED_ALPHA
+        // The parent takes the gesture over: deliver a synthetic CANCEL so the
+        // child clears its pressed/ripple state, then install the drag listener.
+        anchor.dispatchTouchEvent(
+            MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0),
+        )
+        anchor.setOnTouchListener(dragTouchListener)
         onDragStarted?.invoke(cell, app, anchor)
     }
 
-    private fun handleDragTouch(ev: MotionEvent) {
-        when (ev.actionMasked) {
-            MotionEvent.ACTION_MOVE -> {
-                dragMoved = true
-                onDragProgress?.invoke(ev.x, ev.y)
-            }
-            MotionEvent.ACTION_UP -> endDrag(ev.x, ev.y, cancelled = false)
-            MotionEvent.ACTION_CANCEL -> endDrag(ev.x, ev.y, cancelled = true)
-        }
-    }
-
     /** Ends the drag session: restores the icon, clears highlights, reports release. */
-    private fun endDrag(x: Float, y: Float, cancelled: Boolean) {
+    private fun endDrag(x: Float, y: Float, cancelled: Boolean, anchor: View) {
         val app = dragSourceApp
-        val anchor = dragAnchor
         val moved = dragMoved
         dragSourceApp = null
         dragAnchor = null
         dragTargetCell = null
         dragMoved = false
-        anchor?.alpha = 1f
+        anchor.setOnTouchListener(null)
+        anchor.alpha = 1f
         invalidate()
-        if (app == null || anchor == null) return
+        if (app == null) return
         onDragReleased?.invoke(x, y, moved, cancelled, app, anchor)
     }
 
