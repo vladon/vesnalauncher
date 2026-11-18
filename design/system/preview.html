@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vesna Launcher Material 3 Design System</title>
+<style>
+*{box-sizing:border-box}
+:root{color-scheme:light;font-family:Inter,system-ui,sans-serif;color:#2E3338;background:#F8FAF6}
+body{margin:0}
+a{color:#286744;text-underline-offset:.2em}
+a:focus-visible{outline:2px solid #236A71;outline-offset:3px}
+img,svg{display:block;max-width:100%}
+[hidden]{display:none!important}
+.shell{width:min(100% - 40px,1080px);margin-inline:auto}
+.masthead{min-height:72px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid #D8E2D9}
+.masthead img{width:32px;height:32px}
+.masthead nav{display:flex;gap:clamp(12px,3vw,32px);flex-wrap:wrap}
+.masthead nav a{display:grid;align-items:center;min-height:48px;font-size:.875rem;font-weight:600}
+h1,h2,h3,h4{font-family:Nunito,system-ui,sans-serif;line-height:1.2;margin:0}
+h1{font-size:clamp(2.3rem,6vw,4.5rem);letter-spacing:-.04em}
+h2{font-size:clamp(1.6rem,3vw,2.2rem);letter-spacing:-.02em}
+h3{font-size:1.5rem}h4{font-size:1.125rem}
+p{line-height:1.55;margin:0}
+.intro{padding:clamp(32px,7vw,84px) 0 24px}
+.intro p{margin-top:10px;color:#4F6057}
+.identity{min-height:278px;display:grid;grid-template-columns:1.35fr 1fr;align-items:center;position:relative;overflow:hidden;border-radius:24px;background:#EDF5E8;isolation:isolate}
+.identity::before,.identity::after{content:"";position:absolute;z-index:-1;border-radius:50%;width:74%;height:86%;bottom:-56%;right:-9%;transform:rotate(-15deg);background:linear-gradient(95deg,#A8E66E,#2EC6B8 66%,#6FB7FF)}
+.identity::after{right:-28%;bottom:-16%;transform:rotate(-25deg);opacity:.25;z-index:-2}
+.lockup{width:min(96%,460px);margin-inline:auto}
+.hero-icon{justify-self:center;width:clamp(98px,18vw,172px);aspect-ratio:1;overflow:hidden;border-radius:26%;box-shadow:0 12px 24px #2E333826}
+.swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:16px 0 0;padding:0;list-style:none}
+.swatches li{display:grid;gap:4px;align-content:start;font-size:.875rem;overflow-wrap:anywhere}
+.swatches li span:first-child{display:block;height:clamp(24px,5vw,54px);border-radius:12px;background:var(--chip);border:1px solid #2E333818;margin-bottom:3px}
+.swatches code{font-size:.8rem;color:#4F6057}
+.section{margin-block:clamp(48px,8vw,88px)}
+.section>h2{margin-bottom:20px}.section,.section>h2{scroll-margin-top:16px}
+.specimens{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+[data-theme=light]{--primary:#49672E;--on-primary:#FFFFFF;--primary-container:#CAEEA6;--on-primary-container:#324E18;--inverse-primary:#AFD18C;--secondary:#57624A;--on-secondary:#FFFFFF;--secondary-container:#DBE7C9;--on-secondary-container:#3F4A34;--tertiary:#386664;--on-tertiary:#FFFFFF;--tertiary-container:#BBECE9;--on-tertiary-container:#1E4E4C;--error:#BA1A1A;--on-error:#FFFFFF;--error-container:#FFDAD6;--on-error-container:#93000A;--surface:#F9FAEF;--on-surface:#1A1D16;--on-surface-variant:#44483E;--surface-dim:#D9DBD0;--surface-bright:#F9FAEF;--surface-container-lowest:#FFFFFF;--surface-container-low:#F3F5E9;--surface-container:#EDEFE4;--surface-container-high:#E8E9DE;--surface-container-highest:#E2E3D9;--surface-tint:#49672E;--surface-variant:#E0E4D6;--outline:#74796D;--outline-variant:#C4C8BA;--inverse-surface:#2F312A;--inverse-on-surface:#F0F2E7;--scrim:#000000;--shadow:#000000;--background:#F9FAEF;--on-background:#1A1D16;--primary-fixed:#CAEEA6;--primary-fixed-dim:#AFD18C;--on-primary-fixed:#0D2000;--on-primary-fixed-variant:#324E18;--secondary-fixed:#DBE7C9;--secondary-fixed-dim:#BFCBAE;--on-secondary-fixed:#151E0C;--on-secondary-fixed-variant:#3F4A34;--tertiary-fixed:#BBECE9;--tertiary-fixed-dim:#A0CFCD;--on-tertiary-fixed:#00201F;--on-tertiary-fixed-variant:#1E4E4C;color-scheme:light}
+[data-theme=dark]{--primary:#AFD18C;--on-primary:#1D3703;--primary-container:#324E18;--on-primary-container:#CAEEA6;--inverse-primary:#49672E;--secondary:#BFCBAE;--on-secondary:#29341F;--secondary-container:#3F4A34;--on-secondary-container:#DBE7C9;--tertiary:#A0CFCD;--on-tertiary:#003736;--tertiary-container:#1E4E4C;--on-tertiary-container:#BBECE9;--error:#FFB4AB;--on-error:#690005;--error-container:#93000A;--on-error-container:#FFDAD6;--surface:#11140E;--on-surface:#E2E3D9;--on-surface-variant:#C4C8BA;--surface-dim:#11140E;--surface-bright:#373A33;--surface-container-lowest:#0C0F09;--surface-container-low:#1A1D16;--surface-container:#1E211A;--surface-container-high:#282B24;--surface-container-highest:#33362E;--surface-tint:#AFD18C;--surface-variant:#44483E;--outline:#8E9286;--outline-variant:#44483E;--inverse-surface:#E2E3D9;--inverse-on-surface:#2F312A;--scrim:#000000;--shadow:#000000;--background:#11140E;--on-background:#E2E3D9;--primary-fixed:#CAEEA6;--primary-fixed-dim:#AFD18C;--on-primary-fixed:#0D2000;--on-primary-fixed-variant:#324E18;--secondary-fixed:#DBE7C9;--secondary-fixed-dim:#BFCBAE;--on-secondary-fixed:#151E0C;--on-secondary-fixed-variant:#3F4A34;--tertiary-fixed:#BBECE9;--tertiary-fixed-dim:#A0CFCD;--on-tertiary-fixed:#00201F;--on-tertiary-fixed-variant:#1E4E4C;color-scheme:dark}
+.specimen{background:var(--surface-container-lowest);color:var(--on-surface);border:1px solid var(--outline-variant);border-radius:28px;padding:clamp(12px,2.4vw,28px);min-width:0}
+.specimen-heading{margin-bottom:12px}
+.specimen-heading h3{font-family:Nunito,system-ui,sans-serif;font-size:1.5rem;line-height:2rem;font-weight:400;letter-spacing:0rem}
+.role-samples{list-style:none;padding:0;margin:0 0 16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.role-samples li{min-height:32px;display:grid;place-items:center;padding:4px;border-radius:8px;overflow-wrap:anywhere;font-family:Inter,system-ui,sans-serif;font-size:0.75rem;line-height:1rem;font-weight:500;letter-spacing:0.03125rem}
+.role-samples .primary-sample{background:var(--primary);color:var(--on-primary)}
+.role-samples .secondary-sample{background:var(--secondary);color:var(--on-secondary)}
+.role-samples .tertiary-sample{background:var(--tertiary);color:var(--on-tertiary)}
+.panel{border-radius:16px;background:var(--surface);padding:16px}
+.panel+.panel{margin-top:12px}.panel h4{margin-bottom:12px;font-family:Inter,system-ui,sans-serif;font-size:1.375rem;line-height:1.75rem;font-weight:400;letter-spacing:0rem}
+.search{display:flex;align-items:center;background:var(--surface-container-high);color:var(--on-surface-variant);border:1px solid var(--outline);border-radius:999px;min-height:56px;padding-inline:16px 4px;gap:12px}
+.search:focus-within{outline:2px solid var(--secondary);outline-offset:2px}
+.search input{padding:10px 0;min-width:0;flex:1;border:0;background:transparent;color:var(--on-surface);font-family:Inter,system-ui,sans-serif;font-size:1rem;line-height:1.5rem;font-weight:400;letter-spacing:0.03125rem;outline:0}
+.search input::placeholder{color:var(--on-surface-variant)}
+.search input::-webkit-search-cancel-button{display:none}
+.glyph{width:24px;height:24px;flex:none}
+.icon-button{display:grid;place-items:center;flex:none;width:48px;height:48px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--on-surface-variant);cursor:pointer}
+.app-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 4px;list-style:none;margin:16px 0 0;padding:0}
+.app-grid li{display:grid;justify-items:center;align-content:start;min-width:0;gap:4px;text-align:center;font-family:Inter,system-ui,sans-serif;font-size:0.75rem;line-height:1rem;font-weight:500;letter-spacing:0.03125rem;overflow-wrap:anywhere}
+.app-art{width:48px;height:48px;max-width:100%;border-radius:12px;display:grid;place-items:center;background:var(--app-bg);color:var(--app-ink)}
+.hide-labels .app-name{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.feedback{margin-top:16px;padding:8px 12px 4px;border-radius:12px;background:var(--tertiary-container);color:var(--on-tertiary-container)}
+.feedback p{font-family:Inter,system-ui,sans-serif;font-size:0.875rem;line-height:1.25rem;font-weight:400;letter-spacing:0.0125rem}
+.feedback button{margin-top:2px}
+.settings{background:var(--surface-container-low)}
+.setting{min-height:56px;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 4px;position:relative;font-family:Inter,system-ui,sans-serif;font-size:1rem;line-height:1.5rem;font-weight:400;letter-spacing:0.03125rem}
+.setting--supporting{min-height:72px}
+.setting+.setting{border-top:1px solid var(--outline-variant)}
+.setting .glyph{color:var(--on-surface-variant)}
+.setting small,.value{display:block;font-family:Inter,system-ui,sans-serif;font-size:0.875rem;line-height:1.25rem;font-weight:400;letter-spacing:0.0125rem;color:var(--on-surface-variant)}
+.setting:has(input){cursor:pointer}
+.setting input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.switch-track{width:52px;height:32px;display:flex;align-items:center;padding:2px;border:2px solid var(--outline);border-radius:999px;background:var(--surface-container-highest)}
+.switch-track::before{content:"";display:block;width:16px;height:16px;margin-inline-start:4px;background:var(--outline);border-radius:50%}
+.setting input:checked+.switch-track{border-color:var(--primary);background:var(--primary);justify-content:end}
+.setting input:checked+.switch-track::before{width:24px;height:24px;margin:0;background:var(--on-primary)}
+.setting input:focus-visible+.switch-track,.icon-button:focus-visible,.button:focus-visible,.folder-name:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.button{position:relative;isolation:isolate;border:0;border-radius:999px;background:transparent;padding:8px 24px;min-height:48px;cursor:pointer;font-family:Inter,system-ui,sans-serif;font-size:0.875rem;line-height:1.25rem;font-weight:500;letter-spacing:0.00625rem}
+.button::before{content:"";position:absolute;inset:4px 0;z-index:-1;border:1px solid transparent;border-radius:inherit;background:var(--button-fill,transparent)}
+.primary{--button-fill:var(--primary);color:var(--on-primary)}
+.tonal{--button-fill:var(--secondary-container);color:var(--on-secondary-container)}
+.outlined,.text-button{color:var(--primary)}
+.outlined::before{border-color:var(--outline)}
+.text-button{padding-inline:12px}
+.button:active::before,.button:focus-visible::before{box-shadow:inset 0 0 0 40px color-mix(in srgb,currentColor 10%,transparent)}
+@media(hover:hover){.button:hover:not(:active):not(:focus-visible)::before{box-shadow:inset 0 0 0 40px color-mix(in srgb,currentColor 8%,transparent)}.icon-button:hover{background:color-mix(in srgb,currentColor 8%,transparent)}}
+dialog{background:var(--surface-container-high);color:var(--on-surface);border:0;border-radius:28px;padding:24px;width:min(92vw,380px)}
+dialog h4{font-family:Nunito,system-ui,sans-serif;font-size:1.5rem;line-height:2rem;font-weight:400;letter-spacing:0rem}
+dialog .actions{justify-content:flex-end;margin-top:16px}
+dialog::backdrop{background:color-mix(in srgb,var(--scrim) 32%,transparent)}
+.folder-label{position:relative;display:block;margin-top:20px}
+.folder-label span{position:absolute;inset-inline-start:12px;top:0;transform:translateY(-50%);padding-inline:4px;background:var(--surface-container-high);color:var(--on-surface-variant);font-family:Inter,system-ui,sans-serif;font-size:0.75rem;line-height:1rem;font-weight:400;letter-spacing:0.025rem}
+.folder-label:focus-within span{color:var(--primary)}
+.folder-name{display:block;width:100%;border:1px solid var(--outline);background:transparent;color:var(--on-surface);border-radius:4px;min-height:56px;padding:8px 16px;font-family:Inter,system-ui,sans-serif;font-size:1rem;line-height:1.5rem;font-weight:400;letter-spacing:0.03125rem}
+.mask-board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;padding:clamp(14px,3vw,32px);background:#E9F1E7;border-radius:24px}
+.mask-board figure{margin:0;display:grid;justify-items:center;align-content:start;gap:10px}
+.mask-board figcaption{text-align:center;line-height:1.4;font-size:.875rem;overflow-wrap:anywhere}
+.mask{width:min(100%,90px);aspect-ratio:1;overflow:hidden;border:1px solid #2E333819}
+.circle{border-radius:50%}.round{border-radius:22%}.squircle{border-radius:37%}
+.mask-board svg,.hero-icon svg{width:100%;height:100%}
+.foot{border-top:1px solid #D8E2D9;padding-block:20px;color:#4F6057;font-size:.875rem}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:720px){.specimens{grid-template-columns:1fr}.mask-board{grid-template-columns:repeat(3,minmax(0,1fr))}.identity{min-height:200px}}
+@media(max-width:420px){.shell{width:calc(100% - 28px)}.swatches{grid-template-columns:repeat(3,minmax(0,1fr))}.app-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.masthead nav{gap:12px}}
+
+</style>
+</head>
+<body>
+<header class="shell masthead">
+  <img src="brand/vesna-mark.svg" alt="Vesna Launcher">
+  <nav aria-label="Design system">
+    <a href="#themes">Themes</a><a href="#adaptive-icon">Adaptive icon</a><a href="README.md">Specification</a>
+  </nav>
+</header>
+<main class="shell">
+  <div class="intro"><h1>Vesna Launcher</h1><p>Material Design 3 system preview</p></div>
+  <section aria-label="Brand identity">
+    <div class="identity">
+      <img class="lockup" src="brand/vesna-logo.svg" alt="Vesna Launcher primary logo">
+      <div class="hero-icon" role="img" aria-label="Vesna Launcher adaptive icon"><svg aria-hidden="true" viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fold-hero" gradientUnits="userSpaceOnUse" x1="26" y1="40" x2="54" y2="75"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#006D68"/></linearGradient>
+    <linearGradient id="rise-hero" gradientUnits="userSpaceOnUse" x1="70" y1="48" x2="61" y2="83"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#128C7D"/></linearGradient></defs><rect x="0" y="0" width="108" height="108" fill="#F8FAF6"/><path fill="url(#fold-hero)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="url(#rise-hero)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="#90D442" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/></svg></div>
+    </div>
+    <ul class="swatches" aria-label="Brand palette"><li><span style="--chip:#A8E66E" aria-hidden="true"></span><strong>Spring Green</strong><code>#A8E66E</code></li><li><span style="--chip:#2EC6B8" aria-hidden="true"></span><strong>Fresh Teal</strong><code>#2EC6B8</code></li><li><span style="--chip:#6FB7FF" aria-hidden="true"></span><strong>Sky Blue</strong><code>#6FB7FF</code></li><li><span style="--chip:#F8FAF6" aria-hidden="true"></span><strong>Off-White</strong><code>#F8FAF6</code></li><li><span style="--chip:#2E3338" aria-hidden="true"></span><strong>Charcoal</strong><code>#2E3338</code></li></ul>
+  </section>
+  <section class="section" id="themes"><h2>Light and dark themes</h2>
+    <div class="specimens"><article class="specimen" data-theme="light">
+  <header class="specimen-heading"><h3>Light</h3></header>
+  <ul class="role-samples" aria-label="Material color roles"><li class="primary-sample">Primary</li><li class="secondary-sample">Secondary</li><li class="tertiary-sample">Tertiary</li></ul>
+  <div class="panel drawer">
+    <h4>App drawer</h4>
+    <label class="visually-hidden" for="search-light">Search apps</label>
+    <div class="search"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search-light" type="search" placeholder="Search apps" autocomplete="off"/><button class="icon-button clear" type="button" aria-label="Clear search" hidden><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <ul class="app-grid" aria-label="Example apps"><li data-app="calendar"><span class="app-art" style="--app-bg:#DCEAFF;--app-ink:#1D5285"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 4v3m8-3v3M4 10h16m-11 5h6"/></svg></span><span class="app-name">Calendar</span></li><li data-app="camera"><span class="app-art" style="--app-bg:#E6E8EC;--app-ink:#3D4B56"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h4l1.5-2h5L16 7h4v12H4Z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="app-name">Camera</span></li><li data-app="compass"><span class="app-art" style="--app-bg:#D6F1F1;--app-ink:#146466"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></svg></span><span class="app-name">Compass</span></li><li data-app="files"><span class="app-art" style="--app-bg:#E3EDD2;--app-ink:#385E26"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h6l2 2h8v10H4Z"/></svg></span><span class="app-name">Files</span></li><li data-app="notes"><span class="app-art" style="--app-bg:#F2E5C9;--app-ink:#745420"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h10l2 2v14H6Z m3 5h6m-6 4h6m-6 4h4"/></svg></span><span class="app-name">Notes</span></li><li data-app="music"><span class="app-art" style="--app-bg:#F3E3ED;--app-ink:#803762"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17V6l9-2v10M10 17c0 1-1.2 2-2.7 2S5 18.5 5 17.5s1.2-2 2.7-2 2.3.5 2.3 1.5ZM19 14c0 1-1.2 2-2.7 2s-2.3-.5-2.3-1.5 1.2-2 2.7-2 2.3.5 2.3 1.5Z"/></svg></span><span class="app-name">Music</span></li><li data-app="maps"><span class="app-art" style="--app-bg:#E2EFE6;--app-ink:#25634B"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s6-5.7 6-10A6 6 0 1 0 6 10c0 4.3 6 10 6 10Z"/><circle cx="12" cy="10" r="2"/></svg></span><span class="app-name">Maps</span></li><li data-app="clock"><span class="app-art" style="--app-bg:#E5E6FD;--app-ink:#4F4990"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></span><span class="app-name">Clock</span></li></ul>
+    <div class="feedback" hidden><p>No apps found.</p><button class="button tonal clear-empty" type="button">Clear search</button></div>
+    <p class="visually-hidden" role="status"></p>
+  </div>
+  <div class="panel settings">
+    <h4>Settings</h4>
+    <div class="setting setting--supporting"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 13a8 8 0 1 0-8.5 7h.5a2 2 0 0 0 1.5-3.3c-.8-.9-.1-2.2 1.2-2.2h3.5a1.8 1.8 0 0 0 1.8-1.5Z"/><path d="M7.7 11h.1m3.1-3.3h.1m4.8 1.1h.1"/></svg><div><span>Theme</span><small>Current appearance</small></div><span class="value">Light</span></div>
+    <label class="setting"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg><span>Show app names</span><input type="checkbox" role="switch" checked/><span class="switch-track" aria-hidden="true"></span></label>
+  </div>
+  <div class="actions"><button class="button primary open" type="button">Edit folder</button><button class="button outlined reset" type="button">Reset demo</button></div>
+  <dialog aria-labelledby="dialog-light"><form method="dialog"><h4 id="dialog-light">Rename folder</h4><label class="folder-label"><span>Folder name</span><input class="folder-name" required pattern=".*\S.*" value="Favorites"/></label><div class="actions"><button class="button text-button" value="cancel" formnovalidate>Cancel</button><button class="button text-button" value="save">Save</button></div></form></dialog>
+</article><article class="specimen" data-theme="dark">
+  <header class="specimen-heading"><h3>Dark</h3></header>
+  <ul class="role-samples" aria-label="Material color roles"><li class="primary-sample">Primary</li><li class="secondary-sample">Secondary</li><li class="tertiary-sample">Tertiary</li></ul>
+  <div class="panel drawer">
+    <h4>App drawer</h4>
+    <label class="visually-hidden" for="search-dark">Search apps</label>
+    <div class="search"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search-dark" type="search" placeholder="Search apps" autocomplete="off"/><button class="icon-button clear" type="button" aria-label="Clear search" hidden><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <ul class="app-grid" aria-label="Example apps"><li data-app="calendar"><span class="app-art" style="--app-bg:#DCEAFF;--app-ink:#1D5285"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 4v3m8-3v3M4 10h16m-11 5h6"/></svg></span><span class="app-name">Calendar</span></li><li data-app="camera"><span class="app-art" style="--app-bg:#E6E8EC;--app-ink:#3D4B56"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h4l1.5-2h5L16 7h4v12H4Z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="app-name">Camera</span></li><li data-app="compass"><span class="app-art" style="--app-bg:#D6F1F1;--app-ink:#146466"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></svg></span><span class="app-name">Compass</span></li><li data-app="files"><span class="app-art" style="--app-bg:#E3EDD2;--app-ink:#385E26"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h6l2 2h8v10H4Z"/></svg></span><span class="app-name">Files</span></li><li data-app="notes"><span class="app-art" style="--app-bg:#F2E5C9;--app-ink:#745420"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h10l2 2v14H6Z m3 5h6m-6 4h6m-6 4h4"/></svg></span><span class="app-name">Notes</span></li><li data-app="music"><span class="app-art" style="--app-bg:#F3E3ED;--app-ink:#803762"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17V6l9-2v10M10 17c0 1-1.2 2-2.7 2S5 18.5 5 17.5s1.2-2 2.7-2 2.3.5 2.3 1.5ZM19 14c0 1-1.2 2-2.7 2s-2.3-.5-2.3-1.5 1.2-2 2.7-2 2.3.5 2.3 1.5Z"/></svg></span><span class="app-name">Music</span></li><li data-app="maps"><span class="app-art" style="--app-bg:#E2EFE6;--app-ink:#25634B"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s6-5.7 6-10A6 6 0 1 0 6 10c0 4.3 6 10 6 10Z"/><circle cx="12" cy="10" r="2"/></svg></span><span class="app-name">Maps</span></li><li data-app="clock"><span class="app-art" style="--app-bg:#E5E6FD;--app-ink:#4F4990"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></span><span class="app-name">Clock</span></li></ul>
+    <div class="feedback" hidden><p>No apps found.</p><button class="button tonal clear-empty" type="button">Clear search</button></div>
+    <p class="visually-hidden" role="status"></p>
+  </div>
+  <div class="panel settings">
+    <h4>Settings</h4>
+    <div class="setting setting--supporting"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 13a8 8 0 1 0-8.5 7h.5a2 2 0 0 0 1.5-3.3c-.8-.9-.1-2.2 1.2-2.2h3.5a1.8 1.8 0 0 0 1.8-1.5Z"/><path d="M7.7 11h.1m3.1-3.3h.1m4.8 1.1h.1"/></svg><div><span>Theme</span><small>Current appearance</small></div><span class="value">Dark</span></div>
+    <label class="setting"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg><span>Show app names</span><input type="checkbox" role="switch" checked/><span class="switch-track" aria-hidden="true"></span></label>
+  </div>
+  <div class="actions"><button class="button primary open" type="button">Edit folder</button><button class="button outlined reset" type="button">Reset demo</button></div>
+  <dialog aria-labelledby="dialog-dark"><form method="dialog"><h4 id="dialog-dark">Rename folder</h4><label class="folder-label"><span>Folder name</span><input class="folder-name" required pattern=".*\S.*" value="Favorites"/></label><div class="actions"><button class="button text-button" value="cancel" formnovalidate>Cancel</button><button class="button text-button" value="save">Save</button></div></form></dialog>
+</article></div>
+  </section>
+  <section class="section" id="adaptive-icon"><h2>Adaptive icon masks</h2>
+    <div class="mask-board"><figure><div class="mask "><svg aria-hidden="true" viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fold-mask0" gradientUnits="userSpaceOnUse" x1="26" y1="40" x2="54" y2="75"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#006D68"/></linearGradient>
+    <linearGradient id="rise-mask0" gradientUnits="userSpaceOnUse" x1="70" y1="48" x2="61" y2="83"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#128C7D"/></linearGradient></defs><rect x="0" y="0" width="108" height="108" fill="#F8FAF6"/><path fill="url(#fold-mask0)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="url(#rise-mask0)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="#90D442" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/></svg></div><figcaption>Square</figcaption></figure><figure><div class="mask round"><svg aria-hidden="true" viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fold-mask1" gradientUnits="userSpaceOnUse" x1="26" y1="40" x2="54" y2="75"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#006D68"/></linearGradient>
+    <linearGradient id="rise-mask1" gradientUnits="userSpaceOnUse" x1="70" y1="48" x2="61" y2="83"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#128C7D"/></linearGradient></defs><rect x="0" y="0" width="108" height="108" fill="#F8FAF6"/><path fill="url(#fold-mask1)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="url(#rise-mask1)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="#90D442" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/></svg></div><figcaption>Rounded square</figcaption></figure><figure><div class="mask squircle"><svg aria-hidden="true" viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fold-mask2" gradientUnits="userSpaceOnUse" x1="26" y1="40" x2="54" y2="75"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#006D68"/></linearGradient>
+    <linearGradient id="rise-mask2" gradientUnits="userSpaceOnUse" x1="70" y1="48" x2="61" y2="83"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#128C7D"/></linearGradient></defs><rect x="0" y="0" width="108" height="108" fill="#F8FAF6"/><path fill="url(#fold-mask2)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="url(#rise-mask2)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="#90D442" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/></svg></div><figcaption>Squircle</figcaption></figure><figure><div class="mask circle"><svg aria-hidden="true" viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fold-mask3" gradientUnits="userSpaceOnUse" x1="26" y1="40" x2="54" y2="75"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#006D68"/></linearGradient>
+    <linearGradient id="rise-mask3" gradientUnits="userSpaceOnUse" x1="70" y1="48" x2="61" y2="83"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#128C7D"/></linearGradient></defs><rect x="0" y="0" width="108" height="108" fill="#F8FAF6"/><path fill="url(#fold-mask3)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="url(#rise-mask3)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="#90D442" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/></svg></div><figcaption>Circle</figcaption></figure><figure><div class="mask circle" style="--sample-bg:#D9EDCB;--sample-ink:#294732"><svg aria-hidden="true" viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="108" height="108" fill="var(--sample-bg)"/><path fill="var(--sample-ink)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="var(--sample-ink)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="var(--sample-ink)" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/></svg></div><figcaption>Themed light</figcaption></figure><figure><div class="mask circle" style="--sample-bg:#2A4443;--sample-ink:#B0E4DF"><svg aria-hidden="true" viewBox="18 18 72 72" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="108" height="108" fill="var(--sample-bg)"/><path fill="var(--sample-ink)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="var(--sample-ink)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="var(--sample-ink)" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/></svg></div><figcaption>Themed dark</figcaption></figure></div>
+  </section>
+</main>
+<footer class="shell foot">Vesna Launcher · Material Design 3 · Version 1.1</footer>
+<script>
+for (const specimen of document.querySelectorAll(".specimen")) {
+  const input = specimen.querySelector('input[type="search"]');
+  const clear = specimen.querySelector(".clear");
+  const grid = specimen.querySelector(".app-grid");
+  const apps = [...grid.children];
+  const feedback = specimen.querySelector(".feedback");
+  const status = specimen.querySelector('[role="status"]');
+  const toggle = specimen.querySelector('input[role="switch"]');
+  const dialog = specimen.querySelector("dialog");
+  const name = dialog.querySelector(".folder-name");
+  const open = specimen.querySelector(".open");
+  let folderName = "Favorites";
+
+  function filter() {
+    const query = input.value.trim().toLowerCase();
+    for (const app of apps) app.hidden = !app.dataset.app.includes(query);
+    grid.hidden = apps.every(app => app.hidden);
+    feedback.hidden = !grid.hidden;
+    status.textContent = grid.hidden ? "No apps found." : "";
+    clear.hidden = !input.value;
+  }
+  function showLabels() {
+    grid.classList.toggle("hide-labels", !toggle.checked);
+  }
+  input.addEventListener("input", filter);
+  function clearSearch() {
+    input.value = "";
+    filter();
+    input.focus();
+  }
+  clear.addEventListener("click", clearSearch);
+  specimen.querySelector(".clear-empty").addEventListener("click", clearSearch);
+  toggle.addEventListener("change", showLabels);
+  open.addEventListener("click", () => {
+    name.value = folderName;
+    dialog.returnValue = "";
+    dialog.showModal();
+    name.select();
+  });
+  dialog.addEventListener("close", () => {
+    if (dialog.returnValue === "save" && name.value.trim()) folderName = name.value.trim();
+    open.focus();
+  });
+  specimen.querySelector(".reset").addEventListener("click", () => {
+    input.value = "";
+    toggle.checked = true;
+    folderName = "Favorites";
+    showLabels();
+    filter();
+  });
+}
+</script>
+</body>
+</html>

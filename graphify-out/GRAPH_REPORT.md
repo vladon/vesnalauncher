@@ -1,15 +1,18 @@
-# Graph Report - vesnalauncher  (2026-11-18)
+# Graph Report - vesnalauncher  (2026-11-19)
 
 ## Corpus Check
-- 62 files · ~18,896 words (cluster-only regeneration after merging #7)
+- 70 files · ~43,414 words
+- Verdict: corpus is large enough that graph structure adds value.
+- Unclassified: 42 file(s) not represented in the graph (top: .xml 33, (none) 3, .properties 2)
+- WARNING: 42 of 127 files seen (33%) have no supported extractor and are missing from this graph entirely. It may look complete while representing only part of the codebase.
 
 ## Summary
-- 666 nodes · 1359 edges · 28 communities (15 shown, 13 thin omitted)
+- 697 nodes · 1414 edges · 30 communities (16 shown, 14 thin omitted)
 - Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 154 edges (avg confidence: 0.78)
-- Token cost: 0 input · 0 output — cluster-only regeneration (no extraction this run; semantic-extraction spend recorded in cost.json)
+- Token cost: 4,500 input · 1,400 output
 
 ## Graph Freshness
-- Built from commit: `98239023` (post-merge of #7; graph-relevant files identical to `95c61711`)
+- Built from commit: `cec5f126`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -18,35 +21,36 @@
 - Folder Persistence
 - Architecture & README Docs
 - Home Activity Orchestration
-- Icon Rendering & Framework
+- DockView
 - Resolver & Seeding
-- App Model & Controller
+- DockOrderingTest
 - Clean-Room & Process Docs
 - About Screen UI
 - CI Release Workflow
 - Workspace View Internals
 - Grid Canvas Geometry
-- Drawer View Behavior
-- Dock Ordering
-- Folder Dialog UI
+- DrawerView
+- LauncherApp
+- WorkspaceItemDao
 - App Search
 - Current Home Screenshot
-- Drawer List Adapters
-- Folder Contents Adapter
+- DrawerAppsAdapter.kt
 - Pixel Reference Screenshot
 - Home Grid Screenshot
 - Work Profile Reference
-- Drawer Fling-to-Close
+- AppIconView.kt
 - LauncherUiState (isolated)
+- LauncherDragLayer.kt
+- CellContent
 
 ## God Nodes (most connected - your core abstractions)
-1. `LauncherApp` - 81 edges
+1. `LauncherApp` - 83 edges
 2. `WorkspaceRepository` - 36 edges
 3. `WorkspaceView` - 31 edges
 4. `LauncherController` - 31 edges
 5. `HomeActivity` - 30 edges
-6. `AppKey` - 23 edges
-7. `DrawerView` - 20 edges
+6. `AppKey` - 25 edges
+7. `DrawerView` - 21 edges
 8. `WorkspaceItem` - 20 edges
 9. `Query: what does LauncherApp connect (corrected)` - 20 edges
 10. `Query: which docs are not tied to code (corrected)` - 19 edges
@@ -66,55 +70,55 @@
 ## Import Cycles
 - None detected.
 
-## Communities (28 total, 13 thin omitted)
+## Communities (30 total, 14 thin omitted)
 
 ### Community 0 - "Platform App Discovery"
 Cohesion: 0.05
 Nodes (11): AppDiscovery, AppLauncher, LauncherAppsAppDiscovery, HomeRoleChecker, PackageChangeMonitor, PackageEvent, Added, Removed (+3 more)
 
 ### Community 1 - "Folder Persistence"
-Cohesion: 0.06
-Nodes (7): FolderDao, FolderEntity, LauncherDatabase, toDomain(), toEntity(), WorkspaceItemDao, WorkspaceItemEntity
+Cohesion: 0.09
+Nodes (4): FolderDao, FolderEntity, LauncherDatabase, toEntity()
 
 ### Community 2 - "Architecture & README Docs"
 Cohesion: 0.11
 Nodes (51): AboutScreen, AppDiscovery, AppIconView, AppKey, AppLauncher, AppSearch, CellContent, DockOrdering (+43 more)
 
 ### Community 3 - "Home Activity Orchestration"
-Cohesion: 0.08
-Nodes (9): HomeActivity, DragSource, Folder, LauncherMessage, DOCK_FULL, WORKSPACE_FULL, Container, DOCK (+1 more)
-
-### Community 4 - "Icon Rendering & Framework"
 Cohesion: 0.06
-Nodes (3): AppIconView, DockView, LauncherDragLayer
+Nodes (10): FolderDialog, HomeActivity, DragSource, LauncherMessage, DOCK_FULL, WORKSPACE_FULL, LauncherUiState, Container (+2 more)
 
 ### Community 5 - "Resolver & Seeding"
-Cohesion: 0.11
-Nodes (7): AppKey, SeedPlanner, WorkspaceItem, WorkspaceResolver, SeedPlannerTest, WorkspaceResolverFolderTest, WorkspaceResolverTest
-
-### Community 6 - "App Model & Controller"
-Cohesion: 0.09
-Nodes (4): LauncherApp, LauncherController, LauncherUiState, WorkspaceRepository
+Cohesion: 0.16
+Nodes (7): AppKey, toDomain(), Folder, WorkspaceItem, WorkspaceResolver, WorkspaceResolverFolderTest, WorkspaceResolverTest
 
 ### Community 7 - "Clean-Room & Process Docs"
 Cohesion: 0.06
 Nodes (33): Architecture Overview, SettingsActivity, AOSP (including Launcher3), Independent Development Policy, License Compliance (MIT + Apache 2.0), Nova Launcher (reference example), android.yml CI Workflow, CI Quality Gates (+25 more)
 
 ### Community 8 - "About Screen UI"
-Cohesion: 0.06
-Nodes (3): AboutScreen(), VesnaTheme(), SettingsActivity
+Cohesion: 0.05
+Nodes (15): AboutScreen(), VesnaTheme(), SettingsActivity, Android Adaptive Icon, Android handoff and acceptance, Components, Logo, Material 3 color (+7 more)
 
 ### Community 9 - "CI Release Workflow"
 Cohesion: 0.06
 Nodes (35): name, runs-on, steps, RELEASE_KEYSTORE_B64, VESNA_RELEASE_KEY_ALIAS, VESNA_RELEASE_KEY_PASSWORD, VESNA_RELEASE_KEYSTORE, VESNA_RELEASE_STORE_PASSWORD (+27 more)
 
-### Community 10 - "Workspace View Internals"
-Cohesion: 0.10
-Nodes (4): WorkspaceView, CellContent, App, FolderCell
+### Community 12 - "DrawerView"
+Cohesion: 0.07
+Nodes (3): DrawerSearchTest, DrawerView, SimpleOnItemTouchListener
+
+### Community 13 - "LauncherApp"
+Cohesion: 0.08
+Nodes (5): LauncherApp, LauncherController, SeedPlanner, WorkspaceRepository, SeedPlannerTest
 
 ### Community 16 - "Current Home Screenshot"
 Cohesion: 0.29
 Nodes (10): Bottom Dock Row: Calendar, Camera, Chrome, Clock, Folder Icon on Workspace (brown folder, contents not visible), Gesture Navigation Pill (no button bar), Android Home Launcher Layout Pattern (workspace grid + dock + gesture nav), Home Screen Screenshot (1080x2400, current state capture), Launcher Identity: suspected Vesna Launcher build under test (unverified), Status Bar: 12:48, shield badge, 5G signal, battery charging, Dark Abstract Wallpaper (mountain silhouette) (+2 more)
+
+### Community 17 - "DrawerAppsAdapter.kt"
+Cohesion: 0.15
+Nodes (4): DrawerAppsAdapter, Holder, FolderContentsAdapter, Holder
 
 ### Community 19 - "Pixel Reference Screenshot"
 Cohesion: 0.33
@@ -128,6 +132,10 @@ Nodes (9): App Icon Grid Layout (5 rows: Contacts/Drive/Files, Gmail/Google/Maps
 Cohesion: 0.38
 Nodes (7): Android Home Screen Screenshot, App Icon Grid (4 columns, icon-over-label rows), Bottom Dock / Hotseat (Calendar, Camera, Chrome, Clock), Google App Icons (Contacts, Drive, Files, Gmail, Google, Maps, Messages, Phone, YouTube, Chrome, Calendar, Camera, Clock), Vesna Launcher Home Screen Layout Reference, Status Bar (time 1:09, 5G, battery charging), Work Folder (work-profile folder tile)
 
+### Community 29 - "CellContent"
+Cohesion: 0.40
+Nodes (3): CellContent, App, FolderCell
+
 ## Ambiguous Edges - Review These
 - `Home Screen Screenshot (1080x2400, current state capture)` → `Launcher Identity: suspected Vesna Launcher build under test (unverified)`  [AMBIGUOUS]
   .now.png · relation: references
@@ -136,22 +144,22 @@ Nodes (7): Android Home Screen Screenshot, App Icon Grid (4 columns, icon-over-l
 
 ## Knowledge Gaps
 - **33 isolated node(s):** `Added`, `Removed`, `DOCK_FULL`, `WORKSPACE_FULL`, `DOCK` (+28 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 166 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 176 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `LauncherApp` connect `App Model & Controller` to `Platform App Discovery`, `Folder Persistence`, `Home Activity Orchestration`, `Icon Rendering & Framework`, `Resolver & Seeding`, `Workspace View Internals`, `Grid Canvas Geometry`, `Drawer View Behavior`, `Dock Ordering`, `Folder Dialog UI`, `App Search`, `Drawer List Adapters`, `Folder Contents Adapter`?**
-  _High betweenness centrality (0.298) - this node is a cross-community bridge._
+- **Why does `LauncherApp` connect `LauncherApp` to `Platform App Discovery`, `Folder Persistence`, `Home Activity Orchestration`, `DockView`, `Resolver & Seeding`, `DockOrderingTest`, `Workspace View Internals`, `DrawerView`, `App Search`, `DrawerAppsAdapter.kt`, `WorkspaceView.kt`, `AppIconView.kt`, `CellContent`?**
+  _High betweenness centrality (0.294) - this node is a cross-community bridge._
 - **What connects `Added`, `Removed`, `DOCK_FULL` to the rest of the system?**
   _33 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Platform App Discovery` be split into smaller, more focused modules?**
-  _Cohesion score 0.05310734463276836 - nodes in this community are weakly interconnected._
-- **Why does `WorkspaceRepository` connect `App Model & Controller` to `Platform App Discovery`, `Folder Persistence`, `Home Activity Orchestration`, `Resolver & Seeding`, `Grid Canvas Geometry`, `Dock Ordering`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+  _Cohesion score 0.05245901639344262 - nodes in this community are weakly interconnected._
+- **Why does `WorkspaceRepository` connect `LauncherApp` to `Platform App Discovery`, `Folder Persistence`, `Resolver & Seeding`, `DockOrderingTest`, `WorkspaceItemDao`?**
+  _High betweenness centrality (0.059) - this node is a cross-community bridge._
 - **Should `Folder Persistence` be split into smaller, more focused modules?**
-  _Cohesion score 0.0576271186440678 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08558558558558559 - nodes in this community are weakly interconnected._
 
 ### Low-confidence Hints
 _AMBIGUOUS edges — the extractor was unsure. Verify before acting on these._
@@ -160,11 +168,3 @@ _AMBIGUOUS edges — the extractor was unsure. Verify before acting on these._
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
 - **What is the exact relationship between `Carrier App Icon (label reads 'TMoble' - SIM-card-with-gear glyph)` and `Android Home Screen Screenshot (.cur.png)`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-
-## Update notes (2026-11-18, --update audit)
-
-- **Forced overwrite justification:** the #479-family guard refused the write over 3 missing semantic ids. Two are verified renames of the same concepts under the new extraction's id normalization (`docs_architecture_overview_architecture_overview` → `..._architectureoverview`; `docs_architecture_overview_room_database` → `..._roomdatabase`) — no content lost.
-- **`LauncherUiState` doc node was a genuine extraction miss** (OVERVIEW names it in Data flow): re-injected by hand from the verified doc/code text (`LauncherController.kt`), not present in the subagent chunk.
-- **10 `graphify-out/memory/query_*.md` entries were cached as partial** (read 1–3 lines short). Tail inspection shows the unread lines are cited-node lists already represented as graph edges, so the partial markers were cleared on evidence — no re-extraction queued.
-- **Token cost basis:** chunk self-reports only; the update also spent 3 failed agent runs (~$0.01 each) on a flaky write channel before the JSON-via-reply workaround.
-- **This version:** regenerated via `cluster-only` after merging #7; curated community labels preserved from `.graphify_labels.json`.
