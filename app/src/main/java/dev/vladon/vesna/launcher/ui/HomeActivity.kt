@@ -270,30 +270,23 @@ class HomeActivity : ComponentActivity() {
         drawerClosedForDrag = false
     }
 
-    /** Commits a grid drop: relocate to an empty cell, or create/extend a folder. */
+    /**
+     * Commits a root-driven grid release: dock insert/move, or the shared cell
+     * routing ([commitOnCell]). Drawer sources carry Container.WORKSPACE, so the
+     * fromDrawer discriminator must be checked before the container arms.
+     */
     private fun commitGridDrop(source: DragSource, x: Float, y: Float, overDock: Boolean) {
         val app = source.app
         if (overDock) {
-            when (source.container) {
-                Container.WORKSPACE -> controller.moveWorkspaceToDock(app, dock.slotAtLocalX(x))
-                else -> controller.insertIntoDock(app, dock.slotAtLocalX(x))
+            when {
+                source.fromDrawer || source.container == Container.DOCK ->
+                    controller.insertIntoDock(app, dock.slotAtLocalX(x))
+                else -> controller.moveWorkspaceToDock(app, dock.slotAtLocalX(x))
             }
             return
         }
         val cell = workspace.cellAtLocal(x, y) ?: return
-        when (val content = workspace.contentAt(cell)) {
-            null -> when (source.container) {
-                Container.WORKSPACE -> controller.moveWithinWorkspace(app, cell)
-                Container.DOCK -> controller.moveDockToWorkspace(app, cell)
-                else -> controller.insertWorkspaceAt(app, cell)
-            }
-            is CellContent.App -> controller.createFolderFromDrop(
-                app,
-                cell,
-                getString(R.string.folder_default_title),
-            )
-            is CellContent.FolderCell -> controller.addToFolder(app, content.folder.id)
-        }
+        commitOnCell(source, app, cell)
     }
 
     private fun showFolderDialog(folder: Folder) {
@@ -349,13 +342,18 @@ class HomeActivity : ComponentActivity() {
             .show()
     }
 
-    /** Commits a grid drop: relocate to an empty cell, or create/extend a folder. */
+    /**
+     * Commits a drop on a grid cell for every route: a drawer app is inserted
+     * (move ops require an existing row and silently no-op for unpinned apps),
+     * workspace sources relocate within the grid, dock sources return to the
+     * grid, and drops onto occupants create or extend folders.
+     */
     private fun commitOnCell(source: DragSource, app: LauncherApp, cell: Int) {
         when (val content = workspace.contentAt(cell)) {
-            null -> when (source.container) {
-                Container.WORKSPACE -> controller.moveWithinWorkspace(app, cell)
-                Container.DOCK -> controller.moveDockToWorkspace(app, cell)
-                else -> controller.insertWorkspaceAt(app, cell)
+            null -> when {
+                source.fromDrawer -> controller.insertWorkspaceAt(app, cell)
+                source.container == Container.WORKSPACE -> controller.moveWithinWorkspace(app, cell)
+                else -> controller.moveDockToWorkspace(app, cell)
             }
             is CellContent.App -> controller.createFolderFromDrop(
                 app,
