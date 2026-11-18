@@ -42,20 +42,21 @@ no research scenario covers this: write down the acceptance assertions, then
 automate or script them. On completion, add the run record link to
 [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md#home-role-and-launching).
 
-## VESNA-QA-003: package lifecycle verification (done)
+## VESNA-QA-003: package lifecycle verification (partial)
 
-**Status:** done (partial scope) — device run recorded 2026-11-19 on the
-dedicated API 35 AVD; full reproducible record:
-[verification/VESNA-QA-003.md](verification/VESNA-QA-003.md). Drawer-side
-lifecycle (install → drawer, same-package update, disable/re-enable,
-uninstall incl. launcher process restart and uninstall-while-dead) passed end
-to end. Workspace/dock/folder **placement** cases are not executable on 0.4.1:
-two recorded UI defects leave no working path to pin an unpinned app (drawer
-drag is a silent no-op; the drawer item long-press menu opens as a zero-height
-popup) — recorded in the run doc, fix left to a separate increment. The
-managed-profile repeat is untested (the AVD has no profile). Fixture
-methodology: minimal hand-built debug APKs (same package/component/signature,
-two versionCodes, no permissions) from a scratch dir outside the repo.
+**Status:** in-progress. The drawer-side lifecycle run (2026-11-19, dedicated
+API 35 AVD) is accepted for review as **VESNA-QA-003A**; reproducible record:
+[verification/VESNA-QA-003.md](verification/VESNA-QA-003.md). Install →
+drawer, same-package update, disable/re-enable, and uninstall (incl. launcher
+process restart and uninstall-while-dead) passed; **workspace/dock/folder
+placement cases and the managed-profile repeat remain open** — no working
+path to pin an unpinned app existed on 0.4.1 (two recorded UI defects in the
+run doc). **VESNA-BUG-001** (drawer drag-pin no-op) is independently verified
+fixed on API 35 (seeded baseline; a pin to cell 14 and dock 3 persists on the
+fixed build) and awaits merge as **PR #15**; placed-item QA is assigned after
+integration, on the fixed revision. Fixture methodology retained at
+`D:/orca/scratch/vesna-qa-003/` (hand-built debug APKs: same
+package/component/signature, two versionCodes, no permissions).
 **Priority:** P0. **Depends on:** the AVD inventory from
 [VESNA-QA-002](#vesna-qa-002-home-and-launch-return-verification-done).
 

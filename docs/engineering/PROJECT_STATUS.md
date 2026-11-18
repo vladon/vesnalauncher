@@ -35,7 +35,7 @@ exercised; everything else is source-verified only.
 | Drawer search | Case-insensitive substring filter (`AppSearch`), empty state, clear restores full list; drawer never re-orders | `AppSearchTest` (5 JVM tests); on-device `DrawerSearchTest` |
 | Drag-and-drop | Cross-container drag (workspace ⇄ dock ⇄ drawer-to-workspace) routed by `LauncherDragLayer`; drop-target highlights | Source only |
 | Folders | `Folder` grid cell, open/rename/remove in `FolderDialog`, dissolution below two members (`removeFromFolder` returns members to free cells); drag-into-folder via drops onto folder cells (`addToFolder`, two `HomeActivity` paths) | Model only: `WorkspaceResolverFolderTest` (7 tests) covers the resolver projection (member exclusion from top-level cells, folder cell with member count, invalid cell skipped, no override of an app in the target cell, in-folder ordering, stale members dropped, empty without folders). Create/rename/dissolution flows, the dialog UI, and the drag-into-folder UI flow are **not** covered |
-| Package events | `PackageChangeMonitor` via `LauncherApps.registerPackageCallback` (install/update/uninstall, all profiles, `userSerial` tagged); stale layout entries pruned | **Drawer-side device-verified** by the [VESNA-QA-003 run](verification/VESNA-QA-003.md) (2026-11-19, API 35 AVD): install→drawer, same-package update, disable/re-enable, uninstall + launcher restart all clean. Placement-side wipe not exercisable on 0.4.1 — the run doc records two UI defects that block pinning an unpinned app |
+| Package events | `PackageChangeMonitor` via `LauncherApps.registerPackageCallback` (install/update/uninstall, all profiles, `userSerial` tagged); stale layout entries pruned | **Drawer-side device-verified** by the [VESNA-QA-003 run](verification/VESNA-QA-003.md) (2026-11-19, API 35 AVD), accepted for review as VESNA-QA-003A: install→drawer, same-package update, disable/re-enable, uninstall + launcher restart all clean. Placement-side wipe not exercisable on 0.4.1 — the run doc records the UI defects; the drag-pin fix is independently verified on API 35 and pending merge as PR #15 |
 | Persistence | Room `vesna-launcher.db`, schema version 3; migrations 1→2 (per-profile `userSerial`) and 2→3 (folders, `folderId`) | Source only; migrations and post-migration restart are intended behavior, not verified end to end |
 | Settings / About | `SettingsActivity` (Compose + Material 3) with app and version info | Source only |
 
@@ -109,13 +109,15 @@ list means it was not performed, nothing more.
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —
   HOME registration/selection and launch-return device-verified on the
   dedicated API 35 AVD (a Vesna platform baseline item; no approved research ID).
-- Completed: [VESNA-QA-003](verification/VESNA-QA-003.md) — package lifecycle,
-  drawer side (install/update/disable/uninstall/restart), with two recorded
-  UI defects that block all placement cases on 0.4.1 (no working path to pin
-  an unpinned app: drawer drag is a silent no-op; the drawer item menu opens
-  as a zero-height popup). A follow-up increment should fix those two defects,
-  after which the placement rows of QA-003 can be executed; managed-profile
-  repeat still untested (no profile on the AVD).
+- Accepted for review as **VESNA-QA-003A**:
+  [VESNA-QA-003](verification/VESNA-QA-003.md) — package lifecycle, drawer
+  side (install/update/disable/uninstall/restart) on the API 35 AVD. The
+  parent QA-003 item stays **in-progress**: workspace/dock/folder placement
+  cases and the managed-profile repeat are open. They are unblocked by the
+  BUG-001 fix (drawer drag-pin no-op), independently verified on API 35
+  (seeded baseline; pinned cell 14 and dock 3 persist) and awaiting merge as
+  **PR #15**; placed-item QA runs after integration on the fixed revision
+  (coordinator-assigned).
 - Next QA candidates: [VESNA-QA-004 in BACKLOG.md](BACKLOG.md).
 - Prioritized plan: [ROADMAP.md](ROADMAP.md).
 - Requirement-level pointers: [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).

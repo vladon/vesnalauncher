@@ -7,9 +7,12 @@ restart). The **workspace/dock/folder placement cases are not executable on
 pinned, due to two recorded UI defects (below). Run recorded 2026-11-19 on the
 dedicated QA device.
 
-**Item:** [VESNA-QA-003 in BACKLOG.md](../BACKLOG.md#vesna-qa-003-package-lifecycle-verification-done)
+**Item:** [VESNA-QA-003 in BACKLOG.md](../BACKLOG.md#vesna-qa-003-package-lifecycle-verification-partial)
 (P0, Vesna platform baseline, no approved research ID — QA of existing behavior
 only; no product change, no research approval claimed).
+**Sub-item status:** the drawer-side evidence in this document is accepted for
+review as **VESNA-QA-003A**; the parent VESNA-QA-003 item remains **open**
+for the workspace/dock/folder placement cases and the managed-profile repeat.
 **Code under test:** commit `1a2590a` ("docs: record HOME selection and
 launch-return verification (#11)"), branch `vladon/qa-package-lifecycle`
 (isolated worktree `qa-package-lifecycle`); launcher under test
@@ -226,9 +229,11 @@ task forbids provisioning without reporting separately). The cross-profile
 
 ## Regression verification recipe (handoff for the fix increment)
 
-Status note (2026-11-19): the coordinator confirmed defect 1 in source and
-dispatched a separate fix; the placement rows of this item are to be executed
-against the **fixed APK revision** (explicitly identified in that run), not
+Status note (2026-11-19): the coordinator confirmed defect 1 in source; the
+fix is independently verified on API 35 (seeded baseline without placements;
+a pin to cell 14 and dock 3 persists on the fixed build) and awaits merge as
+**PR #15**. The placement rows of this item are to be executed against the
+**fixed revision after integration** (explicitly identified in that run), not
 this 0.4.1 baseline. The original-build lifecycle record above stays valid.
 
 **Fixture (retained, do not regenerate):** `D:/orca/scratch/vesna-qa-003/`
