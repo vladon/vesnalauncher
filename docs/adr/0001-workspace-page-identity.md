@@ -237,12 +237,10 @@ default page persists even when it holds no locating records.
     open;
   - assertions that default-page assignment happened and that keys, positions,
     and folder links survived; page-scope invariants hold after reopen;
-  - the recorded **on-device** remainder of
-    [VESNA-QA-004](../engineering/BACKLOG.md#vesna-qa-004-migration-and-restart-verification-proposed)
-    — force-stop and reboot with layout identical and no re-seed of an emptied
-    workspace — following the run-record discipline of
-    [VESNA-QA-002](../engineering/verification/VESNA-QA-002.md), with the
-    traceability row updated in the same change.
+  - repeat the on-device force-stop, reboot, and empty-layout verification
+    against the new schema using the procedure in
+    [VESNA-QA-004B](../engineering/verification/VESNA-QA-004B.md). Update the
+    traceability row in the same change.
 
 ## Decision prerequisites
 
@@ -288,7 +286,7 @@ or implied by this document.
   · [`GridCanvas`](../../app/src/main/java/dev/vladon/vesna/launcher/workspace/GridCanvas.kt)
   · [`LauncherController`](../../app/src/main/java/dev/vladon/vesna/launcher/workspace/LauncherController.kt)
 - Planning: [ENG-101](../engineering/BACKLOG.md#eng-101-workspace-page-identities-and-schema-migration)
-  · [VESNA-QA-004](../engineering/BACKLOG.md#vesna-qa-004-migration-and-restart-verification-proposed)
+  · [VESNA-QA-004](../engineering/BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done)
   · [traceability: home screen and workspace pages](../engineering/REQUIREMENTS_TRACEABILITY.md#home-screen-and-workspace-pages)
 - Evidence at drafting time: QA-004A harness added by commit `14ec712`
   (verified: `app/src/androidTest/.../RoomMigrationQaTest.kt`, 1 file,

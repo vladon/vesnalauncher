@@ -74,16 +74,28 @@ Verify the `PackageChangeMonitor` → stale-cleanup path end to end:
   (also feeds the managed-profile row in
   [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids)).
 
-## VESNA-QA-004: migration and restart verification (proposed)
+## VESNA-QA-004: migration and restart verification (done)
 
-**Status:** proposed. **Priority:** P0. **Depends on:** AVD inventory.
+**Status:** done. Separate API 35 runs verified historical migrations and
+restart behavior. **Part A,
+migrations:** `RoomMigrationQaTest` (merged as
+[PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`)
+seeds authentic v1 and v2 schemas into isolated on-device test databases and
+migrates them through the unmodified production `LauncherDatabase.build`; the
+coordinator's independent run executed both cases plus `DrawerSearchTest` on
+the dedicated API 35 AVD (2026-11-19). **Part B, persistence:** process death,
+full guest reboot, and no re-seed of an emptied workspace — reproducible
+record: [verification/VESNA-QA-004B.md](verification/VESNA-QA-004B.md)
+(2026-11-19, tested build `0c7269c`, 0.4.1/6).
+**Priority:** P0. **Depends on:** AVD inventory.
 
 - Room 1→2 and 2→3 migrations (`MIGRATION_1_2`, `MIGRATION_2_3`): run against
   representative v1 and v2 databases; layout, folders, and per-profile
-  `userSerial` values survive intact.
-- Process death: force-stop and relaunch; layout identical.
-- Reboot: restart the device; layout identical, no re-seed of an emptied
-  workspace.
+  `userSerial` values survive intact (part A).
+- The persisted placements and icon bounds matched after force-stop and
+  relaunch (part B).
+- The persisted placements and icon bounds matched after reboot. An emptied
+  layout stayed empty (part B).
 
 ## Engineering work items
 
@@ -207,3 +219,4 @@ tracking, layout data only). Gates ENG-106.
 | Item | Evidence |
 |---|---|
 | Drawer search QA baseline (`R-DRAWER-100.4` order-preservation subset, `R-DRAWER-101.1` local-filtering subset) | PR #9, `DrawerSearchTest`, 3 green runs on the dedicated API 35 AVD — see [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record) |
+| VESNA-QA-004 migration and restart verification | Part A: `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`), both migration cases plus `DrawerSearchTest` on the dedicated API 35 AVD; part B: [VESNA-QA-004B](verification/VESNA-QA-004B.md) (force-stop, full guest reboot, no re-seed) — see [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record) |
