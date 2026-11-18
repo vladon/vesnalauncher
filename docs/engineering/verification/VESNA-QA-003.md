@@ -2,10 +2,9 @@
 
 **Verdict:** PARTIAL — every **drawer-side** lifecycle case passed end to end
 (install, same-package update, disable/re-enable, uninstall, launcher process
-restart). The **workspace/dock/folder placement cases are not executable on
-0.4.1**: the build offers no working UI path to pin an app that is not already
-pinned, due to two recorded UI defects (below). Run recorded 2026-11-19 on the
-dedicated QA device.
+restart). The run did not exercise workspace, dock, or folder placement.
+Two UI defects prevented pinning the fixture in this run. Recorded 2026-11-19
+on the dedicated QA device.
 
 **Item:** [VESNA-QA-003 in BACKLOG.md](../BACKLOG.md#vesna-qa-003-package-lifecycle-verification-partial)
 (P0, Vesna platform baseline, no approved research ID — QA of existing behavior
@@ -74,7 +73,8 @@ container, cellIndex, userSerial, folderId) against the baseline snapshot —
 they are *not* claims of byte-identical database files (WAL checkpointing
 legitimately rewrites pages). The production database on the device was never
 written, checkpointed, or cleared by this run; the launcher is debuggable, so
-`run-as` provided the read path. UI observations and DB assertions are labeled
+`run-as` provided the read path. The files were copied sequentially, so these
+snapshots describe observations taken while the app was idle. UI observations and DB assertions are labeled
 separately throughout.
 
 ## Suspected product defects found (recorded only; fix left to a separate increment)
@@ -106,9 +106,8 @@ were reproduced on 0.4.1 (`1a2590a` build installed on the AVD).
    icon-sized anchor) renders and taps normally — verified "Remove from dock" /
    "App info" visible on screen in this run.
 
-Consequence for this item: workspace, dock, and folder **placement** rows of
-the backlog scenario could not be exercised, because no UI path can create the
-first placement. Per the item's own instruction ("pin … only where existing UI
+Consequence for this run: the tested drawer flows did not create the first
+placement, so workspace, dock, and folder lifecycle cases remain open. Per the item's own instruction ("pin … only where existing UI
 supports it") those sub-cases are reported **NOT EXECUTABLE** rather than
 simulated.
 
@@ -199,7 +198,7 @@ task forbids provisioning without reporting separately). The cross-profile
 | # | Case | Result | Evidence |
 |---|---|---|---|
 | A | Install → drawer visibility | **PASS** | `01`, drawer dump, DB unchanged |
-| B | Pin to workspace/dock/folder | **NOT EXECUTABLE** — no working pin path on 0.4.1 (defects 1–2 above) | `dumpsys window` popup frame; DB unchanged after continuous drawer drag |
+| B | Pin to workspace/dock/folder | **NOT EXECUTABLE** — the tested pin paths failed on the baseline (defects 1–2 above) | `dumpsys window` popup frame; DB unchanged after continuous drawer drag |
 | C | Same-package update preserves drawer entry + layout | **PASS** | `03`, identical bounds, DB row-identical |
 | D | Disable → drawer removal; re-enable → recovery | **PASS** (drawer side) | `04`, `05`, DB row-identical both steps |
 | E | Uninstall → no ghosts live, after restart, after dead-uninstall | **PASS** (drawer side) | `06`, `07`, `08`, DB row-identical |
@@ -229,12 +228,10 @@ task forbids provisioning without reporting separately). The cross-profile
 
 ## Regression verification recipe (handoff for the fix increment)
 
-Status note (2026-11-19): the coordinator confirmed defect 1 in source; the
-fix is independently verified on API 35 (seeded baseline without placements;
-a pin to cell 14 and dock 3 persists on the fixed build) and awaits merge as
-**PR #15**. The placement rows of this item are to be executed against the
-**fixed revision after integration** (explicitly identified in that run), not
-this 0.4.1 baseline. The original-build lifecycle record above stays valid.
+Status note (2026-11-19): [PR #15](https://github.com/vladon/vesnalauncher/pull/15)
+fixed defect 1 at `40cb3ee`. The coordinator verified that the same fixture
+could be placed in workspace cell 14 and dock slot 3 on API 35. VESNA-QA-003B
+tracks the separate placed-item lifecycle run against the fixed revision.
 
 **Fixture (retained, do not regenerate):** `D:/orca/scratch/vesna-qa-003/`
 
@@ -265,8 +262,6 @@ Vesna foreground, `adb -s <serial>` pinned throughout):
    `[15,457][255,500]`; press its icon at **(135, 420)**.
 4. One continuous hold-drag to a verified-empty cell (cells 14–19 are free on
    the seeded layout; cell 14 center ≈ (668, 1691)): `input draganddrop 135 420 668 1691 2000`.
-   (A physical finger reproduces identically: long-press the drawer icon,
-   drag to an empty cell, release.)
 5. **Fixed build expectation:** the fixture appears at that cell; a read-only
    snapshot (`adb exec-out run-as dev.vladon.vesna.launcher cat` of
    `vesna-launcher.db` + `-wal` + `-shm`, compared row-by-row) gains a

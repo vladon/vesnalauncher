@@ -49,12 +49,10 @@ API 35 AVD) is accepted for review as **VESNA-QA-003A**; reproducible record:
 [verification/VESNA-QA-003.md](verification/VESNA-QA-003.md). Install →
 drawer, same-package update, disable/re-enable, and uninstall (incl. launcher
 process restart and uninstall-while-dead) passed; **workspace/dock/folder
-placement cases and the managed-profile repeat remain open** — no working
-path to pin an unpinned app existed on 0.4.1 (two recorded UI defects in the
-run doc). **VESNA-BUG-001** (drawer drag-pin no-op) is independently verified
-fixed on API 35 (seeded baseline; a pin to cell 14 and dock 3 persists on the
-fixed build) and awaits merge as **PR #15**; placed-item QA is assigned after
-integration, on the fixed revision. Fixture methodology retained at
+placement cases and the managed-profile repeat remain open**. Two pinning
+defects interrupted these cases on the baseline. [PR #15](https://github.com/vladon/vesnalauncher/pull/15)
+restored drawer drops and was verified on API 35. Placed-item verification
+continues in **VESNA-QA-003B**. Fixture methodology is recorded at
 `D:/orca/scratch/vesna-qa-003/` (hand-built debug APKs: same
 package/component/signature, two versionCodes, no permissions).
 **Priority:** P0. **Depends on:** the AVD inventory from

@@ -42,10 +42,8 @@ AVD** (no new device work required to start).
    (recorded 2026-11-19,
    [verification/VESNA-QA-003.md](verification/VESNA-QA-003.md)). The
    workspace/dock/folder and managed-profile branches remain open: the
-   blocking defect (drawer drag-pin no-op) is fixed in **PR #15**
-   (independently verified on API 35 — seeded baseline, pinned cell 14 and
-   dock 3 persist); placed-item QA runs after integration on the fixed
-   revision.
+   drawer drop defect was fixed in [PR #15](https://github.com/vladon/vesnalauncher/pull/15)
+   and independently verified on API 35. VESNA-QA-003B verifies placed items.
 3. **Migrations and restart** — Room 1→2→3 migration on representative databases,
    layout intact after process death and device reboot
    ([BACKLOG.md](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-proposed)).
