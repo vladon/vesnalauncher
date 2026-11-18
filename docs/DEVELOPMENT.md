@@ -32,7 +32,8 @@ in app localization resources (`values-ru/strings.xml`).
 ## Pull requests
 
 - Small, independently reviewable changes are preferred over large dumps.
-- CI must be green (build + unit tests + lint) before merging.
+- CI must be green (build + unit tests + lint + androidTest compilation) before
+  merging.
 - Squash-merge to keep history linear; one logical change per squash commit.
 - `main` is protected against force pushes and deletion.
 - Never commit generated artifacts: no APKs, no `build/` output, no local
@@ -44,9 +45,10 @@ in app localization resources (`values-ru/strings.xml`).
   **eligible, scoped** pull requests: small, in-scope changes whose required
   checks pass. Scope must match the task the change was made under (for
   orchestrated work, the task's allowed-file list).
-- The required checks (build, JVM unit tests, lint — see below) are mandatory
-  for every merge. **No administrative bypass**: override buttons, admin merges
-  with failing checks, or skip-directives are not permitted, ever.
+- The required checks (build, JVM unit tests, lint, androidTest compilation —
+  see below) are mandatory for every merge. **No administrative bypass**:
+  override buttons, admin merges with failing checks, or skip-directives are
+  not permitted, ever.
 - **Release authorization remains separate.** Merge authorization never implies
   release authorization: cutting a release tag, publishing a GitHub Release, or
   distributing an APK requires its own explicit owner approval at the time of
@@ -75,8 +77,19 @@ request:
 1. `./gradlew assembleDebug` — the project compiles.
 2. `./gradlew testDebugUnitTest` — JVM unit tests pass.
 3. `./gradlew lintDebug` — Android Lint reports no errors.
+4. `./gradlew assembleDebugAndroidTest` — the `androidTest` sources compile into
+   `app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`.
 
-A pull request is mergeable only when all three gates pass.
+Gate 4 is a compile gate only: it proves the instrumentation test sources build,
+but it does not execute any test. GitHub CI has no emulator attached, so
+instrumentation tests never run there. Run them locally against the intended
+Vesna test device only: with no other device attached, use
+`./gradlew connectedDebugAndroidTest`; with other devices connected, install the
+app and androidTest APKs and run the AndroidJUnitRunner on that device via
+`adb -s <serial> shell am instrument -w dev.vladon.vesna.launcher.test/androidx.test.runner.AndroidJUnitRunner`,
+so nothing executes on a phone or research emulator.
+
+A pull request is mergeable only when all four gates pass.
 
 ## Versioning and releases
 
@@ -96,6 +109,6 @@ A pull request is mergeable only when all three gates pass.
 ## Keeping `main` releasable
 
 - Run the relevant checks locally before pushing:
-  `./gradlew assembleDebug testDebugUnitTest lintDebug`.
+  `./gradlew assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug`.
 - Prefer many small merges over one big integration.
 - If `main` breaks, fixing it takes priority over all other work.
