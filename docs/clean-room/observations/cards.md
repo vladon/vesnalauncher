@@ -105,9 +105,9 @@
 - Context: the Nova Now welcome sheet offers "Alternatively, set a manual
   location in Nova Settings" for the Weather Card.
 - EXHAUSTIVE CHECKS (all negative):
-  1. Settings search: "location", "weather", "city" — ALL zero results
-     (search indexes titles AND subtitles; the "dock" control query returns
-     two matches, proving the index works).
+  1. Settings search: "location", "weather", "city", "AccuWeather" — ALL
+     zero results (search indexes titles AND subtitles; the "dock" control
+     query returns two matches, proving the index works).
   2. Card details page (AccuWeather): no location field; overflow (⋮) has
      only "Reset to default"; "See forecast details >" is inert.
   3. Cards list page: card entries only (Media controls, AccuWeather,
@@ -115,6 +115,10 @@
   4. Settings ▸ Integrations (complete inventory): Calendar ("Your
      upcoming events"), Spotify, Deezer, Twitch, Slack, Discord, Dropbox,
      GitHub, Sesame Shortcuts — NO weather/AccuWeather/location entry.
+  5. Overlay surfaces (2026-11-19 00:04–0:08, see OBS-CARDS-116): card
+     long-press = external provider link; card gear = the same Card
+     details page; search-bar ⋮ = Add card / API Integrations / Settings;
+     "Add card" = custom card builder — none offers a location setting.
 - CONCLUSION: the manual-location affordance advertised by the welcome
   sheet does not exist anywhere in Nova 8.9.9's UI. The Weather/AccuWeather
   card's ONLY location path is the precise-Location permission grant
@@ -182,3 +186,40 @@
   card (expires tonight; removable via Cards ▸ AccuWeather ▸ Day/time).
   Welcome-sheet Calendar/Weather toggles left ON (user-facing feature,
   enabled state).
+
+## OBS-CARDS-116 — Nova Now overlay affordances: card gear, ⋮ menu, custom card builder, provider deep link
+
+- Date / Env: 2026-11-19 00:04–00:08 / ENV-1 (Nova Prime)
+- Discovered while exhaustively hunting a manual weather-location setting
+  (completes OBS-CARDS-113): the overlay surfaces hide four affordances
+  the settings-side inventory never showed.
+- **Card long-press = provider deep link**: long-pressing the rendered
+  AccuWeather card does NOT open a Nova popup — it opens accuweather.com
+  in a browser custom tab, pre-navigated to the card's location
+  (Khamovniki, Moscow page: 0°C light snow, RealFeel -6°, wind, humidity).
+  This is the working "forecast details" route the preview link lacks.
+- **Card gear (top-right of the rendered card) = Card details shortcut**:
+  opens the same Card details page as Settings ▸ Cards ▸ AccuWeather, but
+  with an enabled **Save** button (changes apply on Save when entered from
+  the overlay). No location field there either.
+- **Search-bar ⋮ overflow** (top-right of the overlay): exactly three
+  items — "Add card", "API Integrations", "Settings". No weather/location
+  entry.
+- **"Add card" = custom card builder** (NEW Prime capability surface):
+  Card name field, "Featured content" (feature an app/shortcut/widget),
+  "Actions" (pin up to 6 app or shortcut actions), Activate-in-Nova-Now +
+  the full condition set (Day/time, Wi-Fi, weather-change, Bluetooth).
+  Users can author their OWN cards; nothing was created (backed out
+  without Save).
+- **Card render is a timestamped snapshot, not live**: the card showed
+  32°/Snow stamped 0:05 while the accuweather.com page it deep-linked to
+  showed 0°C/Light snow at 0:06 — the overlay card does not live-refresh.
+- Manual-location verdict (with OBS-CARDS-113): NO weather-location
+  setting exists on any surface — settings search ×4 (location/weather/
+  city/accuweather), Cards page, Card details (both entries), card
+  long-press (external link), overlay ⋮ (3 items), Integrations (full
+  inventory). The precise-Location grant remains the only render path.
+- Evidence: EVI-CARDS-001 (overlay-topright, card-longpress, card-gear,
+  overlay-overflow2, add-card-flow, hunt-exit), EVI-SETT-003
+  (search-accuweather)
+- Confidence: Observed
