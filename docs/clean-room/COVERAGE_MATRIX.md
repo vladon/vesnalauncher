@@ -9,60 +9,49 @@ Discovery = feature found and inventoried. Observation = behavior recorded
 with evidence ID. Specification = implementation-independent spec written.
 Acceptance = Given/When/Then criteria written.
 
-Last updated: 2026-11-17 (session 1, Nova 8.9.9 free on ENV-1).
+Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
+1–2, Nova Prime era rounds 3–5; ENV-2 Android 16 AVD comparison in round 3).
 
 | Feature ID | Area | Discovery | Observation | Specification | Acceptance Tests | Confidence |
 |---|---|---|---|---|---|---|
 | HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
-| CARDS-100 | Condition-gated drawer cards | Completed | Completed (UI/persistence/permission-gating model Observed; permission-GRANTED render untested, EVI-CARDS-001) | Completed | Not Started | Partially Observed |
-| DRAWER-104/105 | Drawer tabs, Nova Now cards surface | Completed | Completed (EVI-DRAWER-002) | Completed | Completed (tabs) | Observed |
-| SETT-110/111 | Settings search, Prime-gate interaction | Completed | Completed (EVI-SETT-003, EVI-SYS-002) | Completed | Completed | Observed |
-| SYS-111 | Prime activation + badge gating | Completed | Completed (activation); Blocked (badge rendering — OS grants) | Not Started | Not Started | Partially Observed |
-| BACKUP-101 flows | Quick start (paywalled) / Reset (wizard, layout kept) | Completed | Completed (EVI-BACKUP-003) | Completed | Completed | Observed/Partially (reset semantics) |
-| APPPEAR-100 | Theme mode switch | Completed | Completed (EVI-APPPEAR-001) | Completed | Completed | Observed |
-| BACKUP-100..102 | Backup, share/reset inventory, restore | Completed | Completed (create+restore verified; EVI-BACKUP-001/002) | Completed | Completed | Observed |
-| HOME-104/105 | Page management drag, Nova Now edge surface | Completed | Completed/Partial (EVI-HOME-005, EVI-BACKUP-002) | Completed | Completed | Observed / Partially Observed |
-| WIDGET-100..102 | Placement, resize, popup/removal+undo | Completed | Completed (undo verified, EVI-WIDGET-004) | Completed | Completed | Observed |
-| GESTURE-100 | Preset bindings + catalog | Completed | Completed (EVI-GESTURE-001) | Completed | Completed | Partially Observed (multi-touch untested) |
-| DOCK-100 | Dock structure/config | Completed | Completed (EVI-DOCK-001) | Completed | In Progress | Observed (inventory) |
+| HOME-104 | Page creation via edge drag | Completed | Completed (EVI-HOME-005) | Completed | Completed | Observed |
+| HOME-105 | Nova Now edge surface | Completed | Partial (entry observed once; internals untested, EVI-BACKUP-002) | Completed | Completed (pointer-only) | Partially Observed |
+| CARDS-100 | Condition-gated drawer cards | Completed | Completed (UI/persistence/permission-gating model; permission-GRANTED render untested, EVI-CARDS-001) | Completed | Not Started | Partially Observed |
 | DRAWER-100..103 | Open/close, search, contact offer | Completed | Completed/partial (EVI-DRAWER-001) | Completed | Completed | Observed/Partially Observed |
-| FOLDER-100..101 | Folder create, rename, window | Completed | Completed (EVI-FOLDER-001) | Completed | Completed | Observed |
-| SETT-001 | Settings entry points | Completed | In Progress (workspace shortcut observed) | Not Started | Not Started | Partially Observed |
-| SETT-002 | Settings hierarchy | Completed | Completed (full inventory, 16 entries + Style tab) | Not Started | Not Started | Observed |
-| SETT-003 | Settings search | In Progress (field exists) | Not Started | Not Started | Not Started | Not Tested |
-| SETT-004 | Setting persistence/restart | Not Started | Not Started | Not Started | Not Started | Not Tested |
-| SETT-005 | Import/export layout | In Progress (Backup & restore section found) | Not Started | Not Started | Not Started | Not Tested |
-| APPPEAR-002 | Icon size | Completed (discovered; 125% default, slider+steppers) | Not Started | Not Started | Not Started | Observed (inventory) |
-| APPPEAR-003 | Icon shape | Completed (Round/Squircle/Rounded square/Flower/More/Custom) | Not Started | Not Started | Not Started | Observed (inventory) |
-| APPPEAR-004 | Icon packs | In Progress (Icon theme row found, empty without packs) | Not Started | Not Started | Not Started | Not Tested |
-| APPPEAR-012 | System theme integration | In Progress (Style: Mode=Follow system; Palette=System) | Not Started | Not Started | Not Started | Observed (inventory) |
-| APPPEAR-006 | Accent/dynamic colors | In Progress (Palette + per-surface color controls found) | Not Started | Not Started | Not Started | Observed (inventory) |
-| GESTURE-001..006 | Gestures | Completed (full catalog inventoried) | Partially (all assignment Prime-gated in free; bindings shown) | Not Started | Not Started | Partially Observed |
-| DRAWER-009 | Drawer tabs/groups | In Progress (Tab bar placement=None; Drawer groups=Prime) | Not Started | Not Started | Not Started | Observed (inventory) |
-| DRAWER-014 | Work profile apps | In Progress ("Work apps in their own tab" setting found) | Not Started | Not Started | Not Started | Not Tested |
-| DRAWER-015 | Fast scroll | In Progress (Fast scrollbar toggle found, on) | Not Started | Not Started | Not Started | Not Tested |
-| FOLDER-008 | Folder layout | In Progress (Folders section inventoried: Mode/Window, Grid AUTO, Scroll direction Horizontal) | Not Started | Not Started | Not Started | Observed (inventory) |
-| WIDGET-003 | Widget resizing | In Progress (Widget overlap + corner radius settings found) | Not Started | Not Started | Not Started | Not Tested |
-| SYS-003 | Notification badges | In Progress (section found; Prime-gated) | Not Started | Not Started | Not Started | Observed (inventory) |
-| SYS-001 | Default launcher selection | Completed (system HOME-role dialog observed during setup) | In Progress | Not Started | Not Started | Observed |
-| SYS-006 | Screen rotation | In Progress ("Allow Home screen rotation" off + overflow) | Not Started | Not Started | Not Started | Not Tested |
-| HOME-001..015 | Home screen | Not Started (Dock subpage known to exist) | Not Started | Not Started | Not Started | Not Tested |
-| DRAWER-001..016 (rest) | App drawer behavior | Not Started | Not Started | Not Started | Not Started | Not Tested |
-| DOCK-001..007 | Dock | In Progress (Dock subpage exists under Home screen) | Not Started | Not Started | Not Started | Not Tested |
-| FOLDER-001..007 (rest) | Folders behavior | Not Started | Not Started | Not Started | Not Started | Not Tested |
-| WIDGET-001..008 (rest) | Widgets | Not Started | Not Started | Not Started | Not Started | Not Tested |
-| BACKUP-001..006 | Backup/restore | In Progress (Backup & restore section found) | Not Started | Not Started | Not Started | Not Tested |
-| SYS-002/004/005/007..011 | System integration | Not Started | Not Started | Not Started | Not Started | Not Tested |
-| NF-001..005 | Nonfunctional | Not Started | Not Started | Not Started | Not Started | Not Tested |
+| DRAWER-104 | Drawer tab bar (free: default Apps tab) | Completed | Completed (EVI-DRAWER-002) | Completed | Completed (tabs) | Observed |
+| DRAWER-105 | Nova Now cards surface | Completed | Inventory + architecture statement | Folded into CARDS-100/HOME-105 | Not Started | Partially Observed |
+| SETT-110 (covers SETT-003) | Settings search + deep-linking | Completed | Completed (OBS-SETT-110) | Completed | Completed | Observed |
+| SETT-111 | Prime-gate interaction | Completed | Completed (OBS-SYS-110) | Completed | Completed | Observed |
+| SYS-111..114 | Prime activation, badge pipeline, gating, third-party attempts | Completed | Completed (OBS-SYS-110..114) | Not Started (SYS-111 reference recorded in settings.md) | Not Started | Partially Observed (self-badge root cause found; third-party badge matrix inconclusive) |
+| BACKUP-100..102 | Backup, share/quick-start/reset, restore | Completed | Completed (EVI-BACKUP-001/002/003; reset semantics Partial) | Completed | Completed | Observed/Partially Observed |
+| APPPEAR-100 | Theme mode switch | Completed | Completed (EVI-APPPEAR-001) | Completed | Completed | Observed |
+| HOME-001..015 | Home screen behavior | Most discovered (grid/labels/pages/lock/rotation settings) | Partial (OBS-HOME-001..007; page drag verified) | HOME-100..105 only | HOME-100..105 | Partially Observed |
+| DRAWER-001..016 | App drawer behavior | Most discovered | Partial (open/close/search/ads/tabs verified; OBS-DRAWER-001..004, 110, 111) | DRAWER-100..105 only | DRAWER-100..103, 102b | Partially Observed |
+| DOCK-001..007 | Dock | Completed (subpage inventoried) | Partial (rendering observed; paging/drag untested, EVI-DOCK-001) | DOCK-100 | In Progress | Observed (inventory) |
+| FOLDER-001..008 | Folders | Completed (core flow + settings inventory) | Partial (create/rename/window verified; drag-into/pagination untested) | FOLDER-100/101 | FOLDER-100..102 | Observed (core) |
+| WIDGET-001..008 | Widgets | Completed (picker/placement/resize/remove verified) | Partial (undo restore verified; config-activity cancel path untested) | WIDGET-100..102 | WIDGET-100..102 | Observed (core) |
+| GESTURE-001..006, GESTURE-112 | Gestures | Completed (catalog + Prime-era assignment dialogs) | Partial (free-era bindings; Prime catalog captured; binding-value ambiguity flagged) | GESTURE-100 | Completed (preset bindings) | Partially Observed |
+| APPPEAR-001..012 | Appearance | Partial (headers/Style/Mode/theme-switch observed) | Partial (theme switch verified; Palette/per-surface colors/icon packs untested) | APPPEAR-100 only | APPPEAR-100 | Partially Observed |
+| SETT-001/002 | Settings entry + hierarchy | Completed (16 entries + Style tab; search verified) | Completed (inventory; entry points partial) | SETT-110/111 only | SETT-110 | Partially Observed |
+| SETT-004/005 | Setting persistence; import/export | In Progress (Backup & restore section) | Partial (backup create+restore verified = SETT-005 adjacent) | BACKUP-100..102 | BACKUP-100..102 | Partially Observed |
+| APPPEAR-002/003/004/006/012 | Icon size/shape/packs/colors/theme | Discovered (inventory) | Not Started | Not Started | Not Started | Observed (inventory) |
+| DRAWER-009/014/015 | Drawer groups/work apps/fast-scroll | Discovered (Prime era: tabs verified) | Partial | DRAWER-104 | Completed (tabs) | Partially Observed |
+| SYS-001..011 (rest) | Default launcher, shortcuts, badges config, rotation, accessibility | Partial (SYS-001 observed; badges config inventoried) | Partial (OBS-SYS-111..114) | Not Started | Not Started | Partially Observed |
+| BACKUP-001..006 | Backup/restore detail | Completed (section) | Partial (see BACKUP-100..102) | Covered by BACKUP-100..102 | Completed | Observed/Partially |
+| NF-001..005 | Nonfunctional | Not Started (anecdotes only: startup, scroll, stability unmeasured) | Not Started | Not Started | Not Started | Not Tested |
 
 ## Coverage notes
 
 - This matrix tracks **discovered-feature** coverage only. Nova's total
   feature surface is unknown until navigation is complete; no "100%
   coverage" claim may be made before an independent review.
-- Discovery states above refer to the settings hierarchy inventory (session 1).
-  Behavioral observation has not started except where noted.
-- Free-edition gating observed: Notification badges, Hide apps, Drawer groups,
-  Folders first, and all customizable gestures are Prime-locked; Nova AI is
-  Plus-locked. Vesna is free — these are recorded as *reference behaviors
-  unavailable for direct testing* in the current environment.
+- **Edition timeline**: rounds 1–2 on the free edition (gating observed:
+  badges/gestures/hide-apps/drawer-groups Prime-locked, Nova AI Plus-locked,
+  drawer ads); Nova Prime (lifetime, Pro Key APK) activated 2026-11-18 —
+  all gated features became researchable from round 3 onward; drawer ads
+  disappeared with Prime.
+- Historical free-era observations remain valid as free-tier records; the
+  stale "Blocked" badge-rendering entry was superseded by OBS-SYS-112/113
+  (root cause: test button posts a GROUP_SUMMARY — unbadged by design) and
+  OBS-SYS-114 (third-party badge matrix inconclusive).
