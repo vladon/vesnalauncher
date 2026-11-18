@@ -12,7 +12,7 @@ their per-area files; this is a session index only.
 | 5 | OBS-SYS-115 (system-integration.md) | Chrome badge route design-suppressed (DOWNLOAD_WITHOUT_NOTIFICATION); third-party badge matrix final state: all adb routes design-suppressed |
 | 6 | OBS-CARDS-115 (cards.md) | RENDER VERIFIED: AccuWeather card renders in Nova Now SEARCH results with live data ("Khamovniki, Moscow") once Location granted; plain drawer never renders cards; welcome-sheet toggles persist once permissions granted |
 | 7 | OBS-CARDS-116 (cards.md) | Overlay affordances discovered: card long-press = accuweather.com deep link; card gear = Card details w/ Save; Weather-row gear = DISTINCT built-in-Weather config (no location); ⋮ = Add card/API Integrations/Settings; Add card = custom card builder (also via Cards-page + FAB); card renders FAHRENHEIT regardless of locale (32°F = 0°C site value; no unit preference); stamp static over 8 min |
-| 8 | OBS-CARDS-117 (cards.md) | Day/time condition persists 2h20m past window AND does not gate rendering (card rendered Thursday outside its Wednesday window); corrects OBS-CARDS-112 gating claim + 113/115 expiry phrasings; never-satisfied-condition case untested |
+| 8 | OBS-CARDS-117 (cards.md) | Attached conditions do NOT gate the Nova Now search render: expired Day/time persisted 2h20m+ AND a never-satisfied Wi-Fi condition (MGTS vs RG-5, saved + verified end-to-end) both rendered anyway; BT conditions unusable without paired devices; render requirements = Activate + Location + query; test artifact cleaned up |
 
 ## Pending for next session
 

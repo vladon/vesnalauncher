@@ -251,9 +251,9 @@
   (search-accuweather)
 - Confidence: Observed
 
-## OBS-CARDS-117 — Day/time condition persists past window AND does not gate rendering
+## OBS-CARDS-117 — Attached conditions do not gate rendering (expired Day/time AND never-satisfied Wi-Fi both verified non-blocking)
 
-- Date / Env: 2026-11-19 0:04–0:16 / ENV-1 (Nova Prime)
+- Date / Env: 2026-11-19 0:04–0:40 / ENV-1 (Nova Prime)
 - The AccuWeather card's condition reads "Day/time: 09:57 PM +1 hours on
   Wednesday" (window ended 22:57 Wednesday). At 0:04–0:13 THURSDAY —
   66–76 minutes past the window end, wrong day — the card still RENDERED
@@ -268,11 +268,37 @@
   OBS-CARDS-112's "render requires condition met" is REVISED: the
   condition gate did not prevent renders at 0:04–0:13. Either the gate
   evaluates only at attach/enable time, or expiry enforcement is broken
-  for built-in cards. Whether a NEVER-satisfied condition blocks is
-  untested (the Wednesday window was satisfied when created).
+  for built-in cards.
+- **NEVER-SATISFIED TEST (0:35–0:40, closes the open question)**: attached
+  a Wi-Fi condition "When connected to MGTS_GPON_9FqM network" while the
+  device was on RG-5WiFi-68a4 (condition permanently false) — the editor
+  pre-fills the first scan-result SSID, which was NOT the current
+  network; BLUETOOTH conditions were not attachable on this phone ("No
+  paired devices", Add disabled). Saved via the card's Save button
+  (exit dialog verified), then re-rendered the Nova Now search: **the
+  card STILL RENDERED (32°/Snow)** with the never-satisfied Wi-Fi
+  condition attached. Re-opened Card details from the render itself:
+  BOTH rows attached (Day/time Wednesday + Wi-Fi MGTS) — the save and
+  attach verified end-to-end. CONCLUSION: attached conditions are
+  entirely NON-GATING for the Nova Now search render — neither expired
+  Day/time nor a never-satisfied Wi-Fi condition blocks. The render
+  requirements remain: Activate toggle ON + Location granted + typed
+  query. (A condition satisfied LATER would presumably add the card to
+  the plain drawer per the editor copy "will cause this card to show in
+  the app drawer" — untested; the search surface ignores conditions.)
+- Side observations: tapping the attached Wi-Fi condition row itself
+  REMOVES it (no separate X control on that row); the condition editor
+  "Add" button stays disabled until a device/network is chosen; the
+  BLUETOOTH_CONNECT runtime permission grants cleanly via adb but the
+  condition is unusable without a paired device (revoked after test).
+- Test cleanup: the MGTS Wi-Fi condition was REMOVED after the test
+  (row tap + Save); the card's remaining state is the original
+  Wednesday Day/time condition. No other settings changed.
 - Corrections issued: OBS-CARDS-113 "expired during the checks" → the
   window ended but the condition persists; OBS-CARDS-115's artifact note
   "expires tonight" → did not expire.
 - Evidence: EVI-CARDS-001 (overlay-card-render, rerender-stamp,
-  cond-check), EVI-SETT-003 (search-fahrenheit2)
+  cond-check, bt-test-start, bt-plus-tap, wifi-picker, wifi-cond-attached,
+  never-satisfied-render, cond-verify-saved, wifi-row-tapped,
+  cleanup-done), EVI-SETT-003 (search-fahrenheit2)
 - Confidence: Observed
