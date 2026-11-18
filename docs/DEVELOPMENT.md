@@ -89,6 +89,13 @@ app and androidTest APKs and run the AndroidJUnitRunner on that device via
 `adb -s <serial> shell am instrument -w dev.vladon.vesna.launcher.test/androidx.test.runner.AndroidJUnitRunner`,
 so nothing executes on a phone or research emulator.
 
+When QA runs on a fresh emulator, treat the device as safe to test only after
+boot is completed (`sys.boot_completed=1`) and core system services are stable
+— e.g. consecutive samples showing an unchanged `surfaceflinger`/`system_server`
+PID and a responsive package service, as practiced in
+[VESNA-QA-006](engineering/verification/VESNA-QA-006-API36-1.md); installing or
+instrumenting earlier can conflate boot churn with app failures.
+
 A pull request is mergeable only when all four gates pass.
 
 ## Versioning and releases
