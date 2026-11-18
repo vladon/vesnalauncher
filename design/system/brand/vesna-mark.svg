@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="19 23 64 66" role="img" aria-labelledby="title">
+  <title id="title">Vesna Launcher sprout mark</title>
+  <defs>
+    <linearGradient id="fold" gradientUnits="userSpaceOnUse" x1="26" y1="40" x2="54" y2="75"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#006D68"/></linearGradient>
+    <linearGradient id="rise" gradientUnits="userSpaceOnUse" x1="70" y1="48" x2="61" y2="83"><stop stop-color="#A8E66E"/><stop offset="1" stop-color="#128C7D"/></linearGradient>
+  </defs>
+  <g>
+    <path fill="url(#fold)" d="M25 40H34C40.5 40 45 43.5 48 49L57 65.5L49.5 79C47.5 82.5 44.5 83.5 42 79L23.5 43C22.6 41.2 23.4 40 25 40Z"/>
+    <path fill="url(#rise)" d="M42 79C45 83 48.5 79.9 51.5 74L57.8 61.8C62 53.5 68 50 74.5 49.5C75.8 49.4 76.6 50.4 76 51.6L64.2 75C60 83 54.2 86 48.8 84.5C45.8 83.7 43.4 81.8 42 79Z"/>
+    <path fill="#90D442" fill-rule="evenodd" d="M55 52.5C52.5 44.1 55.1 36 61.2 31.5C65 28.6 70.4 27.5 77.2 28.2C78.1 28.3 78.7 29 78.3 30C75.4 39.8 71.2 44.8 64 46.8C60.1 47.9 57.3 49.8 55 52.5Z M55 52.5C57.2 44.1 62.5 37.7 71.6 32.8C64.4 38.6 60.2 44.6 58.4 49.2Z"/>
+  </g>
+</svg>
