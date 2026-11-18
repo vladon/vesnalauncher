@@ -87,10 +87,12 @@ was added afterwards by [PR #13](https://github.com/vladon/vesnalauncher/pull/13
   cold start, workspace/drawer render, one fixture drawer round-trip. The
   same run exposed a fifth-row dock overlap (VESNA-BUG-004), fixed in
   [PR #23](https://github.com/vladon/vesnalauncher/pull/23) and replayed on API 26 and API 35.
-- An API 36.1 AVD was provisioned but did not boot; API 36.1 behavior is not
-  covered by this audit. Closing that gap is P3 coverage
-  ([ROADMAP.md](ROADMAP.md#p3--quality-and-polish-unblocked-but-unscheduled)),
-  not a P0 gate.
+- At audit time, an API 36.1 AVD was provisioned but did not boot, so API 36.1
+  was not covered by the audit. That gap was closed afterwards by
+  [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
+  (2026-11-19, dedicated API 36.1 AVD on Windows): the full existing
+  instrumentation suite passed 5/5, with HOME selection and launch-return
+  smoke-verified through the system RoleManager dialog.
 - The test preserves the order of a pre-sorted fixture (sorted with the production
   comparator) and asserts the drawer filters without re-ordering. The baseline
   audit does not exercise: discovery sorting, match highlighting (not
@@ -113,10 +115,9 @@ list means it was not performed, nothing more.
 
 ## Known gaps and risks
 
-- API 36.1 emulator never booted during the audit; the newest verified platform
-  is API 35 (instrumentation only). The API 26 minimum-SDK floor was
-  smoke-verified afterwards ([VESNA-QA-005-API26](verification/VESNA-QA-005-API26.md));
-  API 36.1 remains outstanding (P3 coverage).
+- Platform coverage comes from dedicated API 26, API 35, and API 36.1
+  emulators. See the instrumentation record for the tested builds and
+  device configurations.
 - CI does not run instrumentation; `DrawerSearchTest` depends on a local AVD and
   a manual runner.
 - Managed-profile behavior (badged work apps, profile-aware removal) is

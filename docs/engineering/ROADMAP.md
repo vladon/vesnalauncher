@@ -121,9 +121,11 @@ roadmap only records what unblocks them.
 1. **Performance baseline** — cold start, drawer scroll, drag latency measured
    on the reference AVD; first numbers turn "fast" from an aspiration into a
    regression guard.
-2. **API 36.1 verification** — close the unverified-platform gap from
-   [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record).
-   Retained here as P3 coverage, not as a P0 gate.
+2. **API 36.1 verification** — **done**.
+   [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
+   (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at
+   `332fb03`, 7/7 with the integrated BUG-005 candidate at `d8d6a748`, plus
+   HOME/launch-return smoke; scope limited to that configuration.
 3. **Badge compatibility** — re-run the inconclusive research probe as a
    deterministic checklist once a work-profile AVD is part of the QA inventory.
 4. **Accessibility, foldables, work-profile UX** — larger-surface candidates
@@ -153,7 +155,7 @@ flowchart TD
     backupADR --> backup["ENG-106: backup/reset policy"]
     gestureval["research: gesture binding<br/>validation (pending)"] --> gestures["P2: gesture settings"]
     exit --> perf["P3: performance baseline"]
-    perf --> polish["P3: API 36.1, badges"]
+    perf --> polish["P3: badges"]
 ```
 
 Sequencing rules worth restating: verification (P0) precedes features (P1);
