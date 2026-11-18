@@ -112,10 +112,12 @@ list means it was not performed, nothing more.
 - Accepted for review as **VESNA-QA-003A**:
   [VESNA-QA-003](verification/VESNA-QA-003.md) — package lifecycle, drawer
   side (install/update/disable/uninstall/restart) on the API 35 AVD. The
-  parent QA-003 item stays **in-progress**: workspace/dock/folder placement
-  cases and the managed-profile repeat are open. VESNA-QA-003B verifies
-  placed-item behavior after the drawer drop fix in
-  [PR #15](https://github.com/vladon/vesnalauncher/pull/15).
+  [VESNA-QA-003B](verification/VESNA-QA-003B.md) verified upgrade retention
+  for workspace/dock placements and folder cleanup on uninstall. Disabling
+  the fixture dropped its pins, and re-enabling it restored drawer discovery.
+  The parent QA-003 item stays **in-progress** for uninstall across all three
+  containers, the disable-time retention decision, and the managed-profile
+  repeat.
 - Next QA candidates: [VESNA-QA-004 in BACKLOG.md](BACKLOG.md).
 - Prioritized plan: [ROADMAP.md](ROADMAP.md).
 - Requirement-level pointers: [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).
