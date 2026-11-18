@@ -12,6 +12,7 @@ flowchart TB
         WS["WorkspaceView"]
         DK["DockView"]
         DR["DrawerView"]
+        LD["LauncherDragLayer<br/>(drag routing)"]
         SA["SettingsActivity<br/>(Compose + Material 3)"]
     end
 
@@ -34,6 +35,7 @@ flowchart TB
 
     HA --> LC
     DR --> LC
+    LD --> HA
     LC --> AD
     LC --> AL
     PCM --> LC
@@ -50,10 +52,10 @@ flowchart TB
 | Package | Concern | Contents |
 |---|---|---|
 | `platform` | Android system integration | `AppDiscovery` (launchable apps across all profiles via `LauncherApps`), `AppLauncher` (profile-aware launching), `PackageChangeMonitor` (install/update/uninstall events for all profiles), `HomeRoleChecker` (default-home detection and request intents) |
-| `apps` | Application discovery model | `AppKey`, `LauncherApp` |
-| `workspace` | Workspace state | `LauncherController` (UI state + actions), `WorkspaceRepository` (Room-backed layout store), pure logic in `GridCanvas`, `DockOrdering`, `SeedPlanner`, `WorkspaceResolver`, `WorkspaceItem` |
+| `apps` | Application discovery model | `AppKey`, `LauncherApp`, `AppSearch` (pure, unit-testable filter behind drawer search) |
+| `workspace` | Workspace state | `LauncherController` (UI state + actions), `WorkspaceRepository` (Room-backed layout store), pure logic in `GridCanvas`, `DockOrdering`, `SeedPlanner`, `WorkspaceResolver`; models `WorkspaceItem`, `Folder` (grid cell that auto-dissolves below two members), `CellContent` (what a cell renders: `App` or `FolderCell`), `LauncherMessage` (non-fatal feedback: `WORKSPACE_FULL`, `DOCK_FULL`) |
 | `data` | Persistence | Room database, DAO, entity, mappers |
-| `ui` | Rendering | `HomeActivity`, `WorkspaceView`, `DockView`, `DrawerView`, `AppIconView`, `DrawerAppsAdapter` |
+| `ui` | Rendering | `HomeActivity`, `LauncherDragLayer` (root view; routes armed drag sessions), `WorkspaceView`, `DockView`, `DrawerView`, `AppIconView`, `DrawerAppsAdapter`, `FolderDialog` (open-folder grid, rename/remove), `FolderContentsAdapter` |
 | `settings` | Settings | `SettingsActivity`, Compose `AboutScreen`, `VesnaTheme` |
 
 ## Key decisions
@@ -80,7 +82,9 @@ flowchart TB
    dock, and drawer.
 4. User actions (launch, add/remove from workspace/dock) go through
    `LauncherController`, which mutates Room via `WorkspaceRepository`; flows emit
-   the new state.
+   the new state. Drag-and-drop reuses this path: `HomeActivity` arms a session,
+   the root `LauncherDragLayer` intercepts the touch stream and feeds it to the
+   coordinator, and drops commit through the same controller actions.
 5. Package broadcasts trigger re-discovery and layout cleanup, so installs,
    updates, and uninstalls appear without restarting the launcher.
 6. On the very first run (a persisted "seeded" flag absent), `SeedPlanner` fills
