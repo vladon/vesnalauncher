@@ -75,6 +75,25 @@ observations/settings.md OBS-SETT-008.
   "Swipe down → Expand notifications" DOES fire (verified earlier — the
   shade expands). Binding restored to "Expand quick settings" after the
   test (verified via the section row).
+- REFINEMENT (2026-11-19 1:00–1:05, next session): the
+  non-authoritativeness is BINDING-DEPENDENT. With the binding restored
+  to "Expand quick settings", workspace swipe-ups opened the ANDROID
+  QUICK SETTINGS from BOTH zones tested (mid-screen y≈1500→700 and
+  lower y≈1900→900 starts) — the binding FIRES and overrides the
+  drawer-open config. Only "Expand notifications" was non-authoritative
+  in the original experiment. "Open App Drawer" remained "Swipe"
+  throughout (re-verified 1:03), so the routing asymmetry is between
+  BINDING VALUES, not a config change. Refined model: Nova's internal
+  quick-settings action preempts the drawer-open swipe; the
+  notifications action does not. Vesna takeaway stands, sharpened: if
+  the drawer-open gesture and an assignable quick-settings action coexist,
+  Nova lets the assignable action WIN on the workspace — pick one owner
+  per gesture stream and route system-panel actions through the same
+  dispatch as drawer gestures to avoid this ambiguity.
+- Side note: the swipe-up route was needed at all because the drawer
+  opened unreliably during these checks; the workspace search pill's
+  grid icon opens the drawer deterministically (used for the card
+  drawer tests).
 - Vesna takeaway: if Vesna implements both a drawer-open swipe and
   assignable swipe-up actions, the drawer-open gesture must take precedence
   over (or consume) the swipe-up action on the workspace — Nova's effective

@@ -311,14 +311,16 @@
   the welcome sheet's unfulfilled manual-location promise (OBS-CARDS-113)
   — Vesna design lesson: shipping copy must match behavior.
 - Test anomalies: mid-screen swipe-up on the workspace pulled the ANDROID
-  shade twice instead of opening the drawer (the swipe route was
-  unreliable this session; the search pill's grid icon opens the drawer
-  deterministically); `svc wifi` toggling worked cleanly with reconnection
-  in ~10 s.
+  quick settings instead of the drawer — CAUSE FOUND: the restored
+  gestures-section binding ("Expand quick settings") FIRES on the
+  workspace and preempts the drawer-open config (see OBS-GESTURE-112
+  refinement); the search pill's grid icon was the deterministic drawer
+  route. `svc wifi` toggling worked cleanly with reconnection in ~10 s.
 - Test cleanup: BOTH test conditions were removed after their tests
-  (MGTS at 0:45, RG-5 at 0:58 — row tap + Save); the card's remaining
-  state is the original Wednesday Day/time condition. Wi-Fi left ON and
-  reconnected; no other settings changed.
+  (MGTS at 0:45, RG-5 at 0:58 — row tap + Save); removal SEALED by a
+  post-save re-open of the AccuWeather Card details (1:06): only the
+  original Wednesday Day/time condition remains, the Wi-Fi row is
+  unattached. Wi-Fi left ON and reconnected; no other settings changed.
 - Corrections issued: OBS-CARDS-113 "expired during the checks" → the
   window ended but the condition persists; OBS-CARDS-115's artifact note
   "expires tonight" → did not expire.
