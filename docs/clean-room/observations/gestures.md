@@ -94,6 +94,23 @@ observations/settings.md OBS-SETT-008.
   opened unreliably during these checks; the workspace search pill's
   grid icon opens the drawer deterministically (used for the card
   drawer tests).
+- STANDING STATE CHANGE (2026-11-19 1:06–1:10, user-directed): the
+  gestures-section "Swipe up" binding was REASSIGNED to "App drawer"
+  (dialog option, auto-applied; section row verified "Swipe up → App
+  drawer"). Third routing data point: with this binding the workspace
+  swipe-up opens the DRAWER via the gesture (mid-screen swipe verified —
+  Search apps + grid, no quick settings); binding value and drawer
+  config now agree, so no conflict is observable. The previous
+  "Expand quick settings" artifact state is intentionally superseded by
+  the user; do not "restore" it in future sessions.
+- Refinement evidence: EVI-GESTURE-002 (opendrawer-check, drawer-page,
+  drawer-page-top, drawer-gesture-row ["Open App Drawer: Swipe" row],
+  ws-zone-test, ws-zone2, zone-test-result [QS pulls from both zones],
+  root-post-wifi, cards-row2, cards-row3, swipeup-dialog-restore
+  [verified dialog title], binding-appdrawer, ws-pre-swipe2,
+  drawer-verify-final [drawer opens]), EVI-CARDS-001
+  (drawer-checkA2, gt-after-shade [shade pulls mid drawer-tests],
+  drawer-checkA3 [drawer via grid icon])
 - Vesna takeaway: if Vesna implements both a drawer-open swipe and
   assignable swipe-up actions, the drawer-open gesture must take precedence
   over (or consume) the swipe-up action on the workspace — Nova's effective
