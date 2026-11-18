@@ -97,32 +97,38 @@
 - Confidence: Observed (absence across both surfaces + sheet gating text +
   toggle revert); permission-granted render Not Tested
 
-## OBS-CARDS-113 — The advertised manual-location fallback does not exist
+## OBS-CARDS-113 — The advertised manual-location fallback does not exist (FINAL)
 
-- Date / Env: 2026-11-19 ~03:51 / ENV-1 (Nova Prime)
+- Date / Env: 2026-11-19 00:00–00:07 / ENV-1 (Nova Prime) — searches re-run
+  and the remaining surfaces exhausted; this entry supersedes the initial
+  partial finding.
 - Context: the Nova Now welcome sheet offers "Alternatively, set a manual
   location in Nova Settings" for the Weather Card.
-- Action: searched Nova Settings for "location" and then "weather" via the
-  settings search field (search indexes titles AND subtitles — verified
-  earlier with the "dock" query returning two matches).
-- Result: **both queries returned zero results** — no manual-location (or
-  weather) setting exists anywhere in Nova Settings 8.9.9. Additional checks
-  found no location field on the Card details page, the Cards list page
-  (which also holds Games/Photos/Screenshots cards), or the Card details
-  overflow menu (whose only item is "Reset to default"). "See forecast
-  details >" on the card preview is inert (does not navigate).
-- Conclusion: the Weather Card's only render path in this build is the
-  precise-Location permission grant; the advertised manual-location
-  fallback is not implemented/reachable. This makes the weather card
-  effectively render-less without a privacy-sensitive grant — recorded as
-  a Nova quirk and a Vesna design lesson (fallbacks advertised in UI copy
-  must exist).
-- The Day/time condition (Wednesday 03:20+1 h) remained ACTIVE throughout
-  (03:44–03:52 observations inside the window).
-- Evidence: EVI-SETT-003 (search-location, search-weather2),
-  EVI-CARDS-001 (details-r6, details-scroll, details-overflow,
-  forecast-details, cards-scrolled-r6)
-- Confidence: Observed
+- EXHAUSTIVE CHECKS (all negative):
+  1. Settings search: "location", "weather", "city" — ALL zero results
+     (search indexes titles AND subtitles; the "dock" control query returns
+     two matches, proving the index works).
+  2. Card details page (AccuWeather): no location field; overflow (⋮) has
+     only "Reset to default"; "See forecast details >" is inert.
+  3. Cards list page: card entries only (Media controls, AccuWeather,
+     Games, Photos, Screenshots) — no location row.
+  4. Settings ▸ Integrations (complete inventory): Calendar ("Your
+     upcoming events"), Spotify, Deezer, Twitch, Slack, Discord, Dropbox,
+     GitHub, Sesame Shortcuts — NO weather/AccuWeather/location entry.
+- CONCLUSION: the manual-location affordance advertised by the welcome
+  sheet does not exist anywhere in Nova 8.9.9's UI. The Weather/AccuWeather
+  card's ONLY location path is the precise-Location permission grant
+  (verified working via adb grant: the card then rendered live district
+  data — see OBS-CARDS-115). The unfulfilled sheet promise is a Nova
+  quality gap and a Vesna design lesson: every advertised fallback must be
+  implemented and discoverable.
+- The Day/time condition (Wednesday 21:57–22:57) expired during the checks
+  (00:00 Thursday); its earlier render verification stands (OBS-CARDS-115).
+- Evidence: EVI-SETT-003 (search-location, search-weather2, search-city2,
+  main-top-r6), EVI-CARDS-001 (details-r6, details-scroll, details-overflow,
+  forecast-details, cards-scrolled-r6, cards-r6b, integrations-find through
+  integrations-final)
+- Confidence: Observed (exhaustive)
 
 ## OBS-CARDS-114 — Location granted via adb; render probe blocked by device lock
 
