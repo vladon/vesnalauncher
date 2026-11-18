@@ -376,10 +376,24 @@ class HomeActivity : ComponentActivity() {
         val root = findViewById<View>(R.id.launcher_root)
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            workspace.setPadding(0, bars.top, 0, 0)
+            // Preserve the dock space reserved below the grid; only the status
+            // bar offset changes here.
+            workspace.setPadding(0, bars.top, 0, workspace.paddingBottom)
             dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, bars.bottom + dock.paddingTop)
             drawer.applySystemBarInsets(top = bars.top, bottom = bars.bottom)
             insets
+        }
+        // The dock overlays the full-bleed workspace grid, so its measured height
+        // (which already includes the navigation inset) must be reserved as
+        // workspace bottom padding; otherwise the last grid row is hidden behind
+        // the dock. The dock is a workspace sibling, so this cannot loop: only a
+        // real dock height change touches the padding.
+        dock.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            val height = bottom - top
+            if (height == oldBottom - oldTop || height == workspace.paddingBottom) {
+                return@addOnLayoutChangeListener
+            }
+            workspace.setPadding(0, workspace.paddingTop, 0, height)
         }
     }
 
