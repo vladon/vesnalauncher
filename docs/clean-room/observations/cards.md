@@ -251,9 +251,9 @@
   (search-accuweather)
 - Confidence: Observed
 
-## OBS-CARDS-117 — Attached conditions do not gate rendering (expired Day/time AND never-satisfied Wi-Fi both verified non-blocking)
+## OBS-CARDS-117 — Attached conditions are decorative: they gate neither the search render nor the plain drawer (expired Day/time, never-satisfied Wi-Fi, later-satisfied transition all verified non-blocking)
 
-- Date / Env: 2026-11-19 0:04–0:40 / ENV-1 (Nova Prime)
+- Date / Env: 2026-11-19 0:04–0:58 / ENV-1 (Nova Prime)
 - The AccuWeather card's condition reads "Day/time: 09:57 PM +1 hours on
   Wednesday" (window ended 22:57 Wednesday). At 0:04–0:13 THURSDAY —
   66–76 minutes past the window end, wrong day — the card still RENDERED
@@ -291,14 +291,41 @@
   "Add" button stays disabled until a device/network is chosen; the
   BLUETOOTH_CONNECT runtime permission grants cleanly via adb but the
   condition is unusable without a paired device (revoked after test).
-- Test cleanup: the MGTS Wi-Fi condition was REMOVED after the test
-  (row tap + Save); the card's remaining state is the original
-  Wednesday Day/time condition. No other settings changed.
+- **PLAIN-DRAWER / LATER-SATISFIED TEST (0:51–0:57, closes the last
+  open branch)**: attached a Wi-Fi condition for the CURRENT network
+  (RG-5WiFi-68a4 — attachable via the SSID dropdown after scrolling) and
+  exercised the full state transition while the drawer was opened fresh
+  at every step: (a) condition SATISFIED (Wi-Fi connected) → no card in
+  the drawer's divider slot; (b) Wi-Fi disabled via `svc wifi disable`
+  (condition false) → still no card; (c) Wi-Fi re-enabled and the
+  reconnection verified at system level (SSID RG-5WiFi-68a4, supplicant
+  COMPLETED, IP up) → the condition flipped false→true WHILE attached,
+  two fresh drawer opens → STILL no card. The card never appears in the
+  plain drawer under any condition state; the divider slot stays empty.
+- **OVERALL CONDITION SEMANTICS (this build)**: the condition system is
+  decorative — conditions neither gate the Nova Now search render
+  (expired AND never-satisfied both render; OBS-CARDS-117 above) nor
+  surface the card in the plain drawer (satisfied, false, or false→true
+  transition — none show it). The editor copy "when all met, will cause
+  this card to show in the app drawer" is UNFULFILLED in 8.9.9, matching
+  the welcome sheet's unfulfilled manual-location promise (OBS-CARDS-113)
+  — Vesna design lesson: shipping copy must match behavior.
+- Test anomalies: mid-screen swipe-up on the workspace pulled the ANDROID
+  shade twice instead of opening the drawer (the swipe route was
+  unreliable this session; the search pill's grid icon opens the drawer
+  deterministically); `svc wifi` toggling worked cleanly with reconnection
+  in ~10 s.
+- Test cleanup: BOTH test conditions were removed after their tests
+  (MGTS at 0:45, RG-5 at 0:58 — row tap + Save); the card's remaining
+  state is the original Wednesday Day/time condition. Wi-Fi left ON and
+  reconnected; no other settings changed.
 - Corrections issued: OBS-CARDS-113 "expired during the checks" → the
   window ended but the condition persists; OBS-CARDS-115's artifact note
   "expires tonight" → did not expire.
 - Evidence: EVI-CARDS-001 (overlay-card-render, rerender-stamp,
   cond-check, bt-test-start, bt-plus-tap, wifi-picker, wifi-cond-attached,
   never-satisfied-render, cond-verify-saved, wifi-row-tapped,
-  cleanup-done), EVI-SETT-003 (search-fahrenheit2)
+  cleanup-done, drawer-checkA3, drawer-wifi-off, drawer-wifi-reconnected,
+  drawer-final-check, rg5-verify, cleanup-removed), EVI-SETT-003
+  (search-fahrenheit2)
 - Confidence: Observed

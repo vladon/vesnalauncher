@@ -12,7 +12,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| CARDS-100 | Condition-gated drawer cards (AccuWeather/Media: activate toggle, Day/time & other conditions, render in Nova Now search) | discovered (render verified with Location grant; conditions NON-GATING for the search render — OBS-CARDS-117) |
+| CARDS-100 | Condition-gated drawer cards (AccuWeather/Media: activate toggle, Day/time & other conditions, render in Nova Now search) | discovered (render verified with Location grant; conditions DECORATIVE — non-gating for search, never surface in drawer, OBS-CARDS-117) |
 | CARDS-101 | Custom card builder (Add card: name, featured content, up to 6 pinned actions, condition set) | discovered (overlay ⋮ ▸ Add card and Cards-page "+" FAB; OBS-CARDS-116) |
 | CARDS-102 | Overlay card affordances (card long-press = provider deep link; card gear = Card details w/ Save; search-bar ⋮ = Add card/API Integrations/Settings; Fahrenheit rendering; no manual location) | discovered (OBS-CARDS-116) |
 
