@@ -5,7 +5,6 @@ import android.content.ContextWrapper
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
@@ -13,8 +12,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,86 +19,25 @@ import java.io.File
 import java.util.UUID
 
 /**
- * Instrumentation verification of the Room migrations shipped by the production
- * builder ([LauncherDatabase.build]): historical schema v1 → v2 → v3 and v2 → v3,
- * opened through that exact builder so its migrations and Room's post-migration
- * schema validation run unmodified. If production migration validation fails,
- * Room throws and this test fails with that exception — nothing here catches,
- * suppresses, or degrades it.
+ * Room migration verification through the unmodified production
+ * [LauncherDatabase.build]: authentic historical schemas are seeded into a
+ * unique disposable test file and migrated 1→2→3 / 2→3. Migration and
+ * Room's own post-migration schema + identity validation run inside Room;
+ * any failure throws uncaught and fails the test.
  *
- * ## Authentic historical sources (verified at the named tags)
+ * Historical sources (authentic Room-generated DDL of the era):
+ * - v1: tag `v0.1.0` — `app/src/main/java/dev/vladon/vesna/launcher/data/LauncherDatabase.kt`
+ *   (version 1, no migrations) + `WorkspaceItemEntity.kt`.
+ * - v2: tag `v0.2.0` — same files, adds `userSerial INTEGER NOT NULL` inline.
  *
- * - v1 = tag `v0.1.0`: `LauncherDatabase.kt` (`version = 1`, `entities =
- *   [WorkspaceItemEntity]`, no migrations) and `WorkspaceItemEntity.kt` (columns
- *   `id, packageName, className, container, cellIndex`, index on
- *   `(packageName, className)`), under `app/src/main/java/dev/vladon/vesna/launcher/data/`.
- * - v2 = tag `v0.2.0`: same files, `version = 2`, entity additionally carries
- *   `userSerial INTEGER NOT NULL` (Kotlin default `0`, i.e. no SQL `DEFAULT` in
- *   the generated CREATE TABLE, matching how v0.2.0's Room compiler emitted it).
- * - The seed SQL below mirrors the canonical Room-generated DDL for those
- *   entities (same format as the `folders` CREATE in the current production
- *   `MIGRATION_2_3`). Because the migrated schema is validated against the
- *   current entity definitions by Room itself, a non-authentic seed (wrong type,
- *   wrong nullability, wrong PK) would fail this test — the seed cannot drift
- *   silently.
- *
- * ## Isolation (proven deterministically, before and during migration)
- *
- * The production builder hardcodes the database name `vesna-launcher.db`. Room
- * 2.8.5 passes the builder context through unchanged, and the whole path chain
- * resolves through it (`RoomConnectionManager` and sqlite-framework's open
- * helper call `context.getDatabasePath(name)`; the framework `SQLiteOpenHelper`
- * opens via `context.openOrCreateDatabase(name, …)`). [IsolatedDbContext]
- * therefore routes EVERY database name — including the builder's hardcoded one —
- * to the exact seeded file inside a unique per-run app-private directory, and
- * overrides `getApplicationContext()` defensively in case Room ever normalizes
- * the context. Isolation is then proven by assertion, not by trusting the
- * wrapper:
- *
- * 1. before seeding, the target file does not exist and its canonical path
- *    differs from the production database path (different file, different
- *    directory);
- * 2. the freshly seeded file is re-opened raw and its `PRAGMA user_version`
- *    plus row count are checked before Room ever touches it (a wrong routing
- *    would present an empty/new file here);
- * 3. after opening through the production builder, the opened SQLite database's
- *    own path equals the seeded canonical path (again checked after close/reopen);
- * 4. the whole directory is disposable and deleted in `@After` — nothing outside
- *    it is ever read or written.
- *
- * The production file's mtime is deliberately NOT compared: the app under
- * instrumentation may open its own database concurrently, making such a check
- * racy; the path assertions above are the isolation proof.
- *
- * ## Verification scope (per migration path)
- *
- * 1. **PRAGMA metadata**: `user_version` is 3 after migration.
- * 2. **Index**: `index_workspace_items_packageName_className` exists after
- *    migration with exactly the columns `(packageName, className)` (non-unique,
- *    sqlite origin `c`).
- * 3. **App identity**: `room_master_table` carries a non-blank identity hash
- *    that differs from the placeholder written at seed time — the historical
- *    hashes were generated by the old compilers and are unreproducible here, so
- *    the seed stores a marker that Room must overwrite with the current hash
- *    while running the migration; the close/reopen step then re-validates that
- *    written identity (Room throws on mismatch, failing the test).
- * 4. **Row placement**: legacy rows survive with their original primary keys,
- *    package/class/container/cellIndex values.
- * 5. **Profile userSerial**: v1 rows acquire `userSerial = 0` (the `DEFAULT 0`
- *    added by the production `MIGRATION_1_2`); v2 rows keep the exact serials
- *    stored before migration (mixed `0` and non-zero, proving `MIGRATION_2_3`
- *    does not clobber existing serials).
- * 6. **Null legacy folder linkage**: every row that predates v3 has
- *    `folderId == null`; the `folders` table exists with the exact schema and
- *    stays empty (the migration invents no folder rows).
- * 7. **Close/reopen**: the migrated database is closed, reopened through the
- *    production builder at the same file, and the data is verified intact —
- *    this exercises Room's plain-open identity check on the migrated file.
- *
- * Out of scope by design: process-death/reboot durability evidence (separate
- * task), any device run (this worker only builds the APK), and all production
- * database access. Fixture package/class names are inert strings; no Android
- * user/profile is touched.
+ * Kept checks (not duplicated by Room): isolation fails fast before Room opens
+ * (seeded file absent, production path/dir distinct, opened file IS the seeded
+ * one), `PRAGMA user_version` = 3, surviving `(packageName, className)` index
+ * columns, row identity/container/cell/userSerial/folderId (null legacy
+ * linkage), empty `folders`, data intact after close/reopen. Table_info and
+ * identity-hash equality are deliberately not re-asserted: Room validates both
+ * itself on open. Process-death/reboot durability is a separate task; the
+ * production database is never touched.
  */
 @RunWith(AndroidJUnit4::class)
 class RoomMigrationQaTest {
@@ -112,11 +48,7 @@ class RoomMigrationQaTest {
     private val isolatedDir: File =
         appContext.getDir("qa-room-migration-${UUID.randomUUID()}", Context.MODE_PRIVATE)
 
-    /**
-     * The seeded file, named exactly what the production builder passes to
-     * [androidx.room.Room.databaseBuilder] — [IsolatedDbContext] routes that
-     * name here.
-     */
+    /** The seeded file, named exactly what the production builder passes to Room. */
     private val seededDbFile: File = File(isolatedDir, BUILDER_DB_NAME)
 
     @Before
@@ -127,8 +59,7 @@ class RoomMigrationQaTest {
 
     @After
     fun deleteIsolatedDirectory() {
-        // ContextImpl.getDir prefixes "app_"; guard against ever deleting an
-        // unexpected directory.
+        // ContextImpl.getDir prefixes "app_"; guard against deleting anything else.
         check(isolatedDir.name.contains("qa-room-migration-")) { "unexpected isolated dir: ${isolatedDir.name}" }
         isolatedDir.deleteRecursively()
     }
@@ -136,15 +67,13 @@ class RoomMigrationQaTest {
     // ------------------------------------------------------------ test cases
 
     @Test
-    fun migrationFromV1PreservesLayoutAndDerivesDefaults() = runMigrationScenario(
-        seed = Seed(
-            version = 1,
-            createItemsSql = SQL_CREATE_ITEMS_V1,
-            insertSqls = listOf(
-                v1Row(id = 1, pkg = "dev.vladon.qa.fixture1", cls = ".AlphaActivity", container = "WORKSPACE", cell = 5),
-                v1Row(id = 2, pkg = "dev.vladon.qa.fixture2", cls = ".BetaActivity", container = "DOCK", cell = 2),
-                v1Row(id = 3, pkg = "dev.vladon.qa.fixture3", cls = ".GammaActivity", container = "WORKSPACE", cell = 9),
-            ),
+    fun migrationFromV1PreservesLayoutAndDerivesDefaults() = migrateAndVerify(
+        version = 1,
+        createItemsSql = SQL_CREATE_ITEMS_V1,
+        rows = listOf(
+            FixtureRow(id = 1, pkg = "dev.vladon.qa.fixture1", cls = ".AlphaActivity", container = "WORKSPACE", cell = 5),
+            FixtureRow(id = 2, pkg = "dev.vladon.qa.fixture2", cls = ".BetaActivity", container = "DOCK", cell = 2),
+            FixtureRow(id = 3, pkg = "dev.vladon.qa.fixture3", cls = ".GammaActivity", container = "WORKSPACE", cell = 9),
         ),
         expectedItems = listOf(
             WorkspaceItemEntity(id = 1, packageName = "dev.vladon.qa.fixture1", className = ".AlphaActivity", container = "WORKSPACE", cellIndex = 5, userSerial = 0, folderId = null),
@@ -154,14 +83,12 @@ class RoomMigrationQaTest {
     )
 
     @Test
-    fun migrationFromV2PreservesUserSerialsAndAddsFolders() = runMigrationScenario(
-        seed = Seed(
-            version = 2,
-            createItemsSql = SQL_CREATE_ITEMS_V2,
-            insertSqls = listOf(
-                v2Row(id = 1, pkg = "dev.vladon.qa.fixture1", cls = ".AlphaActivity", container = "WORKSPACE", cell = 5, userSerial = 0),
-                v2Row(id = 2, pkg = "dev.vladon.qa.fixture2", cls = ".BetaActivity", container = "DOCK", cell = 2, userSerial = 11),
-            ),
+    fun migrationFromV2PreservesUserSerialsAndAddsFolders() = migrateAndVerify(
+        version = 2,
+        createItemsSql = SQL_CREATE_ITEMS_V2,
+        rows = listOf(
+            FixtureRow(id = 1, pkg = "dev.vladon.qa.fixture1", cls = ".AlphaActivity", container = "WORKSPACE", cell = 5, userSerial = 0),
+            FixtureRow(id = 2, pkg = "dev.vladon.qa.fixture2", cls = ".BetaActivity", container = "DOCK", cell = 2, userSerial = 11),
         ),
         expectedItems = listOf(
             WorkspaceItemEntity(id = 1, packageName = "dev.vladon.qa.fixture1", className = ".AlphaActivity", container = "WORKSPACE", cellIndex = 5, userSerial = 0, folderId = null),
@@ -199,91 +126,85 @@ class RoomMigrationQaTest {
     private val SQL_CREATE_ROOM_MASTER =
         "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)"
 
-    private fun v1Row(id: Long, pkg: String, cls: String, container: String, cell: Int) =
-        "INSERT INTO workspace_items (id, packageName, className, container, cellIndex) " +
-            "VALUES ($id, '$pkg', '$cls', '$container', $cell)"
+    private data class FixtureRow(
+        val id: Long,
+        val pkg: String,
+        val cls: String,
+        val container: String,
+        val cell: Int,
+        val userSerial: Long = 0,
+    )
 
-    private fun v2Row(id: Long, pkg: String, cls: String, container: String, cell: Int, userSerial: Long) =
-        "INSERT INTO workspace_items (id, packageName, className, container, cellIndex, userSerial) " +
-            "VALUES ($id, '$pkg', '$cls', '$container', $cell, $userSerial)"
+    private data class Seed(val createSql: String, val inserts: List<Pair<String, Array<Any?>>>)
 
-    private data class Seed(val version: Int, val createItemsSql: String, val insertSqls: List<String>)
+    /** Fixture rows inserted with parameter binding (no interpolated SQL). */
+    private fun buildSeed(version: Int, createSql: String, rows: List<FixtureRow>): Seed {
+        val insertSql = if (version == 1) {
+            "INSERT INTO workspace_items (id, packageName, className, container, cellIndex) VALUES (?, ?, ?, ?, ?)"
+        } else {
+            "INSERT INTO workspace_items (id, packageName, className, container, cellIndex, userSerial) VALUES (?, ?, ?, ?, ?, ?)"
+        }
+        return Seed(
+            createSql = createSql,
+            inserts = rows.map { row ->
+                val args = if (version == 1) {
+                    arrayOf<Any?>(row.id, row.pkg, row.cls, row.container, row.cell)
+                } else {
+                    arrayOf<Any?>(row.id, row.pkg, row.cls, row.container, row.cell, row.userSerial)
+                }
+                insertSql to args
+            },
+        )
+    }
 
-    /**
-     * Builds the historical database file with raw SQLite: table + index in the
-     * exact Room-generated shape of the era, seed rows, `PRAGMA user_version`
-     * set to the historical version, and a placeholder identity hash in
-     * `room_master_table` (Room rewrites it with the current hash while running
-     * the migrations, before its integrity check — asserted later).
-     */
-    private fun seedHistoricalDatabase(seed: Seed) {
+    private fun seedHistoricalDatabase(version: Int, seed: Seed) {
         SQLiteDatabase.openOrCreateDatabase(seededDbFile, null).use { raw ->
-            raw.execSQL(seed.createItemsSql)
+            raw.execSQL(seed.createSql)
             raw.execSQL(SQL_CREATE_ITEMS_INDEX)
-            seed.insertSqls.forEach(raw::execSQL)
-            raw.version = seed.version
+            seed.inserts.forEach { (sql, args) -> raw.execSQL(sql, args) }
+            raw.version = version
             raw.execSQL(SQL_CREATE_ROOM_MASTER)
+            // Placeholder identity: Room overwrites it with the current hash
+            // while running the migrations, then re-validates it on reopen.
             raw.execSQL(
                 "INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, '$IDENTITY_PLACEHOLDER')",
             )
-            // Seed self-check before migration: the historical file is exactly
-            // what we think it is (wrong routing would surface here as an
-            // empty/new database).
-            assertEquals(seed.version, raw.version)
-            raw.rawQuery("SELECT COUNT(*) FROM workspace_items", null).use { c ->
-                check(c.moveToFirst())
-                assertEquals(seed.insertSqls.size, c.getInt(0))
-            }
-            raw.rawQuery("SELECT COUNT(*) FROM room_master_table WHERE identity_hash = '$IDENTITY_PLACEHOLDER'", null).use { c ->
-                check(c.moveToFirst())
-                assertEquals(1, c.getInt(0))
-            }
         }
     }
 
-    // ------------------------------------------------ migration scenario flow
+    // ----------------------------------------------- single migration check
 
     /**
-     * Seeds the historical file, opens it through the unmodified production
-     * builder (migrations and Room's post-migration validation execute inside
-     * Room; any failure throws out of the first access — deliberately not
-     * caught), verifies the migrated state, then closes and reopens through the
-     * production builder again and verifies the data survived. Both Room
-     * instances are closed on every path via [withOpenedDatabase].
+     * The one migration check: isolation asserts fail fast before Room opens,
+     * then the production builder migrates the seeded file (failures
+     * propagate), metadata/rows are verified, and a close/reopen verifies the
+     * data survived. Both Room instances are closed on every path.
      */
-    private fun runMigrationScenario(seed: Seed, expectedItems: List<WorkspaceItemEntity>) {
-        // Deterministic isolation preconditions (before migration).
+    private fun migrateAndVerify(version: Int, createItemsSql: String, rows: List<FixtureRow>, expectedItems: List<WorkspaceItemEntity>) {
+        // Isolation before anything touches Room (deterministic path proof; the
+        // production file's mtime is racy because the app may open it itself).
         val productionPath = appContext.getDatabasePath(PRODUCTION_DB_NAME).canonicalPath
+        assertFalse("seeded file must not pre-exist", seededDbFile.exists())
         assertNotEquals("test database must not resolve to the production file", productionPath, seededDbFile.canonicalPath)
         assertNotEquals("test database must not share the production directory", File(productionPath).parent, seededDbFile.parent)
 
-        seedHistoricalDatabase(seed)
+        seedHistoricalDatabase(version, buildSeed(version, createItemsSql, rows))
 
-        // Open through the production builder: runs 1→2→3 (or 2→3) migrations
-        // and Room's own schema validation. Failures propagate uncaught.
         withOpenedDatabase { db ->
-            assertOpenedAtSeededFile(db)
-            verifyMigratedMetadata(db)
-            verifyMigratedSchema(db)
-            assertEquals(expectedItems, readItemsSorted(db))
+            assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
+            assertEquals(3, pragmaUserVersion(db))
+            assertEquals(listOf("packageName", "className"), pragmaIndexColumns(db))
+            assertEquals(expectedItems, readItems(db))
             assertEquals("migration must not invent folder rows", emptyList<FolderEntity>(), readFolders(db))
         }
 
-        // Close/reopen through the production builder: plain open validates the
-        // rewritten identity hash internally (Room throws on mismatch).
-        withOpenedDatabase { reopened ->
-            assertOpenedAtSeededFile(reopened)
-            assertEquals(expectedItems, readItemsSorted(reopened))
+        // Close/reopen: plain open makes Room re-validate the written identity.
+        withOpenedDatabase { db ->
+            assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
+            assertEquals(expectedItems, readItems(db))
         }
     }
 
-    /**
-     * Opens the isolated database through the unmodified production builder and
-     * runs [block] with it, guaranteeing [LauncherDatabase.close] on every path
-     * (RoomDatabase is not [Closeable], so this replaces a `use` block). The
-     * first DAO access forces the open; migration and validation failures
-     * propagate uncaught.
-     */
     private inline fun <T> withOpenedDatabase(block: (LauncherDatabase) -> T): T {
         val db = LauncherDatabase.build(IsolatedDbContext(appContext, seededDbFile))
         try {
@@ -294,70 +215,9 @@ class RoomMigrationQaTest {
         }
     }
 
-    /** The opened SQLite file must be the seeded one — never a fresh or production file. */
-    private fun assertOpenedAtSeededFile(db: LauncherDatabase) {
-        assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
-    }
+    // --------------------------------------------------------- small helpers
 
-    // ------------------------------------------------------ verification steps
-
-    /** PRAGMA metadata + rewritten app identity after migration. */
-    private fun verifyMigratedMetadata(db: LauncherDatabase) {
-        assertEquals(3, pragmaUserVersion(db))
-        val identity = db.openHelper.writableDatabase
-            .query(SimpleSQLiteQuery("SELECT identity_hash FROM room_master_table")).use { c ->
-                if (c.moveToFirst()) c.getString(0) else null
-            }
-        assertNotNull("room_master_table must carry the migrated app identity hash", identity)
-        assertTrue("identity hash must be non-blank", identity!!.isNotBlank())
-        assertFalse(
-            "identity hash must be Room's rewritten hash, not the seed placeholder",
-            identity == IDENTITY_PLACEHOLDER,
-        )
-    }
-
-    /** Migrated table_info of both tables plus the surviving v1-era index. */
-    private fun verifyMigratedSchema(db: LauncherDatabase) {
-        val support = db.openHelper.writableDatabase
-        assertEquals(
-            mapOf(
-                "id" to ColumnSpec("INTEGER", notNull = true, pk = true),
-                "packageName" to ColumnSpec("TEXT", notNull = true, pk = false),
-                "className" to ColumnSpec("TEXT", notNull = true, pk = false),
-                "container" to ColumnSpec("TEXT", notNull = true, pk = false),
-                "cellIndex" to ColumnSpec("INTEGER", notNull = true, pk = false),
-                "userSerial" to ColumnSpec("INTEGER", notNull = true, pk = false),
-                "folderId" to ColumnSpec("INTEGER", notNull = false, pk = false),
-            ),
-            pragmaTableInfo(support, "workspace_items"),
-        )
-        assertEquals(
-            mapOf(
-                "id" to ColumnSpec("INTEGER", notNull = true, pk = true),
-                "title" to ColumnSpec("TEXT", notNull = true, pk = false),
-                "cellIndex" to ColumnSpec("INTEGER", notNull = true, pk = false),
-            ),
-            pragmaTableInfo(support, "folders"),
-        )
-        val indexColumns = support
-            .query(SimpleSQLiteQuery("PRAGMA index_info('index_workspace_items_packageName_className')")).use { c ->
-                buildList {
-                    while (c.moveToNext()) add(c.getString(2)) // seqno, cid, name
-                }
-            }
-        assertEquals(listOf("packageName", "className"), indexColumns)
-        val uniqueOrigin = support.query(SimpleSQLiteQuery("PRAGMA index_list('workspace_items')")).use { c ->
-            var found: Pair<Int, String>? = null
-            while (c.moveToNext()) {
-                // seq, name, unique, origin, partial
-                if (c.getString(1) == "index_workspace_items_packageName_className") found = c.getInt(2) to c.getString(3)
-            }
-            found
-        }
-        assertEquals("index must stay non-unique, sqlite-origin 'c'", 0 to "c", uniqueOrigin)
-    }
-
-    private fun readItemsSorted(db: LauncherDatabase): List<WorkspaceItemEntity> =
+    private fun readItems(db: LauncherDatabase): List<WorkspaceItemEntity> =
         runBlocking { db.workspaceItemDao().getAll().sortedBy { it.id } }
 
     private fun readFolders(db: LauncherDatabase): List<FolderEntity> =
@@ -369,48 +229,34 @@ class RoomMigrationQaTest {
             c.getInt(0)
         }
 
-    private fun pragmaTableInfo(support: SupportSQLiteDatabase, table: String): Map<String, ColumnSpec> =
-        support.query(SimpleSQLiteQuery("PRAGMA table_info(`$table`)")).use { c ->
-            buildMap {
-                while (c.moveToNext()) {
-                    // cid, name, type, notnull, dflt_value, pk
-                    put(c.getString(1), ColumnSpec(c.getString(2), c.getInt(3) == 1, c.getInt(5) != 0))
+    private fun pragmaIndexColumns(db: LauncherDatabase): List<String> =
+        db.openHelper.writableDatabase
+            .query(SimpleSQLiteQuery("PRAGMA index_info('index_workspace_items_packageName_className')")).use { c ->
+                buildList {
+                    while (c.moveToNext()) add(c.getString(2)) // seqno, cid, name
                 }
             }
-        }
 
     // --------------------------------------------------------- isolation shim
 
-    private data class ColumnSpec(val type: String?, val notNull: Boolean, val pk: Boolean)
-
     /**
-     * Routes EVERY database name the production builder can pass (it hardcodes
-     * `"vesna-launcher.db"`) to the exact seeded file, overriding both paths the
-     * Room 2.8.5 / sqlite-framework 2.6.2 stack uses: `getDatabasePath` (path
-     * resolution in RoomConnectionManager and the framework open helper) and
-     * `openOrCreateDatabase` (the framework SQLiteOpenHelper open call).
-     * `getApplicationContext` is overridden defensively in case Room normalizes
-     * the context; nothing else is intercepted, all other calls delegate.
+     * Routes every database name the production builder can pass (it hardcodes
+     * `"vesna-launcher.db"`) to the exact seeded file — the only paths Room
+     * 2.8.5 / sqlite-framework 2.6.2 use (verified in bytecode: no
+     * `applicationContext` normalization). `deleteDatabase` is overridden so a
+     * corruption-recovery path cannot delete the real production file.
      */
     private class IsolatedDbContext(base: Context, private val seededFile: File) : ContextWrapper(base) {
-        override fun getApplicationContext(): Context = this
-
         override fun getDatabasePath(name: String): File = seededFile
-
-        override fun openOrCreateDatabase(name: String, mode: Int, factory: SQLiteDatabase.CursorFactory?): SQLiteDatabase =
-            SQLiteDatabase.openOrCreateDatabase(getDatabasePath(name).path, factory, null)
 
         override fun openOrCreateDatabase(
             name: String,
             mode: Int,
             factory: SQLiteDatabase.CursorFactory?,
             errorHandler: DatabaseErrorHandler?,
-        ): SQLiteDatabase = SQLiteDatabase.openOrCreateDatabase(getDatabasePath(name).path, factory, errorHandler)
+        ): SQLiteDatabase = SQLiteDatabase.openOrCreateDatabase(seededFile.path, factory, errorHandler)
 
-        override fun deleteDatabase(name: String): Boolean {
-            val file = getDatabasePath(name)
-            return file.exists() && file.delete()
-        }
+        override fun deleteDatabase(name: String): Boolean = seededFile.exists() && seededFile.delete()
     }
 
     private companion object {
