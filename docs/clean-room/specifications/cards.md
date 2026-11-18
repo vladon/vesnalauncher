@@ -26,11 +26,9 @@ Cards settings inventory (OBS-SETT-006).
   "Nova Now".
 - Persistence: card configuration persists across restart (assumed from
   settings architecture; not directly verified).
-- Evidence: OBS-CARDS-110 (EVI-CARDS-001), OBS-CARDS-111/112 (EVI-CARDS-001
-  r5 captures)
+- Evidence: OBS-CARDS-110..113 (EVI-CARDS-001), OBS-CARDS-115 (r7 captures)
 - Confidence: Observed (config, condition UI/persistence, permission
-  gating model, absence across surfaces); permission-GRANTED render Not
-  Tested
+  gating model, render with granted permission + live data)
 
 ### Vesna requirements
 
@@ -42,10 +40,10 @@ Cards settings inventory (OBS-SETT-006).
 - R-CARDS-100.2: A card manager lists existing cards with per-card
   configuration and an add-card affordance.
 - R-CARDS-100.3 (verified gating model): a card renders only when its
-  condition is met AND its data permission is granted; an ungranted
-  permission prevents rendering (observed: Day/time condition active but
-  Location ungranted → weather card absent on both Nova Now and the
-  drawer; Nova's enable toggle also reverts to off without the grant).
+  condition is met AND its data permission is granted AND the render
+  surface is the Nova Now SEARCH results (typed query) — an active
+  condition with granted permissions does NOT render the card in the plain
+  drawer browse view (all variants observed 2026-11-18/19).
 - R-CARDS-100.4: Cards advertise their required permissions up front (Nova
   lists them in the onboarding sheet with per-card toggles) and offer a
   manual-data alternative (e.g. manual location) INSTEAD of a mandatory
@@ -53,3 +51,6 @@ Cards settings inventory (OBS-SETT-006).
   manual-location fallback that does not exist anywhere in its settings
   (OBS-CARDS-113) — Vesna's advertised fallbacks must be reachable
   (verifiable via settings search).
+- R-CARDS-100.5: Once the data permission is granted, the onboarding
+  toggles persist (no revert) and the condition-met card renders with live
+  data (verified: real district-level weather "Khamovniki, Moscow").

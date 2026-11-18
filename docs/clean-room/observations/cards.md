@@ -142,3 +142,37 @@
 - Evidence: EVI-CARDS-001 (settings-post-grant, unlock-r5), dumpsys grant
   lines
 - Confidence: Observed (grant verified); render Not Tested (locked)
+
+## OBS-CARDS-115 — RENDER VERIFIED: cards render in the Nova Now search surface
+
+- Date / Env: 2026-11-18 22:00–22:02 / ENV-1 (Nova Prime)
+- Setup: Location (FINE+COARSE) granted via adb; Day/time condition active
+  (Wednesday 21:57–22:57, replaced the expired 03:20 window); "Activate in
+  Nova Now" ON; Card details saved; the Nova Now welcome-sheet toggles
+  (Calendar Card + Weather Card) now STAY ON (with Location granted the
+  earlier toggle-revert no longer occurs).
+- Action: opened Nova Now (left-edge swipe) and typed a query.
+- Observed: **the AccuWeather card rendered in the SEARCH RESULTS**, above
+  the "Search with" provider row:
+  - card header "AccuWeather" with its configure gear;
+  - **real location-based data**: 32°, "Snow", "Khamovniki, Moscow"
+    (a Moscow district — the Location grant in use), "See forecast details
+    >", weather artwork, timestamp 21:56;
+  - alongside it, the system **Weather card** (created via the welcome
+    sheet's Weather toggle) also rendered with its own gear.
+- Cross-check: with the query CLEARED, the plain drawer browse view still
+  shows NO card (divider slot empty) — **cards render in the Nova Now
+  search surface only**, not in the plain all-apps drawer browse.
+- COMPLETE RENDER MODEL (all cells now Observed):
+  card configured + "Activate in Nova Now" ON + conditions met + data
+  permission granted + a search query typed → card renders in Nova Now
+  search results with live data. Removing any element (condition expired,
+  permission ungranted, no query) → no card (each variant observed).
+- Evidence: EVI-CARDS-001 (drawer-render-check, novanow-r7,
+  sheet-expanded-r7, drawer-final-render, search-results-r7,
+  drawer-cleared-check)
+- Confidence: Observed
+- Test artifact: Wednesday 21:57–22:57 condition left on the AccuWeather
+  card (expires tonight; removable via Cards ▸ AccuWeather ▸ Day/time).
+  Welcome-sheet Calendar/Weather toggles left ON (user-facing feature,
+  enabled state).

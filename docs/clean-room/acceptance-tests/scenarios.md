@@ -74,6 +74,15 @@ its feature ID. These describe externally observable behavior only.
 - When the user swipes downward over the app grid
 - Then the drawer closes and the workspace is restored
 
+## Cards
+
+### AT-CARDS-100 — Condition-met card renders in Nova Now search
+- Given a card configured with a Day/time condition whose window covers the
+  current time, its data permission granted, and "Activate in Nova Now" on
+- When the user opens Nova Now and types a search query
+- Then the card renders in the search results with live data
+- And with the query cleared, the plain drawer browse view shows no card
+
 ## Backup & restore
 
 ### AT-BACKUP-100 — Backup creation

@@ -17,7 +17,7 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
 | HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
 | HOME-104 | Page creation via edge drag | Completed | Completed (EVI-HOME-005) | Completed | Completed | Observed |
 | HOME-105 | Nova Now edge surface | Completed | Partial (entry observed once; internals untested, EVI-BACKUP-002) | Completed | Completed (pointer-only) | Partially Observed |
-| CARDS-100 | Condition-gated drawer cards | Completed | Blocked for the final cell (permission-GRANTED render — device pattern-locked; gating model Observed, EVI-CARDS-001/114) | Completed | Not Started | Partially Observed |
+| CARDS-100 | Condition-gated drawer cards | Completed | Completed (UI/persistence/gating/render with granted permission + live data — render surface = Nova Now SEARCH results, EVI-CARDS-001 r7) | Completed | Completed (AT-CARDS-100) | Observed |
 | DRAWER-100..103 | Open/close, search, contact offer | Completed | Completed/partial (EVI-DRAWER-001) | Completed | Completed | Observed/Partially Observed |
 | DRAWER-104 | Drawer tab bar (free: default Apps tab) | Completed | Completed (EVI-DRAWER-002) | Completed | Completed (tabs) | Observed |
 | DRAWER-105 | Nova Now cards surface | Completed | Inventory + architecture statement | Folded into CARDS-100/HOME-105 | Not Started | Partially Observed |
