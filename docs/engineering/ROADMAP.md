@@ -22,8 +22,9 @@ Guiding constraints from the baseline:
 
 ## P0 — close the riskiest verification gaps (no new features)
 
-Everything in P0 verifies what already ships, on the **existing dedicated API 35
-AVD** (no new device work required to start).
+Everything in P0 verifies what already ships, on dedicated QA AVDs — the
+existing dedicated API 35 AVD for items 1–3, a dedicated API 26 AVD for the
+item 4 min-SDK smoke.
 
 1. **[VESNA-QA-002](BACKLOG.md#vesna-qa-002-home-and-launch-return-verification-done) — HOME registration/selection and return-from-app.**
    Status: **done** — recorded run 2026-11-18 on the dedicated API 35 AVD
@@ -42,9 +43,14 @@ AVD** (no new device work required to start).
    (recorded 2026-11-19,
    [verification/VESNA-QA-003.md](verification/VESNA-QA-003.md)).
    [VESNA-QA-003B](verification/VESNA-QA-003B.md) verified placed-item
-   behavior on API 35. Uninstall across all three containers, the
-   disable-time retention decision, and the managed-profile repeat remain
-   open.
+   behavior on API 35. The remaining device cases are verified:
+   [VESNA-QA-003C](verification/VESNA-QA-003C.md) (managed profile: work-only
+   uninstall deleted exactly the work-serial placements and left the personal
+   package and pin, stable across a launcher restart) and
+   [VESNA-QA-003D](verification/VESNA-QA-003D.md) (simultaneous
+   workspace/dock/folder removal reconciled after a cold relaunch). The item
+   stays open for the disable-time placement retention product decision; no
+   policy is assumed.
 3. **Migrations and restart** — Room 1→2→3 migration on representative databases,
    layout intact after process death and device reboot
    ([BACKLOG.md](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done)).
@@ -52,8 +58,15 @@ AVD** (no new device work required to start).
    ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`)
    and persistence via [VESNA-QA-004B](verification/VESNA-QA-004B.md)
    (2026-11-19), both on the dedicated API 35 AVD as separate experiments.
+4. **Minimum SDK (API 26) smoke** — the declared `minSdk` 26 floor builds,
+   installs, cold-starts, and passes the full instrumentation suite on API 26
+   ([VESNA-QA-005 in BACKLOG.md](BACKLOG.md#vesna-qa-005-minimum-sdk-api-26-smoke-verification-done)).
+   Status: **done** — narrow smoke recorded 2026-11-19 on the dedicated API 26
+   AVD ([verification/VESNA-QA-005-API26.md](verification/VESNA-QA-005-API26.md)),
+   suite 3/3. [PR #23](https://github.com/vladon/vesnalauncher/pull/23) fixed the dock overlap (VESNA-BUG-004) observed
+   during the smoke run. API 26 and API 35 replays verified the fix.
 
-**Exit criteria for P0:** all three QA items have recorded runs (device, build,
+**Exit criteria for P0:** all four QA items have recorded runs (device, build,
 result) linked from [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).
 
 ## P1 — structural groundwork and the strongest product candidates

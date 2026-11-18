@@ -53,9 +53,19 @@ process restart and uninstall-while-dead) passed. After
 [VESNA-QA-003B](verification/VESNA-QA-003B.md) verified pinning, upgrade
 retention, and folder cleanup on uninstall on API 35. Disabling an app removed
 its workspace and dock placements. Re-enabling it restored drawer discovery.
-The desired retention policy, uninstall with simultaneous workspace, dock,
-and folder placements, and the managed-profile repeat remain open. Fixture
-methodology is recorded at
+[VESNA-QA-003C](verification/VESNA-QA-003C.md) (2026-11-19, API 35) verified
+the managed-profile case end to end: a shell-provisioned work profile's
+fixture was discovered in the drawer, a drawer-drag pin persisted with the
+profile's `userSerial`, launching opened the fixture in the work profile, and
+a work-only uninstall deleted exactly the work-serial placements while the
+personal package and pin survived, stable across a launcher restart.
+[VESNA-QA-003D](verification/VESNA-QA-003D.md) (2026-11-19, API 35) verified
+uninstall with simultaneous workspace, dock, and folder placements: all three
+fixture rows left within seconds, the folder dissolved, and a cold relaunch
+showed no ghost entries. Open item: the disable-time placement retention
+policy — disabling currently removes workspace/dock placements (observed in
+QA-003B). The desired retention behavior remains an open product decision.
+Fixture methodology is recorded at
 `D:/orca/scratch/vesna-qa-003/` (hand-built debug APKs: same
 package/component/signature, two versionCodes, no permissions).
 **Priority:** P0. **Depends on:** the AVD inventory from
@@ -96,6 +106,24 @@ record: [verification/VESNA-QA-004B.md](verification/VESNA-QA-004B.md)
   relaunch (part B).
 - The persisted placements and icon bounds matched after reboot. An emptied
   layout stayed empty (part B).
+
+## VESNA-QA-005: minimum SDK (API 26) smoke verification (done)
+
+**Status:** done — narrow smoke run recorded 2026-11-19 on the dedicated
+API 26 AVD (`Vesna_QA_MinSdk_API_26`, Android 8.0, 1080×1920); reproducible
+record: [verification/VESNA-QA-005-API26.md](verification/VESNA-QA-005-API26.md).
+Scope: build (debug + androidTest), HOME discoverability, explicit cold start
+with workspace and drawer render, one fixture drawer round-trip
+(discover → launch → uninstall); no default-HOME change, no deep drawer or
+workspace editing. The full existing instrumentation suite passed 3/3 on
+API 26 — `RoomMigrationQaTest` (both cases) and `DrawerSearchTest`; the
+per-case JUnit XML (`TEST-Vesna_QA_MinSdk_API_26-AVD-8.0.0.xml`) is listed in
+the record's evidence index. The run exposed VESNA-BUG-004, where the dock
+covered the fifth workspace row. [PR #23](https://github.com/vladon/vesnalauncher/pull/23) fixed the overlap and was replayed
+on API 26 and API 35.
+**Priority:** P0. **Depends on:** the AVD inventory from
+[VESNA-QA-002](#vesna-qa-002-home-and-launch-return-verification-done) (plus
+the dedicated API 26 AVD).
 
 ## Engineering work items
 
@@ -220,3 +248,4 @@ tracking, layout data only). Gates ENG-106.
 |---|---|
 | Drawer search QA baseline (`R-DRAWER-100.4` order-preservation subset, `R-DRAWER-101.1` local-filtering subset) | PR #9, `DrawerSearchTest`, 3 green runs on the dedicated API 35 AVD — see [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record) |
 | VESNA-QA-004 migration and restart verification | Part A: `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`), both migration cases plus `DrawerSearchTest` on the dedicated API 35 AVD; part B: [VESNA-QA-004B](verification/VESNA-QA-004B.md) (force-stop, full guest reboot, no re-seed) — see [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record) |
+| VESNA-QA-005 minimum SDK (API 26) smoke verification | [VESNA-QA-005-API26](verification/VESNA-QA-005-API26.md) (2026-11-19, dedicated API 26 AVD): build, HOME discoverability, cold start, workspace/drawer render, fixture round-trip, instrumentation suite 3/3; VESNA-BUG-004 fixed in [PR #23](https://github.com/vladon/vesnalauncher/pull/23) |
