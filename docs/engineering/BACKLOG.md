@@ -42,9 +42,20 @@ no research scenario covers this: write down the acceptance assertions, then
 automate or script them. On completion, add the run record link to
 [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md#home-role-and-launching).
 
-## VESNA-QA-003: package lifecycle verification (proposed)
+## VESNA-QA-003: package lifecycle verification (partial)
 
-**Status:** proposed. **Priority:** P0. **Depends on:** the AVD inventory from
+**Status:** in-progress. The drawer-side lifecycle run (2026-11-19, dedicated
+API 35 AVD) is accepted for review as **VESNA-QA-003A**; reproducible record:
+[verification/VESNA-QA-003.md](verification/VESNA-QA-003.md). Install →
+drawer, same-package update, disable/re-enable, and uninstall (incl. launcher
+process restart and uninstall-while-dead) passed; **workspace/dock/folder
+placement cases and the managed-profile repeat remain open**. Two pinning
+defects interrupted these cases on the baseline. [PR #15](https://github.com/vladon/vesnalauncher/pull/15)
+restored drawer drops and was verified on API 35. Placed-item verification
+continues in **VESNA-QA-003B**. Fixture methodology is recorded at
+`D:/orca/scratch/vesna-qa-003/` (hand-built debug APKs: same
+package/component/signature, two versionCodes, no permissions).
+**Priority:** P0. **Depends on:** the AVD inventory from
 [VESNA-QA-002](#vesna-qa-002-home-and-launch-return-verification-done).
 
 Verify the `PackageChangeMonitor` → stale-cleanup path end to end:
