@@ -1,4 +1,4 @@
-# Observations — Gestures and Navigation (ENV-1, Nova 8.9.9 free)
+# Observations — Gestures and Navigation (ENV-1, Nova 8.9.9: free era rounds 1-2, Prime era rounds 4+)
 
 Evidence under `EVI-GESTURE-001`. Gesture catalog inventory:
 observations/settings.md OBS-SETT-008.

@@ -1,4 +1,4 @@
-# Observations — Cards (ENV-1, Nova 8.9.9 free)
+# Observations — Cards (ENV-1, Nova 8.9.9: free era inventory, Prime era condition testing)
 
 ## OBS-CARDS-110 — Cards internals: condition-triggered drawer cards
 

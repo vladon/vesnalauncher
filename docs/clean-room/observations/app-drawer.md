@@ -1,4 +1,4 @@
-# Observations — App Drawer (ENV-1, Nova 8.9.9 free)
+# Observations — App Drawer (ENV-1, Nova 8.9.9: free era rounds 1-2, Prime era rounds 4+)
 
 Evidence under `EVI-DRAWER-001`. Environment: drawer style Vertical, grid
 6×5, search bar Top, Show Keyboard on, Frequently used apps on, Fast
