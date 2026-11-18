@@ -37,7 +37,12 @@ AVD** (no new device work required to start).
    scenario covers this today.
 2. **Package removal and temporary unavailability** — uninstall and update/disable
    paths: stale items leave workspace, dock, drawer, and folders
-   ([BACKLOG.md](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-proposed)).
+   ([BACKLOG.md](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-done)).
+   Status: **drawer side done** — recorded run 2026-11-19
+   ([verification/VESNA-QA-003.md](verification/VESNA-QA-003.md)). The
+   workspace/dock/folder branches are blocked on 0.4.1 by two recorded UI
+   defects (drawer drag no-op for unpinned apps; drawer item menu opens as a
+   zero-height popup) — fix first, then execute the placement cases.
 3. **Migrations and restart** — Room 1→2→3 migration on representative databases,
    layout intact after process death and device reboot
    ([BACKLOG.md](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-proposed)).

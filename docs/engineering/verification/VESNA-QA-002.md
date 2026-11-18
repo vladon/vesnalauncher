@@ -129,9 +129,14 @@ untouched.
 
 > **Operational finding for later QA cleanup scripts (QA-003/QA-004):** on
 > API 35, `cmd package clear-package-preferred-activities` alone does **not**
-> clear the HOME role holder. `cmd role remove-role-holder` (an undocumented
-> subcommand — `cmd role help` lists only `get-role-holders`) is required to
-> restore a no-default HOME state.
+> clear the HOME role holder. `cmd role remove-role-holder` is required to
+> restore a no-default HOME state. *(Correction 2026-11-19: an earlier version
+> of this note called `remove-role-holder` undocumented and said `cmd role
+> help` lists only `get-role-holders`; the tested API 35 image's
+> `cmd role help` in fact lists `get-role-holders`, `add-role-holder`,
+> `remove-role-holder`, `clear-role-holders`, and
+> `set-bypassing-role-qualification`. The operational lesson above — that the
+> preferred-activity clearing alone is insufficient — is unchanged.)*
 
 ## Verdict per acceptance item
 

@@ -42,9 +42,21 @@ no research scenario covers this: write down the acceptance assertions, then
 automate or script them. On completion, add the run record link to
 [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md#home-role-and-launching).
 
-## VESNA-QA-003: package lifecycle verification (proposed)
+## VESNA-QA-003: package lifecycle verification (done)
 
-**Status:** proposed. **Priority:** P0. **Depends on:** the AVD inventory from
+**Status:** done (partial scope) — device run recorded 2026-11-19 on the
+dedicated API 35 AVD; full reproducible record:
+[verification/VESNA-QA-003.md](verification/VESNA-QA-003.md). Drawer-side
+lifecycle (install → drawer, same-package update, disable/re-enable,
+uninstall incl. launcher process restart and uninstall-while-dead) passed end
+to end. Workspace/dock/folder **placement** cases are not executable on 0.4.1:
+two recorded UI defects leave no working path to pin an unpinned app (drawer
+drag is a silent no-op; the drawer item long-press menu opens as a zero-height
+popup) — recorded in the run doc, fix left to a separate increment. The
+managed-profile repeat is untested (the AVD has no profile). Fixture
+methodology: minimal hand-built debug APKs (same package/component/signature,
+two versionCodes, no permissions) from a scratch dir outside the repo.
+**Priority:** P0. **Depends on:** the AVD inventory from
 [VESNA-QA-002](#vesna-qa-002-home-and-launch-return-verification-done).
 
 Verify the `PackageChangeMonitor` → stale-cleanup path end to end:
