@@ -40,6 +40,11 @@ Derived from `observations/gestures.md` and the gesture catalog inventory
   paywall).
 - R-GESTURE-100.4: Launcher gestures must yield to system-reserved zones.
 - R-GESTURE-100.5: Provide a home-button action binding with an "only on
-  main home page" scope option (Vesna's default remains plain HOME to
-  workspace — independent design decision; Nova's search-binding default
-  recorded as reference).
+  main home page" scope option whose semantics are: first press returns to
+  the main home page, a second press executes the bound action (Nova's
+  observed model — recorded as reference; Vesna's default remains plain
+  HOME).
+- R-GESTURE-100.6: The drawer-open gesture is a SEPARATE configuration from
+  the gesture assignments (Nova: App drawer ▸ "Open App Drawer" with its
+  own gesture type + gear; the gestures-section "Swipe up" binding is
+  independent and does not gate drawer opening).

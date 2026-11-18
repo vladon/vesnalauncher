@@ -44,16 +44,25 @@ observations/settings.md OBS-SETT-008.
   notifications, Expand quick settings, Recent apps, Screen lock, Nova
   Search, Nova Now, Assistant, Toggle notification bar, Toggle dock,
   Default page, Jump to page, Desktop previews, Nova Settings.
-- Prime-era binding rows observed on the section page: Home button →
-  Nova Search with an "Only on main home page" checkbox below it; and the
-  "Swipe up" row's value line read "Expand quick settings" (round 1, free
-  edition, read "App drawer") — see the caveat below.
-- Caveat: the Swipe-up value reading needs a controlled re-check — a
-  swipe-up at 00:33 (after the Prime restart) still opened the drawer, and
-  swipe-up also opened the drawer during later tests, so either the binding
-  changed mid-session (e.g. via the Prime profile import) or the subtitle
-  mapping differs when rows are expanded. Do not treat either reading as
-  final without a fresh controlled observation.
+- Prime-era binding rows observed on the section page (crystal capture,
+  2026-11-18 22:23): Home button → Nova Search with CHECKED "Only on main
+  home page" (checkbox help text: "Return to the main home page with the
+  first tap, execute the action with a second tap"); Swipe up → Expand
+  quick settings; Swipe down → Expand notifications; Swipe left/right,
+  Double tap, Double tap + swipe up/down → None.
+- RESOLUTION of the earlier binding ambiguity: the free-era "Swipe up →
+  App drawer" reading and the Prime-era "Expand quick settings" reading are
+  BOTH correct — they are DIFFERENT systems. The drawer opens via the
+  SEPARATE App drawer setting ("Open App Drawer: Swipe + gear", in
+  Settings ▸ App drawer), independent of the Gestures section bindings.
+  Live verification: swipe-up opened the drawer post-Prime (00:33, 21:59)
+  while the Gestures section showed "Expand quick settings" — the drawer
+  gesture is not the gestures-section binding.
+- The Home-button semantics also fully explain every observed HOME
+  behavior: HOME from another app → workspace; HOME while on the main home
+  page → Nova Search drawer; HOME while the launcher process is dead →
+  cold-start into the search drawer (the binding fires on the incoming
+  HOME intent).
 - Evidence: EVI-GESTURE-002 (gestures-prime, swipeup-actions,
   swipeup-actions-scrolled, apps-tab, gestures-find)
 - Confidence: Observed (catalog); binding values need re-check

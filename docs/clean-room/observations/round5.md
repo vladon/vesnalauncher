@@ -1,27 +1,31 @@
-# Observations — Round 5 Log (2026-11-18 night, chronological index)
+# Observations — Round 5 Log (2026-11-18/19, chronological index)
 
 Chronological log of the fifth research round. Canonical OBS entries live in
 their per-area files; this is a session index only.
 
 | Sequence | OBS ID (canonical location) | Behavior |
 |---|---|---|
-| 1 | OBS-GESTURE-112 (gestures.md) | Prime-unlocked gesture assignment catalog: NOVA/APPS/SHORTCUTS tabs with the full action list; Prime-era binding rows observed (Swipe-up value ambiguity flagged for re-check) |
-| 2 | OBS-SYS-114 (system-integration.md) | Third-party badge matrix attempts INCONCLUSIVE (Calendar reminder and Clock alarm routes failed to post); popup-menu notification content remains Not Tested (needs a badged app); BadgeTest calendar event deleted |
-| 3 | OBS-CARDS-112/113 (cards.md) | Nova Now live probe with active condition: no card on either surface — render requires condition AND Location permission; the sheet's manual-location fallback does not exist in settings (OQ #12 resolved) |
-| 4 | OBS-CARDS-114 (cards.md) | Location GRANTED via adb (pm grant FINE+COARSE, verified granted=true); render probe BLOCKED — the device self-locked with the pattern after a launcher force-stop (user away); probe is the first action next session |
+| 1 | OBS-SYS-114 (system-integration.md) | Third-party badge matrix attempts INCONCLUSIVE (Calendar reminder and Clock alarm routes failed to post); BadgeTest calendar event deleted |
+| 2 | OBS-GESTURE-112 (gestures.md) | Prime gesture assignment catalog captured (NOVA/APPS/SHORTCUTS tabs, full action list) |
+| 3 | OBS-CARDS-112/113 (cards.md) | Nova Now live probe with active condition: no card on either surface; the sheet's manual-location fallback does not exist (settings search empty) |
+| 4 | OBS-CARDS-114 (cards.md) | Location GRANTED via adb (pm grant FINE+COARSE, verified granted=true); render probe BLOCKED — device self-locked with the pattern (launcher force-stop while idle; user away) |
+| 5 | OBS-SYS-115 (system-integration.md) | Chrome badge route design-suppressed (DOWNLOAD_WITHOUT_NOTIFICATION); third-party badge matrix final state: all adb routes design-suppressed |
+| 6 | OBS-GESTURE-112 (gestures.md) | Binding ambiguity RESOLVED: drawer-open is a separate App-drawer gesture config, independent of the gestures-section bindings (Swipe up → Expand quick settings confirmed); HOME-button two-press semantics documented |
+| 7 | OBS-CARDS-115 (cards.md) | RENDER VERIFIED: AccuWeather card renders in Nova Now SEARCH results with live data ("Khamovniki, Moscow") once Location granted; plain drawer never renders cards; welcome-sheet toggles persist once permissions granted |
 
-## Pending for next session (device locked — pattern required, user away)
+## Pending for next session (device locked — pattern required)
 
-1. Unlock the device (user), then check the AccuWeather card render in the
-   drawer / Nova Now. Location is already granted (persistent); if the
-   Wednesday 03:20–04:20 condition was auto-removed on expiry, add a fresh
-   Day/time condition covering the current time first.
-2. Re-verify the "Swipe up" binding (Prime-era reading said "Expand quick
-   settings"; free-era read "App drawer").
-3. Lessons recorded: do NOT force-stop the launcher while the screen may
-   lock — the keyguard engages and only the user can unlock.
+1. Unlock the device (user), then check the AccuWeather card render in
+   Nova Now search with a fresh condition window (Location already granted;
+   the Wednesday 21:57–22:57 condition likely auto-expired).
+2. Popup-menu notification content: needs a real user-triggered
+   notification (message/mail) — all adb routes are design-suppressed.
+3. Re-verify "Swipe up" is truly bound to "Expand quick settings" by
+   triggering it deliberately (quick-settings panel should open).
 
 Session notes:
 - Consolidation: round2/3/4 confirmed as thin indexes; OBS-SYS-111 stale
-  pending line updated; TEST_ENVIRONMENTS device-config note updated to the
-  resolved state (listener bound, badges working for third-party apps).
+  line updated; TEST_ENVIRONMENTS device-config note at resolved state.
+- Lessons codified in the skill: keyguard caution (force-stop while idle
+  locks the device), runtime-permission granting, group-summary pitfall,
+  cards render model (query-gated Nova Now).

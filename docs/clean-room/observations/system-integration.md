@@ -218,3 +218,24 @@ identify controls.
 - Evidence: EVI-SYS-002 (calendar-badge-check, calendar-zoom,
   playstore-popup-notif, clock-badge-check/2), dumpsys summaries
 - Confidence: Observed (attempts + absence); feature status Not Tested
+
+## OBS-SYS-115 — Chrome route design-suppressed (badge matrix final entry)
+
+- Date / Env: 2026-11-18 22:15–22:21 / ENV-1 (Nova Prime)
+- Attempt: triggered a real Chrome download from the device (small .zip
+  served by a local HTTP server on the host LAN, then via `adb reverse` +
+  127.0.0.1 loopback after the LAN route hit ERR_TOO_MANY_RETRIES — the
+  download completed, visible in Chrome's Downloads screen).
+- Result: NO download-complete notification record — Chrome holds
+  `android.permission.DOWNLOAD_WITHOUT_NOTIFICATION: granted=true`, which
+  suppresses notifications for user-initiated downloads by design.
+- Third-party badge matrix FINAL STATE: every adb-triggerable route is
+  suppressed either by Nova's own design (test button = GROUP_SUMMARY),
+  by Chrome's design (DOWNLOAD_WITHOUT_NOTIFICATION), or by the Calendar
+  provider (adb-inserted events don't schedule reminders). A REAL user-
+  triggered notification (message, mail) would complete the popup-menu
+  content test in seconds when the user is next at the phone.
+- Evidence: EVI-SYS-002 (chrome-download, chrome-proceed2, chrome-retry,
+  chrome-loopback, drawer-chrome-badge), dumpsys package chrome grant
+  lines, Downloads screenshot
+- Confidence: Observed
