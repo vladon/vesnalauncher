@@ -39,6 +39,9 @@ jobs:
       - name: Run Android Lint
         run: ./gradlew lintDebug
 
+      - name: Build debug androidTest APK
+        run: ./gradlew assembleDebugAndroidTest
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
