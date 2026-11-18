@@ -26,8 +26,10 @@ Cards settings inventory (OBS-SETT-006).
   "Nova Now".
 - Persistence: card configuration persists across restart (assumed from
   settings architecture; not directly verified).
-- Evidence: OBS-CARDS-110 (EVI-CARDS-001), OBS-BACKUP-005 (EVI-BACKUP-002)
-- Confidence: Observed (config page/inventory); condition behavior Not
+- Evidence: OBS-CARDS-110 (EVI-CARDS-001), OBS-CARDS-111/112 (EVI-CARDS-001
+  r5 captures)
+- Confidence: Observed (config, condition UI/persistence, permission
+  gating model, absence across surfaces); permission-GRANTED render Not
   Tested
 
 ### Vesna requirements
@@ -39,3 +41,12 @@ Cards settings inventory (OBS-SETT-006).
   permission-gated where needed.
 - R-CARDS-100.2: A card manager lists existing cards with per-card
   configuration and an add-card affordance.
+- R-CARDS-100.3 (verified gating model): a card renders only when its
+  condition is met AND its data permission is granted; an ungranted
+  permission prevents rendering (observed: Day/time condition active but
+  Location ungranted → weather card absent on both Nova Now and the
+  drawer; Nova's enable toggle also reverts to off without the grant).
+- R-CARDS-100.4: Cards advertise their required permissions up front (Nova
+  lists them in the onboarding sheet with per-card toggles) and offer a
+  manual-data alternative (e.g. manual location) instead of a mandatory
+  runtime permission.

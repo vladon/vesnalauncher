@@ -14,7 +14,7 @@ Last updated: 2026-11-17 (session 1, Nova 8.9.9 free on ENV-1).
 | Feature ID | Area | Discovery | Observation | Specification | Acceptance Tests | Confidence |
 |---|---|---|---|---|---|---|
 | HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
-| CARDS-100 | Condition-gated drawer cards | Completed | Partially (UI+persistence Observed; render surface unresolved, EVI-CARDS-001) | Completed | Not Started | Partially Observed |
+| CARDS-100 | Condition-gated drawer cards | Completed | Completed (UI/persistence/permission-gating model Observed; permission-GRANTED render untested, EVI-CARDS-001) | Completed | Not Started | Partially Observed |
 | DRAWER-104/105 | Drawer tabs, Nova Now cards surface | Completed | Completed (EVI-DRAWER-002) | Completed | Completed (tabs) | Observed |
 | SETT-110/111 | Settings search, Prime-gate interaction | Completed | Completed (EVI-SETT-003, EVI-SYS-002) | Completed | Completed | Observed |
 | SYS-111 | Prime activation + badge gating | Completed | Completed (activation); Blocked (badge rendering — OS grants) | Not Started | Not Started | Partially Observed |

@@ -53,3 +53,46 @@
 - Evidence: EVI-CARDS-001 (carddetails-r2, daytime-ui, condition-added,
   drawer-with-card, drawer-scrolled, drawer-live-top, search-with-card)
 - Confidence: Observed (UI/persistence); render surface Not Observed
+
+## OBS-CARDS-112 — Nova Now live probe: permission gating confirmed
+
+- Date / Env: 2026-11-19 03:17–03:23 / ENV-1 (Nova Prime)
+- Action: added a fresh Day/time condition covering the current time
+  (Wednesday, 03:20 + 1 h — editor prefills the start with the current
+  time; W preselected), saved, then probed both surfaces while the window
+  was active (03:21–03:23):
+  1. **Nova Now** (left-edge swipe): surface opened (search bar, Nova AI
+     section with Enable/Disable, frequently-used icons, prediction chips)
+     — **no AccuWeather card**. The "Welcome to Nova Now!" bottom sheet
+     states the gating explicitly: "We can create these Cards for you if
+     you grant their required permissions", listing a Calendar Card
+     (Calendar permission) and a Weather Card ("See current weather by
+     granting precise Location permission. Alternatively, set a manual
+     location in Nova Settings") with enable toggles.
+  2. Toggled the Weather Card ON in the sheet — after dismissing, the
+     toggle REVERTED to OFF (Nova will not keep card creation enabled
+     without its Location permission being granted; granting precise
+     location was deliberately NOT done on the user's device — the card's
+     documented alternative is a manual location in Nova Settings).
+  3. **Drawer**: still no card between predictions and the grid (divider
+     slot empty; light theme this time).
+- ALSO: the previously-persisted Wednesday 00:40+1 h condition was found
+  GONE from the Card details page at 03:20 (row showed "+" again) — the
+  window had passed 100 minutes earlier. Either one-shot semantics (the
+  condition is removed after its window elapses) or an expiry mechanism;
+  the semantics are undetermined — new conditions persist while active
+  (the fresh 03:20 condition is currently listed).
+- CONCLUSION: the render chain is **condition AND data-permission**: a
+  met Day/time condition alone does not render the card; the card's data
+  permission (Location for weather) must also be granted. This closes the
+  render-surface open question with an observed gating model; the exact
+  permission-grant flow was not exercised (privacy-sensitive precise
+  location on the user's device).
+- Test artifact: the fresh Wednesday 03:20–04:20 condition remains on the
+  AccuWeather card (1 h weekly window); removable via Cards ▸ AccuWeather
+  ▸ Day/time if unwanted.
+- Evidence: EVI-CARDS-001 (now-probe-start, condition-editor-r5,
+  cond-editor2, cond-confirmed, novanow-live, novanow-sheet,
+  weather-toggle, novanow-after-toggle, drawer-live-r5)
+- Confidence: Observed (absence across both surfaces + sheet gating text +
+  toggle revert); permission-granted render Not Tested
