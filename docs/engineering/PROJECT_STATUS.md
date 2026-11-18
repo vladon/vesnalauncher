@@ -27,7 +27,7 @@ exercised; everything else is source-verified only.
 
 | Capability | Implementation anchors | Verification |
 |---|---|---|
-| HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only; no test |
+| HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
 | Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior, not verified end to end | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
@@ -106,7 +106,9 @@ list means it was not performed, nothing more.
 
 ## Where to go next
 
-- Immediate QA candidate: [VESNA-QA-002 in BACKLOG.md](BACKLOG.md#vesna-qa-002-home-and-launch-return-verification-proposed)
-  (a Vesna platform baseline item; it carries no approved research ID).
+- Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —
+  HOME registration/selection and launch-return device-verified on the
+  dedicated API 35 AVD (a Vesna platform baseline item; no approved research ID).
+- Next QA candidates: [VESNA-QA-003 and VESNA-QA-004 in BACKLOG.md](BACKLOG.md).
 - Prioritized plan: [ROADMAP.md](ROADMAP.md).
 - Requirement-level pointers: [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).

@@ -15,10 +15,11 @@ are named explicitly.
 
 ---
 
-## VESNA-QA-002: HOME and launch-return verification (proposed)
+## VESNA-QA-002: HOME and launch-return verification (done)
 
-**Status:** proposed — requires identification of the product baseline
-acceptance **before** implementation.
+**Status:** done — device run recorded 2026-11-18 on the dedicated API 35 AVD;
+full reproducible record:
+[verification/VESNA-QA-002.md](verification/VESNA-QA-002.md).
 **Priority:** P0 (first item). **Depends on:** nothing; reuses the **existing
 dedicated API 35 AVD** — no new device work is required to start.
 **Research:** none — this is a Vesna platform baseline item and carries **no
@@ -44,7 +45,7 @@ automate or script them. On completion, add the run record link to
 ## VESNA-QA-003: package lifecycle verification (proposed)
 
 **Status:** proposed. **Priority:** P0. **Depends on:** the AVD inventory from
-[VESNA-QA-002](#vesna-qa-002-home-and-launch-return-verification-proposed).
+[VESNA-QA-002](#vesna-qa-002-home-and-launch-return-verification-done).
 
 Verify the `PackageChangeMonitor` → stale-cleanup path end to end:
 

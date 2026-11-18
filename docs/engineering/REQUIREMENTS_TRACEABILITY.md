@@ -54,7 +54,7 @@ them carries an approved research ID.
 
 | Item | Vesna anchors | Tests / evidence | Status |
 |---|---|---|---|
-| HOME registration/selection, return-from-app | `HomeActivity` `CATEGORY_HOME` filter (`singleTask`, `clearTaskOnLaunch`, `excludeFromRecents`), `HomeRoleChecker`, `defaultHomeRequestIntent()` | none | **Outside the baseline audit**; first verification is [VESNA-QA-002 in BACKLOG.md](BACKLOG.md#vesna-qa-002-home-and-launch-return-verification-proposed) |
+| HOME registration/selection, return-from-app | `HomeActivity` `CATEGORY_HOME` filter (`singleTask`, `clearTaskOnLaunch`, `excludeFromRecents`), `HomeRoleChecker`, `defaultHomeRequestIntent()` | On-device run recorded 2026-11-18: [verification/VESNA-QA-002.md](verification/VESNA-QA-002.md) — offered in system HOME selection, selected as default via system UI, drawer launch of Settings verified in real foreground, HOME return to workspace with drawer closed, previous HOME holder restored | **Device-verified** (VESNA-QA-002 run); at audit time **outside the baseline audit** — see [VESNA-QA-002 in BACKLOG.md](BACKLOG.md#vesna-qa-002-home-and-launch-return-verification-done) |
 | HOME gesture (swipe-up drawer open) | `DrawerView` swipe-up / handle open | The baseline audit does not exercise the HOME gesture | **Outside the baseline audit**; research gesture follow-up (`ee15ed5` on research branch) records a separate drawer-open setting — binding values unvalidated in research |
 
 ## Dock
