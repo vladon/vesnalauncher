@@ -63,22 +63,27 @@ observations/settings.md OBS-SETT-008.
   page → Nova Search drawer; HOME while the launcher process is dead →
   cold-start into the search drawer (the binding fires on the incoming
   HOME intent).
-- LIVE BINDING EXPERIMENT (2026-11-18 23:25, state restored after): bound
-  "Swipe up" to "Expand notifications" (safe probe action), exited to the
-  workspace, performed a mid-screen swipe-up — **the drawer opened, NOT the
-  notification shade**. The gestures-section "Swipe up" binding is
-  NON-AUTHORITATIVE on the workspace: the separate App-drawer opening
-  gesture ("Open App Drawer: Swipe") takes precedence. Meanwhile "Swipe
-  down → Expand notifications" DOES fire (verified earlier — the shade
-  expands). Binding restored to "Expand quick settings" after the test
-  (verified via the section row).
+- LIVE BINDING EXPERIMENT (2026-11-18 23:25, state restored after): first
+  attempted with "Screen lock" as the probe action — it APPLIED instantly
+  (Nova dialogs auto-apply) and was immediately reassigned before any
+  swipe test, because a swipe would have pattern-locked the device (only
+  the user can draw it). Final probe binding: "Expand notifications".
+  Exited to the workspace, performed a mid-screen swipe-up — **the drawer
+  opened, NOT the notification shade**. The gestures-section "Swipe up"
+  binding is NON-AUTHORITATIVE on the workspace: the separate App-drawer
+  opening gesture ("Open App Drawer: Swipe") takes precedence. Meanwhile
+  "Swipe down → Expand notifications" DOES fire (verified earlier — the
+  shade expands). Binding restored to "Expand quick settings" after the
+  test (verified via the section row).
 - Vesna takeaway: if Vesna implements both a drawer-open swipe and
   assignable swipe-up actions, the drawer-open gesture must take precedence
   over (or consume) the swipe-up action on the workspace — Nova's effective
   behavior matches that model.
 - Evidence: EVI-GESTURE-002 (gestures-prime, swipeup-actions,
-  swipeup-actions-scrolled, apps-tab, gestures-find, gestures-r6-open,
-  notif-assigned, swipeup-live-test/final, binding-restored)
+  swipeup-actions-scrolled, apps-tab, gestures-find, gestures-r6-nav,
+  gestures-r6-open, swipeup-dialog-r6, screenlock-selected,
+  dialog-state-check, notif-assigned, swipeup-live-r2 [the drawer-open
+  outcome], binding-restored)
 - Confidence: Observed (catalog, live binding experiment, binding
   resolution); the only open item is whether the "Expand quick settings"
   swipe-up binding EVER fires on the workspace (both observed swipe-ups
