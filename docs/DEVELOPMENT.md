@@ -38,6 +38,35 @@ in app localization resources (`values-ru/strings.xml`).
 - Never commit generated artifacts: no APKs, no `build/` output, no local
   `local.properties`.
 
+## Review and merge authorization
+
+- The repository owner grants **standing authorization** to review and merge
+  **eligible, scoped** pull requests: small, in-scope changes whose required
+  checks pass. Scope must match the task the change was made under (for
+  orchestrated work, the task's allowed-file list).
+- The required checks (build, JVM unit tests, lint — see below) are mandatory
+  for every merge. **No administrative bypass**: override buttons, admin merges
+  with failing checks, or skip-directives are not permitted, ever.
+- **Release authorization remains separate.** Merge authorization never implies
+  release authorization: cutting a release tag, publishing a GitHub Release, or
+  distributing an APK requires its own explicit owner approval at the time of
+  the release.
+
+## Orchestration worker handoff
+
+Work may be dispatched to worker agents with a scoped task. The handoff
+contract:
+
+- The task defines an explicit set of allowed files; workers change nothing
+  outside it and keep unrelated local files untouched.
+- Workers use ordinary `git add` / `git commit` (a single Conventional Commit is
+  preferred) and report completion with the changed files **and** the
+  verification they ran.
+- The coordinator verifies delivered artifacts before treating work as done:
+  inspect `git show` for the delivered commit and run
+  `git diff HEAD^ HEAD --check` for whitespace errors, and spot-check internal
+  Markdown links for documentation tasks.
+
 ## CI quality gates
 
 `.github/workflows/android.yml` runs on every push to `main` and on every pull
