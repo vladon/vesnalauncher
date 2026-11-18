@@ -91,9 +91,9 @@ scrollbar on.
   Apps/Work tabs), EVI-DRAWER-001 (swipe-down-close[2/3])
 - Confidence: Observed
 
-## OBS-DRAWER-112 — Drawer groups UI works with Prime but the drawer render is inert (tabs and smart folders never materialize)
+## OBS-DRAWER-112 — Drawer groups split verdict: TABS work end-to-end (create → bar → switch); SMART FOLDERS are render-inert
 
-- Date / Env: 2026-11-19 1:24–1:31 / ENV-1 (Nova Prime)
+- Date / Env: 2026-11-19 1:24–2:06 / ENV-1 (Nova Prime)
 - Settings ▸ App drawer ▸ **Drawer groups** ("Customize tabs and folders
   in the drawer") opens a full management page: a **Tabs** section
   (default "Apps — All apps, excluding hidden" tab with ⋮ + drag handle,
@@ -113,15 +113,36 @@ scrollbar on.
   Notes/Maps, Now Playing/Phone, Safety/Settings, YouTube/YT Music —
   the smart-folder MEMBER apps render raw, not inside folders). The
   divider slot above the grid stays empty regardless.
-- CONCLUSION: the third decorative/unfinished Nova feature in this build
-  (after the manual-location promise and the condition system): drawer
-  groups are MANAGEABLE but never RENDER. The "Folders first" checkbox
-  was restored to unchecked after the test; no group/tab state changed.
+- CONCLUSION (REVISED by the tab exercise, 1:56–2:06): the feature splits.
+  **TABS WORK end-to-end**: created "TestTab" via Tabs ▸ + (name dialog:
+  type name → ADD; first attempt failed because the keyboard shifted the
+  ADD button — stale coordinates; verified by the tab VANISHING from the
+  list after navigation), placed the **Tab bar = Top** (dropdown: None/
+  Top/Bottom), and the drawer then rendered the tab bar with BOTH tabs
+  (Apps grey | TestTab active-dark); tapping TestTab switched to it
+  (empty content area — a new tab has no assignment rules yet). Full
+  revert verified: Tab bar placement → None, TestTab deleted via its ⋮ ▸
+  Delete (confirmation dialog), Tabs list back to Apps-only.
+  **SMART FOLDERS remain render-inert**: no folder icon in ANY state
+  (fresh opens, Nova restart, Folders first checked) — the grid stays a
+  flat alphabetical app list (member apps render raw), and the divider
+  slot above the grid stays empty. Root cause unexplored (the folders
+  may require per-folder rules the auto-categorizer does not write).
+  Pattern across the build: Nova's unfinished surfaces are the
+  AUTO/decorative ones (auto-located weather, auto-expiring conditions,
+  auto-organized folders), while explicit user-created structures
+  (tabs) function.
 - Vesna lesson: a groups/tabs feature must render its structures or not
   ship the management UI — dead config surfaces erode trust.
 - Evidence: EVI-DRAWER-001 (groups-page1, groups-page2, groups-page3,
   groups-page-open, drawer-folders-render, smartfolders-toggle,
   drawer-folders-scroll, drawer-folders-restart, foldersfirst-find,
   foldersfirst-row, foldersfirst-flipped, foldersfirst-on,
-  drawer-foldersfirst, foldersfirst-restored)
+  drawer-foldersfirst, foldersfirst-restored; tab exercise:
+  groups-tabs-page, tab-add-dialog, tab-named, tab-named2, tab-added2,
+  tabbar-find, tabbar-row2 through tabbar-row10, tabbar-dropdown,
+  tabbar-top-set, tabbar-render, tab-switched, revert-nav,
+  revert-tabbar-row, revert-dropdown, revert-none-set, groups-recheck,
+  groups-with-testtab, testtab-menu2, testtab-menu3, testtab-deleted,
+  testtab-gone)
 - Confidence: Observed

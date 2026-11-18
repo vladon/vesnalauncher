@@ -15,6 +15,13 @@ behavior, an ID is never reassigned to a different behavior.
 | CARDS-100 | Condition-gated drawer cards (AccuWeather/Media: activate toggle, Day/time & other conditions, render in Nova Now search) | discovered (render verified with Location grant; conditions DECORATIVE — non-gating for search, never surface in drawer, OBS-CARDS-117) |
 | CARDS-101 | Custom card builder (Add card: name, featured content, up to 6 pinned actions, condition set) | discovered (overlay ⋮ ▸ Add card and Cards-page "+" FAB; OBS-CARDS-116) |
 | CARDS-102 | Overlay card affordances (card long-press = provider deep link; card gear = Card details w/ Save; search-bar ⋮ = Add card/API Integrations/Settings; Fahrenheit rendering; no manual location) | discovered (OBS-CARDS-116) |
+| CARDS-103 | Calendar card variant (permission empty-state + New event chip; in-app "Connect to Calendar" gate — adb grant insufficient; real events post-connect) | discovered (OBS-CARDS-118) |
+
+## DRAWER — App drawer
+
+| ID | Feature | Discovery status |
+|---|---|---|
+| DRAWER-106 | Drawer groups (tabs + smart folders): management UI fully functional; TABS render/switch end-to-end (Tab bar Top required); smart folders never render (inert despite toggle ON + populated groups) | discovered (OBS-DRAWER-112) |
 
 ## HOME — Home screen / workspace
 
