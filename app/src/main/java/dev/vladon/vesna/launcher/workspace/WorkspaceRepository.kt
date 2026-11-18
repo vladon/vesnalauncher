@@ -70,9 +70,15 @@ class WorkspaceRepository(
         true
     }
 
-    /** Appends the app to the dock; false when the dock is full. */
+    /**
+     * Appends the app to the dock; false when the dock is full. Only top-level
+     * dock entries count toward capacity and append order: rows that are folder
+     * members (folderId set, container kept DOCK after a folder drag) are
+     * invisible in the dock, so they must not consume slots — matching
+     * [insertIntoDock], [moveWorkspaceToDock] and dock resolution.
+     */
     suspend fun addToDock(app: LauncherApp): Boolean = mutationMutex.withLock {
-        val dock = dao.getAll().filter { it.container == Container.DOCK.name }
+        val dock = dao.getAll().filter { it.container == Container.DOCK.name && it.folderId == null }
         if (dock.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
         val order = (dock.maxOfOrNull { it.cellIndex } ?: -1) + 1
         dao.insert(WorkspaceItem(id = 0, key = app.key, container = Container.DOCK, cellIndex = order).toEntity())
