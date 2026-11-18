@@ -197,7 +197,7 @@
 
 ## OBS-CARDS-116 — Nova Now overlay affordances: card gear, ⋮ menu, custom card builder, provider deep link
 
-- Date / Env: 2026-11-19 00:04–00:08 / ENV-1 (Nova Prime)
+- Date / Env: 2026-11-19 00:04–00:15 / ENV-1 (Nova Prime)
 - Discovered while exhaustively hunting a manual weather-location setting
   (completes OBS-CARDS-113): the overlay surfaces hide four affordances
   the settings-side inventory never showed.
