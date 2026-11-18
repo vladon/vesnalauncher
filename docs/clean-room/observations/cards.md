@@ -123,3 +123,22 @@
   EVI-CARDS-001 (details-r6, details-scroll, details-overflow,
   forecast-details, cards-scrolled-r6)
 - Confidence: Observed
+
+## OBS-CARDS-114 — Location granted via adb; render probe blocked by device lock
+
+- Date / Env: 2026-11-18 16:43 / ENV-1 (Nova Prime)
+- Action: granted Nova's declared runtime permissions over adb:
+  `pm grant com.teslacoilsw.launcher android.permission.ACCESS_FINE_LOCATION`
+  and `ACCESS_COARSE_LOCATION` (both verified `granted=true` in dumpsys —
+  persistent, applies without reboot). Asked for by the user (they could not
+  reach the phone).
+- Probe attempt: restarting Nova to pick up the grant force-stopped the
+  launcher, which let the keyguard engage — the device now sits on the
+  pattern lock ("Draw pattern — Pattern required for additional security").
+  All input stopped (only the user can draw the pattern).
+- Status: the permission-GRANTED card-render probe is the FIRST action next
+  session (after the user unlocks). If the Wednesday 03:20–04:20 condition
+  was auto-removed on expiry, add a fresh Day/time window first.
+- Evidence: EVI-CARDS-001 (settings-post-grant, unlock-r5), dumpsys grant
+  lines
+- Confidence: Observed (grant verified); render Not Tested (locked)
