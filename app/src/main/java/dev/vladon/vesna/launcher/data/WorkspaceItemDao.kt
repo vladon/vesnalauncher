@@ -34,11 +34,20 @@ interface WorkspaceItemDao {
     @Query("DELETE FROM workspace_items WHERE id = :id")
     suspend fun deleteById(id: Long)
 
+    /**
+     * Deletes all matched top-level rows for a key+container+profile (an app can
+     * hold several top-level pins). Rows that live inside a folder (`folderId`
+     * non-null) share the key and container — for example a dock item dragged
+     * onto a workspace folder — and are deliberately preserved: a menu-driven
+     * unpin removes only top-level placements, never folder membership. Bulk
+     * uninstall cleanup uses [deleteByPackage] instead.
+     */
     @Query(
         "DELETE FROM workspace_items WHERE packageName = :packageName " +
-            "AND className = :className AND container = :container AND userSerial = :userSerial",
+            "AND className = :className AND container = :container AND userSerial = :userSerial " +
+            "AND folderId IS NULL",
     )
-    suspend fun deleteByKey(packageName: String, className: String, container: String, userSerial: Long)
+    suspend fun deleteTopLevelByKey(packageName: String, className: String, container: String, userSerial: Long)
 
     @Query("DELETE FROM workspace_items WHERE packageName = :packageName AND userSerial = :userSerial")
     suspend fun deleteByPackage(packageName: String, userSerial: Long)

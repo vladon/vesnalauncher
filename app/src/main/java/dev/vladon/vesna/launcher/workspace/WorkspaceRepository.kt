@@ -383,7 +383,7 @@ class WorkspaceRepository(
     }
 
     private suspend fun removeFromContainer(key: AppKey, container: Container) = mutationMutex.withLock {
-        dao.deleteByKey(key.packageName, key.className, container.name, key.userSerial)
+        dao.deleteTopLevelByKey(key.packageName, key.className, container.name, key.userSerial)
     }
 
     private companion object {
