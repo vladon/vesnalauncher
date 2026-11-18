@@ -220,13 +220,15 @@ class WorkspaceRepository(
 
     /**
      * Drag-and-drop from the dock into the workspace grid at [cell]. Returns false
-     * when the cell is occupied (the icon returns home).
+     * when the cell is occupied (the icon returns home). Only the top-level entry
+     * moves: a dock row that is a hidden folder member never matches the source.
      */
     suspend fun moveDockToWorkspace(app: LauncherApp, cell: Int): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(cell)) return@withLock false
         val items = dao.getAll()
         val source = items.firstOrNull {
             it.container == Container.DOCK.name &&
+                it.folderId == null &&
                 it.packageName == app.key.packageName &&
                 it.className == app.key.className &&
                 it.userSerial == app.key.userSerial
