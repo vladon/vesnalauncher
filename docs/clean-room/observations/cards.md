@@ -96,3 +96,30 @@
   weather-toggle, novanow-after-toggle, drawer-live-r5)
 - Confidence: Observed (absence across both surfaces + sheet gating text +
   toggle revert); permission-granted render Not Tested
+
+## OBS-CARDS-113 — The advertised manual-location fallback does not exist
+
+- Date / Env: 2026-11-19 ~03:51 / ENV-1 (Nova Prime)
+- Context: the Nova Now welcome sheet offers "Alternatively, set a manual
+  location in Nova Settings" for the Weather Card.
+- Action: searched Nova Settings for "location" and then "weather" via the
+  settings search field (search indexes titles AND subtitles — verified
+  earlier with the "dock" query returning two matches).
+- Result: **both queries returned zero results** — no manual-location (or
+  weather) setting exists anywhere in Nova Settings 8.9.9. Additional checks
+  found no location field on the Card details page, the Cards list page
+  (which also holds Games/Photos/Screenshots cards), or the Card details
+  overflow menu (whose only item is "Reset to default"). "See forecast
+  details >" on the card preview is inert (does not navigate).
+- Conclusion: the Weather Card's only render path in this build is the
+  precise-Location permission grant; the advertised manual-location
+  fallback is not implemented/reachable. This makes the weather card
+  effectively render-less without a privacy-sensitive grant — recorded as
+  a Nova quirk and a Vesna design lesson (fallbacks advertised in UI copy
+  must exist).
+- The Day/time condition (Wednesday 03:20+1 h) remained ACTIVE throughout
+  (03:44–03:52 observations inside the window).
+- Evidence: EVI-SETT-003 (search-location, search-weather2),
+  EVI-CARDS-001 (details-r6, details-scroll, details-overflow,
+  forecast-details, cards-scrolled-r6)
+- Confidence: Observed

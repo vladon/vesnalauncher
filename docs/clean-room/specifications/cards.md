@@ -48,5 +48,8 @@ Cards settings inventory (OBS-SETT-006).
   drawer; Nova's enable toggle also reverts to off without the grant).
 - R-CARDS-100.4: Cards advertise their required permissions up front (Nova
   lists them in the onboarding sheet with per-card toggles) and offer a
-  manual-data alternative (e.g. manual location) instead of a mandatory
-  runtime permission.
+  manual-data alternative (e.g. manual location) INSTEAD of a mandatory
+  runtime permission. Nova counter-example recorded: its sheet advertises a
+  manual-location fallback that does not exist anywhere in its settings
+  (OBS-CARDS-113) — Vesna's advertised fallbacks must be reachable
+  (verifiable via settings search).
