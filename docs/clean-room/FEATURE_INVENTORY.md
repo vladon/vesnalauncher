@@ -8,6 +8,14 @@ observation file records it with evidence. Status lives in
 ID ranges are pre-allocated per area. IDs are stable: once assigned to a
 behavior, an ID is never reassigned to a different behavior.
 
+## CARDS — Nova Now cards (Prime)
+
+| ID | Feature | Discovery status |
+|---|---|---|
+| CARDS-100 | Condition-gated drawer cards (AccuWeather/Media: activate toggle, Day/time & other conditions, render in Nova Now search) | discovered (render verified with Location grant; condition persistence/non-gating revision in OBS-CARDS-117) |
+| CARDS-101 | Custom card builder (Add card: name, featured content, up to 6 pinned actions, condition set) | discovered (overlay ⋮ ▸ Add card and Cards-page "+" FAB; OBS-CARDS-116) |
+| CARDS-102 | Overlay card affordances (card long-press = provider deep link; card gear = Card details w/ Save; search-bar ⋮ = Add card/API Integrations/Settings; Fahrenheit rendering; no manual location) | discovered (OBS-CARDS-116) |
+
 ## HOME — Home screen / workspace
 
 | ID | Feature | Discovery status |

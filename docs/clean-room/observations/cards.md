@@ -114,11 +114,17 @@
      Games, Photos, Screenshots) — no location row.
   4. Settings ▸ Integrations (complete inventory): Calendar ("Your
      upcoming events"), Spotify, Deezer, Twitch, Slack, Discord, Dropbox,
-     GitHub, Sesame Shortcuts — NO weather/AccuWeather/location entry.
+     GitHub, Microsoft OneDrive, Sesame Shortcuts — NO weather/AccuWeather/
+     location entry.
   5. Overlay surfaces (2026-11-19 00:04–0:08, see OBS-CARDS-116): card
      long-press = external provider link; card gear = the same Card
      details page; search-bar ⋮ = Add card / API Integrations / Settings;
      "Add card" = custom card builder — none offers a location setting.
+  6. Final probes (2026-11-19 0:12–0:15): the Weather result-row gear
+     opens a DISTINCT config page (built-in Weather card — generic
+     template, no location field, page bottom = Bluetooth row); the
+     Settings ▸ Cards list re-scan shows NO distinct "Weather" entry
+     (the sheet toggle feeds the overlay row instead) — see OBS-CARDS-116.
 - CONCLUSION: the manual-location affordance advertised by the welcome
   sheet does not exist anywhere in Nova 8.9.9's UI. The Weather/AccuWeather
   card's ONLY location path is the precise-Location permission grant
@@ -126,8 +132,9 @@
   data — see OBS-CARDS-115). The unfulfilled sheet promise is a Nova
   quality gap and a Vesna design lesson: every advertised fallback must be
   implemented and discoverable.
-- The Day/time condition (Wednesday 21:57–22:57) expired during the checks
-  (00:00 Thursday); its earlier render verification stands (OBS-CARDS-115).
+- The Day/time condition's WINDOW ended during the checks (00:00
+  Thursday); the condition itself persists and did not gate the renders —
+  see OBS-CARDS-117. The earlier render verification stands (OBS-CARDS-115).
 - Evidence: EVI-SETT-003 (search-location, search-weather2, search-city2,
   main-top-r6), EVI-CARDS-001 (details-r6, details-scroll, details-overflow,
   forecast-details, cards-scrolled-r6, cards-r6b, integrations-find through
@@ -183,7 +190,8 @@
   drawer-cleared-check)
 - Confidence: Observed
 - Test artifact: Wednesday 21:57–22:57 condition left on the AccuWeather
-  card (expires tonight; removable via Cards ▸ AccuWeather ▸ Day/time).
+  card (did NOT expire — persists past window, OBS-CARDS-117; removable
+  via Cards ▸ AccuWeather ▸ Day/time).
   Welcome-sheet Calendar/Weather toggles left ON (user-facing feature,
   enabled state).
 
@@ -210,10 +218,29 @@
   "Actions" (pin up to 6 app or shortcut actions), Activate-in-Nova-Now +
   the full condition set (Day/time, Wi-Fi, weather-change, Bluetooth).
   Users can author their OWN cards; nothing was created (backed out
-  without Save).
-- **Card render is a timestamped snapshot, not live**: the card showed
-  32°/Snow stamped 0:05 while the accuweather.com page it deep-linked to
-  showed 0°C/Light snow at 0:06 — the overlay card does not live-refresh.
+  without Save). Reached BOTH from the overlay ⋮ and from a "+" FAB on
+  the Settings ▸ Cards page (added this session).
+- **Weather result-row gear = a DISTINCT config page** (the built-in
+  "Weather" search-result card, separate from the AccuWeather card):
+  generic template only — Actions ("App shortcuts: this app does not
+  provide any shortcuts" toggle), Add action, Activate-in-Nova-Now +
+  conditions. NO location field (page bottom = Bluetooth row). The
+  sheet's Weather toggle does NOT create a Cards-page entry: the Cards
+  list re-scan (0:15) shows Media controls, AccuWeather, Games, Photos,
+  Screenshots — unchanged, plus the new "+" FAB.
+- **Card renders Fahrenheit regardless of locale**: the card shows 32°/Snow
+  while the accuweather.com page it deep-links to shows 0°C/Light snow —
+  32°F = 0°C exactly, and 32°C with actively falling snow is physically
+  impossible, so the unit (not the value) differs. Settings search
+  "fahrenheit" returns nothing: no user-facing unit preference exists
+  (device locale ru-RU, provider page °C).
+- **Stamp behavior**: the card's timestamp (0:05) did not advance across
+  re-renders within ~8 minutes (re-checked 0:13); whether the underlying
+  data refetches per render is undetermined (the value was constant and
+  consistent with current conditions).
+- **Condition persistence (see OBS-CARDS-117)**: the Day/time condition
+  attached to the AccuWeather card remained attached 2h20m past its
+  window while the card kept rendering outside the window.
 - Manual-location verdict (with OBS-CARDS-113): NO weather-location
   setting exists on any surface — settings search ×4 (location/weather/
   city/accuweather), Cards page, Card details (both entries), card
@@ -222,4 +249,30 @@
 - Evidence: EVI-CARDS-001 (overlay-topright, card-longpress, card-gear,
   overlay-overflow2, add-card-flow, hunt-exit), EVI-SETT-003
   (search-accuweather)
+- Confidence: Observed
+
+## OBS-CARDS-117 — Day/time condition persists past window AND does not gate rendering
+
+- Date / Env: 2026-11-19 0:04–0:16 / ENV-1 (Nova Prime)
+- The AccuWeather card's condition reads "Day/time: 09:57 PM +1 hours on
+  Wednesday" (window ended 22:57 Wednesday). At 0:04–0:13 THURSDAY —
+  66–76 minutes past the window end, wrong day — the card still RENDERED
+  in the Nova Now search surface (32°/Snow, Khamovniki).
+- Condition-row check (0:16, Settings ▸ Cards ▸ AccuWeather): the
+  Day/time row is STILL ATTACHED with the original window — no auto-
+  removal 2h20m past the end. This matches the earlier 17h-past-window
+  persistence anomaly; the single observed auto-disappearance remains
+  unexplained.
+- CONSEQUENCES: (a) attached Day/time conditions do NOT auto-expire;
+  (b) an expired/out-of-window condition does NOT block card rendering —
+  OBS-CARDS-112's "render requires condition met" is REVISED: the
+  condition gate did not prevent renders at 0:04–0:13. Either the gate
+  evaluates only at attach/enable time, or expiry enforcement is broken
+  for built-in cards. Whether a NEVER-satisfied condition blocks is
+  untested (the Wednesday window was satisfied when created).
+- Corrections issued: OBS-CARDS-113 "expired during the checks" → the
+  window ended but the condition persists; OBS-CARDS-115's artifact note
+  "expires tonight" → did not expire.
+- Evidence: EVI-CARDS-001 (overlay-card-render, rerender-stamp,
+  cond-check), EVI-SETT-003 (search-fahrenheit2)
 - Confidence: Observed
