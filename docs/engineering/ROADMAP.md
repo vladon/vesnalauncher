@@ -25,14 +25,16 @@ Guiding constraints from the baseline:
 Everything in P0 verifies what already ships, on the **existing dedicated API 35
 AVD** (no new device work required to start).
 
-1. **[VESNA-QA-002](BACKLOG.md#vesna-qa-002-home-and-launch-return-verification-proposed) — HOME registration/selection and return-from-app.**
-   Status: **proposed** (not yet approved for implementation). This is a Vesna
-   platform baseline item and carries **no approved research ID**. Scope: verify
-   Vesna registers as HOME, can be selected as default, and the user returns to
-   the workspace from a launched app; restore the previous HOME holder during
-   cleanup; removing the stock launcher is not required. The product baseline
-   acceptance (what "HOME works" means for 0.4.1) is identified before
-   implementation, since no research scenario covers this today.
+1. **[VESNA-QA-002](BACKLOG.md#vesna-qa-002-home-and-launch-return-verification-done) — HOME registration/selection and return-from-app.**
+   Status: **done** — recorded run 2026-11-18 on the dedicated API 35 AVD
+   ([verification/VESNA-QA-002.md](verification/VESNA-QA-002.md)). A Vesna
+   platform baseline item; carries **no approved research ID**. Scope was:
+   verify Vesna registers as HOME, can be selected as default, and the user
+   returns to the workspace from a launched app; restore the previous HOME
+   holder during cleanup; removing the stock launcher is not required. The
+   product baseline acceptance (what "HOME works" means for 0.4.1) was
+   identified first and is recorded in the verification doc, since no research
+   scenario covers this today.
 2. **Package removal and temporary unavailability** — uninstall and update/disable
    paths: stale items leave workspace, dock, drawer, and folders
    ([BACKLOG.md](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-proposed)).
