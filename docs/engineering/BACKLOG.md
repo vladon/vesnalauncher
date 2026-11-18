@@ -238,7 +238,8 @@ removal, behavior across restore and reboot. Gates ENG-102.
 Decides whether platform backup stays enabled (it may) and defines the scope of
 what is backed up; states whether an explicit in-app backup/restore feature
 exists at all. Must state the privacy position explicitly (no analytics, no
-tracking, layout data only). Gates ENG-106.
+tracking, layout data only). Gates ENG-106. Draft:
+[ADR 0002 — Backup and privacy](../adr/0002-backup-and-privacy.md) (Proposed).
 
 ---
 
