@@ -223,7 +223,7 @@ class HomeActivity : ComponentActivity() {
 
         if (!moved) {
             when {
-                source.fromDrawer -> showDrawerItemMenu(app)
+                source.fromDrawer -> showDrawerItemMenu(anchor, app)
                 container == Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app)
                 else -> showDockItemMenu(anchor, app)
             }
@@ -415,8 +415,8 @@ class HomeActivity : ComponentActivity() {
         popup.show()
     }
 
-    private fun showDrawerItemMenu(app: LauncherApp) {
-        val popup = PopupMenu(this, drawer)
+    private fun showDrawerItemMenu(anchor: View, app: LauncherApp) {
+        val popup = PopupMenu(this, anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_ADD_TO_WORKSPACE, 0, R.string.menu_add_to_workspace)
         popup.menu.add(0, MENU_ADD_TO_DOCK, 1, R.string.menu_add_to_dock)
