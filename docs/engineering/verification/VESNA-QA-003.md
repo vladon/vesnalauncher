@@ -230,8 +230,9 @@ task forbids provisioning without reporting separately). The cross-profile
 
 Status note (2026-11-19): [PR #15](https://github.com/vladon/vesnalauncher/pull/15)
 fixed defect 1 at `40cb3ee`. The coordinator verified that the same fixture
-could be placed in workspace cell 14 and dock slot 3 on API 35. VESNA-QA-003B
-tracks the separate placed-item lifecycle run against the fixed revision.
+could be placed in workspace cell 14 and dock slot 3 on API 35.
+[VESNA-QA-003B](VESNA-QA-003B.md) records the separate placed-item lifecycle
+run against the fixed revision.
 
 **Fixture (retained, do not regenerate):** `D:/orca/scratch/vesna-qa-003/`
 

@@ -40,10 +40,11 @@ AVD** (no new device work required to start).
    ([BACKLOG.md](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-partial)).
    Status: **in-progress** — drawer side accepted for review as VESNA-QA-003A
    (recorded 2026-11-19,
-   [verification/VESNA-QA-003.md](verification/VESNA-QA-003.md)). The
-   workspace/dock/folder and managed-profile branches remain open: the
-   drawer drop defect was fixed in [PR #15](https://github.com/vladon/vesnalauncher/pull/15)
-   and independently verified on API 35. VESNA-QA-003B verifies placed items.
+   [verification/VESNA-QA-003.md](verification/VESNA-QA-003.md)).
+   [VESNA-QA-003B](verification/VESNA-QA-003B.md) verified placed-item
+   behavior on API 35. Uninstall across all three containers, the
+   disable-time retention decision, and the managed-profile repeat remain
+   open.
 3. **Migrations and restart** — Room 1→2→3 migration on representative databases,
    layout intact after process death and device reboot
    ([BACKLOG.md](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-proposed)).
