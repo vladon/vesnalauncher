@@ -223,3 +223,75 @@ task forbids provisioning without reporting separately). The cross-profile
   `/d/orca/workspaces/vesnalauncher/evidence/qa-package-lifecycle/`
   (`00_baseline_workspace.png` … `09_final_restored_workspace.png`, plus the
   `*.db` snapshot trios and `*.xml` dumps per case).
+
+## Regression verification recipe (handoff for the fix increment)
+
+Status note (2026-11-19): the coordinator confirmed defect 1 in source and
+dispatched a separate fix; the placement rows of this item are to be executed
+against the **fixed APK revision** (explicitly identified in that run), not
+this 0.4.1 baseline. The original-build lifecycle record above stays valid.
+
+**Fixture (retained, do not regenerate):** `D:/orca/scratch/vesna-qa-003/`
+
+| File | Package | Activity | versionCode/Name | SHA-256 |
+|---|---|---|---|---|
+| `fixture-v1.apk` | `dev.vladon.qa.lifecyclefixture` | `dev.vladon.qa.lifecyclefixture.MainActivity` | 1 / 0.1 | `f6fb89981616580d8485a728449020fc8236b1386c90901119ec47755eefcebf` |
+| `fixture-v2.apk` | `dev.vladon.qa.lifecyclefixture` | `dev.vladon.qa.lifecyclefixture.MainActivity` | 2 / 0.2 | `ce286df06f70b9f5e213a7d7a8032d68df3848520c9e51717f82c13b48303f83` |
+
+Same debug keystore on both (`CN=Android Debug`, SHA-256 `58231498…`), no
+permissions, drawer label "QA Fixture". The two versionCodes exercise the
+in-place-update path; identical label keeps the alphabetical drawer slot
+stable (between Photos and Safety on the seeded AVD).
+
+**Defect 1 repro — drawer drag-pin is a silent no-op** (clean seeded AVD,
+Vesna foreground, `adb -s <serial>` pinned throughout):
+
+1. `adb install fixture-v1.apk`; verify `pm list packages dev.vladon.qa`.
+2. Open the drawer: swipe up mid-screen (scripted `input swipe 540 1500 540 600 350`).
+   **Gate every gesture on proof the drawer is open** (uiautomator dump contains
+   the item, or screenshot) — a drag that starts on the workspace behind a
+   closed drawer will *move whatever icon sits under the start coordinates*
+   (observed during this run: Safety moved from cell 9 to 14; repaired by drag).
+3. Isolate the item first to make coordinates deterministic: tap the search
+   field, `input text "QA"`, dismiss the keyboard (`input keyevent KEYCODE_BACK`,
+   verify `dumpsys input_method` `mInputShown=false` — an up keyboard gets
+   hidden by the long-press handler and the resulting relayout cancels the
+   in-flight gesture), and re-dump: the sole item renders at
+   `[15,457][255,500]`; press its icon at **(135, 420)**.
+4. One continuous hold-drag to a verified-empty cell (cells 14–19 are free on
+   the seeded layout; cell 14 center ≈ (668, 1691)): `input draganddrop 135 420 668 1691 2000`.
+   (A physical finger reproduces identically: long-press the drawer icon,
+   drag to an empty cell, release.)
+5. **Fixed build expectation:** the fixture appears at that cell; a read-only
+   snapshot (`adb exec-out run-as dev.vladon.vesna.launcher cat` of
+   `vesna-launcher.db` + `-wal` + `-shm`, compared row-by-row) gains a
+   `WORKSPACE` row `packageName='dev.vladon.qa.lifecyclefixture'` at the
+   dropped `cellIndex`. **0.4.1 actual (bug):** drawer closes, no icon, no
+   error, package row count still 0. Also re-verify the drawer→dock drop
+   (same drag, drop over the dock zone): expected `insertIntoDock` (dock must
+   have a free slot — it is full at 4/4 on the seeded layout, so free slot 3
+   first via the dock item menu "Remove from dock", which works); 0.4.1
+   actual is the same silent no-op.
+
+**Defect 2 repro — drawer item menu opens as a zero-height popup:**
+
+1. Same drawer + search-isolation + keyboard-down state as above.
+2. Long-press the item: scripted `input motionevent DOWN 135 420`, sleep ≥1 s,
+   `input motionevent UP 135 420` (physical long-press reproduces identically).
+3. **Fixed build expectation:** a visible popup anchored at the item with
+   "Add to workspace" / "Add to dock" / "App info", each tappable. **0.4.1
+   actual (bug):** no visible menu; `adb shell dumpsys window windows` shows
+   `PopupWindow:<hash>` owned by `dev.vladon.vesna.launcher` with
+   `frame=[0,2337][515,2337]` — height 0 at the screen bottom. Root cause:
+   `showDrawerItemMenu` anchors `PopupMenu(this, drawer)` to the full-screen
+   `DrawerView` instead of the tapped icon view (dock/workspace item menus
+   anchor to their icon and render correctly — verified contrast in this run).
+
+**After the fix, finish the deferred placement rows of this item** on the
+fixed revision: pin via menu and via drag, dock placement (free slot 3, then
+"Add to dock"; re-adding Clock afterwards restores the exact original dock
+order), folder (drag the pinned icon onto an occupied cell — the occupant
+joins the folder; after uninstall the folder dissolves and the occupant
+returns to its own cell, so full cleanup restores the baseline without DB
+writes), then the placement branches of update/disable/uninstall with the
+same read-only row-comparison assertions.
