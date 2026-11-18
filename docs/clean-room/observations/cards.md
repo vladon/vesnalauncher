@@ -331,3 +331,43 @@
   drawer-final-check, rg5-verify, cleanup-removed), EVI-SETT-003
   (search-fahrenheit2)
 - Confidence: Observed
+
+## OBS-CARDS-118 — Calendar card variant: adb grant insufficient, in-app "Connect to Calendar" is the working route
+
+- Date / Env: 2026-11-19 1:19–1:24 / ENV-1 (Nova Prime)
+- The welcome-sheet Calendar toggle was already ON (persisted artifact
+  state). The Nova Now search renders the Calendar ROW + CARD for
+  "cal"-type queries with an EMPTY STATE: in-card text "See your
+  upcoming events inside Nova by granting Calendar permission." + a
+  "New event" action chip.
+- **adb pm grant (READ_CALENDAR granted=true; WRITE_CALENDAR also
+  granted) did NOT flip the card's state** — the permission prompt
+  persisted across fresh overlay renders AND a Nova force-stop
+  restart. Unlike Location, the calendar path is gated on an in-app
+  connect step, not the raw permission.
+- **"Connect to Calendar"** (button on the card's own config page —
+  reached via the Calendar row's gear in the search results, distinct
+  page from AccuWeather's) is the working route: tapping it cleared the
+  upsell banner INSTANTLY; the config preview then rendered real event
+  chips (Nov 30, Dec 10 ×2, Dec 11 ×3 — the user's actual events;
+  titles withheld from the record per the human-interruption rule), and
+  the SEARCH card re-rendered with event data (prompt gone; 3 date
+  chips). Personal events now render in the user's search — left ON
+  (the toggle was already the standing enabled state).
+- Calendar card config page: "App shortcuts — Up to 6 actions" toggle
+  ON (New task + New event chips in the preview — richer than the
+  Weather card, which provides no shortcuts), "Add action", the same
+  decorative condition set, Save/⋮ header. NO Activate toggle on the
+  page — Calendar activation lives on the welcome sheet (unlike
+  AccuWeather, whose details page carries it).
+- Permission artifact: READ/WRITE_CALENDAR left granted (in use by the
+  connected calendar; revoking would break the in-app connect state).
+- Vesna lesson: in-app connect flows beat raw permission prompts for
+  data-source cards — Nova's permission-prompt empty state ignores the
+  granted permission until its own connect step runs, a trap for any
+  launcher that renders provider cards from runtime grants alone.
+- Evidence: EVI-CARDS-001 (cal-variant-start, overlay-cal-query,
+  overlay-cal-granted, overlay-cal-refresh, post-restart,
+  overlay-cal-postrestart, calendar-gear, connect-calendar,
+  calendar-activate, overlay-cal-final)
+- Confidence: Observed

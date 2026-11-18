@@ -90,3 +90,38 @@ scrollbar on.
 - Evidence: EVI-DRAWER-002 (tabs-reverted, tabbar-dropdown2 — preview with
   Apps/Work tabs), EVI-DRAWER-001 (swipe-down-close[2/3])
 - Confidence: Observed
+
+## OBS-DRAWER-112 — Drawer groups UI works with Prime but the drawer render is inert (tabs and smart folders never materialize)
+
+- Date / Env: 2026-11-19 1:24–1:31 / ENV-1 (Nova Prime)
+- Settings ▸ App drawer ▸ **Drawer groups** ("Customize tabs and folders
+  in the drawer") opens a full management page: a **Tabs** section
+  (default "Apps — All apps, excluding hidden" tab with ⋮ + drag handle,
+  plus a "+" add button) and a **Folders** section with AUTO-POPULATED
+  smart folders (Entertainment [YouTube, YouTube Music], Finance [Google
+  Pay], Food [Empty], Games [Empty], Shopping [Empty], Social [Messages,
+  Phone], Travel [Maps]) — sparkle icons, ⋮ menus, "+" add button. The
+  management UI is fully functional with Prime.
+- Related toggles verified: **Smart Folders = ON** ("Automatically
+  organize my apps into folders"), **Tab bar placement = None** (custom
+  tabs would need the bar; only the default tab exists anyway),
+  **Folders first** checkbox (unchecked pre-test).
+- RENDER TEST (all negative): the drawer grid — checked top-to-bottom
+  after fresh opens, after a Nova force-stop restart, and with
+  "Folders first" CHECKED — never shows any folder icon: the grid stays
+  a flat alphabetical app list (Exclave/F-Droid, Gmail/Google, Keep
+  Notes/Maps, Now Playing/Phone, Safety/Settings, YouTube/YT Music —
+  the smart-folder MEMBER apps render raw, not inside folders). The
+  divider slot above the grid stays empty regardless.
+- CONCLUSION: the third decorative/unfinished Nova feature in this build
+  (after the manual-location promise and the condition system): drawer
+  groups are MANAGEABLE but never RENDER. The "Folders first" checkbox
+  was restored to unchecked after the test; no group/tab state changed.
+- Vesna lesson: a groups/tabs feature must render its structures or not
+  ship the management UI — dead config surfaces erode trust.
+- Evidence: EVI-DRAWER-001 (groups-page1, groups-page2, groups-page3,
+  groups-page-open, drawer-folders-render, smartfolders-toggle,
+  drawer-folders-scroll, drawer-folders-restart, foldersfirst-find,
+  foldersfirst-row, foldersfirst-flipped, foldersfirst-on,
+  drawer-foldersfirst, foldersfirst-restored)
+- Confidence: Observed
