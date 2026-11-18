@@ -28,7 +28,7 @@ exercised; everything else is source-verified only.
 | Capability | Implementation anchors | Verification |
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
-| Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior, not verified end to end | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
+| Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
@@ -36,7 +36,7 @@ exercised; everything else is source-verified only.
 | Drag-and-drop | Cross-container drag (workspace ⇄ dock ⇄ drawer-to-workspace) routed by `LauncherDragLayer`; drop-target highlights | Source only |
 | Folders | `Folder` grid cell, open/rename/remove in `FolderDialog`, dissolution below two members (`removeFromFolder` returns members to free cells); drag-into-folder via drops onto folder cells (`addToFolder`, two `HomeActivity` paths) | Model only: `WorkspaceResolverFolderTest` (7 tests) covers the resolver projection (member exclusion from top-level cells, folder cell with member count, invalid cell skipped, no override of an app in the target cell, in-folder ordering, stale members dropped, empty without folders). Create/rename/dissolution flows, the dialog UI, and the drag-into-folder UI flow are **not** covered |
 | Package events | `PackageChangeMonitor` via `LauncherApps.registerPackageCallback` (install/update/uninstall, all profiles, `userSerial` tagged); stale layout entries pruned | **Drawer-side device-verified** by the [VESNA-QA-003 run](verification/VESNA-QA-003.md) (2026-11-19, API 35 AVD), accepted for review as VESNA-QA-003A: install→drawer, same-package update, disable/re-enable, uninstall + launcher restart all clean. The run did not cover pinned fixture entries. [PR #15](https://github.com/vladon/vesnalauncher/pull/15) restored drawer drops and was verified on API 35 |
-| Persistence | Room `vesna-launcher.db`, schema version 3; migrations 1→2 (per-profile `userSerial`) and 2→3 (folders, `folderId`) | Source only; migrations and post-migration restart are intended behavior, not verified end to end |
+| Persistence | Room `vesna-launcher.db`, schema version 3; migrations 1→2 (per-profile `userSerial`) and 2→3 (folders, `folderId`) | **Device-verified at API 35** in two separate experiments: migrations by `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`; v1→2→3 and v2→3 through the production `LauncherDatabase.build`), and process death / full guest reboot / no re-seed by [VESNA-QA-004B](verification/VESNA-QA-004B.md) (2026-11-19, tested build `0c7269c`) |
 | Settings / About | `SettingsActivity` (Compose + Material 3) with app and version info | Source only |
 
 **Explicitly not implemented:** widgets, icon packs, themes, fuzzy search, drawer
@@ -60,13 +60,24 @@ purchases, or analytics/tracking SDKs.
 
 JVM suites: `DockOrderingTest`, `GridCanvasTest`, `SeedPlannerTest`,
 `WorkspaceResolverTest`, `WorkspaceResolverFolderTest` (workspace package) and
-`AppSearchTest` (apps package). One instrumentation suite exists:
-`DrawerSearchTest` (single test covering mixed-case query narrowing, empty state,
-and clear/restore), run locally, not in CI.
+`AppSearchTest` (apps package). At the baseline one instrumentation suite
+existed: `DrawerSearchTest` (single test covering mixed-case query narrowing,
+empty state, and clear/restore), run locally, not in CI; `RoomMigrationQaTest`
+was added afterwards by [PR #13](https://github.com/vladon/vesnalauncher/pull/13)
+(recorded in the instrumentation verification record below).
 
 ### Instrumentation verification record
 
 - `DrawerSearchTest` passed 3 consecutive runs on the dedicated API 35 AVD.
+- `RoomMigrationQaTest` (introduced by
+  [PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`):
+  both cases (`migrationFromV1PreservesLayoutAndDerivesDefaults`,
+  `migrationFromV2PreservesUserSerialsAndAddsFolders`) plus `DrawerSearchTest`
+  were executed by the coordinator on the dedicated API 35 AVD (2026-11-19).
+  The test seeds authentic v1/v2 schemas into isolated on-device databases and
+  migrates through the production `LauncherDatabase.build`; its own doc states
+  process-death/reboot durability is a separate task — covered by
+  [VESNA-QA-004B](verification/VESNA-QA-004B.md).
 - An API 36.1 AVD was provisioned but did not boot; API 36.1 behavior is not
   covered by this audit. Closing that gap is P3 coverage
   ([ROADMAP.md](ROADMAP.md#p3--quality-and-polish-unblocked-but-unscheduled)),
@@ -97,8 +108,6 @@ list means it was not performed, nothing more.
   is API 35 (instrumentation only).
 - CI does not run instrumentation; `DrawerSearchTest` depends on a local AVD and
   a manual runner.
-- Room migrations and end-to-end persistence (process death, reboot) are
-  implemented but not verified by any recorded run.
 - Managed-profile behavior (badged work apps, profile-aware removal) is
   implemented via `LauncherApps` and `userSerial` and is outside the audit.
 - The repository README still labels the status `0.3.0`; `app/build.gradle.kts`
@@ -118,6 +127,11 @@ list means it was not performed, nothing more.
   The parent QA-003 item stays **in-progress** for uninstall across all three
   containers, the disable-time retention decision, and the managed-profile
   repeat.
-- Next QA candidates: [VESNA-QA-004 in BACKLOG.md](BACKLOG.md).
+- Completed since the baseline: [VESNA-QA-004](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done)
+  — Room migrations (`RoomMigrationQaTest`, PR #13, merge `14ec712`) and
+  persistence (process death, full guest reboot, no re-seed;
+  [VESNA-QA-004B](verification/VESNA-QA-004B.md)) device-verified on the
+  dedicated API 35 AVD as two separate experiments. QA-003 sub-items remain
+  open ([VESNA-QA-003 in BACKLOG.md](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-partial)).
 - Prioritized plan: [ROADMAP.md](ROADMAP.md).
 - Requirement-level pointers: [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).

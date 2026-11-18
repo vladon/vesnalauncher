@@ -47,7 +47,11 @@ AVD** (no new device work required to start).
    open.
 3. **Migrations and restart** — Room 1→2→3 migration on representative databases,
    layout intact after process death and device reboot
-   ([BACKLOG.md](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-proposed)).
+   ([BACKLOG.md](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done)).
+   Status: **done** — migrations device-verified via `RoomMigrationQaTest`
+   ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`)
+   and persistence via [VESNA-QA-004B](verification/VESNA-QA-004B.md)
+   (2026-11-19), both on the dedicated API 35 AVD as separate experiments.
 
 **Exit criteria for P0:** all three QA items have recorded runs (device, build,
 result) linked from [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).
