@@ -26,7 +26,7 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
 | DRAWER-100..103 | Open/close, search, contact offer | Completed | Completed/partial (EVI-DRAWER-001) | Completed | Completed | Observed/Partially Observed |
 | DRAWER-104 | Drawer tab bar (free: default Apps tab) | Completed | Completed (EVI-DRAWER-002) | Completed | Completed (tabs) | Observed |
 | DRAWER-105 | Nova Now cards surface | Completed | Inventory + architecture statement | Folded into CARDS-100/HOME-105 | Not Started | Partially Observed |
-| DRAWER-106 | Drawer groups (tabs + smart folders) | Completed (split verdict — OBS-DRAWER-112: TABS work end-to-end [create → Tab bar Top → bar renders → switch]; SMART FOLDERS render-inert in every state incl. restart + Folders first) | Not Started | Not Started | Not Started | Observed |
+| DRAWER-106 | Drawer groups (tabs + smart folders) | Completed (split verdict — OBS-DRAWER-112: TABS work end-to-end [create → Tab bar Top → bar renders → switch]; SMART FOLDERS ship PER-FOLDER DISABLED — ⋮ ▸ Enable activates and renders them immediately; the master toggle alone is insufficient) | Not Started | Not Started | Not Started | Observed |
 | SETT-110 (covers SETT-003) | Settings search + deep-linking | Completed | Completed (OBS-SETT-110) | Completed | Completed | Observed |
 | SETT-111 | Prime-gate interaction | Completed | Completed (OBS-SYS-110) | Completed | Completed | Observed |
 | SYS-111..114 | Prime activation, badge pipeline, gating, third-party attempts | Completed | Completed (OBS-SYS-110..114) | Not Started (SYS-111 reference recorded in settings.md) | Not Started | Partially Observed (self-badge root cause found; third-party badge matrix inconclusive) |

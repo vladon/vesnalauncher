@@ -91,7 +91,7 @@ scrollbar on.
   Apps/Work tabs), EVI-DRAWER-001 (swipe-down-close[2/3])
 - Confidence: Observed
 
-## OBS-DRAWER-112 — Drawer groups split verdict: TABS work end-to-end (create → bar → switch); SMART FOLDERS are render-inert
+## OBS-DRAWER-112 — Drawer groups split verdict: TABS work end-to-end (create → bar → switch); SMART FOLDERS ship per-folder DISABLED — ⋮ ▸ Enable activates them
 
 - Date / Env: 2026-11-19 1:24–2:06 / ENV-1 (Nova Prime)
 - Settings ▸ App drawer ▸ **Drawer groups** ("Customize tabs and folders
@@ -126,14 +126,31 @@ scrollbar on.
   **SMART FOLDERS remain render-inert**: no folder icon in ANY state
   (fresh opens, Nova restart, Folders first checked) — the grid stays a
   flat alphabetical app list (member apps render raw), and the divider
-  slot above the grid stays empty. Root cause unexplored (the folders
-  may require per-folder rules the auto-categorizer does not write).
+  slot above the grid stays empty. ROOT CAUSE (found 3:44): the folders
+  ship PER-FOLDER DISABLED — greyed rows + faded icons in the
+  management UI (vs the Apps tab's full-color row), and each folder's
+  ⋮ menu offers "Enable". Enabling Entertainment rendered it in the
+  drawer grid immediately (folder icon + label).
   Pattern across the build: Nova's unfinished surfaces are the
   AUTO/decorative ones (auto-located weather, auto-expiring conditions,
   auto-organized folders), while explicit user-created structures
   (tabs) function.
+  **SMART FOLDERS — ROOT CAUSE FOUND (2026-11-19 3:44–3:48)**: the
+  auto-created folders ship **PER-FOLDER DISABLED**. Each folder's ⋮
+  menu carries "Enable"/"Disable" — the master Smart Folders toggle is
+  insufficient. PROOF: Entertainment's ⋮ ▸ Enable → the folder
+  IMMEDIATELY rendered in the drawer grid (alphabetical position, with
+  its member apps) on a fresh drawer open — no restart needed. Disable
+  restored the pre-test state. So the feature is functional but
+  dark-by-default: Nova auto-categorizes, writes the folders, and hides
+  every one of them until the user discovers the per-folder Enable —
+  the render failure was a DISCOVERABILITY failure, not dead code
+  (unlike the conditions system and the manual-location promise).
 - Vesna lesson: a groups/tabs feature must render its structures or not
-  ship the management UI — dead config surfaces erode trust.
+  ship the management UI — dead config surfaces erode trust. AND: any
+  auto-generated structure that starts disabled needs an affordance
+  that surfaces its own enablement (a banner/badge), not a buried
+  per-item menu.
 - Evidence: EVI-DRAWER-001 (groups-page1, groups-page2, groups-page3,
   groups-page-open, drawer-folders-render, smartfolders-toggle,
   drawer-folders-scroll, drawer-folders-restart, foldersfirst-find,
@@ -144,5 +161,7 @@ scrollbar on.
   tabbar-top-set, tabbar-render, tab-switched, revert-nav,
   revert-tabbar-row, revert-dropdown, revert-none-set, groups-recheck,
   groups-with-testtab, testtab-menu2, testtab-menu3, testtab-deleted,
-  testtab-gone)
+  testtab-gone; folder enable test: entertainment-find,
+  entertainment-editor, entertainment-menu, entertainment-menu2,
+  folder-enabled-render, entertainment-restored)
 - Confidence: Observed

@@ -23,7 +23,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DRAWER-106 | Drawer groups (tabs + smart folders): management UI fully functional; TABS render/switch end-to-end (Tab bar Top required); smart folders never render (inert despite toggle ON + populated groups) | discovered (OBS-DRAWER-112) |
+| DRAWER-106 | Drawer groups (tabs + smart folders): management UI fully functional; TABS render/switch end-to-end (Tab bar Top required); smart folders ship PER-FOLDER DISABLED — each needs ⋮ ▸ Enable to render (master toggle insufficient) | discovered (OBS-DRAWER-112) |
 
 ## HOME — Home screen / workspace
 
