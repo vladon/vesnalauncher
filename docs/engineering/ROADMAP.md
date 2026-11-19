@@ -120,12 +120,11 @@ roadmap only records what unblocks them.
 
 ## P3 — quality and polish (unblocked but unscheduled)
 
-1. **Performance verification** — [VESNA-QA-007](verification/VESNA-QA-007-COLD-START.md)
-   recorded 10 process-cold debug Activity launches on the dedicated Android
-   15/API 35 shared-host emulator. ActivityManager `TotalTime` ranged from
-   2,677 to 3,830 ms, with a median of 3,072.5 ms. Warm starts, drawer
-   scrolling, drag latency, interactivity, real devices, and release builds
-   still need measurement.
+1. **Performance verification** — Android 15 debug-emulator launch checks
+   cover process-cold timing in [VESNA-QA-007](verification/VESNA-QA-007-COLD-START.md)
+   and paired cold and warm timing in [VESNA-QA-009](verification/VESNA-QA-009-LAUNCH-STATES.md).
+   Hot starts, drawer scrolling, drag latency, interactivity, real devices,
+   and release builds still need measurement.
 2. **API 36.1 verification** — **done**.
    [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at

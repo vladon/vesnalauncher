@@ -34,7 +34,7 @@ exercised; everything else is source-verified only.
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
 | Drawer search | Case-insensitive substring filter (`AppSearch`), empty state, clear restores full list; drawer never re-orders | `AppSearchTest` (5 JVM tests); on-device `DrawerSearchTest` |
 | Drag-and-drop | Cross-container drag (workspace ⇄ dock ⇄ drawer-to-workspace) routed by `LauncherDragLayer`; drop-target highlights | Source only |
-| Folders | `Folder` grid cell, open/rename/remove in `FolderDialog`, dissolution below two members (`removeFromFolder` returns members to free cells); drag-into-folder via drops onto folder cells (`addToFolder`, two `HomeActivity` paths) | Model only: `WorkspaceResolverFolderTest` (7 tests) covers the resolver projection (member exclusion from top-level cells, folder cell with member count, invalid cell skipped, no override of an app in the target cell, in-folder ordering, stale members dropped, empty without folders). [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified creating and opening a workspace folder by drag, plus dissolution after uninstall. Rename, adding to an existing folder by drag, and manual removal still need dedicated device checks |
+| Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. [QA-003D](verification/VESNA-QA-003D.md) verified creating, opening, and uninstall-driven dissolution on API 35. [BUG-007](https://github.com/vladon/vesnalauncher/pull/38) verified manual removal from the selected folder on API 36.1. Rename and adding by drag to an existing folder still need dedicated verification. |
 | Package events | `PackageChangeMonitor` via `LauncherApps.registerPackageCallback` (install/update/uninstall, all profiles, `userSerial` tagged); stale layout entries pruned | **Drawer-side device-verified** by the [VESNA-QA-003 run](verification/VESNA-QA-003.md) (2026-11-19, API 35 AVD), accepted for review as VESNA-QA-003A: install→drawer, same-package update, disable/re-enable, uninstall + launcher restart all clean. The run did not cover pinned fixture entries. [PR #15](https://github.com/vladon/vesnalauncher/pull/15) restored drawer drops and was verified on API 35. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified managed-profile discovery, a work-profile pin carrying the profile's `userSerial`, and profile-scoped uninstall (work-only removal left the personal package and pin, stable across a launcher restart); [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall with simultaneous workspace, dock, and folder placements reconciling after a cold relaunch (both API 35, 2026-11-19) |
 | Persistence | Room `vesna-launcher.db`, schema version 3; migrations 1→2 (per-profile `userSerial`) and 2→3 (folders, `folderId`) | **Device-verified at API 35** in two separate experiments: migrations by `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`; v1→2→3 and v2→3 through the production `LauncherDatabase.build`), and process death / full guest reboot / no re-seed by [VESNA-QA-004B](verification/VESNA-QA-004B.md) (2026-11-19, tested build `0c7269c`) |
 | Settings / About | `SettingsActivity` (Compose + Material 3) with app and version info | Source only |
@@ -105,11 +105,21 @@ was added afterwards by [PR #13](https://github.com/vladon/vesnalauncher/pull/13
   supplies an unsorted fixture and verifies the order of two mixed-case
   substring matches. The full suite passed 8/8 on the dedicated API 35 AVD
   with candidate `18dd2d1`.
+- The eight-test suite passed on API 26 at build `4c5f0c1`.
+  [VESNA-QA-005B](verification/VESNA-QA-005-API26.md#follow-up-on-the-eight-test-suite)
+- The legacy HOME chooser and return from Calculator were verified on API 26.
+  [VESNA-QA-002B](verification/VESNA-QA-002.md#api-26-follow-up-vesna-qa-002b)
+- The folder-member removal and drawer self-drop regressions have scoped
+  device and instrumentation records in
+  [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#folders).
 
 At audit commit `888f557`, startup, scroll, and drag had no baseline
 measurements. [VESNA-QA-007](verification/VESNA-QA-007-COLD-START.md) now
 records a process-cold debug ActivityManager timing series on an Android 15
-shared-host emulator. Warm launch, drawer scrolling, drag latency, time to
+shared-host emulator, and
+[VESNA-QA-009-LAUNCH-STATES](verification/VESNA-QA-009-LAUNCH-STATES.md)
+adds paired cold and warm timings on the dedicated Android 15 AVD (COLD and
+WARM only; no HOT state was measured). Drawer scrolling, drag latency, time to
 interactivity, release builds, and real devices remain open.
 
 ## Audit status discipline
