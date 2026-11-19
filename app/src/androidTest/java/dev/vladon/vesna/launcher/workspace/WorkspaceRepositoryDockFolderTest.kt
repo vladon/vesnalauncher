@@ -40,6 +40,7 @@ class WorkspaceRepositoryDockFolderTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
             .allowMainThreadQueries()
             .build()
         val prefs = context.getSharedPreferences(

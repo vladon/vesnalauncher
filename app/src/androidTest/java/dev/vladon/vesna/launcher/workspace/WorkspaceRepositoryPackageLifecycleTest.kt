@@ -19,7 +19,9 @@ class WorkspaceRepositoryPackageLifecycleTest {
     @Test
     fun disabledPackageKeepsAllItsPinsAndOnlyUninstallDissolvesItsFolder() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java).build()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
+            .build()
         try {
             val dao = db.workspaceItemDao()
             val folders = db.folderDao()
@@ -37,10 +39,10 @@ class WorkspaceRepositoryPackageLifecycleTest {
             val folderId = folders.insert(folder)
             listOf(
                 pin,
-                pin.copy(container = Container.DOCK.name, cellIndex = 2),
-                pin.copy(folderId = folderId, cellIndex = 0),
+                pin.copy(container = Container.DOCK.name, cellIndex = 2, pageId = null),
+                pin.copy(folderId = folderId, cellIndex = 0, pageId = null),
                 pin.copy(userSerial = 10, cellIndex = 5),
-                pin.copy(packageName = "dev.vladon.qa.other", className = "Other", folderId = folderId, cellIndex = 1),
+                pin.copy(packageName = "dev.vladon.qa.other", className = "Other", folderId = folderId, cellIndex = 1, pageId = null),
             ).forEach { dao.insert(it) }
             val before = dao.getAll()
             val liveKeys = setOf(AppKey("dev.vladon.qa.other", "Other"))
@@ -53,7 +55,10 @@ class WorkspaceRepositoryPackageLifecycleTest {
             repository.pruneUninstalled(liveKeys) { _, _ -> false }
 
             val sibling = before.single { it.packageName != packageName }
-            assertEquals(listOf(sibling.copy(folderId = null, cellIndex = folder.cellIndex)), dao.getAll())
+            assertEquals(
+                listOf(sibling.copy(folderId = null, cellIndex = folder.cellIndex, pageId = DEFAULT_WORKSPACE_PAGE_ID)),
+                dao.getAll(),
+            )
             assertNull(folders.getById(folderId))
         } finally {
             db.close()

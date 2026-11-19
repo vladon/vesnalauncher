@@ -101,6 +101,12 @@ one Room transaction. Removing a member also commits its move and any
 resulting dissolution together. A failure inside either operation rolls
 its writes back. [Folder verification](../engineering/REQUIREMENTS_TRACEABILITY.md#folders)
 
+Room schema 4 stores stable workspace page IDs separately from their display
+rank. Top-level workspace items and folders reference a page; folder members
+inherit it, and dock pins remain global. Existing layouts migrate to the
+default page without rewriting their cell positions.
+[ADR-PAGE-1](../adr/0001-workspace-page-identity.md)
+
 ## Threading and lifecycle
 
 - Discovery and database access run on `Dispatchers.IO`; UI state is combined in

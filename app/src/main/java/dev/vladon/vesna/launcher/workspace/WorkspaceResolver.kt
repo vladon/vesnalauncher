@@ -11,12 +11,16 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 object WorkspaceResolver {
 
     /** Workspace cell index to app; stale items and duplicate cells are ignored. */
-    fun workspaceApps(items: List<WorkspaceItem>, apps: List<LauncherApp>): Map<Int, LauncherApp> {
+    fun workspaceApps(
+        items: List<WorkspaceItem>,
+        apps: List<LauncherApp>,
+        pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
+    ): Map<Int, LauncherApp> {
         val appByKey = apps.associateBy { it.key }
         val result = LinkedHashMap<Int, LauncherApp>()
         for (item in items) {
             if (item.container != Container.WORKSPACE) continue
-            if (item.folderId != null) continue
+            if (item.folderId != null || item.pageId != pageId) continue
             if (!GridCanvas.isValidCell(item.cellIndex)) continue
             if (result.containsKey(item.cellIndex)) continue
             appByKey[item.key]?.let { result[item.cellIndex] = it }
@@ -32,12 +36,14 @@ object WorkspaceResolver {
         items: List<WorkspaceItem>,
         apps: List<LauncherApp>,
         folders: List<Folder>,
+        pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Map<Int, CellContent> {
         val cells = LinkedHashMap<Int, CellContent>()
-        for ((cell, app) in workspaceApps(items, apps)) {
+        for ((cell, app) in workspaceApps(items, apps, pageId)) {
             cells[cell] = CellContent.App(app)
         }
         for (folder in folders) {
+            if (folder.pageId != pageId) continue
             if (!GridCanvas.isValidCell(folder.cellIndex)) continue
             if (cells.containsKey(folder.cellIndex)) continue
             val members = items.count { it.folderId == folder.id }

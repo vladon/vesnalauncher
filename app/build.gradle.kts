@@ -57,6 +57,11 @@ android {
     }
 }
 
+// Room exports each schema version to app/schemas for migration review.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.recyclerview)

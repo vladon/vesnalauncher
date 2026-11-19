@@ -63,7 +63,9 @@ class WorkspaceRepositoryTopLevelRemovalTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java).build()
+        db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
+            .build()
         repository = WorkspaceRepository(
             dao = db.workspaceItemDao(),
             db = db,

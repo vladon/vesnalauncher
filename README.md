@@ -11,6 +11,11 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 
 ## Features
 
+### Unreleased
+
+- Workspace pages now have stable IDs in storage. Existing layouts migrate to
+  the default page without moving pins; the launcher still shows one page.
+
 ### 0.4.2
 
 - Disabling an app no longer deletes its workspace or dock pins or its folder
