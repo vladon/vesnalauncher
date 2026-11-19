@@ -290,8 +290,9 @@ class WorkspaceRepository(
         if (draggedItem.id == target.id) return@withLock false
         val foldersHere = folderDao.getAll().any { it.cellIndex == targetCell }
         if (foldersHere) return@withLock false
-        val folderId = folderDao.insert(FolderEntity(title = defaultTitle, cellIndex = targetCell))
+        // Roll back the folder row if either membership update fails.
         db.withTransaction {
+            val folderId = folderDao.insert(FolderEntity(title = defaultTitle, cellIndex = targetCell))
             dao.updateFolder(target.id, folderId)
             dao.updateFolder(draggedItem.id, folderId)
         }

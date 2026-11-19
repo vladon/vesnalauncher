@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.workspace
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -104,6 +105,48 @@ class WorkspaceRepositoryFolderCreationTest {
             "both distinct pins become members of the one new folder",
             setOf("com.example.contacts", "com.example.calendar"),
             dao.getAll().mapNotNull { if (it.folderId == folder.id) it.packageName else null }.toSet(),
+        )
+    }
+
+    /** VESNA-BUG-009: abort the second membership write and check rollback. */
+    @Test
+    fun failedMembershipUpdateLeavesNoCommittedFolder() = runBlocking {
+        seedPin("com.example.contacts", cellIndex = 5)
+        seedPin("com.example.browser", cellIndex = 9)
+        val rowsBefore = dao.getAll()
+        val foldersBefore = db.folderDao().getAll()
+
+        db.openHelper.writableDatabase.execSQL(
+            "CREATE TRIGGER vesna_bug009_failpoint " +
+                "BEFORE UPDATE OF folderId ON workspace_items " +
+                "WHEN NEW.packageName = 'com.example.browser' " +
+                "BEGIN SELECT RAISE(ABORT, 'VESNA-BUG-009 failpoint: dragged membership update'); END",
+        )
+
+        val thrown: SQLiteConstraintException = try {
+            repo.createFolderFromDrop(
+                app("com.example.browser"),
+                targetCell = 5,
+                defaultTitle = "Folder",
+            )
+            error("VESNA-BUG-009: the aborted membership update must surface to the caller")
+        } catch (expected: SQLiteConstraintException) {
+            expected
+        }
+        assertTrue(
+            "VESNA-BUG-009: the failure must come from the installed failpoint trigger, got: $thrown",
+            thrown.message.orEmpty().contains("VESNA-BUG-009 failpoint"),
+        )
+
+        assertEquals(
+            "VESNA-BUG-009: the aborted transaction must leave both placements untouched",
+            rowsBefore,
+            dao.getAll(),
+        )
+        assertEquals(
+            "VESNA-BUG-009: no empty folder may be left behind by the failed drop",
+            foldersBefore,
+            db.folderDao().getAll(),
         )
     }
 }
