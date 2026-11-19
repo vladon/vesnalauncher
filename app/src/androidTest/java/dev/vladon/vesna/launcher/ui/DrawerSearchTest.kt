@@ -27,25 +27,19 @@ import org.junit.runner.RunWith
  * live app-state collector) by adding it to the window's content frame; nothing
  * feeds it real apps, so the injected fixture stays in place deterministically.
  *
- * Ordering: the production sort lives inline in `LauncherAppsAppDiscovery.discover()`
- * (`sortBy { label.lowercase(Locale.ROOT) }`) and cannot be invoked without the
- * LauncherApps system service, so discovery sorting is NOT exercised here. The
- * fixture is pre-sorted with exactly that comparator, and the test asserts the
- * drawer PRESERVES that order — DrawerView only filters via AppSearch, it never
- * re-orders.
+ * The unsorted fixture tests DrawerView's supplied order before and after filtering.
  */
 @RunWith(AndroidJUnit4::class)
 class DrawerSearchTest {
 
-    /** Alphabetical under the production comparator `label.lowercase(ROOT)`. */
     private val fixture = listOf(
-        app("dev.vladon.fixture.alpha", ".AlphaActivity", "Aardwolf"),
-        app("dev.vladon.fixture.amber", ".AmberActivity", "amber fox"),
-        app("dev.vladon.fixture.cherry", ".CherryActivity", "Cherry"),
-        app("dev.vladon.fixture.elder", ".ElderActivity", "Elderberry"),
-        app("dev.vladon.fixture.fig", ".FigActivity", "Fig"),
         app("dev.vladon.fixture.marigold", ".MarigoldActivity", "Marigold"),
         app("dev.vladon.fixture.quokka", ".QuokkaActivity", "Quokka"),
+        app("dev.vladon.fixture.elder", ".ElderActivity", "Elderberry"),
+        app("dev.vladon.fixture.alpha", ".AlphaActivity", "Aardwolf"),
+        app("dev.vladon.fixture.fig", ".FigActivity", "Fig"),
+        app("dev.vladon.fixture.cherry", ".CherryActivity", "Cherry"),
+        app("dev.vladon.fixture.amber", ".AmberActivity", "amber fox"),
     )
 
     private var scenario: ActivityScenario<SettingsActivity>? = null
@@ -90,8 +84,7 @@ class DrawerSearchTest {
 
     @Test
     fun searchNarrowsShowsEmptyStateAndRestore() {
-        // Full list, in the fixture (alphabetical) order — preservation of the
-        // comparator order, not a check of the discovery sort itself.
+        // The unfiltered drawer preserves the supplied order.
         assertVisibleLabels(fixture.map { it.label })
         assertNoResults(false)
 
@@ -103,6 +96,11 @@ class DrawerSearchTest {
         // Mixed-case query hitting a lowercase fixture label.
         setQuery("AMber")
         assertVisibleLabels(listOf("amber fox"))
+        assertNoResults(false)
+
+        // Both matches keep their supplied order.
+        setQuery("rY")
+        assertVisibleLabels(listOf("Elderberry", "Cherry"))
         assertNoResults(false)
 
         // No match shows the empty state.
