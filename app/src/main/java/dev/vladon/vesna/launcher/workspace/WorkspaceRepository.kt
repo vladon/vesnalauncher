@@ -296,56 +296,87 @@ class WorkspaceRepository(
 
     // Folders -------------------------------------------------------------------
 
+    internal sealed interface FolderDropSource {
+        data class Workspace(val cell: Int) : FolderDropSource
+        data object Dock : FolderDropSource
+        data object Drawer : FolderDropSource
+    }
+
     /**
-     * Creates a folder at [targetCell] from a drop of [dragged] onto the app that
-     * currently occupies the cell. Both entries become folder members. Returns
-     * false when an entry is missing, both entries are the same placement, or a
-     * folder already occupies the cell (use [addToFolder] for an existing folder).
+     * Creates a folder from an occupied cell and a dropped app. Drawer apps
+     * add a new member; workspace and dock pins are moved, not copied.
      */
-    suspend fun createFolderFromDrop(
+    internal suspend fun createFolderFromDrop(
         dragged: LauncherApp,
         targetCell: Int,
         defaultTitle: String,
-        fromWorkspaceCell: Int?,
+        source: FolderDropSource,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(targetCell)) return@withLock false
         val items = dao.getAll()
-        val draggedItem = folderDropPin(items, dragged.key, pageId, fromWorkspaceCell) ?: return@withLock false
         val target = items.firstOrNull {
             it.isOnPage(pageId) && it.cellIndex == targetCell
         } ?: return@withLock false
-        if (draggedItem.id == target.id) return@withLock false
-        if (folderAtCell(pageId, targetCell) != null) return@withLock false
+        val copying = source == FolderDropSource.Drawer
+        val key = dragged.key
+        val draggedItem = if (copying) {
+            if (target.hasKey(key)) return@withLock false
+            null
+        } else {
+            folderDropPin(items, key, pageId, source) ?: return@withLock false
+        }
+        if (draggedItem?.id == target.id || folderAtCell(pageId, targetCell) != null) return@withLock false
         // Roll back the folder row if either membership update fails.
         db.withTransaction {
             val folderId = folderDao.insert(FolderEntity(title = defaultTitle, cellIndex = targetCell, pageId = pageId))
             dao.updateFolder(target.id, folderId)
-            dao.updateFolder(draggedItem.id, folderId)
+            if (draggedItem == null) insertFolderMember(key, folderId, targetCell + 1)
+            else dao.updateFolder(draggedItem.id, folderId)
         }
         true
     }
 
-    /** Adds the dragged pin into an existing folder, without falling back from a stale workspace cell. */
-    suspend fun addToFolder(app: LauncherApp, folderId: Long, fromWorkspaceCell: Int?): Boolean = mutationMutex.withLock {
-        val pageId = folderDao.getById(folderId)?.pageId ?: return@withLock false
-        val entry = folderDropPin(dao.getAll(), app.key, pageId, fromWorkspaceCell) ?: return@withLock false
-        dao.updateFolder(entry.id, folderId)
-        true
+    /** Adds a drawer copy or moves an existing top-level pin into a folder. */
+    internal suspend fun addToFolder(app: LauncherApp, folderId: Long, source: FolderDropSource): Boolean =
+        mutationMutex.withLock {
+            val pageId = folderDao.getById(folderId)?.pageId ?: return@withLock false
+            val items = dao.getAll()
+            val key = app.key
+            if (source == FolderDropSource.Drawer) {
+                var lastPosition = -1
+                for (item in items) {
+                    if (item.folderId != folderId) continue
+                    if (item.hasKey(key)) return@withLock false
+                    lastPosition = maxOf(lastPosition, item.cellIndex)
+                }
+                insertFolderMember(key, folderId, lastPosition + 1)
+            } else {
+                val entry = folderDropPin(items, key, pageId, source) ?: return@withLock false
+                dao.updateFolder(entry.id, folderId)
+            }
+            true
+        }
+
+    private suspend fun insertFolderMember(key: AppKey, folderId: Long, position: Int) {
+        dao.insert(WorkspaceItem(0, key, Container.WORKSPACE, position, folderId = folderId).toEntity())
     }
 
     private fun folderDropPin(
         items: List<WorkspaceItemEntity>,
         key: AppKey,
         pageId: Long,
-        fromWorkspaceCell: Int?,
-    ): WorkspaceItemEntity? {
-        if (fromWorkspaceCell != null) return workspacePinAt(items, key, pageId, fromWorkspaceCell)
-        return items.firstOrNull {
-            it.folderId == null && (it.isOnPage(pageId) || it.container == Container.DOCK.name) &&
-                it.packageName == key.packageName && it.className == key.className && it.userSerial == key.userSerial
+        source: FolderDropSource,
+    ): WorkspaceItemEntity? = when (source) {
+        is FolderDropSource.Workspace -> workspacePinAt(items, key, pageId, source.cell)
+        FolderDropSource.Dock -> items.firstOrNull {
+            it.container == Container.DOCK.name && it.folderId == null && it.hasKey(key)
         }
+        FolderDropSource.Drawer -> null
     }
+
+    private fun WorkspaceItemEntity.hasKey(key: AppKey): Boolean =
+        packageName == key.packageName && className == key.className && userSerial == key.userSerial
 
     /**
      * Returns a member of [folderId] to the first free grid cell. If the folder

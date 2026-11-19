@@ -100,11 +100,17 @@ emulator; only the dragged row moved and the prior dock entry shifted right.
 
 Workspace drops onto another pin or a folder also match the source page,
 cell, and app key. Both routes were verified with duplicate pins on API 35:
-only the selected pins became folder members. Dock and drawer sources still
-use their existing app-key lookup for folder drops.
+only the selected pins became folder members. Dock folder drops look up a
+top-level dock pin, not a workspace copy of the same app.
 
-Each folder creation commits the folder row and both membership updates in
-one Room transaction. Removing a member also commits its move and any
+Drawer drops onto another app or a folder insert a new member without moving
+existing pins. A drawer item cannot create a folder with its own pin or add
+another copy to a folder that already contains that app for the same profile.
+Both insertion routes were verified with real drags on an API 35 emulator.
+
+Folder creation commits the folder and both memberships in one Room
+transaction, whether the dragged member is moved or newly inserted.
+Removing a member also commits its move and any
 resulting dissolution together. A failure inside either operation rolls
 its writes back. [Folder verification](../engineering/REQUIREMENTS_TRACEABILITY.md#folders)
 
