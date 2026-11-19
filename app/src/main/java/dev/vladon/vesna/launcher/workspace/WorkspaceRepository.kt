@@ -108,16 +108,17 @@ class WorkspaceRepository(
     }
 
     /**
-     * Moves a workspace item to an EMPTY [toCell]. In 0.3.x this swapped with the
-     * occupant; since 0.4.0 drops onto occupied cells create folders instead, so
-     * this op only relocates. Returns false when the cell is occupied.
+     * Moves the top-level pin for [app] from [fromCell] to an empty [toCell].
+     * Returns false if the source is missing or the destination is invalid or
+     * occupied. Dropping on the same cell succeeds without changing the pin.
      */
-    suspend fun moveWithinWorkspace(app: LauncherApp, toCell: Int): Boolean = mutationMutex.withLock {
+    suspend fun moveWithinWorkspace(app: LauncherApp, fromCell: Int, toCell: Int): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(toCell)) return@withLock false
         val items = dao.getAll()
         val source = items.firstOrNull {
             it.container == Container.WORKSPACE.name &&
                 it.folderId == null &&
+                it.cellIndex == fromCell &&
                 it.packageName == app.key.packageName &&
                 it.className == app.key.className &&
                 it.userSerial == app.key.userSerial

@@ -352,7 +352,8 @@ class HomeActivity : ComponentActivity() {
         when (val content = workspace.contentAt(cell)) {
             null -> when {
                 source.fromDrawer -> controller.insertWorkspaceAt(app, cell)
-                source.container == Container.WORKSPACE -> controller.moveWithinWorkspace(app, cell)
+                source.container == Container.WORKSPACE ->
+                    controller.moveWithinWorkspace(app, source.fromCell, cell)
                 else -> controller.moveDockToWorkspace(app, cell)
             }
             is CellContent.App -> controller.createFolderFromDrop(
