@@ -110,8 +110,15 @@
      query returns two matches, proving the index works).
   2. Card details page (AccuWeather): no location field; overflow (⋮) has
      only "Reset to default"; "See forecast details >" is inert.
-  3. Cards list page: card entries only (Media controls, AccuWeather,
-     Games, Photos, Screenshots) — no location row.
+  3. Cards list page: card entries Media controls, AccuWeather, Games,
+     Photos, Screenshots — CORRECTION (2026-11-19 2:54): the list has a
+     SIXTH built-in below Screenshots that the r6-era scans missed by
+     stopping at Screenshots: **Map locations** ("Set a schedule to see
+     your favorite places with navigation shortcuts") — and its config
+     page DOES carry a location editor ("Add new location", free-text
+     with geocode resolution). It is the MAP-locations editor, not a
+     weather-location setting: the Weather card's manual-location
+     verdict stands; see OBS-CARDS-119.
   4. Settings ▸ Integrations (complete inventory): Calendar ("Your
      upcoming events"), Spotify, Deezer, Twitch, Slack, Discord, Dropbox,
      GitHub, Microsoft OneDrive, Sesame Shortcuts — NO weather/AccuWeather/
@@ -370,4 +377,61 @@
   overlay-cal-granted, overlay-cal-refresh, post-restart,
   overlay-cal-postrestart, calendar-gear, connect-calendar,
   calendar-activate, overlay-cal-final)
+- Confidence: Observed
+
+## OBS-CARDS-119 — Custom card builder save flow verified; Map locations card discovered (geocoded location editor)
+
+- Date / Env: 2026-11-19 2:37–2:59 / ENV-1 (Nova Prime)
+- **SAVE IS GATED**: the builder's Save stays DISABLED (grey — inert to
+  taps) with only a card name; it enables (dark-blue) only after at
+  least one action is attached (Calculator via Add action ▸ Apps tab ▸
+  row ▸ "Add (1/6)"). Featured content remains optional. A name-only
+  card cannot be saved: even the unsaved-changes dialog's Save is grey.
+- **BUT a name-only card ("VesnaTest") DID end up persisted** — the
+  exact commit trigger is unverified (the discard-dialog interaction is
+  the suspect: dismissing the greyed-Save dialog apparently left the
+  card created). Custom cards persist in their OWN SECTION of the Cards
+  list BELOW the built-ins (Media controls, AccuWeather, Games, Photos,
+  Screenshots, then custom cards, then Map locations).
+- **THE CARDS LIST HAS A SIXTH BUILT-IN**: **Map locations** ("Set a
+  schedule to see your favorite places with navigation shortcuts") —
+  missed by every earlier Cards-list scan that stopped at Screenshots.
+  Its config page: "+ **Add new location**" — a location EDITOR (the
+  location-setting surface the manual-location hunt missed; it belongs
+  to the Map card, NOT Weather — OBS-CARDS-113's weather verdict
+  stands).
+- **THE ADD-LOCATION FLOW IS TWO-STAGE GEOCODED**: (1) free-text
+  Location + OK — OK submits the text for geocoding; UNRESOLVABLE text
+  ("Home") leaves OK grey and nothing happens; (2) on resolution the
+  dialog EXPANDS: resolved name ("Moscow, Moscow, Russia" + X clear),
+  editable "Display name" (pre-filled), a live MAP PREVIEW, and an
+  ENABLED OK that commits. The list then shows the location (tappable →
+  "Delete location" — no confirmation). "Moscow" round-tripped
+  completely; both it and the test cards were cleaned up.
+- **BUILDER DEFAULTS**: a new custom card ships with Activate-in-Nova-
+  Now ON and a PRE-ATTACHED Wi-Fi condition (the first-scan-SSID
+  default, "MGTS_GPON_9FqM" — never-satisfied on this device; decorative
+  per OBS-CARDS-117, so it does not gate anything).
+- **Custom-card DELETE**: Card details ▸ ⋮ (More) ▸ Delete — no
+  confirmation dialog; the card vanishes from the custom section.
+  Both test cards (VesnaTest, VesnaTest2) were deleted; the Cards list
+  is back to its pre-test inventory.
+- Stamp refinement: the AccuWeather card's stamp ADVANCED (0:05 → 2:45)
+  across the session's Nova restart — the stamp updates on app
+  restart/re-render cycles but not within a continuous session (~8 min
+  observed static).
+- The custom card's SEARCH-surface render (what a name+action card
+  shows in Nova Now) was NOT tested — the scope was the save flow.
+- Evidence: EVI-CARDS-001 (cards-plus2, builder-open, builder-named,
+  builder-saved2, builder-kbd-down, builder-reopen, action-picker,
+  action-picked2, action-added, builder-saved-final, cards-list-full,
+  cards-after-restart, rebuild2, rebuild-top, rebuild-actions, picker2,
+  picker2-sel, picker2-added, save-enabled-check, save-instant,
+  save-settled, list-bottom-v2, maploc-gear-find, maploc-row,
+  maploc-config, maploc-add-flow, location-added, home-committed,
+  cancel-test, moscow-ok, moscow-committed, moscow-row-tapped,
+  moscow-deleted, maploc-groundtruth). The card-delete verifications
+  used live device-side uiautomator dumps (/sdcard, not retained); the
+  end-state (custom section empty) is re-verifiable in the store via
+  the post-cleanup captures.
 - Confidence: Observed

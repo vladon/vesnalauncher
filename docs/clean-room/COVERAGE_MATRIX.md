@@ -21,6 +21,8 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
 | CARDS-101 | Custom card builder (Add card) | Discovered (builder UI inventoried — OBS-CARDS-116; build/save flow untested) | Not Started | Not Started | Not Started | Partially Observed |
 | CARDS-102 | Overlay card affordances (deep link, gears, overflow, Fahrenheit render) | Completed (inventoried + units/stamp verified — OBS-CARDS-116/117) | Not Started | Not Started | Not Started | Observed |
 | CARDS-103 | Calendar card variant | Completed (card renders with permission empty-state; adb grant insufficient — in-app "Connect to Calendar" is the gate; post-connect renders real events — OBS-CARDS-118) | Completed (connect flow) | Not Started | Not Started | Observed |
+| CARDS-104 | Custom card builder save flow | Completed (save gated on ≥1 action; custom section; defaults; delete verified — OBS-CARDS-119; search render untested) | Not Started | Not Started | Not Started | Observed |
+| CARDS-105 | Map locations card (geocoded location editor) | Completed (add/commit/delete verified; two-stage geocode — OBS-CARDS-119) | Not Started | Not Started | Not Started | Observed |
 | DRAWER-100..103 | Open/close, search, contact offer | Completed | Completed/partial (EVI-DRAWER-001) | Completed | Completed | Observed/Partially Observed |
 | DRAWER-104 | Drawer tab bar (free: default Apps tab) | Completed | Completed (EVI-DRAWER-002) | Completed | Completed (tabs) | Observed |
 | DRAWER-105 | Nova Now cards surface | Completed | Inventory + architecture statement | Folded into CARDS-100/HOME-105 | Not Started | Partially Observed |

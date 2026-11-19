@@ -16,6 +16,8 @@ behavior, an ID is never reassigned to a different behavior.
 | CARDS-101 | Custom card builder (Add card: name, featured content, up to 6 pinned actions, condition set) | discovered (overlay ⋮ ▸ Add card and Cards-page "+" FAB; OBS-CARDS-116) |
 | CARDS-102 | Overlay card affordances (card long-press = provider deep link; card gear = Card details w/ Save; search-bar ⋮ = Add card/API Integrations/Settings; Fahrenheit rendering; no manual location) | discovered (OBS-CARDS-116) |
 | CARDS-103 | Calendar card variant (permission empty-state + New event chip; in-app "Connect to Calendar" gate — adb grant insufficient; real events post-connect) | discovered (OBS-CARDS-118) |
+| CARDS-104 | Custom card builder save flow: Save gated on ≥1 action; custom section below built-ins; defaults Activate ON + pre-attached Wi-Fi condition; delete via ⋮ ▸ Delete | discovered (OBS-CARDS-119; search render of custom cards untested) |
+| CARDS-105 | Map locations built-in card (sixth card, below Screenshots): config = geocoded location editor (two-stage: text → resolve → display name + map preview; unresolvable text leaves OK disabled) | discovered (OBS-CARDS-119; card's own search render untested) |
 
 ## DRAWER — App drawer
 
