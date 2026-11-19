@@ -420,8 +420,13 @@
   across the session's Nova restart — the stamp updates on app
   restart/re-render cycles but not within a continuous session (~8 min
   observed static).
-- The custom card's SEARCH-surface render (what a name+action card
-  shows in Nova Now) was NOT tested — the scope was the save flow.
+- The custom card's SEARCH-surface render WAS tested (2026-11-19 3:25,
+  VesnaRender name+Calculator): the card RENDERS for a NAME-matching
+  query ("vesna" → star-marked card: name, its action chip (Calculator),
+  and its own gear) — the never-satisfied Wi-Fi condition did not block
+  (consistent with OBS-CARDS-117). An ACTION-app query ("calc") matched
+  only the Calculator app — the matching is NAME-based, not
+  action-target-based.
 - Evidence: EVI-CARDS-001 (cards-plus2, builder-open, builder-named,
   builder-saved2, builder-kbd-down, builder-reopen, action-picker,
   action-picked2, action-added, builder-saved-final, cards-list-full,
@@ -430,8 +435,10 @@
   save-settled, list-bottom-v2, maploc-gear-find, maploc-row,
   maploc-config, maploc-add-flow, location-added, home-committed,
   cancel-test, moscow-ok, moscow-committed, moscow-row-tapped,
-  moscow-deleted, maploc-groundtruth). The card-delete verifications
-  used live device-side uiautomator dumps (/sdcard, not retained); the
-  end-state (custom section empty) is re-verifiable in the store via
-  the post-cleanup captures.
+  moscow-deleted, maploc-groundtruth, render-test-start,
+  builder-render-open, render-addaction-find, render-save-check,
+  rendersave-list, render-search-vesna, render-search-calc). The
+  card-delete verifications used live device-side uiautomator dumps
+  (/sdcard, not retained); the end-state (custom section empty) is
+  re-verifiable in the store via the post-cleanup captures.
 - Confidence: Observed
