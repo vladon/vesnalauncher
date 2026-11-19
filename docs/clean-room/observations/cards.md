@@ -426,7 +426,9 @@
   and its own gear) — the never-satisfied Wi-Fi condition did not block
   (consistent with OBS-CARDS-117). An ACTION-app query ("calc") matched
   only the Calculator app — the matching is NAME-based, not
-  action-target-based.
+  action-target-based. RE-VERIFIED 2026-11-20 2:41: a fresh VesnaRender
+  (recreated with the same name+action) rendered identically on the
+  "vesna" query, then was deleted.
 - Evidence: EVI-CARDS-001 (cards-plus2, builder-open, builder-named,
   builder-saved2, builder-kbd-down, builder-reopen, action-picker,
   action-picked2, action-added, builder-saved-final, cards-list-full,
