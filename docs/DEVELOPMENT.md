@@ -82,12 +82,22 @@ request:
 
 Gate 4 is a compile gate only: it proves the instrumentation test sources build,
 but it does not execute any test. GitHub CI has no emulator attached, so
-instrumentation tests never run there. Run them locally against the intended
-Vesna test device only: with no other device attached, use
-`./gradlew connectedDebugAndroidTest`; with other devices connected, install the
-app and androidTest APKs and run the AndroidJUnitRunner on that device via
-`adb -s <serial> shell am instrument -w dev.vladon.vesna.launcher.test/androidx.test.runner.AndroidJUnitRunner`,
-so nothing executes on a phone or research emulator.
+instrumentation tests never run there. On a shared host, verify the intended
+Vesna QA emulator's name and pin every device command to its serial. Build
+the APKs with the Gradle assembly tasks above, then run:
+
+```text
+adb -s <serial> emu avd name
+adb -s <serial> install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s <serial> install -r -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s <serial> shell am instrument -w dev.vladon.vesna.launcher.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+Keep connected Gradle tasks for hosts where the intended QA device is the
+only attached device. An unscoped task can select every attached target
+and remove the launcher package and its data during teardown.
+[VESNA-QA-003E](engineering/verification/VESNA-QA-003E.md#operational-findings)
+records the shared-host incident and recovery.
 
 When QA runs on a fresh emulator, treat the device as safe to test only after
 boot is completed (`sys.boot_completed=1`) and core system services are stable
