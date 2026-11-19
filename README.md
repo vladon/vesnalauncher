@@ -6,10 +6,26 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 
 - **Package name:** `dev.vladon.vesna.launcher`
 - **License:** [MIT](LICENSE)
-- **Status:** `0.3.0`
+- **Status:** `0.4.1` ([latest release](https://github.com/vladon/vesnalauncher/releases/latest))
 - **Language:** Kotlin, English UI (Russian localization included)
 
 ## Features
+
+### 0.4.1 (latest release)
+
+- Drag-and-drop fixes: drops from the drawer commit reliably, recycled drawer
+  items no longer fire stale drag-release listeners, and dock reordering and workspace-to-dock drops ignore folder members. Folder cells count as
+  occupied in free-cell placement, and removing a folder pre-checks that the
+  grid can fit its members.
+
+### 0.4.0
+
+- Workspace folders: dropping an icon onto another icon creates a folder and
+  dropping onto a folder adds to it; folders render as a folder icon with a
+  member count, open in a dialog grid, support rename and member removal, and
+  auto-dissolve when fewer than two members remain.
+- Drag-and-drop from the drawer: long-press arms the drag, the drawer closes
+  mid-gesture, and the app lands on a workspace cell or a dock slot.
 
 ### 0.3.0
 
@@ -23,7 +39,7 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 ### 0.2.0
 
 - Drag-and-drop on the workspace: long-press an icon and drop it on an empty cell
-  or on another icon to swap them.
+  or on another icon to swap them (0.4.0 replaced the swap with folder creation).
 - Work-profile apps are listed and launchable (discovery and launching via
   `LauncherApps`, with profile badges on the icons).
 - Signed release builds: GitHub Releases carry APKs signed with the project key.
@@ -42,13 +58,18 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 - Settings screen (Jetpack Compose + Material 3) with app and version info.
 - English and Russian localization.
 
-Not yet implemented: folders, widgets, drag between the drawer and other
-containers, icon packs, themes, fuzzy search matching. See [PRODUCT.md](PRODUCT.md)
-for the roadmap.
+Not yet implemented: widgets, icon packs, themes, and fuzzy search matching.
+See [PRODUCT.md](PRODUCT.md) for the roadmap. Work-profile apps have been
+supported since 0.2.0 (badged, profile-scoped discovery and removal via
+`LauncherApps`); their dedicated device verification (2026-11-19) and later
+folder, drag, and dock-rendering fixes landed on `main` after the 0.4.1
+release, ahead of the next release.
 
 ## Build
 
-Requirements: JDK 17+, Android SDK with platform 37.
+Requirements: JDK 17+, Android SDK. The app targets `compileSdk`/`targetSdk`
+37 (`minSdk` 26); CI installs `platforms;android-37.2` and
+`build-tools;36.0.0`. Full setup instructions: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ```bash
 ./gradlew assembleDebug          # debug APK in app/build/outputs/apk/debug/
@@ -57,9 +78,12 @@ Requirements: JDK 17+, Android SDK with platform 37.
 ./gradlew lintDebug              # Android Lint
 ```
 
-On Windows shells (Git Bash/PowerShell) invoke `gradlew.bat` with an explicit
-`JAVA_HOME`, for example:
-`JAVA_HOME='C:\Program Files\Microsoft\jdk-21' ./gradlew.bat assembleDebug`.
+In PowerShell, invoke `gradlew.bat` with an explicit `JAVA_HOME`, for example:
+
+```powershell
+$env:JAVA_HOME = 'C:\Program Files\Microsoft\jdk-21'
+.\gradlew.bat assembleDebug
+```
 
 Release builds are signed only when the signing environment is present, so plain
 `./gradlew assembleRelease` locally produces an unsigned APK. To sign locally, set:
