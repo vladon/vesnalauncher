@@ -45,6 +45,13 @@ analytics and tracking. [Product principles](../../PRODUCT.md)
   a verified profile-mapping model. Never transfer profile serials, raw Room
   databases, other preferences, cached artwork, wallpaper, credentials, logs,
   or device identifiers.
+- Vesna maintains the snapshot in app-private `files/transfer/layout`, the
+  only allowlisted path. After each committed layout or seed-state change,
+  generate it from one consistent database read and replace it atomically.
+  Android setup may copy the file without launching Vesna, so repair stale
+  snapshots on startup. If setup interrupts a write, it may copy the last
+  complete snapshot, never a partial update. The snapshot format version,
+  not the Room version, selects the restore rules.
 - Validate and apply the snapshot transactionally before seeding. Restore the
   personal-profile pins against the destination's personal profile only.
   Keep restored pins pending while destination apps are still installing;
