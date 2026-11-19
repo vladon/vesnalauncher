@@ -14,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -111,5 +112,37 @@ class WorkspaceRepositoryDockFolderTest {
 
         assertFalse(repo.addToDock(app("com.other.app")))
         assertEquals(5, dao.getAll().count { it.container == "DOCK" })
+    }
+
+    /**
+     * Regression for VESNA-BUG-006: when the same app has a hidden dock row that is
+     * a folder member (its dock icon was dragged into a folder) plus a visible
+     * top-level dock row (re-pinned from the drawer), a dock-to-workspace drag must
+     * move the visible row. The hidden member is seeded first so the pre-fix
+     * first-match lookup without a folderId filter picked it.
+     */
+    @Test
+    fun moveDockToWorkspaceMovesVisibleRowNotHiddenFolderMember() = runBlocking {
+        val folderId = db.folderDao().insert(FolderEntity(title = "Folder", cellIndex = 14))
+        seedDockRow("com.google.android.deskclock", 3, folderId)
+        seedDockRow("com.google.android.deskclock", 3)
+
+        val rows = dao.getAll()
+        val hidden = rows.single { it.folderId == folderId }
+        val visible = rows.single { it.packageName == "com.google.android.deskclock" && it.folderId == null }
+        assertTrue("hidden row must precede the visible row", hidden.id < visible.id)
+
+        assertTrue(repo.moveDockToWorkspace(app("com.google.android.deskclock"), 15))
+
+        val after = dao.getAll()
+        val moved = after.single { it.id == visible.id }
+        assertEquals("WORKSPACE", moved.container)
+        assertEquals(15, moved.cellIndex)
+        assertNull(moved.folderId)
+        val member = after.single { it.id == hidden.id }
+        assertEquals("DOCK", member.container)
+        assertEquals(3, member.cellIndex)
+        assertEquals(folderId, member.folderId)
+        assertEquals(14, db.folderDao().getById(folderId)?.cellIndex)
     }
 }
