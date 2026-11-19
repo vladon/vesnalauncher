@@ -349,6 +349,7 @@ class HomeActivity : ComponentActivity() {
      * grid, and drops onto occupants create or extend folders.
      */
     private fun commitOnCell(source: DragSource, app: LauncherApp, cell: Int) {
+        val fromWorkspaceCell = source.fromCell.takeIf { !source.fromDrawer && source.container == Container.WORKSPACE }
         when (val content = workspace.contentAt(cell)) {
             null -> when {
                 source.fromDrawer -> controller.insertWorkspaceAt(app, cell)
@@ -360,8 +361,9 @@ class HomeActivity : ComponentActivity() {
                 app,
                 cell,
                 getString(R.string.folder_default_title),
+                fromWorkspaceCell,
             )
-            is CellContent.FolderCell -> controller.addToFolder(app, content.folder.id)
+            is CellContent.FolderCell -> controller.addToFolder(app, content.folder.id, fromWorkspaceCell)
         }
     }
 

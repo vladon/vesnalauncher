@@ -98,6 +98,11 @@ and a missing source cancels the move without reporting a full dock.
 The workspace-to-dock fix was verified with two identical pins on an API 35
 emulator; only the dragged row moved and the prior dock entry shifted right.
 
+Workspace drops onto another pin or a folder also match the source page,
+cell, and app key. Both routes were verified with duplicate pins on API 35:
+only the selected pins became folder members. Dock and drawer sources still
+use their existing app-key lookup for folder drops.
+
 Each folder creation commits the folder row and both membership updates in
 one Room transaction. Removing a member also commits its move and any
 resulting dissolution together. A failure inside either operation rolls

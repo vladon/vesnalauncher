@@ -106,13 +106,15 @@ class LauncherController(
     }
 
     /** Creates a folder at [targetCell] from a drop of [dragged] onto its occupant. */
-    fun createFolderFromDrop(dragged: LauncherApp, targetCell: Int, defaultTitle: String) {
-        scope.launch { workspaceRepository.createFolderFromDrop(dragged, targetCell, defaultTitle) }
+    fun createFolderFromDrop(dragged: LauncherApp, targetCell: Int, defaultTitle: String, fromWorkspaceCell: Int?) {
+        scope.launch {
+            workspaceRepository.createFolderFromDrop(dragged, targetCell, defaultTitle, fromWorkspaceCell)
+        }
     }
 
     /** Adds a dragged app into an existing folder. */
-    fun addToFolder(app: LauncherApp, folderId: Long) {
-        scope.launch { workspaceRepository.addToFolder(app, folderId) }
+    fun addToFolder(app: LauncherApp, folderId: Long, fromWorkspaceCell: Int?) {
+        scope.launch { workspaceRepository.addToFolder(app, folderId, fromWorkspaceCell) }
     }
 
     /** Returns a member of [folderId] to the first free grid cell (dissolves sparse folders). */

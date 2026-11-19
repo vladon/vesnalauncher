@@ -86,7 +86,7 @@ class WorkspaceRepositoryFolderCreationTest {
 
         assertFalse(
             "VESNA-BUG-008: a drawer self-drop must be refused without mutating",
-            repo.createFolderFromDrop(app("com.example.contacts"), targetCell = 5, defaultTitle = "Folder"),
+            repo.createFolderFromDrop(app("com.example.contacts"), targetCell = 5, defaultTitle = "Folder", fromWorkspaceCell = null),
         )
 
         assertEquals("VESNA-BUG-008: the sole pin must stay untouched", rowsBefore, dao.getAll())
@@ -99,7 +99,7 @@ class WorkspaceRepositoryFolderCreationTest {
         seedPin("com.example.contacts", cellIndex = 5)
         seedPin("com.example.calendar", cellIndex = 6)
 
-        assertTrue(repo.createFolderFromDrop(app("com.example.calendar"), targetCell = 5, defaultTitle = "Folder"))
+        assertTrue(repo.createFolderFromDrop(app("com.example.calendar"), targetCell = 5, defaultTitle = "Folder", fromWorkspaceCell = 6))
 
         val folder = db.folderDao().getAll().single { it.cellIndex == 5 }
         assertEquals(
@@ -129,6 +129,7 @@ class WorkspaceRepositoryFolderCreationTest {
                 app("com.example.browser"),
                 targetCell = 5,
                 defaultTitle = "Folder",
+                fromWorkspaceCell = 9,
             )
             error("VESNA-BUG-009: the aborted membership update must surface to the caller")
         } catch (expected: SQLiteConstraintException) {
@@ -149,5 +150,33 @@ class WorkspaceRepositoryFolderCreationTest {
             foldersBefore,
             db.folderDao().getAll(),
         )
+    }
+
+    @Test
+    fun workspaceDropsUseTheSelectedDuplicateForNewAndExistingFolders() = runBlocking {
+        val contacts = app("com.example.contacts")
+        seedPin(contacts.packageName, cellIndex = 0)
+        seedPin(contacts.packageName, cellIndex = 5)
+        seedPin(contacts.packageName, cellIndex = 9)
+        seedPin("com.example.calendar", cellIndex = 6)
+        val before = dao.getAll().associateBy { it.cellIndex }
+
+        assertFalse(repo.createFolderFromDrop(contacts, 6, "Folder", fromWorkspaceCell = 7))
+        assertEquals(before, dao.getAll().associateBy { it.cellIndex })
+        assertTrue(db.folderDao().getAll().isEmpty())
+        assertTrue(repo.createFolderFromDrop(contacts, 6, "Folder", fromWorkspaceCell = 5))
+        val folder = db.folderDao().getAll().single()
+        val afterCreation = dao.getAll().associateBy { it.cellIndex }
+        assertEquals(before.getValue(0), afterCreation.getValue(0))
+        assertEquals(folder.id, afterCreation.getValue(5).folderId)
+        assertEquals(folder.id, afterCreation.getValue(6).folderId)
+        assertEquals(before.getValue(9), afterCreation.getValue(9))
+
+        assertFalse(repo.addToFolder(contacts, folder.id, fromWorkspaceCell = 5))
+        assertEquals(afterCreation, dao.getAll().associateBy { it.cellIndex })
+        assertTrue(repo.addToFolder(contacts, folder.id, fromWorkspaceCell = 9))
+        val afterExtension = dao.getAll().associateBy { it.cellIndex }
+        assertEquals(before.getValue(0), afterExtension.getValue(0))
+        assertEquals(before.getValue(9).copy(folderId = folder.id, pageId = null), afterExtension.getValue(9))
     }
 }

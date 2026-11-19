@@ -306,15 +306,12 @@ class WorkspaceRepository(
         dragged: LauncherApp,
         targetCell: Int,
         defaultTitle: String,
+        fromWorkspaceCell: Int?,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(targetCell)) return@withLock false
         val items = dao.getAll()
-        val draggedItem = items.firstOrNull {
-            it.folderId == null && (it.isOnPage(pageId) || it.container == Container.DOCK.name) &&
-                it.packageName == dragged.key.packageName && it.className == dragged.key.className &&
-                it.userSerial == dragged.key.userSerial
-        } ?: return@withLock false
+        val draggedItem = folderDropPin(items, dragged.key, pageId, fromWorkspaceCell) ?: return@withLock false
         val target = items.firstOrNull {
             it.isOnPage(pageId) && it.cellIndex == targetCell
         } ?: return@withLock false
@@ -329,17 +326,25 @@ class WorkspaceRepository(
         true
     }
 
-    /** Adds a top-level app (workspace or dock) into an existing folder. */
-    suspend fun addToFolder(app: LauncherApp, folderId: Long): Boolean = mutationMutex.withLock {
+    /** Adds the dragged pin into an existing folder, without falling back from a stale workspace cell. */
+    suspend fun addToFolder(app: LauncherApp, folderId: Long, fromWorkspaceCell: Int?): Boolean = mutationMutex.withLock {
         val pageId = folderDao.getById(folderId)?.pageId ?: return@withLock false
-        val items = dao.getAll()
-        val entry = items.firstOrNull {
-            it.folderId == null && (it.isOnPage(pageId) || it.container == Container.DOCK.name) &&
-                it.packageName == app.key.packageName && it.className == app.key.className &&
-                it.userSerial == app.key.userSerial
-        } ?: return@withLock false
+        val entry = folderDropPin(dao.getAll(), app.key, pageId, fromWorkspaceCell) ?: return@withLock false
         dao.updateFolder(entry.id, folderId)
         true
+    }
+
+    private fun folderDropPin(
+        items: List<WorkspaceItemEntity>,
+        key: AppKey,
+        pageId: Long,
+        fromWorkspaceCell: Int?,
+    ): WorkspaceItemEntity? {
+        if (fromWorkspaceCell != null) return workspacePinAt(items, key, pageId, fromWorkspaceCell)
+        return items.firstOrNull {
+            it.folderId == null && (it.isOnPage(pageId) || it.container == Container.DOCK.name) &&
+                it.packageName == key.packageName && it.className == key.className && it.userSerial == key.userSerial
+        }
     }
 
     /**

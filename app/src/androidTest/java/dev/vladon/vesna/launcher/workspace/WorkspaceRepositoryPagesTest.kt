@@ -75,7 +75,7 @@ class WorkspaceRepositoryPagesTest {
             assertTrue(repository.insertWorkspaceAt(other, 0, first))
             assertTrue(repository.insertWorkspaceAt(target, 3, second))
             assertTrue(repository.insertIntoDock(dock, 0))
-            assertTrue(repository.createFolderFromDrop(dock, 3, "Folder", second))
+            assertTrue(repository.createFolderFromDrop(dock, 3, "Folder", fromWorkspaceCell = null, pageId = second))
             val folder = db.folderDao().getAll().single()
             assertEquals(second, folder.pageId)
             assertFalse(repository.insertWorkspaceAt(other, 3, second))
