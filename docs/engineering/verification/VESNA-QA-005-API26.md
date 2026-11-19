@@ -176,3 +176,37 @@ API 26 (QA-003B covered it on API 35), the occluded-row launch path.
 - `TEST-Vesna_QA_MinSdk_API_26-AVD-8.0.0.xml` — per-case JUnit XML
 - `logcat-*.txt` — per-case device logcat captures
 - `test-result-exit-code.txt` — runner exit code (0)
+
+## Follow-up on the eight-test suite
+
+On 2026-11-19, the same Android 8.0/API 26 AVD ran the full instrumentation
+suite at commit `4c5f0c19b652610aa40fe290c26f06074490d33f` (PR #34). User 0
+was active, core services were stable, and both Vesna packages were absent
+at preflight. NexusLauncher was the resolved HOME and foreground.
+
+Debug APK assembly, instrumentation APK assembly, and all 42 JVM tests
+passed. Android lint reported 0 errors and 18 warnings. The build artifacts
+were recorded with these SHA-256 hashes:
+
+| APK | SHA-256 |
+| --- | --- |
+| `app-debug.apk` | `beeeff4a797d9f88b189ae0d32295e6d4c2de91b34d8e9675516b3673147aaf7` |
+| `app-debug-androidTest.apk` | `a49d3ec967f28efa4f7f5519d55282404cdf59b8e087d5305b074528e7b93337` |
+
+Serial-pinned `adb` installation and AndroidJUnitRunner execution on
+`emulator-5562` passed **8/8**:
+
+| Test class | Passed |
+| --- | ---: |
+| `RoomMigrationQaTest` | 2 |
+| `DrawerSearchTest` | 1 |
+| `WorkspaceRepositoryDockFolderTest` | 3 |
+| `WorkspaceRepositoryTopLevelRemovalTest` | 2 |
+
+An explicit launch opened `HomeActivity` and rendered workspace icons.
+Teardown removed the two packages installed for the run and confirmed
+NexusLauncher as the resolved HOME and foreground. The previous HOME default
+was preserved throughout.
+
+Detached evidence is in `qa-evidence/qa005b-api26-current/`, including the
+runner log, JVM test XMLs, artifact checksums, and workspace hierarchy.
