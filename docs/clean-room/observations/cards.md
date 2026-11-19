@@ -437,8 +437,21 @@
   cancel-test, moscow-ok, moscow-committed, moscow-row-tapped,
   moscow-deleted, maploc-groundtruth, render-test-start,
   builder-render-open, render-addaction-find, render-save-check,
-  rendersave-list, render-search-vesna, render-search-calc). The
-  card-delete verifications used live device-side uiautomator dumps
-  (/sdcard, not retained); the end-state (custom section empty) is
-  re-verifiable in the store via the post-cleanup captures.
+  rendersave-list, render-search-vesna, render-search-calc).
+  Schedule test (15:39–15:41): moscow-readded, sched-editor,
+  schedule-added, chip-thu-selected, sched-render-test,
+  drawer-sched-check, moscow-delete-final. The card-delete
+  verifications used live device-side uiautomator dumps (/sdcard, not
+  retained); the end-state (custom section empty) is re-verifiable in
+  the store via the post-cleanup captures.
+- **SCHEDULE TEST (15:39–15:41)**: the Map locations schedule = TIME +
+  DAYS rows ("15:39 Thursday" — tapping a day chip snapshots the
+  current time; "Add schedule" adds more rows; each location's
+  "Activate in Nova Now" label governs). With the schedule ACTIVE at
+  its exact set time: the card STILL never renders — the "map
+  locations" query returned only web suggestions, and the plain drawer
+  showed nothing. Render is fully inert across every tested state
+  (location/no location/scheduled active/exact name/location
+  name/partials). Management is complete (add/resolve/commit/schedule/
+  delete + Undo snackbar) but NO render path exists.
 - Confidence: Observed

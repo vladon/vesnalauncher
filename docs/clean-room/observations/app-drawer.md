@@ -146,6 +146,16 @@ scrollbar on.
   every one of them until the user discovers the per-folder Enable —
   the render failure was a DISCOVERABILITY failure, not dead code
   (unlike the conditions system and the manual-location promise).
+- **ALL-SEVEN RENDER VERIFIED (2026-11-19 15:18–15:26, next session)**:
+  enabled every folder (Entertainment pre-enabled + Finance, Games,
+  Social via ⋮ menus with screenshot-anchored Enable taps; Food,
+  Shopping, Travel enabled mid-loop) — ALL SEVEN render in the drawer
+  grid, alphabetically, live. Sub-quirk: EMPTY folders (Food, Games,
+  Shopping) render as BARE UNLABELED icons; populated ones show labels.
+  All folders re-disabled after the test (pre-test state). Settings-app
+  trap: the page re-themed (red header) mid-session and the keyboard
+  swallowed grid swipes as keypresses ("ft", "by" typed into the drawer
+  search field) — dismiss the keyboard before grid scrolling.
 - Vesna lesson: a groups/tabs feature must render its structures or not
   ship the management UI — dead config surfaces erode trust. AND: any
   auto-generated structure that starts disabled needs an affordance
