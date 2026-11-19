@@ -40,9 +40,14 @@ workspace. The drawer-opening swipe revealed app entries in the UI
 hierarchy and screenshot. Android's resolved HOME remained NexusLauncher
 throughout the run.
 
+A separate registration check used the same app APK on the same AVD.
+`cmd package query-activities` listed Vesna's `HomeActivity` as a HOME
+candidate alongside NexusLauncher. The HOME role stayed with NexusLauncher.
+The candidate entry disappeared after removing the temporary Vesna package.
+
 ## Teardown
 
-The two task-installed Vesna packages were removed. The preflight HOME
+The task-installed Vesna packages were removed after each pass. The preflight HOME
 resolution and NexusLauncher foreground matched. Orca shut down only the
 new AVD, and its definition remains available for subsequent verification.
 
