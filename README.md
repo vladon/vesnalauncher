@@ -1,15 +1,45 @@
-# Vesna Launcher
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./design/readme/hero-dark.svg">
+    <img src="./design/readme/hero-light.svg" alt="Vesna Launcher" width="960">
+  </picture>
+</h1>
 
-Vesna Launcher is a fast, free, and open-source Android home launcher built for an
-international audience. It has no ads, no subscriptions, no paid features, no in-app
-purchases, and no commercial analytics or tracking SDKs — and it never will.
+<p align="center"><strong>A fast, free, open-source Android home launcher</strong></p>
 
-- **Package name:** `dev.vladon.vesna.launcher`
-- **License:** [MIT](LICENSE)
-- **Version:** `0.4.2` ([latest published release](https://github.com/vladon/vesnalauncher/releases/latest))
-- **Language:** Kotlin, English UI (Russian localization included)
+<p align="center">
+  <a href="https://github.com/vladon/vesnalauncher/releases/latest"><strong>Get the signed APK</strong></a><br>
+  <a href="#features">Features</a>
+  · <a href="#design">Design</a>
+  · <a href="#build">Build</a>
+</p>
+
+<p align="center"><sub>Android 8.0+ · English and Russian · MIT license</sub></p>
+
+## Install
+
+Download the signed APK from [GitHub Releases](https://github.com/vladon/vesnalauncher/releases/latest),
+install it, and choose **Vesna Launcher** as your default Home app in Android
+Settings. The current release is
+[v0.4.2](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.2).
+The Android package name is `dev.vladon.vesna.launcher`.
 
 ## Features
+
+- **Home and dock.** Keep your apps on a 4 × 5 workspace and up to four favorites
+  in the dock. Vesna saves your layout locally and restores it after a restart.
+- **App drawer and search.** Swipe up or tap the drawer handle to browse your
+  installed apps. Type an app name to filter the list.
+- **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
+  pins between the workspace and dock. Drop an app on another in the workspace
+  to create a folder, then rename it or remove members as needed.
+- **Work profiles.** Launch work apps from badged icons. Removing a work copy
+  leaves its personal counterpart's pins in place.
+- **Free and private.** Vesna is free of ads, subscriptions, paid features,
+  in-app purchases, commercial analytics and tracking SDKs.
+
+<details>
+<summary>Feature history</summary>
 
 ### 0.4.2
 
@@ -70,67 +100,83 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 - Settings screen (Jetpack Compose + Material 3) with app and version info.
 - English and Russian localization.
 
-Not yet implemented: widgets, icon packs, themes, and fuzzy search matching.
-See [PRODUCT.md](PRODUCT.md) for the roadmap. Work-profile apps are discovered
-and shown with a profile badge; uninstalling a work copy does not remove its
-personal counterpart's pins.
+</details>
+
+See the [product overview](PRODUCT.md) and [engineering roadmap](docs/engineering/ROADMAP.md)
+for project scope and future work. Widgets, icon packs, themes and fuzzy search
+are planned or deferred.
+
+## Design
+
+The Vesna identity pairs a sprouting V with Spring Green, Fresh Teal and Sky
+Blue. The launcher design specification builds on Material Design 3 with
+light and dark palettes, Nunito headlines and Inter interface text.
+
+[Design specification](design/system/README.md) ·
+[Design tokens](design/system/tokens.json) ·
+[Logo assets](design/system/brand/) ·
+[Adaptive icon](design/system/adaptive-icon/)
+
+Open [`design/system/preview.html`](design/system/preview.html) in a browser
+from your checkout to try the proposed components in both themes.
 
 ## Build
 
-Requirements: JDK 17+, Android SDK. The app targets `compileSdk`/`targetSdk`
-37 (`minSdk` 26); CI installs `platforms;android-37.2` and
-`build-tools;36.0.0`. Full setup instructions: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Vesna is written in Kotlin. Use JDK 17+ and Android SDK platform 37. CI installs
+`platforms;android-37.2` and `build-tools;36.0.0`. The minimum API level is 26.
+See the [development guide](docs/DEVELOPMENT.md) for setup.
 
 ```bash
-./gradlew assembleDebug          # debug APK in app/build/outputs/apk/debug/
-./gradlew assembleRelease        # unsigned release APK
-./gradlew testDebugUnitTest      # unit tests
-./gradlew lintDebug              # Android Lint
+./gradlew assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug
 ```
 
-In PowerShell, invoke `gradlew.bat` with an explicit `JAVA_HOME`, for example:
+On Windows, use the PowerShell equivalent with the path to your installed JDK.
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Microsoft\jdk-21'
-.\gradlew.bat assembleDebug
+.\gradlew.bat assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug
 ```
 
-Release builds are signed only when the signing environment is present, so plain
-`./gradlew assembleRelease` locally produces an unsigned APK. To sign locally, set:
+The debug APK is written to `app/build/outputs/apk/debug/`. The
+[Android CI workflow](.github/workflows/android.yml) builds the app, compiles
+instrumentation test sources, runs JVM tests and runs Android Lint on pull
+requests and pushes to `main`.
+
+<details>
+<summary>Release builds and signing</summary>
+
+Run `./gradlew assembleRelease` to build a release APK. A local release is
+unsigned unless you export the required signing variables.
 
 ```bash
-VESNA_RELEASE_KEYSTORE=/path/to/vesna-release.keystore
-VESNA_RELEASE_STORE_PASSWORD=...
-VESNA_RELEASE_KEY_ALIAS=vesna
-VESNA_RELEASE_KEY_PASSWORD=...
+export VESNA_RELEASE_KEYSTORE=/path/to/vesna-release.keystore
+export VESNA_RELEASE_STORE_PASSWORD=...
+export VESNA_RELEASE_KEY_ALIAS=vesna
+export VESNA_RELEASE_KEY_PASSWORD=...
+./gradlew assembleRelease
 ```
 
-The keystore itself never lives in the repository: CI restores it from the
-`RELEASE_KEYSTORE_B64` secret (alongside `RELEASE_STORE_PASSWORD`,
-`RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`). The maintainers keep an offline
-copy of the same material.
+A `v*` tag triggers the release job. CI restores the keystore from the
+`RELEASE_KEYSTORE_B64` secret and uses `RELEASE_STORE_PASSWORD`,
+`RELEASE_KEY_ALIAS` and `RELEASE_KEY_PASSWORD` to sign the APK. The job checks
+the signature with `apksigner` and attaches the APK to the GitHub Release.
+The maintainers keep an offline copy of the signing material. Keep signing
+material and local build outputs outside the repository.
 
-Every push and pull request is built and tested by GitHub Actions
-([.github/workflows/android.yml](.github/workflows/android.yml)). Pushing a `v*`
-tag runs the release job, which builds the **signed** release APK, verifies the
-signature with `apksigner`, and attaches it to the GitHub Release. No build
-artifacts or signing material are committed to the repository.
+</details>
 
 ## Documentation
 
-- [PRODUCT.md](PRODUCT.md) — product concept and MVP boundaries.
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — trunk-based development workflow,
-  commit conventions, CI gates, release process.
-- [docs/architecture/OVERVIEW.md](docs/architecture/OVERVIEW.md) — architecture.
-- [docs/clean-room/PROCESS.md](docs/clean-room/PROCESS.md) — independent development
-  policy (how third-party launchers may and may not be used as references).
+- [Product overview](PRODUCT.md)
+- [Development workflow](docs/DEVELOPMENT.md)
+- [Architecture overview](docs/architecture/OVERVIEW.md)
+- [Independent development policy](docs/clean-room/PROCESS.md)
 
 ## Contributing
 
-Issues and pull requests are welcome. Please follow the conventions in
-[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): short-lived branches, Conventional
-Commits, English documentation, and green CI before merge.
+Issues and pull requests are welcome. Use short-lived branches, Conventional
+Commits and English documentation, and make sure CI passes before merging.
 
 ## License
 
-Vesna Launcher is distributed under the MIT license. See [LICENSE](LICENSE).
+Vesna Launcher is distributed under the [MIT license](LICENSE).
