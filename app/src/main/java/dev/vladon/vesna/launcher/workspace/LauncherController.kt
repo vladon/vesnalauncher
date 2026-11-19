@@ -115,9 +115,9 @@ class LauncherController(
         scope.launch { workspaceRepository.addToFolder(app, folderId) }
     }
 
-    /** Returns a folder member to the first free grid cell (dissolves sparse folders). */
-    fun removeFromFolder(app: LauncherApp) {
-        scope.launch { workspaceRepository.removeFromFolder(app) }
+    /** Returns a member of [folderId] to the first free grid cell (dissolves sparse folders). */
+    fun removeFromFolder(app: LauncherApp, folderId: Long) {
+        scope.launch { workspaceRepository.removeFromFolder(app, folderId) }
     }
 
     /** Renames a folder. */
