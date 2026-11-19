@@ -119,13 +119,22 @@ instrumentation run on emulator-5556 only (`ANDROID_SERIAL=emulator-5556` +
    Fixture uninstall cleanup therefore ran on relaunch (`pruneStale` +
    folder normalization), not at uninstall time. QA loops should `am start` the
    launcher after any `install -r` before asserting DB state.
-3. An initial Gradle invocation resolved every connected device and was
-   stopped before the first logged package install. The follow-up device
-   checks found no evidence of off-target installs. The retry selected only
-   `emulator-5556` with `ANDROID_SERIAL`; that run produced the two-passing
-   test report. The coordinator separately used serial-targeted adb
-   instrumentation on emulator-5560: one test failed as expected on the
-   baseline, and both cases passed on the patch.
+3. **Correction, 2026-11-19.** An unscoped `connectedDebugAndroidTest`
+   invocation selected six connected targets. Later package-manager logs
+   confirm that it installed and removed the Vesna app and test APKs on two
+   off-target development AVDs, `emulator-5558` and `emulator-5560`. Their
+   logs include app-data clearing events. The coordinator reinstalled the
+   prior debug APKs and restored the documented placement layouts (18 and
+   19 rows, respectively) and HOME states by comparing them with the
+   pre-run snapshots. Recovery of other removed app data remains unverified.
+   The host run also listed a phone and the separate research emulator as
+   targets. Available host logs do not establish what ran on either.
+4. The retry selected only `emulator-5556` with `ANDROID_SERIAL` and
+   produced the two-passing test report. In a separate planned run on
+   `emulator-5560`, the coordinator used serial-pinned adb instrumentation.
+   One test failed as expected on the baseline, and both cases passed on
+   the patch. For execution on a shared host, follow the serial-pinned
+   installation and test procedure in [Development](../../DEVELOPMENT.md#ci-quality-gates).
 
 ## Limitations
 
