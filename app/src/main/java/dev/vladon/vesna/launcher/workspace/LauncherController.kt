@@ -144,9 +144,9 @@ class LauncherController(
         scope.launch { workspaceRepository.moveDockToWorkspace(app, cell) }
     }
 
-    /** Persists a drag-and-drop result: move to an empty cell (occupied → folder flow). */
-    fun moveWithinWorkspace(app: LauncherApp, toCell: Int) {
-        scope.launch { workspaceRepository.moveWithinWorkspace(app, toCell) }
+    /** Moves the selected workspace pin from [fromCell] to [toCell]. */
+    fun moveWithinWorkspace(app: LauncherApp, fromCell: Int, toCell: Int) {
+        scope.launch { workspaceRepository.moveWithinWorkspace(app, fromCell, toCell) }
     }
 
     /** Dock-internal reorder to [slot]. */
