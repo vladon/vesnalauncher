@@ -295,7 +295,7 @@ class HomeActivity : ComponentActivity() {
             context = this,
             folder = folder,
             onLaunch = { controller.launch(it) },
-            onRemoveFromFolder = { controller.removeFromFolder(it) },
+            onRemoveFromFolder = { controller.removeFromFolder(it, folder.id) },
             onRename = { f, title -> controller.renameFolder(f.id, title) },
             onRemoveFolder = { controller.removeFolder(folder.id) },
             onDismissed = {

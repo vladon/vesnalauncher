@@ -310,18 +310,19 @@ class WorkspaceRepository(
     }
 
     /**
-     * Returns a folder member to the first free grid cell and dissolves the folder
-     * when fewer than two members remain. The folder's own cell counts as occupied
-     * while it persists; returns false (member stays in the folder) when no cell
-     * is free.
+     * Returns a member of [folderId] to the first free grid cell and dissolves
+     * [folderId] when fewer than two members remain, sending its remaining member
+     * to the folder's cell. Only the membership in [folderId] matches. Returns
+     * false without mutating when [folderId] does not exist, the app is not a
+     * member of it, or no cell is free.
      */
-    suspend fun removeFromFolder(app: LauncherApp): Boolean = mutationMutex.withLock {
+    suspend fun removeFromFolder(app: LauncherApp, folderId: Long): Boolean = mutationMutex.withLock {
         val items = dao.getAll()
         val entry = items.firstOrNull {
-            it.folderId != null && it.packageName == app.key.packageName &&
+            it.folderId == folderId && it.packageName == app.key.packageName &&
                 it.className == app.key.className && it.userSerial == app.key.userSerial
         } ?: return@withLock false
-        val folder = folderDao.getById(entry.folderId!!) ?: return@withLock false
+        val folder = folderDao.getById(folderId) ?: return@withLock false
         val occupied = items.filter { it.folderId == null && it.container == Container.WORKSPACE.name }
             .mapTo(mutableSetOf()) { it.cellIndex }
         folderDao.getAll().mapTo(occupied) { it.cellIndex }
