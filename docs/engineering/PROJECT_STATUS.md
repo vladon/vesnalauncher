@@ -92,17 +92,25 @@ was added afterwards by [PR #13](https://github.com/vladon/vesnalauncher/pull/13
   [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
   (2026-11-19, dedicated API 36.1 AVD on Windows): the full existing
   instrumentation suite passed 5/5, with HOME selection and launch-return
-  smoke-verified through the system RoleManager dialog.
-- The test preserves the order of a pre-sorted fixture (sorted with the production
-  comparator) and asserts the drawer filters without re-ordering. The baseline
-  audit does not exercise: discovery sorting, match highlighting (not
-  implemented), the HOME gesture, Room migrations, reboot persistence, or
-  managed-profile behavior. Behaviors outside that list are not claimed tested
-  here either — see the audit-scope note below.
+  smoke-verified through the system RoleManager dialog. Run 2 on the same AVD
+  exercised the BUG-005 candidate `d8d6a748` with the added
+  `WorkspaceRepositoryTopLevelRemovalTest`: 7/7 passed; these device runs are
+  scoped to that branch candidate, which merged as
+  [PR #27](https://github.com/vladon/vesnalauncher/pull/27) (`81cea18`).
+- Dock capacity, top-level unpin, and dock-to-workspace drag regressions were
+  verified on dedicated emulators. The verification scope for each fix is
+  recorded in [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids).
+- [VESNA-QA-008](https://github.com/vladon/vesnalauncher/pull/34) strengthened
+  the approved order-preservation and local-filtering coverage. The test
+  supplies an unsorted fixture and verifies the order of two mixed-case
+  substring matches. The full suite passed 8/8 on the dedicated API 35 AVD
+  with candidate `18dd2d1`.
 
-**No performance measurements or benchmarks exist** for the launcher. Startup,
-scroll, and drag behavior have not been measured; any such claim would be
-unfounded.
+At audit commit `888f557`, startup, scroll, and drag had no baseline
+measurements. [VESNA-QA-007](verification/VESNA-QA-007-COLD-START.md) now
+records a process-cold debug ActivityManager timing series on an Android 15
+shared-host emulator. Warm launch, drawer scrolling, drag latency, time to
+interactivity, release builds, and real devices remain open.
 
 ## Audit status discipline
 
