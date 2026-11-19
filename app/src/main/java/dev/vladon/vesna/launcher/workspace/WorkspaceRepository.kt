@@ -313,11 +313,9 @@ class WorkspaceRepository(
     }
 
     /**
-     * Returns a member of [folderId] to the first free grid cell and dissolves
-     * [folderId] when fewer than two members remain, sending its remaining member
-     * to the folder's cell. Only the membership in [folderId] matches. Returns
-     * false without mutating when [folderId] does not exist, the app is not a
-     * member of it, or no cell is free.
+     * Returns a member of [folderId] to the first free grid cell. If the folder
+     * dissolves, its last member returns to the folder cell in the same transaction.
+     * Returns false if the folder or membership is missing or the workspace is full.
      */
     suspend fun removeFromFolder(app: LauncherApp, folderId: Long): Boolean = mutationMutex.withLock {
         val items = dao.getAll()
@@ -333,8 +331,8 @@ class WorkspaceRepository(
         db.withTransaction {
             dao.updatePlacement(entry.id, Container.WORKSPACE.name, cell)
             dao.updateFolder(entry.id, null)
+            dissolveIfSparse(folder.id)
         }
-        dissolveIfSparse(folder.id)
         true
     }
 

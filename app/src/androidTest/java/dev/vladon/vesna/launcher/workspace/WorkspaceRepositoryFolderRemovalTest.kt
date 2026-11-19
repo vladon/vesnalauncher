@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.workspace
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -138,5 +139,43 @@ class WorkspaceRepositoryFolderRemovalTest {
 
         assertEquals("no row changed", rowsBefore, dao.getAll())
         assertNotNull("folder A survives", db.folderDao().getById(folderA))
+    }
+
+    /** VESNA-BUG-011: abort folder deletion and verify both memberships roll back. */
+    @Test
+    fun failedFolderDissolveRollsBackTheWholeRemovalAtomically() = runBlocking {
+        val folderB = db.folderDao().insert(FolderEntity(title = "Beta", cellIndex = 10))
+        seedMember("com.google.android.deskclock", folderB, cellIndex = 1)
+        seedMember("com.google.android.calendar", folderB, cellIndex = 2)
+        val rowsBefore = dao.getAll()
+        val foldersBefore = db.folderDao().getAll()
+
+        db.openHelper.writableDatabase.execSQL(
+            "CREATE TRIGGER vesna_bug011_failpoint " +
+                "BEFORE DELETE ON folders WHEN OLD.id = $folderB " +
+                "BEGIN SELECT RAISE(ABORT, 'VESNA-BUG-011 failpoint: sparse folder deletion'); END",
+        )
+
+        val thrown: SQLiteConstraintException = try {
+            repo.removeFromFolder(app("com.google.android.deskclock"), folderB)
+            error("VESNA-BUG-011: the aborted folder deletion must surface to the caller")
+        } catch (expected: SQLiteConstraintException) {
+            expected
+        }
+        assertTrue(
+            "VESNA-BUG-011: the failure must come from the installed failpoint trigger, got: $thrown",
+            thrown.message.orEmpty().contains("VESNA-BUG-011 failpoint"),
+        )
+
+        assertEquals(
+            "VESNA-BUG-011: the rolled-back removal must leave every placement untouched",
+            rowsBefore,
+            dao.getAll(),
+        )
+        assertEquals(
+            "VESNA-BUG-011: the fixture folder must survive the failed dissolution",
+            foldersBefore,
+            db.folderDao().getAll(),
+        )
     }
 }
