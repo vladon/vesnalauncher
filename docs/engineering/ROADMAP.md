@@ -12,8 +12,6 @@ Guiding constraints from the baseline:
   subset of `R-DRAWER-100.4` + local-filtering subset of `R-DRAWER-101.1`) are
   **gated**; roadmap phases consume them only after the research matrix is
   repaired ([RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md#known-weaknesses-in-the-research-matrix)).
-- No performance work is scheduled yet: no measurements exist, so there is no
-  baseline to optimize against (documented in [PROJECT_STATUS.md](PROJECT_STATUS.md#quality-status-at-the-baseline)).
 - ADR candidates (page identity/schema migration, widget host cleanup,
   backup/privacy) precede the features that depend on them; see
   [BACKLOG.md](BACKLOG.md#adr-candidates).
@@ -48,7 +46,11 @@ item 4 min-SDK smoke.
    uninstall deleted exactly the work-serial placements and left the personal
    package and pin, stable across a launcher restart) and
    [VESNA-QA-003D](verification/VESNA-QA-003D.md) (simultaneous
-   workspace/dock/folder removal reconciled after a cold relaunch). The item
+   workspace/dock/folder removal reconciled after a cold relaunch). The
+   dock folder-capacity defect observed in that line (VESNA-BUG-003) was
+   fixed in [PR #26](https://github.com/vladon/vesnalauncher/pull/26) and
+   device-verified in [VESNA-QA-003E](verification/VESNA-QA-003E.md) (see
+   that record for the corrected operational history). The item
    stays open for the disable-time placement retention product decision; no
    policy is assumed.
 3. **Migrations and restart** — Room 1→2→3 migration on representative databases,
@@ -118,9 +120,12 @@ roadmap only records what unblocks them.
 
 ## P3 — quality and polish (unblocked but unscheduled)
 
-1. **Performance baseline** — cold start, drawer scroll, drag latency measured
-   on the reference AVD; first numbers turn "fast" from an aspiration into a
-   regression guard.
+1. **Performance verification** — [VESNA-QA-007](verification/VESNA-QA-007-COLD-START.md)
+   recorded 10 process-cold debug Activity launches on the dedicated Android
+   15/API 35 shared-host emulator. ActivityManager `TotalTime` ranged from
+   2,677 to 3,830 ms, with a median of 3,072.5 ms. Warm starts, drawer
+   scrolling, drag latency, interactivity, real devices, and release builds
+   still need measurement.
 2. **API 36.1 verification** — **done**.
    [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at

@@ -62,7 +62,10 @@ personal package and pin survived, stable across a launcher restart.
 [VESNA-QA-003D](verification/VESNA-QA-003D.md) (2026-11-19, API 35) verified
 uninstall with simultaneous workspace, dock, and folder placements: all three
 fixture rows left within seconds, the folder dissolved, and a cold relaunch
-showed no ghost entries. Open item: the disable-time placement retention
+showed no ghost entries. The dock folder-capacity defect found in this line
+(VESNA-BUG-003) was fixed in [PR #26](https://github.com/vladon/vesnalauncher/pull/26)
+and device-verified in [VESNA-QA-003E](verification/VESNA-QA-003E.md)
+(2026-11-19, API 35). Open item: the disable-time placement retention
 policy — disabling currently removes workspace/dock placements (observed in
 QA-003B). The desired retention behavior remains an open product decision.
 Fixture methodology is recorded at
@@ -247,6 +250,8 @@ tracking, layout data only). Gates ENG-106. Draft:
 
 | Item | Evidence |
 |---|---|
-| Drawer search QA baseline (`R-DRAWER-100.4` order-preservation subset, `R-DRAWER-101.1` local-filtering subset) | PR #9, `DrawerSearchTest`, 3 green runs on the dedicated API 35 AVD — see [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record) |
+| Drawer search QA baseline (`R-DRAWER-100.4` order-preservation subset, `R-DRAWER-101.1` local-filtering subset) | `DrawerSearchTest` added in PR #9 and strengthened by [VESNA-QA-008 (PR #34)](https://github.com/vladon/vesnalauncher/pull/34). The updated suite passed 8/8 on the dedicated API 35 AVD. |
 | VESNA-QA-004 migration and restart verification | Part A: `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`), both migration cases plus `DrawerSearchTest` on the dedicated API 35 AVD; part B: [VESNA-QA-004B](verification/VESNA-QA-004B.md) (force-stop, full guest reboot, no re-seed) — see [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record) |
 | VESNA-QA-005 minimum SDK (API 26) smoke verification | [VESNA-QA-005-API26](verification/VESNA-QA-005-API26.md) (2026-11-19, dedicated API 26 AVD): build, HOME discoverability, cold start, workspace/drawer render, fixture round-trip, instrumentation suite 3/3; VESNA-BUG-004 fixed in [PR #23](https://github.com/vladon/vesnalauncher/pull/23) |
+| VESNA-QA-006 Android 16 (API 36.1) smoke verification | [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md) (2026-11-19, dedicated API 36.1 AVD on Windows): instrumentation 5/5 at `332fb03` and 7/7 with the integrated BUG-005 candidate `d8d6a748` (later merged as [PR #27](https://github.com/vladon/vesnalauncher/pull/27)); HOME/launch-return smoke; scope limited to that AVD configuration |
+| VESNA-QA-007 debug cold-launch timing baseline | [VESNA-QA-007-COLD-START](verification/VESNA-QA-007-COLD-START.md) (2026-11-19, PR #33): ten process-cold `HomeActivity` launches, debug 0.4.1 at `81cea18`, Android 15/API 35 shared-host emulator; see the run record for ActivityManager `TotalTime` observations |
