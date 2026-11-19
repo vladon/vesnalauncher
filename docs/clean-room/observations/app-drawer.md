@@ -156,6 +156,11 @@ scrollbar on.
   trap: the page re-themed (red header) mid-session and the keyboard
   swallowed grid swipes as keypresses ("ft", "by" typed into the drawer
   search field) — dismiss the keyboard before grid scrolling.
+- **ENABLE PERSISTENCE CONFIRMED (02:14–02:17, next day)**: after a Nova
+  force-stop restart, ALL SEVEN enabled folders still render in the
+  drawer grid (Entertainment/Finance/Food/Games visible; Shopping/
+  Social/Travel after one scroll) — the per-folder Enable state
+  persists across restarts.
 - Vesna lesson: a groups/tabs feature must render its structures or not
   ship the management UI — dead config surfaces erode trust. AND: any
   auto-generated structure that starts disabled needs an affordance

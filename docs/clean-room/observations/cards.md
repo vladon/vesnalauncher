@@ -444,14 +444,18 @@
   verifications used live device-side uiautomator dumps (/sdcard, not
   retained); the end-state (custom section empty) is re-verifiable in
   the store via the post-cleanup captures.
-- **SCHEDULE TEST (15:39–15:41)**: the Map locations schedule = TIME +
-  DAYS rows ("15:39 Thursday" — tapping a day chip snapshots the
-  current time; "Add schedule" adds more rows; each location's
-  "Activate in Nova Now" label governs). With the schedule ACTIVE at
-  its exact set time: the card STILL never renders — the "map
-  locations" query returned only web suggestions, and the plain drawer
-  showed nothing. Render is fully inert across every tested state
-  (location/no location/scheduled active/exact name/location
-  name/partials). Management is complete (add/resolve/commit/schedule/
-  delete + Undo snackbar) but NO render path exists.
+- **SCHEDULE TEST (15:39–15:41 + 02:14–02:21 next day)**: the Map
+  locations schedule = TIME + DAYS rows ("15:39 Thursday" — tapping a
+  day chip snapshots the current time; "Add schedule" adds more rows;
+  each location's "Activate in Nova Now" label governs). With the
+  schedule ACTIVE at its exact set time: the card STILL never renders —
+  the "map locations" query returned only web suggestions, and the
+  plain drawer showed nothing. **The state matrix is now COMPLETE**:
+  a FUTURE-day schedule (02:19 Saturday, set on Friday) also never
+  renders — drawer and exact-name search both negative on 02:19. The
+  schedule itself persisted exactly across the day boundary and a Nova
+  restart. Render is fully inert across EVERY tested state
+  (location/no location/scheduled active/scheduled future/exact name/
+  location name/partials). Management is complete (add/resolve/commit/
+  schedule/delete + Undo snackbar) but NO render path exists.
 - Confidence: Observed
