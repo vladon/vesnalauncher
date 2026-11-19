@@ -131,9 +131,9 @@ class LauncherController(
     }
 
     /** Workspace → dock drag at [slot]; emits [LauncherMessage.DOCK_FULL] when full. */
-    fun moveWorkspaceToDock(app: LauncherApp, slot: Int) {
+    fun moveWorkspaceToDock(app: LauncherApp, fromCell: Int, slot: Int) {
         scope.launch {
-            if (!workspaceRepository.moveWorkspaceToDock(app, slot)) {
+            if (workspaceRepository.moveWorkspaceToDock(app, fromCell, slot) == DockMoveResult.FULL) {
                 _messages.tryEmit(LauncherMessage.DOCK_FULL)
             }
         }

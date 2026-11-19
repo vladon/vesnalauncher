@@ -89,7 +89,7 @@ class WorkspaceRepositoryPagesTest {
             assertNull(db.folderDao().getById(folder.id))
             val items = dao.getAll().map { it.toDomain() }
             assertEquals(mapOf(0 to dock, 3 to target), WorkspaceResolver.workspaceApps(items, listOf(target, dock, other), second))
-            assertTrue(repository.moveWorkspaceToDock(dock, 0, second))
+            assertEquals(DockMoveResult.MOVED, repository.moveWorkspaceToDock(dock, fromCell = 0, slot = 0, pageId = second))
             assertNull(dao.getAll().single { it.packageName == dock.packageName }.pageId)
             assertEquals(listOf(dock), WorkspaceResolver.dockApps(repository.items.first(), listOf(dock)))
         } finally {

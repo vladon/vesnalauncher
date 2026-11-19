@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
+
 /**
  * Room-backed store of the launcher layout: which apps sit in which workspace
  * cells and dock slots.
@@ -136,13 +138,7 @@ class WorkspaceRepository(
     ): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(toCell)) return@withLock false
         val items = dao.getAll()
-        val source = items.firstOrNull {
-            it.isOnPage(pageId) &&
-                it.cellIndex == fromCell &&
-                it.packageName == app.key.packageName &&
-                it.className == app.key.className &&
-                it.userSerial == app.key.userSerial
-        } ?: return@withLock false
+        val source = workspacePinAt(items, app.key, pageId, fromCell) ?: return@withLock false
         if (source.cellIndex == toCell) return@withLock true
         if (cellIsOccupied(items, pageId, toCell)) return@withLock false
         db.withTransaction {
@@ -150,6 +146,12 @@ class WorkspaceRepository(
         }
         true
     }
+
+    private fun workspacePinAt(items: List<WorkspaceItemEntity>, key: AppKey, pageId: Long, cell: Int): WorkspaceItemEntity? =
+        items.firstOrNull {
+            it.isOnPage(pageId) && it.cellIndex == cell &&
+                it.packageName == key.packageName && it.className == key.className && it.userSerial == key.userSerial
+        }
 
     private fun WorkspaceItemEntity.isOnPage(pageId: Long): Boolean =
         this.pageId == pageId && folderId == null && container != Container.DOCK.name
@@ -224,30 +226,27 @@ class WorkspaceRepository(
     }
 
     /**
-     * Drag-and-drop from the workspace into the dock at [slot]. Existing dock
-     * entries at or after the slot shift right. Returns false when the dock is full.
+     * Moves the pin at [fromCell] on [pageId] into dock [slot].
+     * Existing dock entries at or after the slot shift right.
      */
-    suspend fun moveWorkspaceToDock(
+    internal suspend fun moveWorkspaceToDock(
         app: LauncherApp,
+        fromCell: Int,
         slot: Int,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
-    ): Boolean = mutationMutex.withLock {
+    ): DockMoveResult = mutationMutex.withLock {
         val items = dao.getAll()
-        val source = items.firstOrNull {
-            it.isOnPage(pageId) &&
-                it.packageName == app.key.packageName &&
-                it.className == app.key.className &&
-                it.userSerial == app.key.userSerial
-        } ?: return@withLock false
+        val source = workspacePinAt(items, app.key, pageId, fromCell)
+            ?: return@withLock DockMoveResult.SOURCE_MISSING
         val dockIds = items.filter { it.container == Container.DOCK.name && it.folderId == null }
             .sortedBy { it.cellIndex }
             .map { it.id }
-        if (dockIds.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
+        if (dockIds.size >= GridCanvas.DOCK_CAPACITY) return@withLock DockMoveResult.FULL
         val order = DockOrdering.insertAt(dockIds, source.id, slot)
         db.withTransaction {
             order.forEachIndexed { index, id -> dao.updatePlacement(id, Container.DOCK.name, index, pageId = null) }
         }
-        true
+        DockMoveResult.MOVED
     }
 
     /**

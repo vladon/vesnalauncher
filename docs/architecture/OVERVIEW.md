@@ -92,9 +92,11 @@ flowchart TB
    the dock and first workspace page. An upgraded install with an existing
    layout is adopted as-is; a user-emptied workspace is never re-seeded.
 
-Current main identifies a workspace pin dragged to an empty cell by the
-source cell and exact app key. Two pins with the same app key retain their
-individual placements. [PR #44](https://github.com/vladon/vesnalauncher/pull/44)
+A drag from the workspace to an empty cell or the dock matches the source
+page, cell, and exact app key. Another pin of the same app stays in place,
+and a missing source cancels the move without reporting a full dock.
+The workspace-to-dock fix was verified with two identical pins on an API 35
+emulator; only the dragged row moved and the prior dock entry shifted right.
 
 Each folder creation commits the folder row and both membership updates in
 one Room transaction. Removing a member also commits its move and any

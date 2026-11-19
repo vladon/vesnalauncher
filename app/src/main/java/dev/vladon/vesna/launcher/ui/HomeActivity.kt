@@ -235,7 +235,7 @@ class HomeActivity : ComponentActivity() {
             overDock && source.fromDrawer ->
                 controller.insertIntoDock(app, dock.slotAtLocalX(wx - dock.left))
             overDock && source.container == Container.WORKSPACE ->
-                controller.moveWorkspaceToDock(app, dock.slotAtLocalX(wx - dock.left))
+                controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(wx - dock.left))
             overDock && source.container == Container.DOCK ->
                 controller.reorderDock(app, dock.slotAtLocalX(wx - dock.left))
             !overDock && source.fromDrawer ->
@@ -281,7 +281,7 @@ class HomeActivity : ComponentActivity() {
             when {
                 source.fromDrawer || source.container == Container.DOCK ->
                     controller.insertIntoDock(app, dock.slotAtLocalX(x))
-                else -> controller.moveWorkspaceToDock(app, dock.slotAtLocalX(x))
+                else -> controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(x))
             }
             return
         }
