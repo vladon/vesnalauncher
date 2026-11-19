@@ -19,7 +19,11 @@ are named explicitly.
 
 **Status:** done — device run recorded 2026-11-18 on the dedicated API 35 AVD;
 full reproducible record:
-[verification/VESNA-QA-002.md](verification/VESNA-QA-002.md).
+[verification/VESNA-QA-002.md](verification/VESNA-QA-002.md). The Android 8
+(API 26) legacy follow-up — Settings chooser selection and the
+Calculator → HOME return replay — is appended to the same report as
+[VESNA-QA-002B](verification/VESNA-QA-002.md#api-26-follow-up-vesna-qa-002b)
+(2026-11-19, [PR #37](https://github.com/vladon/vesnalauncher/pull/37)).
 **Priority:** P0 (first item). **Depends on:** nothing; reuses the **existing
 dedicated API 35 AVD** — no new device work is required to start.
 **Research:** none — this is a Vesna platform baseline item and carries **no
@@ -123,7 +127,12 @@ API 26 — `RoomMigrationQaTest` (both cases) and `DrawerSearchTest`; the
 per-case JUnit XML (`TEST-Vesna_QA_MinSdk_API_26-AVD-8.0.0.xml`) is listed in
 the record's evidence index. The run exposed VESNA-BUG-004, where the dock
 covered the fifth workspace row. [PR #23](https://github.com/vladon/vesnalauncher/pull/23) fixed the overlap and was replayed
-on API 26 and API 35.
+on API 26 and API 35. The follow-up on the full eight-test suite — all eight
+instrumentation tests passed on API 26 at build `4c5f0c1` — is appended to
+the same report as
+[VESNA-QA-005B](verification/VESNA-QA-005-API26.md#follow-up-on-the-eight-test-suite)
+(2026-11-19, [PR #36](https://github.com/vladon/vesnalauncher/pull/36)); the
+original smoke record above predates that suite.
 **Priority:** P0. **Depends on:** the AVD inventory from
 [VESNA-QA-002](#vesna-qa-002-home-and-launch-return-verification-done) (plus
 the dedicated API 26 AVD).
@@ -255,3 +264,4 @@ tracking, layout data only). Gates ENG-106. Draft:
 | VESNA-QA-005 minimum SDK (API 26) smoke verification | [VESNA-QA-005-API26](verification/VESNA-QA-005-API26.md) (2026-11-19, dedicated API 26 AVD): build, HOME discoverability, cold start, workspace/drawer render, fixture round-trip, instrumentation suite 3/3; VESNA-BUG-004 fixed in [PR #23](https://github.com/vladon/vesnalauncher/pull/23) |
 | VESNA-QA-006 Android 16 (API 36.1) smoke verification | [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md) (2026-11-19, dedicated API 36.1 AVD on Windows): instrumentation 5/5 at `332fb03` and 7/7 with the integrated BUG-005 candidate `d8d6a748` (later merged as [PR #27](https://github.com/vladon/vesnalauncher/pull/27)); HOME/launch-return smoke; scope limited to that AVD configuration |
 | VESNA-QA-007 debug cold-launch timing baseline | [VESNA-QA-007-COLD-START](verification/VESNA-QA-007-COLD-START.md) (2026-11-19, PR #33): ten process-cold `HomeActivity` launches, debug 0.4.1 at `81cea18`, Android 15/API 35 shared-host emulator; see the run record for ActivityManager `TotalTime` observations |
+| VESNA-QA-009 launch-state timing verification | [VESNA-QA-009-LAUNCH-STATES](verification/VESNA-QA-009-LAUNCH-STATES.md) (2026-11-19, [PR #40](https://github.com/vladon/vesnalauncher/pull/40)): paired cold and warm ActivityManager timings for one Android 15 debug-emulator configuration |
