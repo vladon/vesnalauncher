@@ -33,8 +33,8 @@ exercised; everything else is source-verified only.
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
 | Drawer search | Case-insensitive substring filter (`AppSearch`), empty state, clear restores full list; drawer never re-orders | `AppSearchTest` (5 JVM tests); on-device `DrawerSearchTest` |
-| Drag-and-drop | Cross-container drag (workspace ⇄ dock ⇄ drawer-to-workspace) routed by `LauncherDragLayer`; drop-target highlights | Source only |
-| Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. [QA-003D](verification/VESNA-QA-003D.md) verified creating, opening, and uninstall-driven dissolution on API 35. [BUG-007](https://github.com/vladon/vesnalauncher/pull/38) verified manual removal from the selected folder on API 36.1. Rename and adding by drag to an existing folder still need dedicated verification. |
+| Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
+| Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
 | Package events | `PackageChangeMonitor` via `LauncherApps.registerPackageCallback` (install/update/uninstall, all profiles, `userSerial` tagged); stale layout entries pruned | **Drawer-side device-verified** by the [VESNA-QA-003 run](verification/VESNA-QA-003.md) (2026-11-19, API 35 AVD), accepted for review as VESNA-QA-003A: install→drawer, same-package update, disable/re-enable, uninstall + launcher restart all clean. The run did not cover pinned fixture entries. [PR #15](https://github.com/vladon/vesnalauncher/pull/15) restored drawer drops and was verified on API 35. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified managed-profile discovery, a work-profile pin carrying the profile's `userSerial`, and profile-scoped uninstall (work-only removal left the personal package and pin, stable across a launcher restart); [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall with simultaneous workspace, dock, and folder placements reconciling after a cold relaunch (both API 35, 2026-11-19) |
 | Persistence | Room `vesna-launcher.db`, schema version 3; migrations 1→2 (per-profile `userSerial`) and 2→3 (folders, `folderId`) | **Device-verified at API 35** in two separate experiments: migrations by `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`; v1→2→3 and v2→3 through the production `LauncherDatabase.build`), and process death / full guest reboot / no re-seed by [VESNA-QA-004B](verification/VESNA-QA-004B.md) (2026-11-19, tested build `0c7269c`) |
 | Settings / About | `SettingsActivity` (Compose + Material 3) with app and version info | Source only |
@@ -97,6 +97,14 @@ was added afterwards by [PR #13](https://github.com/vladon/vesnalauncher/pull/13
   `WorkspaceRepositoryTopLevelRemovalTest`: 7/7 passed; these device runs are
   scoped to that branch candidate, which merged as
   [PR #27](https://github.com/vladon/vesnalauncher/pull/27) (`81cea18`).
+- On Android 12/API 31, the 12-test candidate `75ca3ed` passed. The run
+  verified workspace and drawer rendering and HOME registration while
+  NexusLauncher remained default.
+  [VESNA-QA-010](verification/VESNA-QA-010-API31.md)
+- The full 16-test instrumentation suite passed on dedicated API 26, 31,
+  35, and 36.1 emulators using the same reviewed debug candidate
+  `1b5dc2e`. Each run used the serial-pinned runner and restored its
+  fixture. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids)
 - Dock capacity, top-level unpin, and dock-to-workspace drag regressions were
   verified on dedicated emulators. The verification scope for each fix is
   recorded in [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids).
@@ -109,9 +117,9 @@ was added afterwards by [PR #13](https://github.com/vladon/vesnalauncher/pull/13
   [VESNA-QA-005B](verification/VESNA-QA-005-API26.md#follow-up-on-the-eight-test-suite)
 - The legacy HOME chooser and return from Calculator were verified on API 26.
   [VESNA-QA-002B](verification/VESNA-QA-002.md#api-26-follow-up-vesna-qa-002b)
-- The folder-member removal and drawer self-drop regressions have scoped
-  device and instrumentation records in
-  [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#folders).
+- Focused regression records cover the two folder transactions and the
+  selected-pin workspace move.
+  [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#folders)
 
 At audit commit `888f557`, startup, scroll, and drag had no baseline
 measurements. [VESNA-QA-007](verification/VESNA-QA-007-COLD-START.md) now
@@ -133,7 +141,7 @@ list means it was not performed, nothing more.
 
 ## Known gaps and risks
 
-- Platform coverage comes from dedicated API 26, API 35, and API 36.1
+- Platform coverage comes from dedicated API 26, API 31, API 35, and API 36.1
   emulators. See the instrumentation record for the tested builds and
   device configurations.
 - CI does not run instrumentation; `DrawerSearchTest` depends on a local AVD and
