@@ -35,7 +35,7 @@ exercised; everything else is source-verified only.
 | Drawer search | Case-insensitive substring filter (`AppSearch`), empty state, clear restores full list; drawer never re-orders | `AppSearchTest` (5 JVM tests); on-device `DrawerSearchTest` |
 | Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
-| Package events | `PackageChangeMonitor` via `LauncherApps.registerPackageCallback` (install/update/uninstall, all profiles, `userSerial` tagged); stale layout entries pruned | **Drawer-side device-verified** by the [VESNA-QA-003 run](verification/VESNA-QA-003.md) (2026-11-19, API 35 AVD), accepted for review as VESNA-QA-003A: install→drawer, same-package update, disable/re-enable, uninstall + launcher restart all clean. The run did not cover pinned fixture entries. [PR #15](https://github.com/vladon/vesnalauncher/pull/15) restored drawer drops and was verified on API 35. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified managed-profile discovery, a work-profile pin carrying the profile's `userSerial`, and profile-scoped uninstall (work-only removal left the personal package and pin, stable across a launcher restart); [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall with simultaneous workspace, dock, and folder placements reconciling after a cold relaunch (both API 35, 2026-11-19) |
+| Package events | `PackageChangeMonitor` uses profile-scoped `LauncherApps` callbacks; disabled apps retain their pins | [VESNA-QA-003A](verification/VESNA-QA-003.md) verified drawer changes after install, update, disable/re-enable, and uninstall. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified work-profile pinning and uninstall. [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall across all three containers. [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disable/re-enable retains placements across a launcher restart. All four records use API 35. |
 | Persistence | Room `vesna-launcher.db`, schema version 3; migrations 1→2 (per-profile `userSerial`) and 2→3 (folders, `folderId`) | **Device-verified at API 35** in two separate experiments: migrations by `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`; v1→2→3 and v2→3 through the production `LauncherDatabase.build`), and process death / full guest reboot / no re-seed by [VESNA-QA-004B](verification/VESNA-QA-004B.md) (2026-11-19, tested build `0c7269c`) |
 | Settings / About | `SettingsActivity` (Compose + Material 3) with app and version info | Source only |
 
@@ -151,29 +151,18 @@ list means it was not performed, nothing more.
   profile-scoped discovery, pinning, and removal were device-verified
   afterwards by [VESNA-QA-003C](verification/VESNA-QA-003C.md) (2026-11-19,
   API 35 AVD).
-- The repository README was refreshed on 2026-11-19 to match the published
-  release `0.4.1` (folders, drawer drag-and-drop, and 0.4.1 drag-and-drop
-  fixes); `app/build.gradle.kts` (0.4.1, code 6) remains authoritative.
+- The last published release is `0.4.1` (version code 6).
+  The `0.4.2` candidate uses version code 7 and keeps Room schema version 3.
 
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —
   HOME registration/selection and launch-return device-verified on the
   dedicated API 35 AVD (a Vesna platform baseline item; no approved research ID).
-- Accepted for review as **VESNA-QA-003A**:
-  [VESNA-QA-003](verification/VESNA-QA-003.md) — package lifecycle, drawer
-  side (install/update/disable/uninstall/restart) on the API 35 AVD. The
-  [VESNA-QA-003B](verification/VESNA-QA-003B.md) verified upgrade retention
-  for workspace/dock placements and folder cleanup on uninstall. Disabling
-  the fixture dropped its pins, and re-enabling it restored drawer discovery.
-  The parent QA-003 item stays **in-progress** for the disable-time placement
-  retention product decision only; the remaining device cases are verified —
-  uninstall across all three containers by
-  [VESNA-QA-003D](verification/VESNA-QA-003D.md) (simultaneous
-  workspace/dock/folder removal, reconciled after a cold relaunch) and the
-  managed-profile case by [VESNA-QA-003C](verification/VESNA-QA-003C.md)
-  (work-only uninstall left the personal package and pin, stable across a
-  launcher restart).
+- Completed since the baseline: [VESNA-QA-003](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-partial)
+  — installed app lifecycle verified at API 35, including a work-only
+  uninstall and retention of workspace, dock, and folder pins while
+  a personal-profile app is disabled.
 - Completed since the baseline: [VESNA-QA-005](verification/VESNA-QA-005-API26.md)
   — minimum SDK (API 26) smoke on the dedicated API 26 AVD: build, HOME
   discoverability, cold start, workspace/drawer render, one fixture drawer
@@ -184,7 +173,6 @@ list means it was not performed, nothing more.
   — Room migrations (`RoomMigrationQaTest`, PR #13, merge `14ec712`) and
   persistence (process death, full guest reboot, no re-seed;
   [VESNA-QA-004B](verification/VESNA-QA-004B.md)) device-verified on the
-  dedicated API 35 AVD as two separate experiments. QA-003 sub-items remain
-  open ([VESNA-QA-003 in BACKLOG.md](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-partial)).
+  dedicated API 35 AVD as two separate experiments.
 - Prioritized plan: [ROADMAP.md](ROADMAP.md).
 - Requirement-level pointers: [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md).
