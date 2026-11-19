@@ -54,6 +54,7 @@ class HomeActivity : ComponentActivity() {
         val fromCell: Int,
         val anchor: View,
         val fromDrawer: Boolean,
+        val dockPinId: Long = 0,
     )
 
     private var dragSource: DragSource? = null
@@ -106,8 +107,8 @@ class HomeActivity : ComponentActivity() {
         }
 
         dock.onAppClick = { controller.launch(it) }
-        dock.onDragStarted = { slot, app, anchor ->
-            dragSource = DragSource(app, Container.DOCK, slot, anchor, fromDrawer = false)
+        dock.onDragStarted = { pin, anchor ->
+            dragSource = DragSource(pin.app, Container.DOCK, fromCell = -1, anchor, fromDrawer = false, dockPinId = pin.id)
         }
         dock.onDragProgress = { x, y -> updateDragTarget(Container.DOCK, x + dock.left, y + dock.top) }
         dock.onDragReleased = { x, y, moved, cancelled, app, anchor ->
@@ -178,7 +179,7 @@ class HomeActivity : ComponentActivity() {
 
     private fun render(state: LauncherUiState) {
         workspace.bind(state.workspaceCells)
-        dock.bind(state.dockApps)
+        dock.bind(state.dockPins)
         drawer.submitApps(state.apps)
         emptyHint.isVisible = state.isWorkspaceEmpty
     }
@@ -238,7 +239,7 @@ class HomeActivity : ComponentActivity() {
             overDock && source.container == Container.WORKSPACE ->
                 controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(wx - dock.left))
             overDock && source.container == Container.DOCK ->
-                controller.reorderDock(app, dock.slotAtLocalX(wx - dock.left))
+                controller.reorderDock(source.dockPinId, dock.slotAtLocalX(wx - dock.left))
             !overDock && source.fromDrawer ->
                 workspace.cellAtLocal(wx, wy)?.let { cell ->
                     commitOnCell(source, app, cell)
@@ -280,8 +281,8 @@ class HomeActivity : ComponentActivity() {
         val app = source.app
         if (overDock) {
             when {
-                source.fromDrawer || source.container == Container.DOCK ->
-                    controller.insertIntoDock(app, dock.slotAtLocalX(x))
+                source.fromDrawer -> controller.insertIntoDock(app, dock.slotAtLocalX(x))
+                source.container == Container.DOCK -> controller.reorderDock(source.dockPinId, dock.slotAtLocalX(x))
                 else -> controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(x))
             }
             return
@@ -355,7 +356,7 @@ class HomeActivity : ComponentActivity() {
                 source.fromDrawer -> controller.insertWorkspaceAt(app, cell)
                 source.container == Container.WORKSPACE ->
                     controller.moveWithinWorkspace(app, source.fromCell, cell)
-                else -> controller.moveDockToWorkspace(app, cell)
+                else -> controller.moveDockToWorkspace(source.dockPinId, cell)
             }
             is CellContent.App -> controller.createFolderFromDrop(
                 app,
@@ -370,7 +371,7 @@ class HomeActivity : ComponentActivity() {
     private fun DragSource.folderDropSource(): FolderDropSource = when {
         fromDrawer -> FolderDropSource.Drawer
         container == Container.WORKSPACE -> FolderDropSource.Workspace(fromCell)
-        else -> FolderDropSource.Dock
+        else -> FolderDropSource.Dock(dockPinId)
     }
 
     private fun showMessage(message: LauncherMessage) {

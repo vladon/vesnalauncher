@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.LinearLayout
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.workspace.DockPin
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 
 /**
@@ -29,7 +30,7 @@ class DockView @JvmOverloads constructor(
     var onAppClick: ((LauncherApp) -> Unit)? = null
 
     /** The user lifted a dock icon by long-pressing it; a drag session has begun. */
-    var onDragStarted: ((slot: Int, app: LauncherApp, anchor: android.view.View) -> Unit)? = null
+    var onDragStarted: ((pin: DockPin, anchor: View) -> Unit)? = null
 
     /** Drag progress in dock-local coordinates. */
     var onDragProgress: ((Float, Float) -> Unit)? = null
@@ -43,7 +44,8 @@ class DockView @JvmOverloads constructor(
         null
 
     private val density = resources.displayMetrics.density
-    private var boundApps: List<LauncherApp> = emptyList()
+    var boundCount: Int = 0
+        private set
 
     private var dragSourceApp: LauncherApp? = null
     private var dragAnchor: android.view.View? = null
@@ -82,9 +84,9 @@ class DockView @JvmOverloads constructor(
             true
         }
 
-    /** Starts a drag for the dock icon at [slot]; the item dims until it is dropped. */
-    private fun beginDrag(slot: Int, app: LauncherApp, anchor: View) {
-        dragSourceApp = app
+    /** Starts a drag for the selected dock pin; the item dims until drop. */
+    private fun beginDrag(pin: DockPin, anchor: View) {
+        dragSourceApp = pin.app
         dragAnchor = anchor
         dragMoved = false
         dragTargetSlot = null
@@ -96,7 +98,7 @@ class DockView @JvmOverloads constructor(
             MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0),
         )
         anchor.setOnTouchListener(dragTouchListener)
-        onDragStarted?.invoke(slot, app, anchor)
+        onDragStarted?.invoke(pin, anchor)
     }
 
     /** Shows (slot != null) or hides the drop-target highlight for drag sessions. */
@@ -114,9 +116,6 @@ class DockView @JvmOverloads constructor(
         if (slotWidth <= 0f || width <= 0) return 0
         return (x / slotWidth).toInt().coerceIn(0, GridCanvas.DOCK_CAPACITY - 1)
     }
-
-    /** Number of currently bound dock apps (drags must respect dock capacity). */
-    val boundCount: Int get() = boundApps.size
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -137,16 +136,18 @@ class DockView @JvmOverloads constructor(
         )
     }
 
-    fun bind(apps: List<LauncherApp>) {
-        boundApps = apps
+    fun bind(pins: List<DockPin>) {
+        boundCount = minOf(pins.size, GridCanvas.DOCK_CAPACITY)
         removeAllViews()
-        for (app in apps.take(GridCanvas.DOCK_CAPACITY)) {
+        for (index in 0 until boundCount) {
+            val pin = pins[index]
+            val app = pin.app
             val view = AppIconView(context)
             view.layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
             view.bind(app)
             view.setOnClickListener { onAppClick?.invoke(app) }
             view.setOnLongClickListener { anchor ->
-                beginDrag(boundApps.indexOf(app), app, anchor)
+                beginDrag(pin, anchor)
                 true
             }
             addView(view)

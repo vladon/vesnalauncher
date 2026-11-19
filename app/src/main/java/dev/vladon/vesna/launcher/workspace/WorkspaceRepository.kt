@@ -255,19 +255,13 @@ class WorkspaceRepository(
      * moves: a dock row that is a hidden folder member never matches the source.
      */
     suspend fun moveDockToWorkspace(
-        app: LauncherApp,
+        pinId: Long,
         cell: Int,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(cell) || db.workspacePageDao().getById(pageId) == null) return@withLock false
         val items = dao.getAll()
-        val source = items.firstOrNull {
-            it.container == Container.DOCK.name &&
-                it.folderId == null &&
-                it.packageName == app.key.packageName &&
-                it.className == app.key.className &&
-                it.userSerial == app.key.userSerial
-        } ?: return@withLock false
+        val source = items.firstOrNull { it.isDockPin(pinId) } ?: return@withLock false
         if (cellIsOccupied(items, pageId, cell)) return@withLock false
         db.withTransaction {
             dao.updatePlacement(source.id, Container.WORKSPACE.name, cell, pageId)
@@ -276,16 +270,11 @@ class WorkspaceRepository(
     }
 
     /** Reorders a dock entry to [slot] (dragging sideways inside the dock). */
-    suspend fun reorderDock(app: LauncherApp, slot: Int): Boolean = mutationMutex.withLock {
+    suspend fun reorderDock(pinId: Long, slot: Int): Boolean = mutationMutex.withLock {
         val items = dao.getAll()
         val dock = items.filter { it.container == Container.DOCK.name && it.folderId == null }
             .sortedBy { it.cellIndex }
-        val from = dock.indexOfFirst {
-            it.folderId == null &&
-                it.packageName == app.key.packageName &&
-                it.className == app.key.className &&
-                it.userSerial == app.key.userSerial
-        }
+        val from = dock.indexOfFirst { it.id == pinId }
         if (from < 0) return@withLock false
         val order = DockOrdering.moveTo(dock.map { it.id }, from, slot)
         db.withTransaction {
@@ -298,7 +287,7 @@ class WorkspaceRepository(
 
     internal sealed interface FolderDropSource {
         data class Workspace(val cell: Int) : FolderDropSource
-        data object Dock : FolderDropSource
+        data class Dock(val pinId: Long) : FolderDropSource
         data object Drawer : FolderDropSource
     }
 
@@ -369,11 +358,12 @@ class WorkspaceRepository(
         source: FolderDropSource,
     ): WorkspaceItemEntity? = when (source) {
         is FolderDropSource.Workspace -> workspacePinAt(items, key, pageId, source.cell)
-        FolderDropSource.Dock -> items.firstOrNull {
-            it.container == Container.DOCK.name && it.folderId == null && it.hasKey(key)
-        }
+        is FolderDropSource.Dock -> items.firstOrNull { it.isDockPin(source.pinId) && it.hasKey(key) }
         FolderDropSource.Drawer -> null
     }
+
+    private fun WorkspaceItemEntity.isDockPin(pinId: Long): Boolean =
+        id == pinId && container == Container.DOCK.name && folderId == null
 
     private fun WorkspaceItemEntity.hasKey(key: AppKey): Boolean =
         packageName == key.packageName && className == key.className && userSerial == key.userSerial

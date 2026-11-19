@@ -133,7 +133,8 @@ class WorkspaceRepositoryDockFolderTest {
         val visible = rows.single { it.packageName == "com.google.android.deskclock" && it.folderId == null }
         assertTrue("hidden row must precede the visible row", hidden.id < visible.id)
 
-        assertTrue(repo.moveDockToWorkspace(app("com.google.android.deskclock"), 15))
+        assertFalse(repo.moveDockToWorkspace(hidden.id, 15))
+        assertTrue(repo.moveDockToWorkspace(visible.id, 15))
 
         val after = dao.getAll()
         val moved = after.single { it.id == visible.id }
@@ -145,5 +146,27 @@ class WorkspaceRepositoryDockFolderTest {
         assertEquals(3, member.cellIndex)
         assertEquals(folderId, member.folderId)
         assertEquals(14, db.folderDao().getById(folderId)?.cellIndex)
+    }
+
+    @Test
+    fun duplicateDockPinsReorderAndMoveByTheirOwnIds() = runBlocking {
+        seedDockRow("com.example.contacts", 0)
+        seedDockRow("com.example.calendar", 1)
+        seedDockRow("com.example.contacts", 2)
+        val before = dao.getAll().sortedBy { it.cellIndex }
+        val (first, middle, dragged) = before
+
+        assertTrue(repo.reorderDock(dragged.id, 0))
+        assertEquals(
+            listOf(dragged.id, first.id, middle.id),
+            dao.getAll().sortedBy { it.cellIndex }.map { it.id },
+        )
+        assertTrue(repo.moveDockToWorkspace(dragged.id, 7))
+        val after = dao.getAll().associateBy { it.id }
+        assertEquals(dragged.copy(container = "WORKSPACE", cellIndex = 7, pageId = DEFAULT_WORKSPACE_PAGE_ID), after.getValue(dragged.id))
+        assertEquals(first.copy(cellIndex = 1), after.getValue(first.id))
+        assertFalse(repo.reorderDock(dragged.id, 1))
+        assertFalse(repo.moveDockToWorkspace(dragged.id, 8))
+        assertEquals(after, dao.getAll().associateBy { it.id })
     }
 }

@@ -75,7 +75,8 @@ class WorkspaceRepositoryPagesTest {
             assertTrue(repository.insertWorkspaceAt(other, 0, first))
             assertTrue(repository.insertWorkspaceAt(target, 3, second))
             assertTrue(repository.insertIntoDock(dock, 0))
-            assertTrue(repository.createFolderFromDrop(dock, 3, "Folder", WorkspaceRepository.FolderDropSource.Dock, pageId = second))
+            val dockPinId = dao.getAll().single { it.container == Container.DOCK.name }.id
+            assertTrue(repository.createFolderFromDrop(dock, 3, "Folder", WorkspaceRepository.FolderDropSource.Dock(dockPinId), pageId = second))
             val folder = db.folderDao().getAll().single()
             assertEquals(second, folder.pageId)
             assertFalse(repository.insertWorkspaceAt(other, 3, second))
@@ -91,7 +92,7 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(mapOf(0 to dock, 3 to target), WorkspaceResolver.workspaceApps(items, listOf(target, dock, other), second))
             assertEquals(DockMoveResult.MOVED, repository.moveWorkspaceToDock(dock, fromCell = 0, slot = 0, pageId = second))
             assertNull(dao.getAll().single { it.packageName == dock.packageName }.pageId)
-            assertEquals(listOf(dock), WorkspaceResolver.dockApps(repository.items.first(), listOf(dock)))
+            assertEquals(listOf(DockPin(dockPinId, dock)), WorkspaceResolver.dockPins(repository.items.first(), listOf(dock)))
         } finally {
             db.close()
         }

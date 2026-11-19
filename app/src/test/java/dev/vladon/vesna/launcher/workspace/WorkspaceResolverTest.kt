@@ -40,9 +40,10 @@ class WorkspaceResolverTest {
             WorkspaceItem(1, keyB, Container.DOCK, cellIndex = 1),
             WorkspaceItem(2, keyC, Container.DOCK, cellIndex = 2),
             WorkspaceItem(3, keyA, Container.DOCK, cellIndex = 0),
+            WorkspaceItem(4, keyA, Container.DOCK, cellIndex = 3),
         )
-        val resolved = WorkspaceResolver.dockApps(items, listOf(app(keyA), app(keyB)))
-        assertEquals(listOf("com.a", "com.b"), resolved.map { it.packageName })
+        val resolved = WorkspaceResolver.dockPins(items, listOf(app(keyA), app(keyB)))
+        assertEquals(listOf(DockPin(3, app(keyA)), DockPin(1, app(keyB)), DockPin(4, app(keyA))), resolved)
     }
 
     @Test

@@ -209,13 +209,16 @@ class WorkspaceRepositoryFolderCreationTest {
         seedPin("com.example.target", cellIndex = 6)
         assertTrue(repo.addToDock(pinned))
         val workspacePin = dao.getAll().first { it.packageName == pinned.packageName && it.container == "WORKSPACE" }
-        val dockPin = dao.getAll().first { it.container == "DOCK" }
+        val originalDock = dao.getAll().single { it.container == Container.DOCK.name }
+        assertTrue(repo.addToDock(pinned))
+        val dockPin = dao.getAll().single { it.container == Container.DOCK.name && it.id != originalDock.id }
 
-        assertTrue(repo.createFolderFromDrop(pinned, 6, "Folder", WorkspaceRepository.FolderDropSource.Dock))
+        assertTrue(repo.createFolderFromDrop(pinned, 6, "Folder", WorkspaceRepository.FolderDropSource.Dock(dockPin.id)))
 
         val folder = db.folderDao().getAll().single()
         val rows = dao.getAll().associateBy { it.id }
         assertEquals(workspacePin, rows.getValue(workspacePin.id))
+        assertEquals(originalDock, rows.getValue(originalDock.id))
         assertEquals(folder.id, rows.getValue(dockPin.id).folderId)
     }
 }

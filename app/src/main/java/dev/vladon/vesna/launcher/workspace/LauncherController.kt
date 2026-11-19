@@ -27,7 +27,7 @@ enum class LauncherMessage { WORKSPACE_FULL, DOCK_FULL }
 data class LauncherUiState(
     val apps: List<LauncherApp> = emptyList(),
     val workspaceCells: Map<Int, CellContent> = emptyMap(),
-    val dockApps: List<LauncherApp> = emptyList(),
+    val dockPins: List<DockPin> = emptyList(),
     val folders: Map<Long, Folder> = emptyMap(),
     val folderContents: Map<Long, List<LauncherApp>> = emptyMap(),
 ) {
@@ -65,7 +65,7 @@ class LauncherController(
             LauncherUiState(
                 apps = apps,
                 workspaceCells = WorkspaceResolver.workspaceCells(items, apps, folders),
-                dockApps = WorkspaceResolver.dockApps(items, apps),
+                dockPins = WorkspaceResolver.dockPins(items, apps),
                 folders = folders.associateBy { it.id },
                 folderContents = WorkspaceResolver.folderContents(items, apps),
             )
@@ -142,8 +142,8 @@ class LauncherController(
     }
 
     /** Dock → workspace drag onto an empty [cell]; no-op when the cell is occupied. */
-    fun moveDockToWorkspace(app: LauncherApp, cell: Int) {
-        scope.launch { workspaceRepository.moveDockToWorkspace(app, cell) }
+    fun moveDockToWorkspace(pinId: Long, cell: Int) {
+        scope.launch { workspaceRepository.moveDockToWorkspace(pinId, cell) }
     }
 
     /** Moves the selected workspace pin from [fromCell] to [toCell]. */
@@ -152,8 +152,8 @@ class LauncherController(
     }
 
     /** Dock-internal reorder to [slot]. */
-    fun reorderDock(app: LauncherApp, slot: Int) {
-        scope.launch { workspaceRepository.reorderDock(app, slot) }
+    fun reorderDock(pinId: Long, slot: Int) {
+        scope.launch { workspaceRepository.reorderDock(pinId, slot) }
     }
 
     fun addToWorkspace(app: LauncherApp) {

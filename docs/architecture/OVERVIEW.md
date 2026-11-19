@@ -100,8 +100,11 @@ emulator; only the dragged row moved and the prior dock entry shifted right.
 
 Workspace drops onto another pin or a folder also match the source page,
 cell, and app key. Both routes were verified with duplicate pins on API 35:
-only the selected pins became folder members. Dock folder drops look up a
-top-level dock pin, not a workspace copy of the same app.
+only the selected pins became folder members.
+
+Dock tiles retain their saved pin ID. Reorder, workspace drops, and folder
+drops resolve that exact top-level dock row rather than another copy of the
+app. The API 35 replay verified all three routes with duplicate dock pins.
 
 Drawer drops onto another app or a folder insert a new member without moving
 existing pins. A drawer item cannot create a folder with its own pin or add

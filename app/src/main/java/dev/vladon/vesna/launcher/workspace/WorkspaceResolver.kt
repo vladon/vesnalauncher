@@ -3,6 +3,9 @@ package dev.vladon.vesna.launcher.workspace
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 
+/** A rendered dock tile keeps the ID of its persisted pin. */
+data class DockPin(val id: Long, val app: LauncherApp)
+
 /**
  * Pure projection of persisted layout items onto live apps. Unavailable apps
  * are hidden without changing their stored positions. Items inside folders
@@ -66,13 +69,13 @@ object WorkspaceResolver {
             }
     }
 
-    /** Dock apps ordered by position; stale entries and folder members are skipped. */
-    fun dockApps(items: List<WorkspaceItem>, apps: List<LauncherApp>): List<LauncherApp> {
+    /** Dock pins ordered by position; unavailable apps and folder members are skipped. */
+    fun dockPins(items: List<WorkspaceItem>, apps: List<LauncherApp>): List<DockPin> {
         val appByKey = apps.associateBy { it.key }
         return items.asSequence()
             .filter { it.container == Container.DOCK && it.folderId == null }
             .sortedBy { it.cellIndex }
-            .mapNotNull { appByKey[it.key] }
+            .mapNotNull { item -> appByKey[item.key]?.let { DockPin(item.id, it) } }
             .toList()
     }
 }
