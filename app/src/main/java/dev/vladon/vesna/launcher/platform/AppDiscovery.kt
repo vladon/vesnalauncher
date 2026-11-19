@@ -24,6 +24,9 @@ import java.util.Locale
  */
 interface AppDiscovery {
     fun discover(): List<LauncherApp>
+
+    /** Checks installation independently of whether a package is launchable. */
+    fun isPackageInstalled(packageName: String, userSerial: Long): Boolean
 }
 
 class LauncherAppsAppDiscovery(private val appContext: Context) : AppDiscovery {
@@ -55,6 +58,19 @@ class LauncherAppsAppDiscovery(private val appContext: Context) : AppDiscovery {
         }
         result.sortBy { it.label.lowercase(Locale.ROOT) }
         return result
+    }
+
+    override fun isPackageInstalled(packageName: String, userSerial: Long): Boolean {
+        val profile = userManager.getUserForSerialNumber(userSerial) ?: return false
+        return try {
+            launcherApps.getApplicationInfo(packageName, PackageManager.MATCH_DISABLED_COMPONENTS, profile)
+            true
+        } catch (_: PackageManager.NameNotFoundException) {
+            false
+        } catch (_: SecurityException) {
+            // Inaccessible profiles do not establish that a package was uninstalled.
+            true
+        }
     }
 }
 

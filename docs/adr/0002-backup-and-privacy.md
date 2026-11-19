@@ -56,9 +56,10 @@ current design scope is Android. [Cross-platform transfer configuration](https:/
 ## Restore risks
 
 - A restored layout can refer to apps that the package manager has yet to
-  restore. Vesna currently prunes absent app keys during refresh. If a
-  restored pin is pruned, a later package-added event refreshes discovery
-  without restoring the pin. Verify the effect of restore ordering.
+  restore. Vesna prunes pins for packages it cannot find during refresh, while
+  retaining disabled apps that are still installed. If a restored pin is pruned,
+  a later package-added event refreshes discovery without restoring the pin.
+  Verify the effect of restore ordering.
   [Launcher refresh](../../app/src/main/java/dev/vladon/vesna/launcher/workspace/LauncherController.kt)
 - Profile serials identify users within a device. On another device the same
   number can identify a different profile, or have no match. Define how

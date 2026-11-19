@@ -175,8 +175,8 @@ class LauncherController(
     }
 
     /**
-     * Re-reads the installed app list, seeds the layout on first run, and prunes
-     * entries of apps that disappeared while the launcher was not running.
+     * Refreshes launchable apps, seeds the layout on first run, and removes pins
+     * for packages uninstalled while the launcher was not running.
      * Serialized with a mutex so overlapping package events cannot double-seed.
      */
     private suspend fun refresh() = refreshMutex.withLock {
@@ -190,6 +190,8 @@ class LauncherController(
                 workspaceRepository.markSeeded()
             }
         }
-        workspaceRepository.pruneStale(apps.map { it.key }.toSet())
+        withContext(Dispatchers.IO) {
+            workspaceRepository.pruneUninstalled(apps.mapTo(HashSet()) { it.key }, discovery::isPackageInstalled)
+        }
     }
 }

@@ -35,9 +35,9 @@ item 4 min-SDK smoke.
    identified first and is recorded in the verification doc, since no research
    scenario covers this today.
 2. **Package removal and temporary unavailability** — uninstall and update/disable
-   paths: stale items leave workspace, dock, drawer, and folders
+   paths: uninstall removes pins; disabling hides icons without deleting pins
    ([BACKLOG.md](BACKLOG.md#vesna-qa-003-package-lifecycle-verification-partial)).
-   Status: **in-progress** — drawer side accepted for review as VESNA-QA-003A
+   Status: **done** — drawer lifecycle verified in VESNA-QA-003A
    (recorded 2026-11-19,
    [verification/VESNA-QA-003.md](verification/VESNA-QA-003.md)).
    [VESNA-QA-003B](verification/VESNA-QA-003B.md) verified placed-item
@@ -50,9 +50,9 @@ item 4 min-SDK smoke.
    dock folder-capacity defect observed in that line (VESNA-BUG-003) was
    fixed in [PR #26](https://github.com/vladon/vesnalauncher/pull/26) and
    device-verified in [VESNA-QA-003E](verification/VESNA-QA-003E.md) (see
-   that record for the corrected operational history). The item
-   stays open for the disable-time placement retention product decision; no
-   policy is assumed.
+   that record for the corrected operational history).
+   [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disabled-app
+   pin retention, including re-enable and a cold relaunch.
 3. **Migrations and restart** — Room 1→2→3 migration on representative databases,
    layout intact after process death and device reboot
    ([BACKLOG.md](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done)).

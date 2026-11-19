@@ -20,8 +20,8 @@ sealed interface PackageEvent {
     data class Removed(val packageName: String, val userSerial: Long) : PackageEvent
 
     /**
-     * The package was updated or changed in place (enabled/disabled); identifiers
-     * survive but metadata may change.
+     * A package changed in place, including changes to launch availability.
+     * Unlike [Removed], this does not establish that the package was uninstalled.
      */
     data class Replaced(val packageName: String, val userSerial: Long) : PackageEvent
 }
@@ -72,10 +72,9 @@ class PackageChangeMonitor(private val appContext: Context) {
             user: UserHandle,
             replacing: Boolean,
         ) {
-            // A package became temporarily unlaunchable (for example removable
-            // storage was removed); treat it like a removal so dead icons clear.
+            // Temporarily unavailable storage is not an uninstall.
             emitAll(packageNames, user, replacing) { name, serial ->
-                PackageEvent.Removed(name, serial)
+                PackageEvent.Replaced(name, serial)
             }
         }
     }
