@@ -165,3 +165,28 @@ untouched.
 - Status documents are updated only to the extent observed here (HOME-role row
   in REQUIREMENTS_TRACEABILITY.md, the HOME capability row and "Where to go
   next" in PROJECT_STATUS.md, and the item status in BACKLOG.md / ROADMAP.md).
+
+## API 26 follow-up (VESNA-QA-002B)
+
+On 2026-11-19, the legacy HOME-selection path and return from a launched app
+were verified on `Vesna_QA_MinSdk_API_26` (`emulator-5562`, Android 8.0,
+user 0). The debug APK was built at `4c5f0c1` (0.4.1, version code 6,
+SHA-256 `beeeff4a797d9f88b189ae0d32295e6d4c2de91b34d8e9675516b3673147aaf7`).
+NexusLauncher was the resolved HOME and foreground at preflight.
+
+1. Open Vesna explicitly and tap **Set Vesna as your default launcher**.
+   The banner opens Android Settings using `Settings.ACTION_HOME_SETTINGS`.
+   The **Home app** preference opens the legacy chooser.
+2. Select **Vesna Launcher** in the radio list. Android resolves the HOME
+   intent to `dev.vladon.vesna.launcher/.ui.HomeActivity`. Press HOME and
+   verify the Vesna workspace appears without the setup banner.
+3. Tap Calculator in Vesna and confirm it takes focus. Press system HOME.
+   Vesna regains focus with the same visible workspace icon labels and bounds.
+4. Select **Pixel Launcher** through the same Settings chooser. Press HOME
+   and verify Android resolves to NexusLauncher and shows its workspace.
+   Uninstall the Vesna package installed for this test. The original package
+   inventory and NexusLauncher HOME resolution match at teardown.
+
+Each adb command was pinned to `emulator-5562`. Evidence is retained in
+`qa-evidence/qa002b-api26-home/`, including the chooser hierarchy, HOME
+resolution and focus probes, and matching workspace snapshots.
