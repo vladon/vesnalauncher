@@ -271,8 +271,8 @@ class WorkspaceRepository(
     /**
      * Creates a folder at [targetCell] from a drop of [dragged] onto the app that
      * currently occupies the cell. Both entries become folder members. Returns
-     * false when either entry is missing or a folder already occupies the cell
-     * (the caller should use [addToFolder] instead).
+     * false when an entry is missing, both entries are the same placement, or a
+     * folder already occupies the cell (use [addToFolder] for an existing folder).
      */
     suspend fun createFolderFromDrop(
         dragged: LauncherApp,
@@ -287,6 +287,7 @@ class WorkspaceRepository(
         val target = items.firstOrNull {
             it.container == Container.WORKSPACE.name && it.folderId == null && it.cellIndex == targetCell
         } ?: return@withLock false
+        if (draggedItem.id == target.id) return@withLock false
         val foldersHere = folderDao.getAll().any { it.cellIndex == targetCell }
         if (foldersHere) return@withLock false
         val folderId = folderDao.insert(FolderEntity(title = defaultTitle, cellIndex = targetCell))
