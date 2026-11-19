@@ -91,6 +91,15 @@ flowchart TB
    the dock and first workspace page. An upgraded install with an existing
    layout is adopted as-is; a user-emptied workspace is never re-seeded.
 
+Current main identifies a workspace pin dragged to an empty cell by the
+source cell and exact app key. Two pins with the same app key retain their
+individual placements. [PR #44](https://github.com/vladon/vesnalauncher/pull/44)
+
+Each folder creation commits the folder row and both membership updates in
+one Room transaction. Removing a member also commits its move and any
+resulting dissolution together. A failure inside either operation rolls
+its writes back. [Folder verification](../engineering/REQUIREMENTS_TRACEABILITY.md#folders)
+
 ## Threading and lifecycle
 
 - Discovery and database access run on `Dispatchers.IO`; UI state is combined in
