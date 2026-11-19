@@ -53,3 +53,28 @@ new AVD, and its definition remains available for subsequent verification.
 
 The result covers the recorded build and emulator only. Runner output and
 screenshots are retained in `qa-evidence/qa010-api31/`.
+
+## Follow-up on the sixteen-test suite
+
+The same API 31 AVD passed all 16 instrumentation tests on 2026-11-19 with
+the debug candidate `1b5dc2e55b8ad2a8f440e5793af6efa7a7050e48` for
+[PR #45](https://github.com/vladon/vesnalauncher/pull/45). The tested APKs
+were verified before installation:
+
+| APK | SHA-256 |
+| --- | --- |
+| `app-debug.apk` | `0d588b59331fc2fe94f7a8a07cede2d54dafd5d666a95327206d92768bcee1fe` |
+| `app-debug-androidTest.apk` | `b8ee2c8ca9934680eb97db3a839ec4b88378502b6bb5c4a2dc223ee40f74ec6a` |
+
+The recorded SDK boot command started the preserved AVD on one attempt.
+The run verified `emulator-5570`, API 31, user 0, stable core services,
+and stock HOME before serial-pinned installation and AndroidJUnitRunner
+execution. Both folder rollback regressions and the selected-pin move
+regression passed in the full suite. This follow-up covers instrumentation
+with the latest candidate. The workspace, drawer, and HOME observations
+above belong to the earlier build.
+
+The two Vesna packages were removed and the original NexusLauncher HOME
+and foreground were verified. Orca shut down the AVD and retained its
+definition. Runner output and boot logs are in
+`qa-evidence/qa010b-api31-suite/`.
