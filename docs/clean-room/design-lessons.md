@@ -75,6 +75,69 @@ action to save"), and the discard path must never silently create.
    scrolling to the TRUE bottom — inventories that stop at an assumed tail
    poison downstream conclusions ("no location setting anywhere").
 
+## Per-gap fix guidance for the implementation team
+
+Each gap below maps to a concrete implementation directive. "Reference" points
+at the Nova behavior that demonstrated the failure; "Build" is the directive.
+
+### Gap 1 — Conditions are decorative
+- Reference: card conditions render nowhere they claim to gate; expiry never
+  removes a condition; a later-true transition never surfaces the card.
+- Build:
+  1. One evaluation engine, one source of truth: a `CardGate.evaluate(card,
+     surface, now)` consumed by BOTH the drawer and the search/card overlay.
+  2. Conditions are state machines, not filters: each carries
+     `never-met → active → expired → removed`, and expiry REMOVES the row
+     from config (with a toast), never silently.
+  3. A satisfied-later condition enqueues the card onto the gated surface
+     within one UI refresh (the promise Nova's editor copy makes but never
+     keeps).
+  4. Acceptance tests: expired / never-met / met-later each asserted against
+     both surfaces. If a gate cannot be enforced on a surface, delete the
+     surface's copy of the gate.
+
+### Gap 2 — Manual-location promise
+- Reference: welcome-sheet copy promised a Nova Settings fallback that does
+  not exist; the only location editor belongs to a different card
+  (Map locations) and was undiscoverable.
+- Build:
+  1. Copy lint: every fallback string is a ticket reference. Ship the
+     settings surface in the same release as the copy.
+  2. One location model shared by all location-consuming cards (weather,
+     maps) with per-card overrides — never per-card location stores.
+  3. The editor must appear in Settings search under every user word
+     ("location", the card name, the city name).
+
+### Gap 3 — Smart folders dark-by-default
+- Reference: auto-generated folders shipped per-folder disabled behind a
+  per-item ⋮ ▸ Enable; the master toggle alone hid all seven.
+- Build:
+  1. First enablement is a first-run CHOICE presented once ("Organize your
+     apps?") — never a buried per-item menu.
+  2. The master toggle is sufficient: ON = all generated folders render;
+     per-folder granularity lives in the folder's own editor.
+  3. Empty generated folders are not rendered at all (Nova's bare unlabeled
+     icons were a second defect on top of the first).
+
+### Gap 4 — Builder save gating
+- Reference: Save disabled with no explanation; a name-only card persisted
+  through the discard path while the visible Save stayed grey.
+- Build:
+  1. A disabled primary action carries its reason inline ("Add at least one
+     action to save") and the reason list updates live.
+  2. Save semantics are total: either the card commits or the discard path
+     provably destroys it — never both-neither.
+  3. Autosave drafts: the discard dialog is a symptom; with draft
+     persistence the dialog disappears entirely.
+
+### Cross-cutting
+- Conditions/locations/folders all failed the same way: the management UI
+  shipped before the runtime. Gate any config surface on its runtime
+  landing in the SAME release.
+- The test matrix that caught all four: for every gate — false, expired,
+  met-later; for every inventory — scroll past the assumed tail; for every
+  state — verify it survives a restart.
+
 ## Status
 
 - All four gaps documented as Observed with evidence IDs; the condition matrix
