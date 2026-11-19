@@ -49,7 +49,7 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(before, repository.items.first().sortedBy { it.id })
             assertEquals(mapOf(0 to app, 1 to other), WorkspaceResolver.workspaceApps(before, listOf(app, other), first))
             assertEquals(mapOf(1 to app), WorkspaceResolver.workspaceApps(before, listOf(app, other), second))
-            repository.removeFromWorkspace(app, second)
+            repository.removeFromWorkspace(app, cell = 1, pageId = second)
             assertEquals(before.filter { it.pageId == first }, repository.items.first().sortedBy { it.id })
         } finally {
             db.close()

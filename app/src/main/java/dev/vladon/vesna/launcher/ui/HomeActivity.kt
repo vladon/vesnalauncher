@@ -226,8 +226,8 @@ class HomeActivity : ComponentActivity() {
         if (!moved) {
             when {
                 source.fromDrawer -> showDrawerItemMenu(anchor, app)
-                container == Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app)
-                else -> showDockItemMenu(anchor, app)
+                container == Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app, source.fromCell)
+                else -> showDockItemMenu(anchor, app, source.dockPinId)
             }
             return
         }
@@ -407,7 +407,7 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
-    private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp) {
+    private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp, cell: Int) {
         val popup = PopupMenu(this, anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_ADD_TO_DOCK, 0, R.string.menu_add_to_dock)
@@ -416,7 +416,7 @@ class HomeActivity : ComponentActivity() {
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_ADD_TO_DOCK -> controller.addToDock(app)
-                MENU_REMOVE -> controller.removeFromWorkspace(app)
+                MENU_REMOVE -> controller.removeFromWorkspace(app, cell)
                 MENU_APP_INFO -> showAppInfo(app)
             }
             true
@@ -424,14 +424,14 @@ class HomeActivity : ComponentActivity() {
         popup.show()
     }
 
-    private fun showDockItemMenu(anchor: View, app: LauncherApp) {
+    private fun showDockItemMenu(anchor: View, app: LauncherApp, pinId: Long) {
         val popup = PopupMenu(this, anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_REMOVE, 0, R.string.menu_remove_from_dock)
         popup.menu.add(0, MENU_APP_INFO, 1, R.string.menu_app_info)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                MENU_REMOVE -> controller.removeFromDock(app)
+                MENU_REMOVE -> controller.removeFromDock(pinId)
                 MENU_APP_INFO -> showAppInfo(app)
             }
             true

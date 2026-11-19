@@ -162,8 +162,8 @@ class LauncherController(
         }
     }
 
-    fun removeFromWorkspace(app: LauncherApp) {
-        scope.launch { workspaceRepository.removeFromWorkspace(app) }
+    fun removeFromWorkspace(app: LauncherApp, cell: Int) {
+        scope.launch { workspaceRepository.removeFromWorkspace(app, cell) }
     }
 
     fun addToDock(app: LauncherApp) {
@@ -172,8 +172,8 @@ class LauncherController(
         }
     }
 
-    fun removeFromDock(app: LauncherApp) {
-        scope.launch { workspaceRepository.removeFromDock(app) }
+    fun removeFromDock(pinId: Long) {
+        scope.launch { workspaceRepository.removeFromDock(pinId) }
     }
 
     /**

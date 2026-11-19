@@ -94,10 +94,12 @@ class WorkspaceRepository(
         true
     }
 
-    suspend fun removeFromWorkspace(app: LauncherApp, pageId: Long = DEFAULT_WORKSPACE_PAGE_ID) =
-        removeFromContainer(app.key, Container.WORKSPACE, pageId)
+    suspend fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long = DEFAULT_WORKSPACE_PAGE_ID) =
+        mutationMutex.withLock {
+            dao.deleteWorkspacePin(app.key.packageName, app.key.className, app.key.userSerial, pageId, cell)
+        }
 
-    suspend fun removeFromDock(app: LauncherApp) = removeFromContainer(app.key, Container.DOCK, null)
+    suspend fun removeFromDock(pinId: Long) = mutationMutex.withLock { dao.deleteDockPin(pinId) }
 
     /** Removes every layout entry of an uninstalled package in one profile. */
     suspend fun removeAllForPackage(packageName: String, userSerial: Long) = mutationMutex.withLock {
@@ -435,10 +437,6 @@ class WorkspaceRepository(
                 folderDao.deleteById(folderId)
             }
         }
-    }
-
-    private suspend fun removeFromContainer(key: AppKey, container: Container, pageId: Long?) = mutationMutex.withLock {
-        dao.deleteTopLevelByKey(key.packageName, key.className, container.name, key.userSerial, pageId)
     }
 
     private companion object {

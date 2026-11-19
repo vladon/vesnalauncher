@@ -43,29 +43,17 @@ interface WorkspaceItemDao {
     @Query("DELETE FROM workspace_items WHERE id = :id")
     suspend fun deleteById(id: Long)
 
-    /**
-     * Deletes all matched top-level rows for a key+container+profile on one
-     * page (an app can hold several top-level pins across pages). Rows that
-     * live inside a folder (`folderId` non-null) share the key and container —
-     * for example a dock item dragged onto a workspace folder — and are
-     * deliberately preserved, as are identical pins on other pages: a
-     * menu-driven unpin removes only the top-level placements of the page it is
-     * invoked on, never folder membership or other pages. `pageId IS :pageId`
-     * matches the dock (`pageId` null) and each workspace page alike. Bulk
-     * uninstall cleanup uses [deleteByPackage] instead.
-     */
+    /** Deletes the selected workspace pin without touching copies in other cells. */
     @Query(
-        "DELETE FROM workspace_items WHERE packageName = :packageName " +
-            "AND className = :className AND container = :container AND userSerial = :userSerial " +
-            "AND folderId IS NULL AND pageId IS :pageId",
+        "DELETE FROM workspace_items WHERE id = (" +
+            "SELECT id FROM workspace_items WHERE packageName = :packageName AND className = :className " +
+            "AND userSerial = :userSerial AND pageId = :pageId AND cellIndex = :cell " +
+            "AND container != 'DOCK' AND folderId IS NULL ORDER BY id LIMIT 1)",
     )
-    suspend fun deleteTopLevelByKey(
-        packageName: String,
-        className: String,
-        container: String,
-        userSerial: Long,
-        pageId: Long?,
-    )
+    suspend fun deleteWorkspacePin(packageName: String, className: String, userSerial: Long, pageId: Long, cell: Int)
+
+    @Query("DELETE FROM workspace_items WHERE id = :id AND container = 'DOCK' AND folderId IS NULL")
+    suspend fun deleteDockPin(id: Long)
 
     @Query("DELETE FROM workspace_items WHERE packageName = :packageName AND userSerial = :userSerial")
     suspend fun deleteByPackage(packageName: String, userSerial: Long)
