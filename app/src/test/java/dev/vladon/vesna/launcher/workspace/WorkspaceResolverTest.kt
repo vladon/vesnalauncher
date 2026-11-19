@@ -46,16 +46,6 @@ class WorkspaceResolverTest {
     }
 
     @Test
-    fun `stale keys reports persisted keys missing from live apps`() {
-        val items = listOf(
-            WorkspaceItem(1, keyA, Container.WORKSPACE, 0),
-            WorkspaceItem(2, keyC, Container.DOCK, 0),
-        )
-        val stale = WorkspaceResolver.staleKeys(items, setOf(keyA, keyB))
-        assertEquals(setOf(keyC), stale)
-    }
-
-    @Test
     fun `duplicate cells keep the first persisted item`() {
         val items = listOf(
             WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = 2),

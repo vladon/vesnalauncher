@@ -46,10 +46,13 @@ no research scenario covers this: write down the acceptance assertions, then
 automate or script them. On completion, add the run record link to
 [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md#home-role-and-launching).
 
-## VESNA-QA-003: package lifecycle verification (partial)
+<a id="vesna-qa-003-package-lifecycle-verification-partial"></a>
 
-**Status:** in-progress. The drawer-side lifecycle run (2026-11-19, dedicated
-API 35 AVD) is accepted for review as **VESNA-QA-003A**; reproducible record:
+## VESNA-QA-003: package lifecycle verification (done)
+
+**Status:** done — includes disabled-app pin retention verified on API 35 by
+[VESNA-QA-003F](verification/VESNA-QA-003F.md). The earlier drawer-side run
+(2026-11-19, dedicated API 35 AVD) is recorded as **VESNA-QA-003A**:
 [verification/VESNA-QA-003.md](verification/VESNA-QA-003.md). Install →
 drawer, same-package update, disable/re-enable, and uninstall (incl. launcher
 process restart and uninstall-while-dead) passed. After
@@ -69,9 +72,9 @@ fixture rows left within seconds, the folder dissolved, and a cold relaunch
 showed no ghost entries. The dock folder-capacity defect found in this line
 (VESNA-BUG-003) was fixed in [PR #26](https://github.com/vladon/vesnalauncher/pull/26)
 and device-verified in [VESNA-QA-003E](verification/VESNA-QA-003E.md)
-(2026-11-19, API 35). Open item: the disable-time placement retention
-policy — disabling currently removes workspace/dock placements (observed in
-QA-003B). The desired retention behavior remains an open product decision.
+(2026-11-19, API 35). Disabled apps now keep their stored workspace and dock
+positions and folder memberships. They reappear on re-enable; uninstall
+still removes pins for the affected profile.
 Fixture methodology is recorded at
 `D:/orca/scratch/vesna-qa-003/` (hand-built debug APKs: same
 package/component/signature, two versionCodes, no permissions).
@@ -84,9 +87,9 @@ Verify the `PackageChangeMonitor` → stale-cleanup path end to end:
   UI **and** the database (no ghost cells after restart).
 - Update an app (same package, new version) in place: entries and order survive
   (`PackageEvent.Replaced` path).
-- Temporarily unavailable app (disabled via `pm disable-user` or a suspended
-  work app): behavior matches the documented stale-item policy; recovery on
-  re-enable.
+- Disable an app with `pm disable-user`: it is hidden without changing its
+  pins or folder memberships, including across a launcher restart.
+  Re-enabling restores its icons.
 - Repeat at least one case across a managed profile if the AVD supports one
   (also feeds the managed-profile row in
   [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids)).

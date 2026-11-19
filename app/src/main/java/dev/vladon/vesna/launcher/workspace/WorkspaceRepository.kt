@@ -94,11 +94,19 @@ class WorkspaceRepository(
         dao.deleteByPackage(packageName, userSerial)
     }
 
-    /** Drops persisted items that reference apps no longer installed, then dissolves sparse folders. */
-    suspend fun pruneStale(liveKeys: Set<AppKey>) = mutationMutex.withLock {
-        val stale = dao.getAll().filter { AppKey(it.packageName, it.className, it.userSerial) !in liveKeys }
-        for (item in stale) dao.deleteById(item.id)
-        stale.mapNotNull { it.folderId }.toSet().forEach { dissolveIfSparse(it) }
+    /** Removes pins only for uninstalled packages; unavailable pins keep their positions. */
+    suspend fun pruneUninstalled(
+        launchableKeys: Set<AppKey>,
+        isPackageInstalled: (String, Long) -> Boolean,
+    ) = mutationMutex.withLock {
+        val packageInstalled = HashMap<Pair<String, Long>, Boolean>()
+        for (item in dao.getAll()) {
+            if (AppKey(item.packageName, item.className, item.userSerial) in launchableKeys) continue
+            val installed = packageInstalled.getOrPut(item.packageName to item.userSerial) {
+                isPackageInstalled(item.packageName, item.userSerial)
+            }
+            if (!installed) dao.deleteById(item.id)
+        }
         normalizeFolders()
     }
 

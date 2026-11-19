@@ -4,9 +4,9 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 
 /**
- * Pure projection of persisted layout items onto live apps: joins items with the
- * current app list so entries of uninstalled apps never reach the UI. Items inside
- * folders (non-null folderId) are excluded from the grid and dock views.
+ * Pure projection of persisted layout items onto live apps. Unavailable apps
+ * are hidden without changing their stored positions. Items inside folders
+ * (non-null folderId) are excluded from the grid and dock views.
  */
 object WorkspaceResolver {
 
@@ -69,8 +69,4 @@ object WorkspaceResolver {
             .mapNotNull { appByKey[it.key] }
             .toList()
     }
-
-    /** Keys referenced by persisted items that are no longer installed. */
-    fun staleKeys(items: List<WorkspaceItem>, liveKeys: Set<AppKey>): Set<AppKey> =
-        items.map { it.key }.filter { it !in liveKeys }.toSet()
 }

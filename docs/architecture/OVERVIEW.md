@@ -76,8 +76,9 @@ flowchart TB
 1. `VesnaApplication` creates the `LauncherGraph` and starts `PackageChangeMonitor`.
 2. `LauncherController` discovers installed apps on `Dispatchers.IO` and keeps a
    `StateFlow<LauncherUiState>` that combines live apps with persisted workspace
-   items. Items whose app is no longer installed are filtered from the UI and
-   pruned from the database.
+   items. A disabled app is hidden but its workspace cell, dock order and folder
+   membership are kept. Re-enabling it makes those pins reappear. Only package
+   removal for that profile drops its pins and dissolves newly sparse folders.
 3. `HomeActivity` collects the state flow while started and renders workspace,
    dock, and drawer.
 4. User actions (launch, add/remove from workspace/dock) go through

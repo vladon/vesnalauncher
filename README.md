@@ -6,12 +6,24 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 
 - **Package name:** `dev.vladon.vesna.launcher`
 - **License:** [MIT](LICENSE)
-- **Status:** `0.4.1` ([latest release](https://github.com/vladon/vesnalauncher/releases/latest))
+- **Version:** `0.4.2` ([latest published release](https://github.com/vladon/vesnalauncher/releases/latest))
 - **Language:** Kotlin, English UI (Russian localization included)
 
 ## Features
 
-### 0.4.1 (latest release)
+### 0.4.2
+
+- Disabling an app no longer deletes its workspace or dock pins or its folder
+  memberships. Its icons return when the app is re-enabled.
+- Moving a pin within the workspace or from the dock to the workspace no
+  longer moves another copy of the same app.
+- Folder creation and member removal save together with their layout changes.
+  Dropping a drawer icon onto its own workspace pin no longer creates a
+  one-item folder.
+- Fixed bottom-row icons overlapping the dock, the drawer item menu anchor,
+  and dock capacity counting folder members as separate favorites.
+
+### 0.4.1
 
 - Drag-and-drop fixes: drops from the drawer commit reliably, recycled drawer
   items no longer fire stale drag-release listeners, and dock reordering and workspace-to-dock drops ignore folder members. Folder cells count as
@@ -59,11 +71,9 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 - English and Russian localization.
 
 Not yet implemented: widgets, icon packs, themes, and fuzzy search matching.
-See [PRODUCT.md](PRODUCT.md) for the roadmap. Work-profile apps have been
-supported since 0.2.0 (badged, profile-scoped discovery and removal via
-`LauncherApps`); their dedicated device verification (2026-11-19) and later
-folder, drag, and dock-rendering fixes landed on `main` after the 0.4.1
-release, ahead of the next release.
+See [PRODUCT.md](PRODUCT.md) for the roadmap. Work-profile apps are discovered
+and shown with a profile badge; uninstalling a work copy does not remove its
+personal counterpart's pins.
 
 ## Build
 
