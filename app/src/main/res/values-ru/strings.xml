@@ -19,6 +19,7 @@
     <string name="menu_add_to_workspace">Добавить на рабочий стол</string>
     <string name="menu_remove_from_workspace">Убрать с рабочего стола</string>
     <string name="menu_add_to_dock">Добавить в док</string>
+    <string name="menu_move_to_page">Переместить на страницу…</string>
     <string name="menu_remove_from_dock">Убрать из дока</string>
     <string name="menu_app_info">О приложении</string>
     <string name="shortcut_options">Действия с ярлыком</string>
@@ -32,10 +33,15 @@
     <string name="workspace_previous_page">Предыдущая страница рабочего стола</string>
     <string name="workspace_next_page">Следующая страница рабочего стола</string>
     <string name="workspace_page_position">Страница рабочего стола %1$d из %2$d</string>
+    <string name="move_page_number">Страница рабочего стола %1$d</string>
 
     <string name="workspace_empty_hint">Откройте меню рабочего стола, чтобы настроить страницу</string>
     <string name="toast_workspace_full">Эта страница рабочего стола заполнена</string>
     <string name="toast_workspace_page_not_empty">Удалить можно только пустые страницы</string>
+    <string name="toast_shortcut_moved">Ярлык перемещён</string>
+    <string name="toast_no_move_destination">Сначала освободите место на другой странице</string>
+    <string name="toast_move_destination_full">На этой странице нет места</string>
+    <string name="toast_move_unavailable">Ярлык или страница больше недоступны</string>
     <string name="toast_dock_full">Док заполнен</string>
 
     <!-- Папки -->

@@ -29,7 +29,7 @@ exercised; everything else is source-verified only.
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
 | Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
-| Workspace pages (unreleased) | **Home options → Add home page**. Up to eight 4×5 pages; swipe horizontally or use the arrows above the shared dock. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls). |
+| Workspace pages (unreleased) | **Home options → Add home page**. Up to eight 4×5 pages; swipe horizontally or use the arrows above the shared dock. **Shortcut options → Move to page…** moves a Home shortcut to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls) and [Move a shortcut between pages](#move-a-shortcut-between-pages). |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
@@ -173,8 +173,8 @@ list means it was not performed, nothing more.
 
 The local `workspace-page-controls` branch builds on the 0.4.3 storage work; it
 does not change the Room schema or the last published release. New pages are
-empty, and adding or moving an app acts on the displayed page. On an empty
-extra page, open **Home options → Remove empty page** to free a slot and return
+empty; ordinary pinning and drag-and-drop act on the displayed page. On an
+empty extra page, open **Home options → Remove empty page** to free a slot and return
 to the first Home page. The first page and pages with saved shortcuts or folders
 cannot be removed, even if a saved shortcut is not currently visible. Page
 reordering and dragging between pages are not available.
@@ -197,6 +197,24 @@ reordering and dragging between pages are not available.
   folder on Android 15. Android 8 hid the pager after removing the only extra
   page. The new menu row fit at 320 dp and 1.6× type in English and Russian;
   touch selection and visible D-pad focus and activation were verified.
+
+### Move a shortcut between pages
+
+Long-press a Home app shortcut, or focus it and press **Shift+F10** or the
+**Menu** key. Choose **Move to page…** and select a destination with room.
+Vesna moves the existing shortcut to the first free cell and keeps the
+current page selected. It does not copy the shortcut or replace another item.
+With only one page, the action is hidden.
+
+- Android 8: the touch chooser skipped a full page and moved the same pin
+  to the eligible page. Android 15: D-pad selected a destination; Back
+  canceled without moving the pin and returned keyboard focus to it.
+- The moved pin ID, destination and selected source page survived a force-stop
+  and restart. All pre-existing layout rows were unchanged after QA cleanup.
+- Checked the Dark 320 dp and Light 610 dp choosers, Russian at 200% text,
+  RTL with localized page numbers, and both navigation modes. Debug lint and
+  all ten `WorkspaceRepositoryPagesTest` cases passed on both emulators.
+  TalkBack speech and physical devices were not checked.
 
 ### Home options
 

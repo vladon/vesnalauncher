@@ -343,6 +343,86 @@ class WorkspaceRepositoryPagesTest {
         }
     }
 
+    @Test
+    fun pageMoveUsesTheExactPinAndTheFirstUnoccupiedCell() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        try {
+            val dao = db.workspaceItemDao()
+            val folders = db.folderDao()
+            val repository = WorkspaceRepository(
+                dao, db, folders, context.getSharedPreferences("qa_workspace_page_moves", Context.MODE_PRIVATE),
+            )
+            val source = DEFAULT_WORKSPACE_PAGE_ID
+            val full = db.workspacePageDao().insert(WorkspacePageEntity(rank = 1))
+            val destination = db.workspacePageDao().insert(WorkspacePageEntity(rank = 9))
+            val app = LauncherApp(AppKey("qa.duplicate", "Main"), "Duplicate", null)
+            assertTrue(repository.insertWorkspaceAt(app, 0, source))
+            assertTrue(repository.insertWorkspaceAt(app, 3, source))
+            assertTrue(repository.insertWorkspaceAt(app, 0, destination))
+            assertTrue(repository.addToDock(app))
+            folders.insert(FolderEntity(title = "Reserved", pageId = destination, cellIndex = 1))
+            for (cell in 0 until GridCanvas.CAPACITY) {
+                assertTrue(repository.insertWorkspaceAt(app, cell, full))
+            }
+            val before = dao.getAll().sortedBy { it.id }
+            val savedFolders = folders.getAll()
+            val selectedId = before.single { it.pageId == source && it.cellIndex == 3 }.id
+
+            val choices = requireNotNull(repository.pageMoveOptions(app.key, cell = 3, pageId = source))
+            assertEquals(selectedId, choices.pinId)
+            assertEquals(listOf(PageMoveTarget(destination, number = 3)), choices.pages)
+            assertEquals(PageMoveResult.MOVED, repository.movePinToPage(selectedId, 3, source, destination))
+            assertEquals(
+                before.map { if (it.id == selectedId) it.copy(pageId = destination, cellIndex = 2) else it },
+                dao.getAll().sortedBy { it.id },
+            )
+            assertEquals(savedFolders, folders.getAll())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun pageMoveRevalidatesCapacityAndDoesNotMoveAReplacementPin() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        try {
+            val dao = db.workspaceItemDao()
+            val repository = WorkspaceRepository(
+                dao, db, db.folderDao(), context.getSharedPreferences("qa_workspace_page_moves", Context.MODE_PRIVATE),
+            )
+            val origin = DEFAULT_WORKSPACE_PAGE_ID
+            val target = requireNotNull(repository.createPage())
+            val retiredTarget = requireNotNull(repository.createPage())
+            val app = LauncherApp(AppKey("qa.move", "Main"), "Move", null)
+            assertTrue(repository.insertWorkspaceAt(app, 0, origin))
+            for (cell in 0 until GridCanvas.CAPACITY - 1) {
+                assertTrue(repository.insertWorkspaceAt(app, cell, target))
+            }
+            val choice = requireNotNull(repository.pageMoveOptions(app.key, 0, origin))
+            assertTrue(choice.pages.any { it.id == target })
+            assertTrue(repository.insertWorkspaceAt(app, GridCanvas.CAPACITY - 1, target))
+            assertTrue(repository.removeEmptyPage(retiredTarget))
+            val fullLayout = dao.getAll().sortedBy { it.id }
+
+            assertEquals(PageMoveResult.FULL, repository.movePinToPage(choice.pinId, 0, origin, target))
+            assertEquals(PageMoveResult.UNAVAILABLE, repository.movePinToPage(choice.pinId, 0, origin, retiredTarget))
+            assertEquals(fullLayout, dao.getAll().sortedBy { it.id })
+
+            repository.removeFromWorkspace(app, cell = 0, pageId = target)
+            repository.removeFromWorkspace(app, cell = 0, pageId = origin)
+            assertTrue(repository.insertWorkspaceAt(app, 0, origin))
+            val replacementLayout = dao.getAll().sortedBy { it.id }
+            assertEquals(PageMoveResult.UNAVAILABLE, repository.movePinToPage(choice.pinId, 0, origin, target))
+            assertEquals(replacementLayout, dao.getAll().sortedBy { it.id })
+        } finally {
+            db.close()
+        }
+    }
+
     private class CountingDiscovery(private val apps: List<LauncherApp>) : AppDiscovery {
         var calls = 0
             private set

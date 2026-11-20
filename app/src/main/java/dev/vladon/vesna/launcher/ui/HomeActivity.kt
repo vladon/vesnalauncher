@@ -503,6 +503,10 @@ class HomeActivity : ComponentActivity() {
             LauncherMessage.WORKSPACE_FULL -> getString(R.string.toast_workspace_full)
             LauncherMessage.DOCK_FULL -> getString(R.string.toast_dock_full)
             LauncherMessage.WORKSPACE_PAGE_NOT_EMPTY -> getString(R.string.toast_workspace_page_not_empty)
+            LauncherMessage.SHORTCUT_MOVED -> getString(R.string.toast_shortcut_moved)
+            LauncherMessage.NO_MOVE_DESTINATION -> getString(R.string.toast_no_move_destination)
+            LauncherMessage.MOVE_DESTINATION_FULL -> getString(R.string.toast_move_destination_full)
+            LauncherMessage.MOVE_UNAVAILABLE -> getString(R.string.toast_move_unavailable)
         }
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
@@ -540,17 +544,47 @@ class HomeActivity : ComponentActivity() {
         val popup = vesnaPopupMenu(anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_ADD_TO_DOCK, 0, R.string.menu_add_to_dock)
-        popup.menu.add(0, MENU_REMOVE, 1, R.string.menu_remove_from_workspace)
-        popup.menu.add(0, MENU_APP_INFO, 2, R.string.menu_app_info)
+        if (renderedState.pageIds.size > 1) {
+            popup.menu.add(0, MENU_MOVE_TO_PAGE, 1, R.string.menu_move_to_page)
+        }
+        popup.menu.add(0, MENU_REMOVE, 2, R.string.menu_remove_from_workspace)
+        popup.menu.add(0, MENU_APP_INFO, 3, R.string.menu_app_info)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_ADD_TO_DOCK -> controller.addToDock(app)
+                MENU_MOVE_TO_PAGE -> anchor.post { showMovePageMenu(anchor, app, cell, pageId) }
                 MENU_REMOVE -> controller.removeFromWorkspace(app, cell, pageId)
                 MENU_APP_INFO -> showAppInfo(app)
             }
             true
         }
         popup.show()
+    }
+
+    private fun showMovePageMenu(anchor: View, app: LauncherApp, cell: Int, pageId: Long) {
+        lifecycleScope.launch {
+            val options = controller.pageMoveOptions(app, cell, pageId)
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                renderedState.activePageId != pageId || !anchor.isAttachedToWindow || !anchor.isShown
+            ) return@launch
+            if (options == null) {
+                showMessage(LauncherMessage.MOVE_UNAVAILABLE)
+                return@launch
+            }
+            if (options.pages.isEmpty()) {
+                showMessage(LauncherMessage.NO_MOVE_DESTINATION)
+                return@launch
+            }
+            val popup = vesnaPopupMenu(anchor)
+            for (target in options.pages) {
+                popup.menu.add(0, target.number, target.number, getString(R.string.move_page_number, target.number))
+                    .setOnMenuItemClickListener {
+                        controller.movePinToPage(options.pinId, cell, pageId, target.id)
+                        true
+                    }
+            }
+            popup.show()
+        }
     }
 
     private fun showDockItemMenu(anchor: View, app: LauncherApp, pinId: Long) {
@@ -645,5 +679,6 @@ class HomeActivity : ComponentActivity() {
         const val MENU_FOLDER_REMOVE = 9
         const val MENU_ADD_WORKSPACE_PAGE = 10
         const val MENU_REMOVE_WORKSPACE_PAGE = 11
+        const val MENU_MOVE_TO_PAGE = 12
     }
 }

@@ -19,6 +19,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
+internal enum class PageMoveResult { MOVED, FULL, UNAVAILABLE }
+
+internal data class PageMoveTarget(val id: Long, val number: Int)
+internal data class PageMoveOptions(val pinId: Long, val pages: List<PageMoveTarget>)
 
 /** Hard cap on workspace pages; removing an empty extra page frees a slot. */
 internal const val MAX_WORKSPACE_PAGES = 8
@@ -121,7 +125,7 @@ class WorkspaceRepository(
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
         if (db.workspacePageDao().getById(pageId) == null) return@withLock false
-        val occupied = occupiedCells(dao.getAll(), pageId)
+        val occupied = occupiedCells(dao.getAll(), folderDao.getAll(), pageId)
         val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
         dao.insert(
             WorkspaceItem(id = 0, key = app.key, container = Container.WORKSPACE, cellIndex = cell, pageId = pageId)
@@ -129,6 +133,37 @@ class WorkspaceRepository(
         )
         true
     }
+
+    /** Reads the selected pin and destinations from the same layout snapshot. */
+    internal suspend fun pageMoveOptions(key: AppKey, cell: Int, pageId: Long): PageMoveOptions? =
+        mutationMutex.withLock {
+            val items = dao.getAll()
+            val source = workspacePinAt(items, key, pageId, cell) ?: return@withLock null
+            val folders = folderDao.getAll()
+            val pages = buildList {
+                db.workspacePageDao().getAll().forEachIndexed { index, page ->
+                    if (page.id != pageId &&
+                        GridCanvas.firstFreeCell(occupiedCells(items, folders, page.id)) != null
+                    ) add(PageMoveTarget(page.id, index + 1))
+                }
+            }
+            PageMoveOptions(source.id, pages)
+        }
+
+    /** Moves the same pin into the first free cell, without changing the selected page. */
+    internal suspend fun movePinToPage(pinId: Long, cell: Int, pageId: Long, destinationId: Long): PageMoveResult =
+        mutationMutex.withLock {
+            if (pageId == destinationId || db.workspacePageDao().getById(destinationId) == null) {
+                return@withLock PageMoveResult.UNAVAILABLE
+            }
+            val items = dao.getAll()
+            val source = items.firstOrNull { it.id == pinId && it.isOnPage(pageId) && it.cellIndex == cell }
+                ?: return@withLock PageMoveResult.UNAVAILABLE
+            val destinationCell = GridCanvas.firstFreeCell(occupiedCells(items, folderDao.getAll(), destinationId))
+                ?: return@withLock PageMoveResult.FULL
+            dao.updatePlacement(source.id, Container.WORKSPACE.name, destinationCell, destinationId)
+            PageMoveResult.MOVED
+        }
 
     /**
      * Appends the app to the dock; false when the dock is full. Only top-level
@@ -215,13 +250,14 @@ class WorkspaceRepository(
     private suspend fun folderAtCell(pageId: Long, cell: Int): FolderEntity? =
         folderDao.getAll().firstOrNull { it.pageId == pageId && it.cellIndex == cell }
 
-    private suspend fun occupiedCells(
+    private fun occupiedCells(
         items: List<WorkspaceItemEntity>,
+        folders: List<FolderEntity>,
         pageId: Long,
         excludedFolderId: Long? = null,
     ): Set<Int> = buildSet {
         for (item in items) if (item.isOnPage(pageId)) add(item.cellIndex)
-        for (folder in folderDao.getAll()) {
+        for (folder in folders) {
             if (folder.pageId == pageId && folder.id != excludedFolderId) add(folder.cellIndex)
         }
     }
@@ -434,7 +470,7 @@ class WorkspaceRepository(
         } ?: return@withLock false
         val folder = folderDao.getById(folderId) ?: return@withLock false
         val pageId = folder.pageId ?: return@withLock false
-        val occupied = occupiedCells(items, pageId)
+        val occupied = occupiedCells(items, folderDao.getAll(), pageId)
         val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
         db.withTransaction {
             dao.updatePlacement(entry.id, Container.WORKSPACE.name, cell, pageId)
@@ -459,7 +495,7 @@ class WorkspaceRepository(
         val folder = folderDao.getById(folderId) ?: return@withLock false
         val members = dao.getAll().filter { it.folderId == folderId }.sortedBy { it.cellIndex }
         val pageId = folder.pageId ?: return@withLock false
-        val occupied = occupiedCells(dao.getAll(), pageId, excludedFolderId = folder.id)
+        val occupied = occupiedCells(dao.getAll(), folderDao.getAll(), pageId, excludedFolderId = folder.id)
         val freeCells = (0 until GridCanvas.CAPACITY).filter { it !in occupied }
         if (members.size > freeCells.size) return@withLock false
         db.withTransaction {

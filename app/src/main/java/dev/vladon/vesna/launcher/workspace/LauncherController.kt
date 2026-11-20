@@ -23,7 +23,10 @@ import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
 
 /** Non-fatal feedback from launcher actions, mapped to user-visible strings by the UI. */
-enum class LauncherMessage { WORKSPACE_FULL, DOCK_FULL, WORKSPACE_PAGE_NOT_EMPTY }
+enum class LauncherMessage {
+    WORKSPACE_FULL, DOCK_FULL, WORKSPACE_PAGE_NOT_EMPTY,
+    SHORTCUT_MOVED, NO_MOVE_DESTINATION, MOVE_DESTINATION_FULL, MOVE_UNAVAILABLE,
+}
 
 /** Everything the launcher UI renders. */
 data class LauncherUiState(
@@ -208,6 +211,20 @@ class LauncherController(
     /** Moves the workspace pin from [fromCell] to [toCell] on [pageId]. */
     fun moveWithinWorkspace(app: LauncherApp, fromCell: Int, toCell: Int, pageId: Long) {
         scope.launch { workspaceRepository.moveWithinWorkspace(app, fromCell, toCell, pageId) }
+    }
+
+    internal suspend fun pageMoveOptions(app: LauncherApp, cell: Int, pageId: Long): PageMoveOptions? =
+        workspaceRepository.pageMoveOptions(app.key, cell, pageId)
+
+    internal fun movePinToPage(pinId: Long, cell: Int, pageId: Long, destinationId: Long) {
+        scope.launch {
+            val message = when (workspaceRepository.movePinToPage(pinId, cell, pageId, destinationId)) {
+                PageMoveResult.MOVED -> LauncherMessage.SHORTCUT_MOVED
+                PageMoveResult.FULL -> LauncherMessage.MOVE_DESTINATION_FULL
+                PageMoveResult.UNAVAILABLE -> LauncherMessage.MOVE_UNAVAILABLE
+            }
+            _messages.tryEmit(message)
+        }
     }
 
     /** Dock-internal reorder to [slot]. */
