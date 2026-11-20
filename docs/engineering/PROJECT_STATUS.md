@@ -684,6 +684,19 @@ or the next open position when adding. Hidden but saved pins still use capacity.
   focused JVM tests and debug lint passed. Physical devices and TalkBack were
   not checked.
 
+### Atomic dock insertion
+
+A drawer drop now writes the new dock pin and the shifted slots in one Room
+transaction. If a slot update fails, the saved dock stays unchanged.
+
+- An in-memory SQLite trigger aborted the last slot shift on Android 8 and 15.
+  The previous build left the incoming pin at slot zero. The fixed build
+  preserved every original row and completed the same drop once the trigger
+  was removed. All five dock repository tests and debug lint passed.
+- On Android 15, a real drawer drop filled the second slot and shifted the
+  existing icons without replacing their saved pins. The original fixture
+  layout was restored afterward.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

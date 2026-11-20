@@ -356,31 +356,31 @@ class WorkspaceRepository(
     }
 
     /**
-     * Inserts a top-level app (for example dragged from the drawer) into the dock
-     * at [slot]; dock entries at or after the slot shift right. Returns false when
-     * the dock is full.
+     * Inserts a top-level app at [slot] and shifts existing dock pins in a
+     * single transaction. Returns false when the dock is full.
      */
     suspend fun insertIntoDock(app: LauncherApp, slot: Int): Boolean = mutationMutex.withLock {
-        val dockIds = dao.getAll().filter { it.container == Container.DOCK.name && it.folderId == null }
-            .sortedBy { it.cellIndex }
-            .map { it.id }
-        if (dockIds.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
-        val order = DockOrdering.insertAt(dockIds, 0L, slot)
-        val newId = dao.insert(
-            WorkspaceItem(
-                id = 0,
-                key = app.key,
-                container = Container.DOCK,
-                cellIndex = 0,
-                userSerial = app.key.userSerial,
-            ).toEntity(),
-        )
-        // Replace the placeholder id with the generated one and normalize slots.
-        val finalOrder = order.map { if (it == 0L) newId else it }
         db.withTransaction {
-            finalOrder.forEachIndexed { index, id -> dao.updatePlacement(id, Container.DOCK.name, index, pageId = null) }
+            val dock = dao.getAll().filter { it.container == Container.DOCK.name && it.folderId == null }
+                .sortedBy { it.cellIndex }
+            if (dock.size >= GridCanvas.DOCK_CAPACITY) return@withTransaction false
+
+            val insertSlot = slot.coerceIn(0, dock.size)
+            dao.insert(
+                WorkspaceItem(
+                    id = 0,
+                    key = app.key,
+                    container = Container.DOCK,
+                    cellIndex = insertSlot,
+                    userSerial = app.key.userSerial,
+                ).toEntity(),
+            )
+            dock.forEachIndexed { index, pin ->
+                val newSlot = if (index < insertSlot) index else index + 1
+                if (pin.cellIndex != newSlot) dao.updateCellIndex(pin.id, newSlot)
+            }
+            true
         }
-        true
     }
 
     /**
