@@ -68,8 +68,12 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(second, recreated.savedActivePageId())
             assertEquals(savedFolders, db.folderDao().getAll())
             assertEquals(before, repository.items.first().sortedBy { it.id })
-            assertEquals(mapOf(0 to app, 1 to other), WorkspaceResolver.workspaceApps(before, listOf(app, other), first))
-            assertEquals(mapOf(1 to app), WorkspaceResolver.workspaceApps(before, listOf(app, other), second))
+            val apps = listOf(app, other).associateBy { it.key }
+            assertEquals(
+                mapOf(0 to CellContent.App(app), 1 to CellContent.App(other)),
+                WorkspaceResolver.workspaceCells(before, apps, emptyList(), first),
+            )
+            assertEquals(mapOf(1 to CellContent.App(app)), WorkspaceResolver.workspaceCells(before, apps, emptyList(), second))
             repository.removeFromWorkspace(app, cell = 1, pageId = second)
             assertEquals(before.filterNot { it.pageId == second }, repository.items.first().sortedBy { it.id })
             assertTrue(repository.reorderPage(second, destinationIndex = 1, displayedOrder = reordered))
@@ -144,10 +148,14 @@ class WorkspaceRepositoryPagesTest {
 
             assertNull(db.folderDao().getById(folder.id))
             val items = dao.getAll().map { it.toDomain() }
-            assertEquals(mapOf(0 to dock, 3 to target), WorkspaceResolver.workspaceApps(items, listOf(target, dock, other), second))
+            val apps = listOf(target, dock, other).associateBy { it.key }
+            assertEquals(
+                mapOf(0 to CellContent.App(dock), 3 to CellContent.App(target)),
+                WorkspaceResolver.workspaceCells(items, apps, emptyList(), second),
+            )
             assertEquals(DockMoveResult.MOVED, repository.moveWorkspaceToDock(dock, fromCell = 0, slot = 0, pageId = second))
             assertNull(dao.getAll().single { it.packageName == dock.packageName }.pageId)
-            assertEquals(listOf(DockPin(dockPinId, dock)), WorkspaceResolver.dockPins(repository.items.first(), listOf(dock)))
+            assertEquals(listOf(DockPin(dockPinId, dock)), WorkspaceResolver.dockPins(repository.items.first(), apps))
         } finally {
             db.close()
         }
@@ -389,6 +397,66 @@ class WorkspaceRepositoryPagesTest {
         }
     }
 
+    @Test(timeout = 15_000)
+    fun catalogueRefreshKeepsPersonalAndWorkPinsDistinctAcrossSurfaces() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_page_catalogue_refresh"
+        context.deleteSharedPreferences(prefsName)
+        val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
+        try {
+            val repository = WorkspaceRepository(
+                db.workspaceItemDao(), db, db.folderDao(), context.getSharedPreferences(prefsName, Context.MODE_PRIVATE),
+            )
+            val personal = LauncherApp(AppKey("qa.dual", "Main"), "Personal")
+            val work = LauncherApp(personal.key.copy(userSerial = 10), "Work")
+            val second = requireNotNull(repository.createPage())
+            assertTrue(repository.insertWorkspaceAt(personal, cell = 0, pageId = DEFAULT_WORKSPACE_PAGE_ID))
+            assertTrue(repository.insertWorkspaceAt(work, cell = 0, pageId = second))
+            assertTrue(repository.insertWorkspaceAt(personal, cell = 2, pageId = second))
+            assertTrue(repository.insertIntoDock(work, slot = 0))
+            assertTrue(repository.createFolderFromDrop(work, 2, "Both", WorkspaceRepository.FolderDropSource.Drawer, second))
+            val folder = db.folderDao().getAll().single().id
+            val savedItems = db.workspaceItemDao().getAll().sortedBy { it.id }
+
+            val discovery = CountingDiscovery(listOf(work, personal))
+            val events = MutableSharedFlow<PackageEvent>()
+            val controller = LauncherController(scope, discovery, AppLauncher(context), repository, events)
+            events.subscriptionCount.first { it > 0 }
+            controller.selectWorkspacePage(second)
+            val both = controller.state.first { it.activePageId == second && it.folderContents[folder]?.size == 2 }
+            assertEquals(listOf(work, personal), both.apps)
+            assertEquals(CellContent.App(work), both.workspaceCells[0])
+            assertEquals(work, both.dockPins.single().app)
+            assertEquals(listOf(personal, work), both.folderContents[folder])
+
+            discovery.apps = listOf(personal)
+            events.emit(PackageEvent.CatalogueChanged)
+            val personalOnly = controller.state.first { it.apps == listOf(personal) }
+            assertFalse(personalOnly.workspaceCells.containsKey(0))
+            assertTrue(personalOnly.dockPins.isEmpty())
+            assertEquals(listOf(personal), personalOnly.folderContents[folder])
+            assertEquals(savedItems, db.workspaceItemDao().getAll().sortedBy { it.id })
+
+            val updatedWork = work.copy(label = "Updated Work")
+            discovery.apps = listOf(personal, updatedWork)
+            events.emit(PackageEvent.CatalogueChanged)
+            val restored = controller.state.first { it.apps == discovery.apps }
+            assertEquals(CellContent.App(updatedWork), restored.workspaceCells[0])
+            assertEquals(updatedWork, restored.dockPins.single().app)
+            assertEquals(listOf(personal, updatedWork), restored.folderContents[folder])
+            controller.selectWorkspacePage(DEFAULT_WORKSPACE_PAGE_ID)
+            val first = controller.state.first { it.activePageId == DEFAULT_WORKSPACE_PAGE_ID }
+            assertEquals(CellContent.App(personal), first.workspaceCells[0])
+            assertEquals(savedItems, db.workspaceItemDao().getAll().sortedBy { it.id })
+        } finally {
+            scope.cancel()
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
     @Test
     fun pageMoveUsesTheExactPinAndTheFirstUnoccupiedCell() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -594,7 +662,7 @@ class WorkspaceRepositoryPagesTest {
         }
     }
 
-    private class CountingDiscovery(private val apps: List<LauncherApp>) : AppDiscovery {
+    private class CountingDiscovery(@Volatile var apps: List<LauncherApp>) : AppDiscovery {
         var calls = 0
             private set
 

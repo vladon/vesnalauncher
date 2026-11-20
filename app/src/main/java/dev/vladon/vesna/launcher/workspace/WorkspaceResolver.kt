@@ -11,25 +11,7 @@ data class DockPin(val id: Long, val app: LauncherApp)
  * are hidden without changing their stored positions. Items inside folders
  * (non-null folderId) are excluded from the grid and dock views.
  */
-object WorkspaceResolver {
-
-    /** Workspace cell index to app; stale items and duplicate cells are ignored. */
-    fun workspaceApps(
-        items: List<WorkspaceItem>,
-        apps: List<LauncherApp>,
-        pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
-    ): Map<Int, LauncherApp> {
-        val appByKey = apps.associateBy { it.key }
-        val result = LinkedHashMap<Int, LauncherApp>()
-        for (item in items) {
-            if (item.container != Container.WORKSPACE) continue
-            if (item.folderId != null || item.pageId != pageId) continue
-            if (!GridCanvas.isValidCell(item.cellIndex)) continue
-            if (result.containsKey(item.cellIndex)) continue
-            appByKey[item.key]?.let { result[item.cellIndex] = it }
-        }
-        return result
-    }
+internal object WorkspaceResolver {
 
     /**
      * Workspace cell contents for rendering: top-level apps plus folders occupying
@@ -37,13 +19,17 @@ object WorkspaceResolver {
      */
     fun workspaceCells(
         items: List<WorkspaceItem>,
-        apps: List<LauncherApp>,
+        appsByKey: Map<AppKey, LauncherApp>,
         folders: List<Folder>,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Map<Int, CellContent> {
         val cells = LinkedHashMap<Int, CellContent>()
-        for ((cell, app) in workspaceApps(items, apps, pageId)) {
-            cells[cell] = CellContent.App(app)
+        for (item in items) {
+            if (item.container != Container.WORKSPACE) continue
+            if (item.folderId != null || item.pageId != pageId) continue
+            if (!GridCanvas.isValidCell(item.cellIndex)) continue
+            if (cells.containsKey(item.cellIndex)) continue
+            appsByKey[item.key]?.let { cells[item.cellIndex] = CellContent.App(it) }
         }
         for (folder in folders) {
             if (folder.pageId != pageId) continue
@@ -58,24 +44,22 @@ object WorkspaceResolver {
     /** Apps inside each folder, ordered by their in-folder position. */
     fun folderContents(
         items: List<WorkspaceItem>,
-        apps: List<LauncherApp>,
+        appsByKey: Map<AppKey, LauncherApp>,
     ): Map<Long, List<LauncherApp>> {
-        val appByKey = apps.associateBy { it.key }
         return items.asSequence()
             .filter { it.folderId != null }
             .groupBy { it.folderId!! }
             .mapValues { (_, members) ->
-                members.sortedBy { it.cellIndex }.mapNotNull { appByKey[it.key] }
+                members.sortedBy { it.cellIndex }.mapNotNull { appsByKey[it.key] }
             }
     }
 
     /** Dock pins ordered by position; unavailable apps and folder members are skipped. */
-    fun dockPins(items: List<WorkspaceItem>, apps: List<LauncherApp>): List<DockPin> {
-        val appByKey = apps.associateBy { it.key }
+    fun dockPins(items: List<WorkspaceItem>, appsByKey: Map<AppKey, LauncherApp>): List<DockPin> {
         return items.asSequence()
             .filter { it.container == Container.DOCK && it.folderId == null }
             .sortedBy { it.cellIndex }
-            .mapNotNull { item -> appByKey[item.key]?.let { DockPin(item.id, it) } }
+            .mapNotNull { item -> appsByKey[item.key]?.let { DockPin(item.id, it) } }
             .toList()
     }
 }

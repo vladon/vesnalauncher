@@ -63,7 +63,12 @@ class LauncherController(
 
     private val refreshMutex = Mutex()
     private val pageActionMutex = Mutex()
-    private val _apps = MutableStateFlow<List<LauncherApp>>(emptyList())
+    // The ordered drawer list and the placement index come from the same discovery.
+    private data class AppCatalogue(val apps: List<LauncherApp>) {
+        val byKey = apps.associateBy { it.key }
+    }
+
+    private val appCatalogue = MutableStateFlow(AppCatalogue(emptyList()))
 
     /** The selected page ID; stale IDs on startup resolve to the primary page. */
     private val _activePageId = MutableStateFlow(workspaceRepository.savedActivePageId())
@@ -76,24 +81,24 @@ class LauncherController(
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
 
     val state: StateFlow<LauncherUiState> =
-        combine<List<LauncherApp>, List<WorkspaceItem>, List<Folder>, List<WorkspacePageEntity>, Long, LauncherUiState>(
-            _apps,
+        combine<AppCatalogue, List<WorkspaceItem>, List<Folder>, List<WorkspacePageEntity>, Long, LauncherUiState>(
+            appCatalogue,
             workspaceRepository.items,
             workspaceRepository.folders,
             pages,
             _activePageId,
-        ) { apps, items, folders, pageList, activePageId ->
+        ) { catalogue, items, folders, pageList, activePageId ->
             // The stored ID can outlive a deleted page if the process stopped
             // between the Room write and the preference update.
             val selection = pageList.firstOrNull { it.id == activePageId }?.id
                 ?: pageList.firstOrNull()?.id
                 ?: DEFAULT_WORKSPACE_PAGE_ID
             LauncherUiState(
-                apps = apps,
-                workspaceCells = WorkspaceResolver.workspaceCells(items, apps, folders, selection),
-                dockPins = WorkspaceResolver.dockPins(items, apps),
+                apps = catalogue.apps,
+                workspaceCells = WorkspaceResolver.workspaceCells(items, catalogue.byKey, folders, selection),
+                dockPins = WorkspaceResolver.dockPins(items, catalogue.byKey),
                 folders = folders.associateBy { it.id },
-                folderContents = WorkspaceResolver.folderContents(items, apps),
+                folderContents = WorkspaceResolver.folderContents(items, catalogue.byKey),
                 pageIds = pageList.map { it.id },
                 activePageId = selection,
                 canRemoveActivePage = selection != DEFAULT_WORKSPACE_PAGE_ID &&
@@ -295,13 +300,13 @@ class LauncherController(
      * decision atomic against pins placed before the first seed completes.
      */
     private suspend fun refresh() = refreshMutex.withLock {
-        val apps = withContext(Dispatchers.IO) { discovery.discover() }
-        _apps.value = apps
-        if (!workspaceRepository.isSeeded() && apps.isNotEmpty()) {
-            workspaceRepository.seedOrAdopt(SeedPlanner.plan(apps))
+        val catalogue = withContext(Dispatchers.IO) { AppCatalogue(discovery.discover()) }
+        appCatalogue.value = catalogue
+        if (!workspaceRepository.isSeeded() && catalogue.apps.isNotEmpty()) {
+            workspaceRepository.seedOrAdopt(SeedPlanner.plan(catalogue.apps))
         }
         withContext(Dispatchers.IO) {
-            workspaceRepository.pruneUninstalled(apps.mapTo(HashSet()) { it.key }, discovery::isPackageInstalled)
+            workspaceRepository.pruneUninstalled(catalogue.byKey.keys, discovery::isPackageInstalled)
         }
     }
 }

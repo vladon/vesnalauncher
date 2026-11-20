@@ -632,6 +632,24 @@ events still retain the package and profile so only its own pins are removed.
   fixture pin. The search query and launcher process stayed active during the
   update, disable, enable, and uninstall checks. Debug lint passed.
 
+### Shared app index for Home
+
+The workspace, dock, and folders use one app lookup built when Vesna refreshes
+its app catalogue. Changing pages or placements reuses that lookup. The drawer
+still uses the discovery order, and shortcuts still match by component and
+profile.
+
+- With 500 fixture apps and ten Home page switches, the controller read
+  15,000 catalogue entries on the prior build and none on the new build after
+  the initial refresh, on both Android 8 and 15. This counts catalogue reads,
+  not page-switch latency.
+- The refresh regression kept Personal and Work copies separate and restored a
+  temporarily unavailable Work copy to the workspace, dock, and folder without
+  changing saved placements. All 15 page tests passed on each emulator, as did
+  the 12 JVM resolver tests and debug lint. Real Home and drawer search rendered
+  on both emulators; Android 15 also retained dock and folder order across page
+  switches. The regression used simulated profile entries, not a live Work profile.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

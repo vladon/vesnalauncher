@@ -20,18 +20,21 @@ class WorkspaceResolverTest {
             WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = 0),
             WorkspaceItem(2, keyB, Container.WORKSPACE, cellIndex = 5),
         )
-        val apps = listOf(app(keyA), app(keyB))
-        assertEquals(mapOf(0 to apps[0], 5 to apps[1]), WorkspaceResolver.workspaceApps(items, apps))
+        val apps = listOf(app(keyA), app(keyB)).associateBy { it.key }
+        assertEquals(
+            mapOf(0 to CellContent.App(apps.getValue(keyA)), 5 to CellContent.App(apps.getValue(keyB))),
+            WorkspaceResolver.workspaceCells(items, apps, emptyList()),
+        )
     }
 
     @Test
-    fun `items of uninstalled apps are dropped`() {
+    fun `items without a live app are not rendered`() {
         val items = listOf(
             WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = 0),
             WorkspaceItem(2, keyC, Container.WORKSPACE, cellIndex = 3),
         )
-        val resolved = WorkspaceResolver.workspaceApps(items, listOf(app(keyA)))
-        assertEquals(mapOf(0 to app(keyA)), resolved)
+        val resolved = WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA)), emptyList())
+        assertEquals(mapOf(0 to CellContent.App(app(keyA))), resolved)
     }
 
     @Test
@@ -42,7 +45,7 @@ class WorkspaceResolverTest {
             WorkspaceItem(3, keyA, Container.DOCK, cellIndex = 0),
             WorkspaceItem(4, keyA, Container.DOCK, cellIndex = 3),
         )
-        val resolved = WorkspaceResolver.dockPins(items, listOf(app(keyA), app(keyB)))
+        val resolved = WorkspaceResolver.dockPins(items, mapOf(keyA to app(keyA), keyB to app(keyB)))
         assertEquals(listOf(DockPin(3, app(keyA)), DockPin(1, app(keyB)), DockPin(4, app(keyA))), resolved)
     }
 
@@ -52,13 +55,13 @@ class WorkspaceResolverTest {
             WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = 2),
             WorkspaceItem(2, keyB, Container.WORKSPACE, cellIndex = 2),
         )
-        val resolved = WorkspaceResolver.workspaceApps(items, listOf(app(keyA), app(keyB)))
-        assertEquals(keyA, resolved.getValue(2).key)
+        val resolved = WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA), keyB to app(keyB)), emptyList())
+        assertEquals(CellContent.App(app(keyA)), resolved.getValue(2))
     }
 
     @Test
     fun `invalid cells are never rendered`() {
         val items = listOf(WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = GridCanvas.CAPACITY))
-        assertTrue(WorkspaceResolver.workspaceApps(items, listOf(app(keyA))).isEmpty())
+        assertTrue(WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA)), emptyList()).isEmpty())
     }
 }
