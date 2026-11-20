@@ -378,9 +378,12 @@ keeping the selected workspace page. An unsaved folder name is discarded.
 - On Android 8, a Home intent closed the rename editor, keyboard, and folder
   without saving the draft. Using Back instead returned to the open folder.
 - Checked Light with gesture navigation and Dark with three-button navigation
-  at enlarged text sizes. The new shortcut regression failed on the prior
-  build and both `ShortcutActionsTest` cases passed after the fix on both
-  emulators. Debug lint passed; physical devices were not checked.
+  at enlarged text sizes. The Home options regression verifies that the same
+  activity regains window focus, rather than relying on Android 8's active
+  accessibility root immediately after the popup closes. All three shortcut
+  tests passed on Android 8 and 15; the Home options test failed on both when
+  dismissal was deliberately disabled. Debug lint passed; physical devices
+  were not checked.
 
 ### App launch feedback
 

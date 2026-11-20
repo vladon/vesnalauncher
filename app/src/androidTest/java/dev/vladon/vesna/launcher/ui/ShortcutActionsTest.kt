@@ -62,10 +62,20 @@ class ShortcutActionsTest {
                 original = it
                 it.findViewById<View>(R.id.home_options).performClick()
             }
+            fun originalHasWindowFocus(): Boolean {
+                var focused = false
+                home.onActivity {
+                    assertSame(original, it)
+                    focused = it.hasWindowFocus()
+                }
+                return focused
+            }
+
             assertTrue("Home options did not open", until {
                 automation.rootInActiveWindow?.findAccessibilityNodeInfosByText(settings)
                     ?.any { it.text?.toString() == settings } == true
             })
+            assertTrue("Home options did not take window focus", until { !originalHasWindowFocus() })
 
             val command = "am start -W -a android.intent.action.MAIN -c android.intent.category.HOME " +
                 "-f 0x10000000 -n ${context.packageName}/.ui.HomeActivity"
@@ -73,12 +83,8 @@ class ShortcutActionsTest {
                 val result = it.bufferedReader().readText()
                 assertTrue(result, result.contains("Status: ok"))
             }
-            assertTrue("Home options stayed open on return to the workspace", until {
-                val root = automation.rootInActiveWindow ?: return@until false
-                root.packageName == context.packageName &&
-                    root.findAccessibilityNodeInfosByText(settings).none { it.text?.toString() == settings }
-            })
-            home.onActivity { assertSame(original, it) }
+            // The active accessibility root can lag behind popup dismissal on Android 8.
+            assertTrue("Home did not regain window focus after dismissing options", until(::originalHasWindowFocus))
         }
     }
 
