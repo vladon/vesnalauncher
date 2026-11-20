@@ -44,6 +44,13 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.4
+
+- Search Vesna settings and open separate pages for default launcher setup,
+  Appearance, and About. Settings opens without a leftover search or keyboard.
+- Android Back closes the keyboard before clearing search. Each settings page
+  has a [direct Android link](docs/engineering/verification/VESNA-QA-SETTINGS-NAVIGATION.md).
+
 ### 0.4.3
 
 - Manage multiple Home pages, including a page picker and moves between pages.
