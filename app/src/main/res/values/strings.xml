@@ -37,7 +37,8 @@
     <string name="drawer_close">Close app drawer</string>
     <string name="drawer_title">App drawer</string>
     <string name="drawer_search_hint">Search apps</string>
-    <string name="drawer_no_results">Nothing found</string>
+    <string name="drawer_clear_search">Clear search</string>
+    <string name="drawer_no_results">No matching apps</string>
 
     <!-- About / settings -->
     <string name="about_version_fmt">Version %1$s</string>

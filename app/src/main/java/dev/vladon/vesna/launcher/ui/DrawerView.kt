@@ -44,6 +44,7 @@ class DrawerView @JvmOverloads constructor(
     private val list: RecyclerView
     private val closeButton: View
     private val searchField: EditText
+    private val clearSearchButton: View
     private val noResultsView: TextView
     private val adapter: DrawerAppsAdapter
     private val density = resources.displayMetrics.density
@@ -97,6 +98,14 @@ class DrawerView @JvmOverloads constructor(
 
         noResultsView = findViewById(R.id.drawer_no_results)
         searchField = findViewById(R.id.drawer_search)
+        val searchBar = findViewById<View>(R.id.drawer_search_bar)
+        searchField.setOnFocusChangeListener { _, focused -> searchBar.isActivated = focused }
+        clearSearchButton = findViewById(R.id.drawer_clear_search)
+        clearSearchButton.setOnClickListener {
+            // Restore focus before the cleared query hides the button.
+            searchField.requestFocus()
+            searchField.text.clear()
+        }
         searchField.addTextChangedListener(
             object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -126,7 +135,8 @@ class DrawerView @JvmOverloads constructor(
         val query = searchField.text?.toString().orEmpty()
         val filtered = AppSearch.filter(allApps, query)
         adapter.submitList(filtered)
-        noResultsView.isVisible = filtered.isEmpty()
+        clearSearchButton.isVisible = query.isNotEmpty()
+        noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
         list.scrollToPosition(0)
     }
 
@@ -140,10 +150,9 @@ class DrawerView @JvmOverloads constructor(
         applyFilter()
     }
 
-    /** Pads the close button and list so they clear the system bars. */
-    fun applySystemBarInsets(top: Int, bottom: Int) {
-        findViewById<ViewGroup>(R.id.drawer_content).setPadding(0, top, 0, 0)
-        list.setPadding(0, 0, 0, bottom)
+    /** Keeps drawer controls and results within the visible area, including above the IME. */
+    internal fun applyContentInsets(top: Int, bottom: Int) {
+        getChildAt(0).setPadding(0, top, 0, bottom)
     }
 
     fun open() {

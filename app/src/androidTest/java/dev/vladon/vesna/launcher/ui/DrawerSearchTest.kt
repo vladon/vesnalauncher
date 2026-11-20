@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.os.SystemClock
+import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -14,6 +15,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.SettingsActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -108,8 +110,14 @@ class DrawerSearchTest {
         assertVisibleLabels(emptyList())
         assertNoResults(true)
 
-        // Clearing the query restores the full list.
-        setQuery("")
+        // Use the visible control, not setText, to prove the user can recover.
+        onDrawer { host ->
+            val clear = host.findViewById<View>(R.id.drawer_clear_search)
+            assertTrue(clear.isShown)
+            clear.performClick()
+            assertTrue(host.findViewById<EditText>(R.id.drawer_search).hasFocus())
+            assertEquals(View.GONE, clear.visibility)
+        }
         assertVisibleLabels(fixture.map { it.label })
         assertNoResults(false)
     }

@@ -34,7 +34,7 @@ exercised; everything else is source-verified only.
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
 | App drawer access (unreleased) | Tap the labeled app-grid button above the dock or swipe up. Close with the drawer button or Android Back; keyboard focus returns to the invoking control. | Android 8 and 15 touch, accessibility hierarchy, and Android 15 D-pad checks; see [App drawer access](#app-drawer-access). |
-| Drawer search | Case-insensitive substring filter (`AppSearch`), empty state, clear restores full list; drawer never re-orders | `AppSearchTest` (5 JVM tests); on-device `DrawerSearchTest` |
+| Drawer search | Case-insensitive substring filter (`AppSearch`). **Clear search** restores the ordered grid and returns focus to the field; results stay above the keyboard. | `AppSearchTest` (5 JVM tests); `DrawerSearchTest` and real Home checks on Android 8 and 15. |
 | Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
 | Package events | `PackageChangeMonitor` uses profile-scoped `LauncherApps` callbacks; disabled apps retain their pins | [VESNA-QA-003A](verification/VESNA-QA-003.md) verified drawer changes after install, update, disable/re-enable, and uninstall. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified work-profile pinning and uninstall. [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall across all three containers. [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disable/re-enable retains placements across a launcher restart. All four records use API 35. |
@@ -212,6 +212,20 @@ and keeps Home out of keyboard and accessibility traversal while open.
 - A drawer drag on a secondary Home page still landed on that page. Removing
   the test pin restored the exact original placement and folder rows. TalkBack
   speech and handheld-device behavior were not verified.
+
+### Drawer search recovery
+
+The trailing 48 dp clear button appears only when there is text, including on
+the no-results screen. It restores the full grid and gives the search field
+focus so another query can be typed immediately.
+
+- The updated `DrawerSearchTest` passed on API 26 and API 35, clearing through
+  the actual button. Touch clearing, a second mixed-case query, and Android 15
+  Tab/D-pad clearing were also exercised in Home. Debug lint reported no errors.
+- Checked the Light and Dark search controls at 320 dp and 1.6× type, English
+  and Russian labels, and RTL placement. The drawer grid ended at the visible
+  keyboard boundary on both Android versions; the final app could be scrolled
+  fully above the keyboard on Android 15. TalkBack speech was not verified.
 
 ## Where to go next
 

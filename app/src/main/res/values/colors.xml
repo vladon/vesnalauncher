@@ -13,7 +13,8 @@
     <!-- Vesna Material 3 roles shared by the wallpaper-backed launcher controls. -->
     <color name="home_control_surface">#E8E9DE</color>
     <color name="workspace_page_primary">#49672E</color>
-    <color name="workspace_page_outline">#74796D</color>
+    <color name="vesna_outline">#74796D</color>
+    <color name="vesna_on_surface_variant">#44483E</color>
     <color name="home_control_secondary">#57624A</color>
     <color name="home_control_on_surface">#1A1D16</color>
     <color name="home_control_hover">#141A1D16</color>

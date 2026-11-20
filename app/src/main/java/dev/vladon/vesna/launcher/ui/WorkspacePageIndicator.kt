@@ -13,7 +13,7 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
     private val density = resources.displayMetrics.density
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val primary = context.getColor(R.color.workspace_page_primary)
-    private val outline = context.getColor(R.color.workspace_page_outline)
+    private val outline = context.getColor(R.color.vesna_outline)
     private var selected = -1
     private var count = 0
 

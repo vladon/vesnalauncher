@@ -469,10 +469,11 @@ class HomeActivity : ComponentActivity() {
         val root = findViewById<View>(R.id.launcher_root)
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             // Preserve the space reserved for the dock and Home controls.
             workspace.setPadding(0, bars.top, 0, workspace.paddingBottom)
             dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, bars.bottom + dock.paddingTop)
-            drawer.applySystemBarInsets(top = bars.top, bottom = bars.bottom)
+            drawer.applyContentInsets(top = bars.top, bottom = maxOf(bars.bottom, ime.bottom))
             insets
         }
         // The dock overlays the workspace and includes the navigation inset.
