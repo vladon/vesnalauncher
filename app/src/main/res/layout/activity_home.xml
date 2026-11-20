@@ -4,41 +4,114 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <dev.vladon.vesna.launcher.ui.WorkspaceView
-        android:id="@+id/workspace"
+    <FrameLayout
+        android:id="@+id/home_content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no">
 
-    <TextView
-        android:id="@+id/workspace_empty_hint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="96dp"
-        android:padding="16dp"
-        android:text="@string/workspace_empty_hint"
-        android:textColor="@color/hint_color"
-        android:textSize="14sp" />
+        <dev.vladon.vesna.launcher.ui.WorkspaceView
+            android:id="@+id/workspace"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
-    <dev.vladon.vesna.launcher.ui.DockView
-        android:id="@+id/dock"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom" />
+        <TextView
+            android:id="@+id/workspace_empty_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="96dp"
+            android:background="@drawable/workspace_label_backing"
+            android:fontFamily="@font/inter_regular"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
+            android:text="@string/workspace_empty_hint"
+            android:textColor="@color/icon_label_color"
+            android:textSize="14sp" />
 
-    <TextView
-        android:id="@+id/banner_default_home"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|center_horizontal"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/banner_background"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="10dp"
-        android:text="@string/banner_set_default_home"
-        android:textColor="@color/icon_label_color"
-        android:textSize="14sp"
-        android:visibility="gone" />
+        <dev.vladon.vesna.launcher.ui.DockView
+            android:id="@+id/dock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom" />
+
+        <LinearLayout
+            android:id="@+id/home_controls"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/home_options"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/home_control_icon_button"
+                android:contentDescription="@string/home_options"
+                android:focusable="true"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_home_options"
+                android:tooltipText="@string/home_options" />
+
+            <LinearLayout
+                android:id="@+id/workspace_page_controls"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/home_control_surface"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="0dp"
+                android:visibility="gone">
+
+                <ImageButton
+                    android:id="@+id/workspace_previous_page"
+                    android:layout_width="48dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/home_control_states"
+                    android:contentDescription="@string/workspace_previous_page"
+                    android:focusable="true"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_workspace_previous_page" />
+
+                <dev.vladon.vesna.launcher.ui.WorkspacePageIndicator
+                    android:id="@+id/workspace_page_indicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:accessibilityLiveRegion="polite"
+                    android:background="@drawable/home_control_states"
+                    android:focusable="true"
+                    android:importantForAccessibility="yes"
+                    android:tooltipText="@string/workspace_choose_page" />
+
+                <ImageButton
+                    android:id="@+id/workspace_next_page"
+                    android:layout_width="48dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/home_control_states"
+                    android:contentDescription="@string/workspace_next_page"
+                    android:focusable="true"
+                    android:scaleType="center"
+                    android:src="@drawable/ic_workspace_next_page" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/home_open_drawer"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/home_control_icon_button"
+                android:contentDescription="@string/drawer_open"
+                android:focusable="true"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_open_drawer"
+                android:tooltipText="@string/drawer_open" />
+        </LinearLayout>
+    </FrameLayout>
 
     <dev.vladon.vesna.launcher.ui.DrawerView
         android:id="@+id/drawer"

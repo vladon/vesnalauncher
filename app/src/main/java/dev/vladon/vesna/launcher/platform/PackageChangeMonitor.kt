@@ -11,19 +11,12 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-/**
- * A change affecting an installed application package in a specific Android
- * profile ([userSerial] follows the UserManager serial convention, `0` = main).
- */
 sealed interface PackageEvent {
-    data class Added(val packageName: String, val userSerial: Long) : PackageEvent
-    data class Removed(val packageName: String, val userSerial: Long) : PackageEvent
+    /** Refresh the launchable app list without treating the change as an uninstall. */
+    data object CatalogueChanged : PackageEvent
 
-    /**
-     * A package changed in place, including changes to launch availability.
-     * Unlike [Removed], this does not establish that the package was uninstalled.
-     */
-    data class Replaced(val packageName: String, val userSerial: Long) : PackageEvent
+    /** An uninstall in one Android profile. */
+    data class Removed(val packageName: String, val userSerial: Long) : PackageEvent
 }
 
 /**
@@ -44,58 +37,38 @@ class PackageChangeMonitor(private val appContext: Context) {
 
     private val callback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
-            emit(PackageEvent.Added(packageName, serialOf(user)))
+            catalogueChanged()
         }
 
         override fun onPackageRemoved(packageName: String, user: UserHandle) {
-            emit(PackageEvent.Removed(packageName, serialOf(user)))
+            _events.tryEmit(PackageEvent.Removed(packageName, userManager.getSerialNumberForUser(user)))
         }
 
         override fun onPackageChanged(packageName: String, user: UserHandle) {
             // Covers updates (replacing install) and enable/disable state changes.
-            emit(PackageEvent.Replaced(packageName, serialOf(user)))
+            catalogueChanged()
         }
 
         override fun onPackagesAvailable(
             packageNames: Array<out String?>,
             user: UserHandle,
             replacing: Boolean,
-        ) {
-            // A package became launchable again (for example its storage returned).
-            emitAll(packageNames, user, replacing) { name, serial ->
-                PackageEvent.Added(name, serial)
-            }
-        }
+        ) = onAvailabilityChanged(packageNames)
 
         override fun onPackagesUnavailable(
             packageNames: Array<out String?>,
             user: UserHandle,
             replacing: Boolean,
-        ) {
-            // Temporarily unavailable storage is not an uninstall.
-            emitAll(packageNames, user, replacing) { name, serial ->
-                PackageEvent.Replaced(name, serial)
-            }
-        }
+        ) = onAvailabilityChanged(packageNames)
     }
 
-    private fun emitAll(
-        packageNames: Array<out String?>,
-        user: UserHandle,
-        replacing: Boolean,
-        build: (String, Long) -> PackageEvent,
-    ) {
-        val serial = serialOf(user)
-        for (name in packageNames) {
-            if (name == null) continue
-            emit(if (replacing) PackageEvent.Replaced(name, serial) else build(name, serial))
-        }
+    private fun onAvailabilityChanged(packageNames: Array<out String?>) {
+        // Availability changes are not uninstalls. Refresh the whole catalogue once per batch.
+        if (packageNames.any { it != null }) catalogueChanged()
     }
 
-    private fun serialOf(user: UserHandle): Long = userManager.getSerialNumberForUser(user)
-
-    private fun emit(event: PackageEvent) {
-        _events.tryEmit(event)
+    private fun catalogueChanged() {
+        _events.tryEmit(PackageEvent.CatalogueChanged)
     }
 
     fun start() {

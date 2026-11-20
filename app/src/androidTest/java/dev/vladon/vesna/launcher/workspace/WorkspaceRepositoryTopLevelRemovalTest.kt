@@ -13,23 +13,13 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * VESNA-BUG-005 regression: a menu-driven unpin ([WorkspaceRepository.removeFromDock] /
- * [WorkspaceRepository.removeFromWorkspace]) must delete ONLY the top-level
- * placement of the app. An app can additionally be a folder member carrying the
- * same key+container (a dock item dragged onto a workspace folder keeps its
- * DOCK container; see QA-003D), and that membership must survive the unpin.
- *
- * Both cases run against an in-memory Room database and an isolated
- * [WorkspaceRepository]; the production database is never touched. Unrelated
- * rows (other apps, other profiles, other containers, other folders) assert the
- * delete stays scoped to the key+container+profile of the top-level row.
+ * A menu-driven unpin removes only the selected placement. Other copies of
+ * the app, including same-key folder memberships, are preserved.
  */
 @RunWith(AndroidJUnit4::class)
 class WorkspaceRepositoryTopLevelRemovalTest {
@@ -63,7 +53,9 @@ class WorkspaceRepositoryTopLevelRemovalTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java).build()
+        db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
+            .build()
         repository = WorkspaceRepository(
             dao = db.workspaceItemDao(),
             db = db,
@@ -84,23 +76,15 @@ class WorkspaceRepositoryTopLevelRemovalTest {
         dao.insert(item(calendar.key, Container.DOCK, cellIndex = 0)) // unrelated dock entry
         dao.insert(item(contacts.key, Container.WORKSPACE, cellIndex = 0)) // unrelated grid entry
         dao.insert(item(fixture.key, Container.WORKSPACE, cellIndex = 14, folderId = folderId))
-        dao.insert(item(clock.key, Container.DOCK, cellIndex = 3, folderId = folderId))
+        val hiddenPin = dao.insert(item(clock.key, Container.DOCK, cellIndex = 3, folderId = folderId))
+        dao.insert(item(clock.key, Container.DOCK, cellIndex = 2))
         val topLevelPin = dao.insert(item(clock.key, Container.DOCK, cellIndex = 3))
         dao.insert(item(clock.key, Container.DOCK, cellIndex = 1, userSerial = 1)) // other profile
 
-        repository.removeFromDock(clock)
-
-        assertNull(dao.getAll().firstOrNull { it.id == topLevelPin })
-        val member = dao.getAll().firstOrNull { it.packageName == clock.key.packageName && it.folderId != null }
-        assertNotNull(member)
-        assertEquals(Container.DOCK.name, member!!.container)
-        assertEquals(3, member.cellIndex)
-        assertEquals(folderId, member.folderId)
-        assertEquals(1L, dao.getAll().firstOrNull { it.userSerial == 1L }!!.userSerial)
-        assertTrue(dao.getAll().any { it.packageName == fixture.key.packageName && it.folderId == folderId })
-        assertTrue(dao.getAll().any { it.container == Container.DOCK.name && it.folderId == null && it.cellIndex == 0 })
-        assertTrue(dao.getAll().any { it.container == Container.WORKSPACE.name && it.folderId == null && it.cellIndex == 0 })
-        // The folder itself is untouched: folder dissolution is not part of unpinning.
+        val before = dao.getAll()
+        repository.removeFromDock(hiddenPin)
+        repository.removeFromDock(topLevelPin)
+        assertEquals(before.filterNot { it.id == topLevelPin }, dao.getAll())
         assertNotNull(db.folderDao().getById(folderId))
     }
 
@@ -110,17 +94,13 @@ class WorkspaceRepositoryTopLevelRemovalTest {
         val folderId = db.folderDao().insert(FolderEntity(title = "Folder", cellIndex = 9))
         dao.insert(item(clock.key, Container.DOCK, cellIndex = 2)) // unrelated dock entry
         dao.insert(item(contacts.key, Container.WORKSPACE, cellIndex = 7, folderId = folderId))
+        dao.insert(item(contacts.key, Container.WORKSPACE, cellIndex = 5))
         val topLevel = dao.insert(item(contacts.key, Container.WORKSPACE, cellIndex = 0, userSerial = 0))
 
-        repository.removeFromWorkspace(contacts)
-
-        assertNull(dao.getAll().firstOrNull { it.id == topLevel })
-        val member = dao.getAll().firstOrNull { it.packageName == contacts.key.packageName && it.folderId != null }
-        assertNotNull(member)
-        assertEquals(Container.WORKSPACE.name, member!!.container)
-        assertEquals(7, member.cellIndex)
-        assertEquals(folderId, member.folderId)
-        assertTrue(dao.getAll().any { it.container == Container.DOCK.name && it.folderId == null && it.cellIndex == 2 })
+        val before = dao.getAll()
+        repository.removeFromWorkspace(contacts, cell = 7)
+        repository.removeFromWorkspace(contacts, cell = 0)
+        assertEquals(before.filterNot { it.id == topLevel }, dao.getAll())
         assertNotNull(db.folderDao().getById(folderId))
     }
 

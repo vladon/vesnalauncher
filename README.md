@@ -20,26 +20,39 @@
 
 Download the signed APK from [GitHub Releases](https://github.com/vladon/vesnalauncher/releases/latest),
 install it, and choose **Vesna Launcher** as your default Home app in Android
-Settings. The current release is
-[v0.4.2](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.2).
+Settings. See the [latest release](https://github.com/vladon/vesnalauncher/releases/latest)
+for download details and release notes.
 The Android package name is `dev.vladon.vesna.launcher`.
 
 ## Features
 
-- **Home and dock.** Keep your apps on a 4 × 5 workspace and up to four favorites
-  in the dock. Vesna saves your layout locally and restores it after a restart.
-- **App drawer and search.** Swipe up or tap the drawer handle to browse your
-  installed apps. Type an app name to filter the list.
+- **Home and dock.** Add, switch, and reorder Home pages. Move shortcuts and
+  folders between pages and keep up to four favorites in the dock. Vesna saves
+  your layout locally and restores it after a restart.
+- **App drawer and search.** Swipe up or tap the app-grid button. Search by name
+  with or without accents, and press Enter to open a single result.
 - **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
   pins between the workspace and dock. Drop an app on another in the workspace
   to create a folder, then rename it or remove members as needed.
 - **Work profiles.** Launch work apps from badged icons. Removing a work copy
   leaves its personal counterpart's pins in place.
+- **Appearance and accessibility.** Choose System, Light, or Dark and decide
+  whether to show app names. Keyboard shortcuts open the same menus as touch.
 - **Free and private.** Vesna is free of ads, subscriptions, paid features,
   in-app purchases, commercial analytics and tracking SDKs.
 
 <details>
 <summary>Feature history</summary>
+
+### 0.4.3
+
+- Manage multiple Home pages, including a page picker and moves between pages.
+  Existing shortcuts and folders migrate to the first page without moving.
+- Use the Home options and drawer buttons, keyboard menus, more forgiving
+  search, and layouts that adapt to narrow screens and larger text.
+- Keep the drawer at the same scroll position when apps change. Folder
+  operations preserve exact shortcuts and explain when there is not enough room.
+- Choose fixed Vesna light and dark themes and optionally hide app names.
 
 ### 0.4.2
 
@@ -103,8 +116,8 @@ The Android package name is `dev.vladon.vesna.launcher`.
 </details>
 
 See the [product overview](PRODUCT.md) and [engineering roadmap](docs/engineering/ROADMAP.md)
-for project scope and future work. Widgets, icon packs, themes and fuzzy search
-are planned or deferred.
+for project scope and future work. Widgets, icon packs, and fuzzy search are
+planned or deferred.
 
 ## Design
 

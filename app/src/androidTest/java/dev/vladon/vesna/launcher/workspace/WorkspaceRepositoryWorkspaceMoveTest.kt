@@ -43,6 +43,7 @@ class WorkspaceRepositoryWorkspaceMoveTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
             .build()
         val prefs = context.getSharedPreferences(
             "workspace-move-qa-${UUID.randomUUID()}",
@@ -115,5 +116,34 @@ class WorkspaceRepositoryWorkspaceMoveTest {
         )
 
         assertEquals("VESNA-BUG-010: no row may move without a matched source cell", before, dao.getAll())
+    }
+
+    @Test
+    fun workspaceToDockMovesOnlyTheSelectedDuplicate() = runBlocking {
+        val contacts = app("com.example.contacts")
+        seedPin(contacts.packageName, cellIndex = 0)
+        seedPin(contacts.packageName, cellIndex = 5)
+        val before = dao.getAll().associateBy { it.cellIndex }
+
+        assertEquals(DockMoveResult.MOVED, repo.moveWorkspaceToDock(contacts, fromCell = 5, slot = 0))
+
+        val after = dao.getAll().associateBy { it.id }
+        val first = before.getValue(0)
+        val dragged = before.getValue(5)
+        assertEquals(first, after.getValue(first.id))
+        assertEquals(dragged.copy(container = Container.DOCK.name, cellIndex = 0, pageId = null), after.getValue(dragged.id))
+    }
+
+    @Test
+    fun workspaceToDockRejectsStaleSourceAndFullDockWithoutChangingLayout() = runBlocking {
+        val contacts = app("com.example.contacts")
+        seedPin(contacts.packageName, cellIndex = 0)
+        repeat(GridCanvas.DOCK_CAPACITY) { assertTrue(repo.addToDock(app("com.example.dock$it"))) }
+        val before = dao.getAll()
+
+        assertEquals(DockMoveResult.SOURCE_MISSING, repo.moveWorkspaceToDock(contacts, fromCell = 5, slot = 0))
+        assertEquals(DockMoveResult.FULL, repo.moveWorkspaceToDock(contacts, fromCell = 0, slot = 0))
+
+        assertEquals(before, dao.getAll())
     }
 }

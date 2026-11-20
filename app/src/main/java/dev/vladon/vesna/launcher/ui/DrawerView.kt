@@ -3,34 +3,39 @@ package dev.vladon.vesna.launcher.ui
 import android.content.Context
 import android.os.SystemClock
 import android.util.AttributeSet
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
+import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
-import androidx.core.content.ContextCompat
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.AppSearch
 import dev.vladon.vesna.launcher.apps.LauncherApp
-import dev.vladon.vesna.launcher.workspace.GridCanvas
 
 /**
- * Full-height app drawer that slides up over the workspace. Opened by a swipe-up
- * gesture on the workspace or by tapping the handle; closed by tapping the handle,
- * a downward fling, or the back button.
+ * Full-height app drawer above Home. Opens by button or swipe-up, and closes
+ * by button, downward fling, or Android Back.
  */
 class DrawerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : ViewGroup(context, attrs) {
 
-    var onAppClick: ((LauncherApp) -> Unit)? = null
+    var onAppClick: ((LauncherApp) -> Boolean)? = null
+    internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
     /** Long-press on a drawer item arms a drag from the drawer (drag layer drives). */
     var onItemDragStarted: ((LauncherApp, View) -> Unit)? = null
@@ -40,9 +45,17 @@ class DrawerView @JvmOverloads constructor(
     var onItemDragMoved: ((LauncherApp, View) -> Unit)? = null
     var onOpenedChanged: ((Boolean) -> Unit)? = null
 
+    internal var showAppNames: Boolean
+        get() = appNames.visible
+        set(value) { appNames.visible = value }
+
     private val list: RecyclerView
-    private val handle: ViewGroup
+    private val grid = GridLayoutManager(context, MAX_APP_GRID_COLUMNS)
+    private val appNames: GridAppNames
+    private val closeButton: View
+    private val searchBar: View
     private val searchField: EditText
+    private val clearSearchButton: View
     private val noResultsView: TextView
     private val adapter: DrawerAppsAdapter
     private val density = resources.displayMetrics.density
@@ -51,21 +64,28 @@ class DrawerView @JvmOverloads constructor(
     private val minFlingDistancePx =
         3 * ViewConfiguration.get(context).scaledTouchSlop
 
-    private var allApps: List<LauncherApp> = emptyList()
+    private var appSearch = AppSearch(emptyList())
+    private var quickLaunchResult: LauncherApp? = null
+    private var enterTarget: LauncherApp? = null
+    private var searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
+    private var resetScrollOnCommit = false
+    private val commitScrollReset = Runnable(::resetScrollAfterFilter)
+    private var refreshAnchor: AppKey? = null
 
-    val isOpen: Boolean get() = visibility == VISIBLE
+    private var isOpen = false
 
     init {
         inflate(context, R.layout.view_drawer, this)
-        background = ContextCompat.getDrawable(context, R.color.drawer_background)
+        setBackgroundResource(R.color.vesna_surface)
         elevation = 8 * density
 
         adapter = DrawerAppsAdapter(
-            onItemClick = {
+            onItemClick = ::launchApp,
+            onItemOptions = { app, anchor ->
                 hideKeyboard()
-                onAppClick?.invoke(it)
+                onItemOptions?.invoke(app, anchor)
             },
-            onItemLongClick = { app, anchor ->
+            onItemTouchHold = { app, anchor ->
                 hideKeyboard()
                 onItemDragStarted?.invoke(app, anchor)
                 // While armed, the drag layer owns subsequent MOVE events; the UP
@@ -86,21 +106,65 @@ class DrawerView @JvmOverloads constructor(
                         else -> false
                     }
                 }
-                true
             },
+            onAppsCommitted = ::keepVisibleRowAfterRefresh,
         )
         list = findViewById(R.id.drawer_list)
-        list.layoutManager = GridLayoutManager(context, GridCanvas.COLUMNS)
+        list.layoutManager = grid
+        appNames = GridAppNames(list)
         list.adapter = adapter
         installDrawerFlingToClose()
 
         noResultsView = findViewById(R.id.drawer_no_results)
         searchField = findViewById(R.id.drawer_search)
+        searchBar = findViewById(R.id.drawer_search_bar)
+        searchField.setOnFocusChangeListener { _, focused ->
+            searchBar.isActivated = focused
+            if (!focused) {
+                searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
+                enterTarget = null
+            }
+        }
+        searchField.setOnKeyListener { _, keyCode, event ->
+            if ((keyCode != KeyEvent.KEYCODE_ENTER && keyCode != KeyEvent.KEYCODE_NUMPAD_ENTER) ||
+                event.flags and (KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_EDITOR_ACTION) != 0
+            ) return@setOnKeyListener false
+
+            val canHandle = event.hasNoModifiers() &&
+                BaseInputConnection.getComposingSpanStart(searchField.text) < 0
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> {
+                    if (event.repeatCount == 0) {
+                        // Keep Enter in search even without a unique match: TextView can
+                        // otherwise move focus to a result that the adapter is replacing.
+                        searchEnterKey = if (canHandle) keyCode else KeyEvent.KEYCODE_UNKNOWN
+                        enterTarget = if (canHandle) quickLaunchResult else null
+                    }
+                    searchEnterKey == keyCode
+                }
+                KeyEvent.ACTION_UP -> {
+                    if (searchEnterKey != keyCode) return@setOnKeyListener false
+                    val target = enterTarget
+                    val result = quickLaunchResult
+                    searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
+                    enterTarget = null
+                    if (!event.isCanceled && canHandle && result != null && result.key == target?.key) launchApp(result)
+                    true
+                }
+                else -> false
+            }
+        }
+        clearSearchButton = findViewById(R.id.drawer_clear_search)
+        clearSearchButton.setOnClickListener {
+            // Restore focus before the cleared query hides the button.
+            searchField.requestFocus()
+            searchField.text.clear()
+        }
         searchField.addTextChangedListener(
             object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                 override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-                override fun afterTextChanged(s: android.text.Editable?) = applyFilter()
+                override fun afterTextChanged(s: android.text.Editable?) = applyFilter(resetScroll = true)
             },
         )
         searchField.setOnEditorActionListener { field, actionId, _ ->
@@ -113,19 +177,83 @@ class DrawerView @JvmOverloads constructor(
             }
         }
 
-        handle = findViewById(R.id.drawer_handle)
-        handle.setOnClickListener { if (isOpen) close() else open() }
-
+        closeButton = findViewById(R.id.drawer_close)
+        closeButton.setOnClickListener { close() }
+        ViewCompat.setAccessibilityPaneTitle(this, context.getString(R.string.drawer_title))
+        updateDrawerFocusability()
         visibility = GONE
-        translationY = height.toFloat()
+        animate().setDuration(ANIMATION_MS).setInterpolator(PathInterpolator(0.2f, 0f, 0f, 1f))
     }
 
-    private fun applyFilter() {
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (isOpen && !searchField.hasFocus() && event.action == KeyEvent.ACTION_DOWN &&
+            !event.isCtrlPressed && !event.isMetaPressed && event.isPrintingKey && event.unicodeChar != 0 &&
+            searchField.requestFocus()
+        ) {
+            // Append to the existing query and let EditText handle the original key,
+            // including modifiers and composing accents.
+            searchField.setSelection(searchField.length())
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun applyFilter(resetScroll: Boolean) {
+        // A package refresh can supersede a pending search diff. Carry the reset
+        // forward to the result list that actually commits.
+        if (resetScroll) resetScrollOnCommit = true
         val query = searchField.text?.toString().orEmpty()
-        val filtered = AppSearch.filter(allApps, query)
-        adapter.submitList(filtered)
-        noResultsView.isVisible = filtered.isEmpty()
+        val filtered = appSearch.filter(query)
+        // ListAdapter may still be applying its diff when Enter is pressed.
+        quickLaunchResult = if (query.isNotBlank()) filtered.singleOrNull() else null
+        adapter.submitList(filtered, if (resetScrollOnCommit) commitScrollReset else null)
+        clearSearchButton.isVisible = query.isNotEmpty()
+        noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
+    }
+
+    private fun resetScrollAfterFilter() {
+        resetScrollOnCommit = false
+        refreshAnchor = null
         list.scrollToPosition(0)
+    }
+
+    private fun keepVisibleRowAfterRefresh() {
+        if (!isOpen || resetScrollOnCommit || !list.canScrollVertically(-1)) {
+            refreshAnchor = null
+            return
+        }
+        val top = list.paddingTop
+        val bottom = list.height - list.paddingBottom
+        // The diff has updated adapter positions, but the attached children still
+        // describe the viewport the user is looking at, even if they scrolled
+        // while the diff was running. Prefer the previous anchor only if it is
+        // still on the first visible row; a refresh can move it sideways.
+        val apps = adapter.currentList
+        var anchorPosition = RecyclerView.NO_POSITION
+        var anchorTop = 0
+        for (i in 0 until grid.childCount) {
+            val tile = grid.getChildAt(i) ?: continue
+            val tileTop = grid.getDecoratedTop(tile)
+            if (grid.getDecoratedBottom(tile) <= top || tileTop >= bottom) continue
+            if (anchorPosition != RecyclerView.NO_POSITION && tileTop != anchorTop) break
+            val position = list.getChildAdapterPosition(tile)
+            if (position == RecyclerView.NO_POSITION) continue
+            if (anchorPosition == RecyclerView.NO_POSITION) {
+                anchorPosition = position
+                anchorTop = tileTop
+            }
+            if (apps[position].key == refreshAnchor) {
+                anchorPosition = position
+                break
+            }
+        }
+        refreshAnchor = apps.getOrNull(anchorPosition)?.key
+        if (anchorPosition != RecyclerView.NO_POSITION) {
+            grid.scrollToPositionWithOffset(anchorPosition, anchorTop - top)
+        }
+    }
+
+    private fun launchApp(app: LauncherApp) {
+        if (onAppClick?.invoke(app) == true) hideKeyboard()
     }
 
     private fun hideKeyboard() {
@@ -134,39 +262,57 @@ class DrawerView @JvmOverloads constructor(
     }
 
     fun submitApps(apps: List<LauncherApp>) {
-        allApps = apps
-        applyFilter()
+        appSearch = AppSearch(apps)
+        applyFilter(resetScroll = false)
     }
 
-    /** Pads the drawer content so handle and list clear the system bars. */
-    fun applySystemBarInsets(top: Int, bottom: Int) {
-        findViewById<ViewGroup>(R.id.drawer_content).setPadding(0, top, 0, 0)
-        list.setPadding(0, 0, 0, bottom)
+    /** Keeps drawer controls and results within the visible area, including above the IME. */
+    internal fun applyContentInsets(insets: Insets) {
+        getChildAt(0).setPadding(insets.left, insets.top, insets.right, insets.bottom)
     }
 
     fun open() {
         if (isOpen) return
+        animate().cancel()
+        isOpen = true
+        if (visibility != VISIBLE) translationY = height.toFloat()
         visibility = VISIBLE
-        animate().translationY(0f).setDuration(ANIMATION_MS).start()
+        updateDrawerFocusability()
+        if (height > 0) animate().translationY(0f).start()
         onOpenedChanged?.invoke(true)
+        closeButton.requestFocus()
     }
 
     fun close() {
         if (!isOpen) return
+        animate().cancel()
+        isOpen = false
+        updateDrawerFocusability()
         searchField.setText("")
         searchField.clearFocus()
         hideKeyboard()
-        animate().translationY(height.toFloat())
-            .setDuration(ANIMATION_MS)
-            .withEndAction { visibility = GONE }
-            .start()
+        if (height == 0) {
+            visibility = GONE
+        } else {
+            animate().translationY(height.toFloat())
+                .withEndAction { if (!isOpen) visibility = GONE }
+                .start()
+        }
         onOpenedChanged?.invoke(false)
+    }
+
+    private fun updateDrawerFocusability() {
+        descendantFocusability = if (isOpen) FOCUS_BEFORE_DESCENDANTS else FOCUS_BLOCK_DESCENDANTS
+        importantForAccessibility =
+            if (isOpen) IMPORTANT_FOR_ACCESSIBILITY_AUTO else IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        // Keep the drawer off-screen below the parent when closed.
-        if (!isOpen && animation == null) translationY = h.toFloat()
+        if (isOpen && oldh == 0) {
+            translationY = h.toFloat()
+            animate().translationY(0f).start()
+        }
     }
 
     /**
@@ -220,6 +366,19 @@ class DrawerView @JvmOverloads constructor(
         val height = getDefaultSize(suggestedMinimumHeight, heightMeasureSpec)
         setMeasuredDimension(width, height)
         val content = getChildAt(0)
+        val availableWidth = width - content.paddingLeft - content.paddingRight - list.paddingLeft - list.paddingRight
+        val density = resources.displayMetrics.density
+        val columns = appGridColumnCount(availableWidth, density)
+        val compact = columns < MAX_APP_GRID_COLUMNS
+        if (compact != (grid.spanCount < MAX_APP_GRID_COLUMNS)) {
+            searchField.setHint(if (compact) R.string.drawer_search_hint_compact else R.string.drawer_search_hint)
+            val sideMargin = ((if (compact) 8 else 16) * density + 0.5f).toInt()
+            searchBar.updateLayoutParams<MarginLayoutParams> {
+                leftMargin = sideMargin
+                rightMargin = sideMargin
+            }
+        }
+        grid.spanCount = columns
         content.measure(
             MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),

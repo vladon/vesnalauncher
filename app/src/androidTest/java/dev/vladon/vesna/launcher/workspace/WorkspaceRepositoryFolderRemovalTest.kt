@@ -5,8 +5,6 @@ import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import dev.vladon.vesna.launcher.apps.AppKey
-import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.data.FolderEntity
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
@@ -14,7 +12,6 @@ import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -45,6 +42,7 @@ class WorkspaceRepositoryFolderRemovalTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
             .build()
         val prefs = context.getSharedPreferences(
             "folder-removal-qa-${UUID.randomUUID()}",
@@ -59,10 +57,8 @@ class WorkspaceRepositoryFolderRemovalTest {
         db.close()
     }
 
-    private fun app(pkg: String) = LauncherApp(AppKey(pkg, "$pkg.Activity"), pkg)
-
     /** Seeds a WORKSPACE folder member; [cellIndex] is its stored placement. */
-    private suspend fun seedMember(pkg: String, folderId: Long, cellIndex: Int) {
+    private suspend fun seedMember(pkg: String, folderId: Long, cellIndex: Int): Long =
         dao.insert(
             WorkspaceItemEntity(
                 packageName = pkg,
@@ -72,7 +68,6 @@ class WorkspaceRepositoryFolderRemovalTest {
                 folderId = folderId,
             ),
         )
-    }
 
     /**
      * Both folders hold two members and contain the same app: folder A has the
@@ -100,7 +95,7 @@ class WorkspaceRepositoryFolderRemovalTest {
         val rowBDup = rowsBefore.single { it.folderId == folderB && it.packageName == "com.google.android.deskclock" }
         val rowBCam = rowsBefore.single { it.folderId == folderB && it.packageName == "com.android.camera2" }
 
-        assertTrue(repo.removeFromFolder(app("com.google.android.deskclock"), folderB))
+        assertEquals(FolderRemovalResult.REMOVED, repo.removeFromFolder(rowBDup.id, folderB))
 
         val rowsAfter = dao.getAll()
         assertEquals(
@@ -124,28 +119,99 @@ class WorkspaceRepositoryFolderRemovalTest {
         assertEquals("B's remaining member returns to B's cell", 11, returned.cellIndex)
     }
 
+    @Test
+    fun removingTheLaterCopyKeepsTheEarlierCopyAndIgnoresAStaleAction() = runBlocking {
+        val folder = FolderEntity(title = "Duplicates", cellIndex = 10)
+        val folderId = db.folderDao().insert(folder)
+        val firstCopy = seedMember("com.google.android.deskclock", folderId, cellIndex = 1)
+        seedMember("com.android.camera2", folderId, cellIndex = 2)
+        val selectedCopy = seedMember("com.google.android.deskclock", folderId, cellIndex = 3)
+        val before = dao.getAll().associateBy { it.id }
+
+        assertEquals(FolderRemovalResult.REMOVED, repo.removeFromFolder(selectedCopy, folderId))
+        assertEquals(FolderRemovalResult.UNAVAILABLE, repo.removeFromFolder(selectedCopy, folderId))
+
+        val after = dao.getAll().associateBy { it.id }
+        assertEquals("The earlier copy stays in the folder", before.getValue(firstCopy), after.getValue(firstCopy))
+        assertEquals(
+            before + (selectedCopy to before.getValue(selectedCopy).copy(
+                cellIndex = 0, folderId = null, pageId = DEFAULT_WORKSPACE_PAGE_ID,
+            )),
+            after,
+        )
+        assertEquals(folder.copy(id = folderId), db.folderDao().getById(folderId))
+    }
+
     /**
-     * Removing via a folder id that does not exist returns false and leaves every
-     * row and folder untouched.
+     * A folder action cannot move a pin that belongs to a different folder.
      */
     @Test
-    fun removalFromMissingFolderReturnsFalseWithoutChanges() = runBlocking {
+    fun removalFromWrongFolderReturnsFalseWithoutChanges() = runBlocking {
         val folderA = db.folderDao().insert(FolderEntity(title = "Alpha", cellIndex = 10))
-        seedMember("com.google.android.deskclock", folderA, cellIndex = 1)
+        val folderB = db.folderDao().insert(FolderEntity(title = "Beta", cellIndex = 11))
+        val pinId = seedMember("com.google.android.deskclock", folderA, cellIndex = 1)
         seedMember("com.google.android.calendar", folderA, cellIndex = 2)
+        seedMember("com.google.android.deskclock", folderB, cellIndex = 1)
+        seedMember("com.android.camera2", folderB, cellIndex = 2)
         val rowsBefore = dao.getAll()
+        val foldersBefore = db.folderDao().getAll()
 
-        assertFalse(repo.removeFromFolder(app("com.google.android.deskclock"), folderId = 9999L))
+        assertEquals(FolderRemovalResult.UNAVAILABLE, repo.removeFromFolder(pinId, folderB))
 
         assertEquals("no row changed", rowsBefore, dao.getAll())
-        assertNotNull("folder A survives", db.folderDao().getById(folderA))
+        assertEquals(foldersBefore, db.folderDao().getAll())
+    }
+
+    @Test
+    fun fullFolderPagePreservesEveryPlacementAndBothActionsWorkAfterMakingRoom() = runBlocking {
+        val pageId = requireNotNull(repo.createPage())
+        val folder = FolderEntity(title = "Apps", cellIndex = 10, pageId = pageId)
+        val folderId = db.folderDao().insert(folder)
+        val first = seedMember("qa.first", folderId, cellIndex = 0)
+        val second = seedMember("qa.second", folderId, cellIndex = 1)
+        val third = seedMember("qa.third", folderId, cellIndex = 2)
+        for (cell in 0 until GridCanvas.CAPACITY) {
+            if (cell == folder.cellIndex) continue
+            dao.insert(
+                WorkspaceItemEntity(
+                    packageName = "qa.other", className = "Main", container = "WORKSPACE",
+                    cellIndex = cell, pageId = pageId,
+                ),
+            )
+        }
+        val before = dao.getAll().associateBy { it.id }
+
+        assertEquals(FolderRemovalResult.NO_ROOM, repo.removeFromFolder(third, folderId))
+        assertEquals(FolderRemovalResult.NO_ROOM, repo.removeFolder(folderId))
+        assertEquals(before, dao.getAll().associateBy { it.id })
+        assertEquals(folder.copy(id = folderId), db.folderDao().getById(folderId))
+
+        val freedForMember = before.values.single { it.pageId == pageId && it.cellIndex == 4 }
+        dao.deleteById(freedForMember.id)
+        assertEquals(FolderRemovalResult.REMOVED, repo.removeFromFolder(third, folderId))
+        val movedMember = before.getValue(third).copy(cellIndex = 4, folderId = null, pageId = pageId)
+        assertEquals(before - freedForMember.id + (third to movedMember), dao.getAll().associateBy { it.id })
+
+        val freedForFolder = before.values.single { it.pageId == pageId && it.cellIndex == 6 }
+        dao.deleteById(freedForFolder.id)
+        assertEquals(FolderRemovalResult.REMOVED, repo.removeFolder(folderId))
+        assertEquals(
+            before - freedForMember.id - freedForFolder.id + mapOf(
+                first to before.getValue(first).copy(cellIndex = 6, folderId = null, pageId = pageId),
+                second to before.getValue(second).copy(cellIndex = 10, folderId = null, pageId = pageId),
+                third to movedMember,
+            ),
+            dao.getAll().associateBy { it.id },
+        )
+        assertNull(db.folderDao().getById(folderId))
+        assertEquals(FolderRemovalResult.UNAVAILABLE, repo.removeFolder(folderId))
     }
 
     /** VESNA-BUG-011: abort folder deletion and verify both memberships roll back. */
     @Test
     fun failedFolderDissolveRollsBackTheWholeRemovalAtomically() = runBlocking {
         val folderB = db.folderDao().insert(FolderEntity(title = "Beta", cellIndex = 10))
-        seedMember("com.google.android.deskclock", folderB, cellIndex = 1)
+        val pinId = seedMember("com.google.android.deskclock", folderB, cellIndex = 1)
         seedMember("com.google.android.calendar", folderB, cellIndex = 2)
         val rowsBefore = dao.getAll()
         val foldersBefore = db.folderDao().getAll()
@@ -157,7 +223,7 @@ class WorkspaceRepositoryFolderRemovalTest {
         )
 
         val thrown: SQLiteConstraintException = try {
-            repo.removeFromFolder(app("com.google.android.deskclock"), folderB)
+            repo.removeFromFolder(pinId, folderB)
             error("VESNA-BUG-011: the aborted folder deletion must surface to the caller")
         } catch (expected: SQLiteConstraintException) {
             expected

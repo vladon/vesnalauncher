@@ -40,18 +40,27 @@ class LauncherAppsAppDiscovery(private val appContext: Context) : AppDiscovery {
 
     override fun discover(): List<LauncherApp> {
         val result = ArrayList<LauncherApp>()
+        val packageManager = appContext.packageManager
+        val densityDpi = appContext.resources.displayMetrics.densityDpi
         for (profile in launcherApps.profiles) {
             val userSerial = userManager.getSerialNumberForUser(profile)
+            // Android returns the original label for an unbadged profile.
+            // Once it does, skip the call for the rest of that profile.
+            var badgeLabels = true
             for (activity in launcherApps.getActivityList(null, profile)) {
                 val component = activity.componentName
                 // Vesna's own settings entry is reachable from the workspace menu; it
                 // does not belong in the drawer.
                 if (component.packageName == appContext.packageName) continue
+                val label = activity.label.toString().ifBlank { component.packageName }
+                val profileLabel = if (badgeLabels) packageManager.getUserBadgedLabel(label, profile) else label
+                badgeLabels = profileLabel !== label
                 result.add(
                     LauncherApp(
                         key = AppKey(component.packageName, component.className, userSerial),
-                        label = activity.label.toString().ifBlank { component.packageName },
-                        icon = activity.getBadgedIcon(appContext.resources.displayMetrics.densityDpi),
+                        label = label,
+                        icon = activity.getBadgedIcon(densityDpi),
+                        badgedLabel = if (badgeLabels) profileLabel.toString() else null,
                     ),
                 )
             }
@@ -93,13 +102,29 @@ class AppLauncher(private val appContext: Context) {
      * without crashing, but the list itself is still correct.
      */
     fun launch(app: LauncherApp): Boolean {
-        return try {
+        return tryStart {
             if (app.key.userSerial == MAIN_PROFILE_SERIAL || launcherApps == null) {
                 appContext.startActivity(mainProfileIntent(app))
             } else {
                 val user = userManager.getUserForSerialNumber(app.key.userSerial) ?: return false
                 launcherApps.startMainActivity(ComponentName(app.key.packageName, app.key.className), user, null, null)
             }
+        }
+    }
+
+    /** Opens the application's Settings page in the profile selected in Vesna. */
+    internal fun openAppInfo(app: LauncherApp): Boolean {
+        val launcher = launcherApps ?: return false
+        val key = app.key
+        return tryStart {
+            val user = userManager.getUserForSerialNumber(key.userSerial) ?: return false
+            launcher.startAppDetailsActivity(ComponentName(key.packageName, key.className), user, null, null)
+        }
+    }
+
+    private inline fun tryStart(start: () -> Unit): Boolean =
+        try {
+            start()
             true
         } catch (e: ActivityNotFoundException) {
             // Stale entry: activity was disabled or removed since the last discovery pass.
@@ -111,7 +136,6 @@ class AppLauncher(private val appContext: Context) {
             // Work profile is turned off or in quiet mode.
             false
         }
-    }
 
     private fun mainProfileIntent(app: LauncherApp): Intent =
         Intent(Intent.ACTION_MAIN)

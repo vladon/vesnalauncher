@@ -3,26 +3,33 @@ package dev.vladon.vesna.launcher.workspace
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 
+/** A rendered dock tile keeps the ID of its persisted pin. */
+data class DockPin(val id: Long, val app: LauncherApp)
+
+/** A rendered folder tile keeps the ID of its persisted membership. */
+data class FolderPin(val id: Long, val app: LauncherApp)
+
+/** Saved order includes unavailable pins; the visible dock packs the remaining icons. */
+data class DockLayout(val savedOrder: List<Long>, val pins: List<DockPin>) {
+    internal fun dropColumn(column: Int, reordering: Boolean): Int? {
+        val last = if (reordering) pins.lastIndex else {
+            if (savedOrder.size >= GridCanvas.DOCK_CAPACITY) return null
+            pins.size
+        }
+        return if (last < 0) null else column.coerceIn(0, last)
+    }
+
+    /** Convert a visual destination to its index in the saved order, or append. */
+    internal fun savedSlot(column: Int): Int =
+        pins.getOrNull(column)?.let { savedOrder.indexOf(it.id) } ?: savedOrder.size
+}
+
 /**
  * Pure projection of persisted layout items onto live apps. Unavailable apps
  * are hidden without changing their stored positions. Items inside folders
  * (non-null folderId) are excluded from the grid and dock views.
  */
-object WorkspaceResolver {
-
-    /** Workspace cell index to app; stale items and duplicate cells are ignored. */
-    fun workspaceApps(items: List<WorkspaceItem>, apps: List<LauncherApp>): Map<Int, LauncherApp> {
-        val appByKey = apps.associateBy { it.key }
-        val result = LinkedHashMap<Int, LauncherApp>()
-        for (item in items) {
-            if (item.container != Container.WORKSPACE) continue
-            if (item.folderId != null) continue
-            if (!GridCanvas.isValidCell(item.cellIndex)) continue
-            if (result.containsKey(item.cellIndex)) continue
-            appByKey[item.key]?.let { result[item.cellIndex] = it }
-        }
-        return result
-    }
+internal object WorkspaceResolver {
 
     /**
      * Workspace cell contents for rendering: top-level apps plus folders occupying
@@ -30,14 +37,20 @@ object WorkspaceResolver {
      */
     fun workspaceCells(
         items: List<WorkspaceItem>,
-        apps: List<LauncherApp>,
+        appsByKey: Map<AppKey, LauncherApp>,
         folders: List<Folder>,
+        pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Map<Int, CellContent> {
         val cells = LinkedHashMap<Int, CellContent>()
-        for ((cell, app) in workspaceApps(items, apps)) {
-            cells[cell] = CellContent.App(app)
+        for (item in items) {
+            if (item.container != Container.WORKSPACE) continue
+            if (item.folderId != null || item.pageId != pageId) continue
+            if (!GridCanvas.isValidCell(item.cellIndex)) continue
+            if (cells.containsKey(item.cellIndex)) continue
+            appsByKey[item.key]?.let { cells[item.cellIndex] = CellContent.App(it) }
         }
         for (folder in folders) {
+            if (folder.pageId != pageId) continue
             if (!GridCanvas.isValidCell(folder.cellIndex)) continue
             if (cells.containsKey(folder.cellIndex)) continue
             val members = items.count { it.folderId == folder.id }
@@ -46,27 +59,28 @@ object WorkspaceResolver {
         return cells
     }
 
-    /** Apps inside each folder, ordered by their in-folder position. */
+    /** Visible pins inside each folder, ordered by their saved positions. */
     fun folderContents(
         items: List<WorkspaceItem>,
-        apps: List<LauncherApp>,
-    ): Map<Long, List<LauncherApp>> {
-        val appByKey = apps.associateBy { it.key }
+        appsByKey: Map<AppKey, LauncherApp>,
+    ): Map<Long, List<FolderPin>> {
         return items.asSequence()
             .filter { it.folderId != null }
             .groupBy { it.folderId!! }
             .mapValues { (_, members) ->
-                members.sortedBy { it.cellIndex }.mapNotNull { appByKey[it.key] }
+                members.sortedBy { it.cellIndex }.mapNotNull { item ->
+                    appsByKey[item.key]?.let { FolderPin(item.id, it) }
+                }
             }
     }
 
-    /** Dock apps ordered by position; stale entries and folder members are skipped. */
-    fun dockApps(items: List<WorkspaceItem>, apps: List<LauncherApp>): List<LauncherApp> {
-        val appByKey = apps.associateBy { it.key }
-        return items.asSequence()
-            .filter { it.container == Container.DOCK && it.folderId == null }
+    /** Only top-level pins consume dock capacity; unavailable pins are not drawn. */
+    fun dockLayout(items: List<WorkspaceItem>, appsByKey: Map<AppKey, LauncherApp>): DockLayout {
+        val saved = items.filter { it.container == Container.DOCK && it.folderId == null }
             .sortedBy { it.cellIndex }
-            .mapNotNull { appByKey[it.key] }
-            .toList()
+        return DockLayout(
+            savedOrder = saved.map { it.id },
+            pins = saved.mapNotNull { item -> appsByKey[item.key]?.let { DockPin(item.id, it) } },
+        )
     }
 }

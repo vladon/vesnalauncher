@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Launcher theme: transparent system bars over the live wallpaper.
-         minSdk 26 (Android 8.0) has native adaptive icons and vector drawables,
-         so a platform theme without AppCompat keeps start-up lean. -->
-    <style name="Theme.Vesna" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Vesna.Platform" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Vesna.Chrome" parent="Theme.Vesna.Platform">
+        <item name="android:colorAccent">@color/workspace_page_primary</item>
+        <item name="android:colorBackgroundFloating">@color/home_control_surface</item>
+    </style>
+
+    <style name="Theme.Vesna.Settings" parent="Theme.Vesna.Chrome">
+        <item name="android:windowBackground">@color/vesna_surface</item>
+    </style>
+
+    <!-- Keep Home transparent over the user's wallpaper in both palettes. -->
+    <style name="Theme.Vesna" parent="Theme.Vesna.Chrome">
         <item name="android:windowShowWallpaper">true</item>
         <item name="android:windowBackground">@color/workspace_scrim</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
@@ -12,5 +21,22 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <style name="ThemeOverlay.Vesna.PopupMenu" parent="">
+        <item name="android:popupMenuStyle">@style/Widget.Vesna.PopupMenu</item>
+        <item name="android:textAppearanceLargePopupMenu">@style/TextAppearance.Vesna.PopupMenu</item>
+        <item name="android:colorControlHighlight">@color/home_control_focus_press</item>
+    </style>
+
+    <style name="Widget.Vesna.PopupMenu" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">@drawable/vesna_popup_menu_background</item>
+    </style>
+
+    <style name="TextAppearance.Vesna.PopupMenu" parent="android:TextAppearance.Material.Body1">
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:textColor">@color/home_control_on_surface</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.007143</item>
     </style>
 </resources>

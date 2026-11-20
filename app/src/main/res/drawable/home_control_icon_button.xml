@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingMode="stack">
+    <item android:drawable="@drawable/home_control_surface" android:left="4dp" android:right="4dp" />
+    <item android:drawable="@drawable/home_control_states" />
+</layer-list>

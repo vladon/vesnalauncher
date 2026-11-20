@@ -92,14 +92,36 @@ flowchart TB
    the dock and first workspace page. An upgraded install with an existing
    layout is adopted as-is; a user-emptied workspace is never re-seeded.
 
-Current main identifies a workspace pin dragged to an empty cell by the
-source cell and exact app key. Two pins with the same app key retain their
-individual placements. [PR #44](https://github.com/vladon/vesnalauncher/pull/44)
+A drag from the workspace to an empty cell or the dock matches the source
+page, cell, and exact app key. Another pin of the same app stays in place,
+and a missing source cancels the move without reporting a full dock.
+The workspace-to-dock fix was verified with two identical pins on an API 35
+emulator; only the dragged row moved and the prior dock entry shifted right.
 
-Each folder creation commits the folder row and both membership updates in
-one Room transaction. Removing a member also commits its move and any
+Workspace drops onto another pin or a folder also match the source page,
+cell, and app key. Both routes were verified with duplicate pins on API 35:
+only the selected pins became folder members.
+
+Dock tiles retain their saved pin ID. Reorder, workspace drops, and folder
+drops resolve that exact top-level dock row rather than another copy of the
+app. The API 35 replay verified all three routes with duplicate dock pins.
+
+Drawer drops onto another app or a folder insert a new member without moving
+existing pins. A drawer item cannot create a folder with its own pin or add
+another copy to a folder that already contains that app for the same profile.
+Both insertion routes were verified with real drags on an API 35 emulator.
+
+Folder creation commits the folder and both memberships in one Room
+transaction, whether the dragged member is moved or newly inserted.
+Removing a member also commits its move and any
 resulting dissolution together. A failure inside either operation rolls
 its writes back. [Folder verification](../engineering/REQUIREMENTS_TRACEABILITY.md#folders)
+
+Room schema 4 stores stable workspace page IDs separately from their display
+rank. Top-level workspace items and folders reference a page; folder members
+inherit it, and dock pins remain global. Existing layouts migrate to the
+default page without rewriting their cell positions.
+[ADR-PAGE-1](../adr/0001-workspace-page-identity.md)
 
 ## Threading and lifecycle
 

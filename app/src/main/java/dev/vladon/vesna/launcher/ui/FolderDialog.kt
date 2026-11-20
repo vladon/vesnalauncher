@@ -1,19 +1,33 @@
 package dev.vladon.vesna.launcher.ui
 
-import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
+import android.view.ViewGroup
 import android.widget.PopupMenu
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.viewinterop.AndroidView
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.ThemeMode
+import dev.vladon.vesna.launcher.settings.VesnaTheme
 import dev.vladon.vesna.launcher.workspace.Folder
+import dev.vladon.vesna.launcher.workspace.FolderPin
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
 
 /**
@@ -21,100 +35,93 @@ import dev.vladon.vesna.launcher.workspace.LauncherUiState
  * long-press offers removal back to the workspace. The folder can be renamed or
  * removed entirely. [update] is called by the owner whenever launcher state emits.
  */
-class FolderDialog(
+internal class FolderDialog(
     context: Context,
     private val folder: Folder,
     private val onLaunch: (LauncherApp) -> Unit,
-    private val onRemoveFromFolder: (LauncherApp) -> Unit,
-    private val onRename: (Folder, String) -> Unit,
-    private val onRemoveFolder: (Folder) -> Unit,
+    private val onAppInfo: (LauncherApp) -> Unit,
+    private val onRemoveFromFolder: (Long) -> Unit,
+    private val onRename: () -> Unit,
+    private val onRemoveFolder: () -> Unit,
+    private val onShowPopup: (PopupMenu) -> Unit,
     private val onDismissed: () -> Unit,
 ) {
 
-    private val dialog: AlertDialog
-    private val adapter: FolderContentsAdapter
-    private var currentTitle: String = folder.title
+    private val host = ComposeView(context)
+    private val snackbar = SnackbarHostState()
+    private val list = LayoutInflater.from(context).inflate(R.layout.dialog_folder, null) as FolderGridView
+    private val appNames = GridAppNames(list)
+    private val adapter = FolderContentsAdapter(
+        onItemClick = onLaunch,
+        onItemOptions = ::showItemMenu,
+    )
+    private var currentTitle by mutableStateOf(folder.title)
+
+    internal var showAppNames: Boolean
+        get() = appNames.visible
+        set(value) { appNames.visible = value }
 
     init {
-        val view = LayoutInflater.from(context).inflate(R.layout.dialog_folder, null)
-        val list = view.findViewById<RecyclerView>(R.id.folder_list)
-        list.layoutManager = GridLayoutManager(context, GRID_COLUMNS)
-        adapter = FolderContentsAdapter(
-            onItemClick = onLaunch,
-            onItemLongClick = { app ->
-                showItemMenu(context, app)
-                true
-            },
-        )
         list.adapter = adapter
-
-        dialog = AlertDialog.Builder(context)
-            .setTitle(folder.title)
-            .setView(view)
-            .setPositiveButton(R.string.folder_rename) { _, _ -> showRenamePrompt(context) }
-            .setNegativeButton(R.string.folder_remove) { _, _ ->
-                onRemoveFolder(folder)
-                onDismissed()
-            }
-            .setOnDismissListener { onDismissed() }
-            .create()
     }
 
-    fun show() = dialog.show()
+    fun show(parent: ViewGroup, themeMode: ThemeMode) {
+        host.setContent {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+                AlertDialog(
+                    onDismissRequest = ::dismiss,
+                    title = { Text(currentTitle, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                    text = {
+                        Column {
+                            AndroidView(factory = { list }, modifier = Modifier.fillMaxWidth().weight(1f, fill = false))
+                            SnackbarHost(snackbar)
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = onRename) { Text(stringResource(R.string.folder_rename)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = onRemoveFolder) { Text(stringResource(R.string.folder_remove)) }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                )
+            }
+        }
+        parent.addView(host, 0, 0)
+    }
 
     /** Closes the dialog (for example when the folder dissolved). */
-    fun dismiss() = dialog.dismiss()
+    fun dismiss() {
+        val parent = host.parent as? ViewGroup ?: return
+        parent.removeView(host)
+        onDismissed()
+    }
+
+    suspend fun showSnackbar(message: String) {
+        snackbar.showSnackbar(message)
+    }
 
     fun update(state: LauncherUiState) {
-        val folder = state.folders[folder.id] ?: return
-        if (folder.title != currentTitle) {
-            currentTitle = folder.title
-            dialog.setTitle(currentTitle)
-        }
+        val folder = state.folders[folder.id] ?: return dismiss()
+        currentTitle = folder.title
         adapter.submitList(state.folderContents[folder.id].orEmpty())
     }
 
-    private fun showItemMenu(context: Context, app: LauncherApp) {
-        val anchor = dialog.window?.decorView ?: return
-        val popup = PopupMenu(context, anchor)
-        popup.menu.add(0, MENU_REMOVE_FROM_FOLDER, 0, context.getString(R.string.folder_remove_from_folder))
-        popup.menu.add(0, MENU_APP_INFO, 1, context.getString(R.string.menu_app_info))
+    private fun showItemMenu(pin: FolderPin, anchor: View) {
+        val popup = vesnaPopupMenu(anchor)
+        popup.menu.add(0, MENU_REMOVE_FROM_FOLDER, 0, R.string.folder_remove_from_folder)
+        popup.menu.add(0, MENU_APP_INFO, 1, R.string.menu_app_info)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                MENU_REMOVE_FROM_FOLDER -> onRemoveFromFolder(app)
-                MENU_APP_INFO -> context.startActivity(
-                    Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.fromParts("package", app.packageName, null),
-                    ),
-                )
+                MENU_REMOVE_FROM_FOLDER -> onRemoveFromFolder(pin.id)
+                MENU_APP_INFO -> onAppInfo(pin.app)
             }
             true
         }
-        popup.show()
-    }
-
-    private fun showRenamePrompt(context: Context) {
-        val input = EditText(context)
-        input.setText(currentTitle)
-        input.setSelection(input.text.length)
-        AlertDialog.Builder(context)
-            .setTitle(context.getString(R.string.folder_rename))
-            .setView(input)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val newTitle = input.text.toString().trim()
-                if (newTitle.isNotEmpty() && newTitle != currentTitle) {
-                    onRename(folder, newTitle)
-                    currentTitle = newTitle
-                    dialog.setTitle(newTitle)
-                }
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        onShowPopup(popup)
     }
 
     private companion object {
-        const val GRID_COLUMNS = 4
         const val MENU_REMOVE_FROM_FOLDER = 1
         const val MENU_APP_INFO = 2
     }

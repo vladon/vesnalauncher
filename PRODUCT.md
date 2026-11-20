@@ -16,7 +16,7 @@ audience; the primary interface language is English with Russian localization.
 2. **Reliability.** A launcher runs all day, every day. Memory leaks, ANRs, and
    layout drift across app install/uninstall storms are release blockers.
 3. **Freedom and privacy.** No monetization of any kind; no telemetry. The only
-   data the launcher stores is the user's own layout, locally.
+   data the launcher stores is the user's own layout and preferences, locally.
 4. **Personalization without lock-in.** Users should be able to shape the
    launcher to their habits; their setup must survive restarts and updates.
 5. **Independent development.** See [docs/clean-room/PROCESS.md](docs/clean-room/PROCESS.md):

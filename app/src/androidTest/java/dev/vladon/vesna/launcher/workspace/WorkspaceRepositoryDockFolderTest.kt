@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.workspace
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -40,6 +41,7 @@ class WorkspaceRepositoryDockFolderTest {
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
             .allowMainThreadQueries()
             .build()
         val prefs = context.getSharedPreferences(
@@ -114,6 +116,37 @@ class WorkspaceRepositoryDockFolderTest {
         assertEquals(5, dao.getAll().count { it.container == "DOCK" })
     }
 
+    @Test
+    fun dockInsertRollsBackTheNewPinAndSlotShiftsTogether() = runBlocking {
+        seedDockRow("com.example.first", 0)
+        seedDockRow("com.example.middle", 1)
+        seedDockRow("com.example.last", 2)
+        val incoming = app("com.example.incoming")
+        val before = dao.getAll().sortedBy { it.id }
+        val failpoint = "dock slot shift interrupted"
+        val sqlite = db.openHelper.writableDatabase
+        sqlite.execSQL(
+            "CREATE TRIGGER fail_dock_slot_shift BEFORE UPDATE OF cellIndex ON workspace_items " +
+                "WHEN OLD.packageName = 'com.example.last' AND NEW.cellIndex = 3 " +
+                "BEGIN SELECT RAISE(ABORT, '$failpoint'); END",
+        )
+        val failure = try {
+            repo.insertIntoDock(incoming, slot = 1)
+            error("Expected the dock slot shift to abort")
+        } catch (expected: SQLiteConstraintException) {
+            expected
+        }
+        assertTrue(failure.message.orEmpty().contains(failpoint))
+        assertEquals("A rejected drop must not leave a saved pin or shift other pins", before, dao.getAll().sortedBy { it.id })
+
+        sqlite.execSQL("DROP TRIGGER fail_dock_slot_shift")
+        assertTrue(repo.insertIntoDock(incoming, slot = 1))
+        val dock = dao.getAll().sortedBy { it.cellIndex }
+        assertEquals(listOf(0, 1, 2, 3), dock.map { it.cellIndex })
+        assertEquals(listOf("com.example.first", incoming.packageName, "com.example.middle", "com.example.last"), dock.map { it.packageName })
+        assertEquals(before.map { it.id }, dock.filterNot { it.packageName == incoming.packageName }.map { it.id })
+    }
+
     /**
      * Regression for VESNA-BUG-006: when the same app has a hidden dock row that is
      * a folder member (its dock icon was dragged into a folder) plus a visible
@@ -132,7 +165,8 @@ class WorkspaceRepositoryDockFolderTest {
         val visible = rows.single { it.packageName == "com.google.android.deskclock" && it.folderId == null }
         assertTrue("hidden row must precede the visible row", hidden.id < visible.id)
 
-        assertTrue(repo.moveDockToWorkspace(app("com.google.android.deskclock"), 15))
+        assertFalse(repo.moveDockToWorkspace(hidden.id, 15))
+        assertTrue(repo.moveDockToWorkspace(visible.id, 15))
 
         val after = dao.getAll()
         val moved = after.single { it.id == visible.id }
@@ -144,5 +178,27 @@ class WorkspaceRepositoryDockFolderTest {
         assertEquals(3, member.cellIndex)
         assertEquals(folderId, member.folderId)
         assertEquals(14, db.folderDao().getById(folderId)?.cellIndex)
+    }
+
+    @Test
+    fun duplicateDockPinsReorderAndMoveByTheirOwnIds() = runBlocking {
+        seedDockRow("com.example.contacts", 0)
+        seedDockRow("com.example.calendar", 1)
+        seedDockRow("com.example.contacts", 2)
+        val before = dao.getAll().sortedBy { it.cellIndex }
+        val (first, middle, dragged) = before
+
+        assertTrue(repo.reorderDock(dragged.id, 0))
+        assertEquals(
+            listOf(dragged.id, first.id, middle.id),
+            dao.getAll().sortedBy { it.cellIndex }.map { it.id },
+        )
+        assertTrue(repo.moveDockToWorkspace(dragged.id, 7))
+        val after = dao.getAll().associateBy { it.id }
+        assertEquals(dragged.copy(container = "WORKSPACE", cellIndex = 7, pageId = DEFAULT_WORKSPACE_PAGE_ID), after.getValue(dragged.id))
+        assertEquals(first.copy(cellIndex = 1), after.getValue(first.id))
+        assertFalse(repo.reorderDock(dragged.id, 1))
+        assertFalse(repo.moveDockToWorkspace(dragged.id, 8))
+        assertEquals(after, dao.getAll().associateBy { it.id })
     }
 }

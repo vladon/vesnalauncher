@@ -77,10 +77,9 @@ Depends on: P0 green (stable verification base), and research-matrix fix-ups for
 any gated ID consumed below.
 
 1. **[ENG-101](BACKLOG.md#eng-101-workspace-page-identities-and-schema-migration): workspace page identities + schema migration.**
-   The single fixed 4×5 page is the platform for page management via drag
-   (research candidate `HOME-104`) and for widgets. The ADR fixes the page
-   identity model and the Room schema version — the version number is **not**
-   pre-committed before the ADR.
+   Room version 4 establishes stable page IDs and page-scoped occupancy. The
+   launcher still shows the default 4×5 page. Page management via drag
+   (research candidate `HOME-104`) is not part of the schema change.
 2. **[ENG-102](BACKLOG.md#eng-102-widget-host--lifecycle-only): widget host — lifecycle only.**
    Requires the **widget host cleanup ADR**; widgets occupy grid cells, so it
    builds on ENG-101's identity model. Config-cancel behavior stays out until

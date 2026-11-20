@@ -9,12 +9,14 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewConfiguration
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -23,8 +25,8 @@ import kotlin.math.max
  * Cell geometry comes from [GridCanvas].
  *
  * Touch model:
- * - tap launches, a long press on empty space opens the launcher menu, an upward
- *   fling anywhere opens the drawer;
+ * - tap launches an app or opens a folder; a long press on empty space opens the launcher menu; an upward
+ *   fling opens the drawer and a horizontal swipe selects an adjacent page;
  * - long-pressing an icon starts a drag session: the view dims the icon, reports
  *   progress in workspace-local coordinates and lets [HomeActivity] decide the drop
  *   target (grid cell or dock); highlights are drawn via [showDropHighlight].
@@ -35,14 +37,17 @@ class WorkspaceView @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
+    internal var onAppOptions: ((Int, LauncherApp, View) -> Unit)? = null
 
     /** A workspace cell was tapped: an app (launch) or a folder (open). */
     var onCellClick: ((CellContent) -> Unit)? = null
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
+    var onSwipePage: ((forward: Boolean) -> Unit)? = null
 
-    /** Long press on a folder cell: menu (rename / remove folder). */
+    /** Opens folder options after a hold without drag, or from keyboard/accessibility. */
     var onFolderLongClick: ((Folder, View) -> Unit)? = null
+    internal var onFolderDrop: ((Folder, Int) -> Unit)? = null
 
     /** The user lifted an icon by long-pressing it; a drag session has begun. */
     var onDragStarted: ((cell: Int, app: LauncherApp, anchor: View) -> Unit)? = null
@@ -62,28 +67,40 @@ class WorkspaceView @JvmOverloads constructor(
     private val gutterPx = (8 * density).toInt()
     private val cellHPadPx = (4 * density).toInt()
     private val cellVPadPx = (4 * density).toInt()
+    private val dragSlop = ViewConfiguration.get(context).scaledTouchSlop
 
     private var boundContent: Map<Int, CellContent> = emptyMap()
+    internal var showAppNames = true
+        set(value) {
+            if (field == value) return
+            field = value
+            for (index in 0 until childCount) {
+                val view = getChildAt(index) as AppIconView
+                if (boundContent[view.tag as Int] is CellContent.App) view.setAppNameVisible(value)
+            }
+        }
+
     private var lastCellW = 0
     private var lastCellH = 0
 
     // Active drag-and-drop state. While a drag is running the grid intercepts the
     // gesture and the swipe-up detector is bypassed.
-    private var dragSourceApp: LauncherApp? = null
+    private var dragContent: CellContent? = null
     private var dragAnchor: View? = null
     private var dragTargetCell: Int? = null
     private var dragMoved = false
+    internal val isDragging: Boolean get() = dragAnchor != null
 
     private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = HIGHLIGHT_COLOR
+        color = ColorUtils.setAlphaComponent(context.getColor(R.color.workspace_page_primary), HIGHLIGHT_ALPHA)
         style = Paint.Style.FILL
     }
 
-    // Touch-event plumbing: a child (icon) holding the gesture routes MOVE/UP through
-    // onInterceptTouchEvent, while empty-area gestures (no child target) reach both
-    // hooks with the same MotionEvent instance. Feeding from both hooks covers all
-    // paths; the identity check prevents feeding any single event twice.
-    private var lastIntercepted: MotionEvent? = null
+    // Observe the whole stream, whether an app child or the empty grid owns it.
+    private var downX = 0f
+    private var downY = 0f
+    private var pageSwipe = false
+    private var longPressed = false
 
     private val gestureDetector = GestureDetector(
         context,
@@ -105,33 +122,45 @@ class WorkspaceView @JvmOverloads constructor(
     )
 
     init {
+        setWillNotDraw(false) // The grid paints the drag target behind its children.
         // Long press on any empty part of the grid.
         isLongClickable = true
         setOnLongClickListener {
+            longPressed = true
             onEmptyAreaLongClick?.invoke()
             true
         }
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.actionMasked) {
-            MotionEvent.ACTION_MOVE,
-            MotionEvent.ACTION_UP,
-            MotionEvent.ACTION_CANCEL,
-            -> {
-                lastIntercepted = ev
-                gestureDetector.onTouchEvent(ev)
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val action = ev.actionMasked
+        if (action == MotionEvent.ACTION_DOWN) {
+            downX = ev.x
+            downY = ev.y
+            pageSwipe = false
+            longPressed = false
+        } else if (action == MotionEvent.ACTION_MOVE && !longPressed && !pageSwipe) {
+            val dx = abs(ev.x - downX)
+            pageSwipe = dx >= PAGE_SWIPE_DP * density && dx > abs(ev.y - downY) * 1.5f
+            if (pageSwipe) {
+                // Cancel the pressed child or the empty grid before handling release.
+                val cancel = MotionEvent.obtain(ev)
+                cancel.action = MotionEvent.ACTION_CANCEL
+                gestureDetector.onTouchEvent(cancel)
+                super.dispatchTouchEvent(cancel)
+                cancel.recycle()
             }
         }
-        return false
-    }
-
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (ev !== lastIntercepted) {
-            gestureDetector.onTouchEvent(ev)
+        if (pageSwipe) {
+            if (action == MotionEvent.ACTION_UP) {
+                val dx = ev.x - downX
+                val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+                if (abs(dx) >= PAGE_SWIPE_DP * density) onSwipePage?.invoke((dx < 0f) != rtl)
+            }
+            return true
         }
-        lastIntercepted = null
-        return super.onTouchEvent(ev)
+        if (!longPressed) gestureDetector.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
     }
 
     // The dragged icon keeps the touch stream, so the drag itself is observed by an
@@ -139,13 +168,19 @@ class WorkspaceView @JvmOverloads constructor(
     // Intercepting on UP would swallow the event (the parent never receives it).
     private val dragTouchListener =
         View.OnTouchListener { view, event ->
-            if (dragSourceApp == null) return@OnTouchListener false
+            val content = dragContent ?: return@OnTouchListener false
             val workspaceX = view.left + event.x
             val workspaceY = view.top + event.y
             when (event.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
-                    dragMoved = true
-                    onDragProgress?.invoke(workspaceX, workspaceY)
+                    dragMoved = dragMoved || max(abs(workspaceX - downX), abs(workspaceY - downY)) > dragSlop
+                    if (dragMoved) {
+                        if (content is CellContent.FolderCell) {
+                            showDropHighlight(folderDropTarget(workspaceX, workspaceY))
+                        } else {
+                            onDragProgress?.invoke(workspaceX, workspaceY)
+                        }
+                    }
                 }
                 MotionEvent.ACTION_UP -> endDrag(workspaceX, workspaceY, cancelled = false, anchor = view)
                 MotionEvent.ACTION_CANCEL -> endDrag(workspaceX, workspaceY, cancelled = true, anchor = view)
@@ -154,8 +189,9 @@ class WorkspaceView @JvmOverloads constructor(
         }
 
     /** Starts a drag for the icon at [cell]; the item dims until it is dropped. */
-    private fun beginDrag(cell: Int, app: LauncherApp, anchor: View) {
-        dragSourceApp = app
+    private fun beginDrag(cell: Int, content: CellContent, anchor: View) {
+        longPressed = true
+        dragContent = content
         dragAnchor = anchor
         dragMoved = false
         dragTargetCell = null
@@ -163,26 +199,43 @@ class WorkspaceView @JvmOverloads constructor(
         anchor.alpha = DRAGGED_ALPHA
         // The parent takes the gesture over: deliver a synthetic CANCEL so the
         // child clears its pressed/ripple state, then install the drag listener.
-        anchor.dispatchTouchEvent(
-            MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0),
-        )
+        val cancel = MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0)
+        anchor.dispatchTouchEvent(cancel)
+        cancel.recycle()
         anchor.setOnTouchListener(dragTouchListener)
-        onDragStarted?.invoke(cell, app, anchor)
+        if (content is CellContent.App) onDragStarted?.invoke(cell, content.app, anchor)
     }
 
     /** Ends the drag session: restores the icon, clears highlights, reports release. */
     private fun endDrag(x: Float, y: Float, cancelled: Boolean, anchor: View) {
-        val app = dragSourceApp
+        val content = dragContent
         val moved = dragMoved
-        dragSourceApp = null
+        dragContent = null
         dragAnchor = null
         dragTargetCell = null
         dragMoved = false
         anchor.setOnTouchListener(null)
         anchor.alpha = 1f
         invalidate()
-        if (app == null) return
-        onDragReleased?.invoke(x, y, moved, cancelled, app, anchor)
+        when (content) {
+            is CellContent.App -> onDragReleased?.invoke(x, y, moved, cancelled, content.app, anchor)
+            is CellContent.FolderCell -> if (!cancelled) {
+                if (!moved) {
+                    onFolderLongClick?.invoke(content.folder, anchor)
+                } else {
+                    folderDropTarget(x, y)?.let { cell -> onFolderDrop?.invoke(content.folder, cell) }
+                }
+            }
+            null -> Unit
+        }
+    }
+
+    private fun folderDropTarget(x: Float, y: Float): Int? =
+        cellAtLocal(x, y)?.takeUnless { isCellOccupied(it) }
+
+    internal fun cancelDrag() {
+        val anchor = dragAnchor ?: return
+        endDrag(0f, 0f, cancelled = true, anchor)
     }
 
     /** Shows (cell != null) or hides the drop-target highlight for drag sessions. */
@@ -227,6 +280,10 @@ class WorkspaceView @JvmOverloads constructor(
 
     /** Reconciles children with the current cell contents. */
     fun bind(cells: Map<Int, CellContent>) {
+        val draggingFolder = (dragContent as? CellContent.FolderCell)?.folder
+        if (draggingFolder != null &&
+            (cells[draggingFolder.cellIndex] as? CellContent.FolderCell)?.folder?.id != draggingFolder.id
+        ) cancelDrag()
         boundContent = cells
         for (i in childCount - 1 downTo 0) {
             val child = getChildAt(i)
@@ -236,18 +293,21 @@ class WorkspaceView @JvmOverloads constructor(
         for ((cell, content) in cells) {
             val existing = findChildForCell(cell)
             val view = existing ?: AppIconView(context).also {
+                // The grid already insets each cell. Keep the tile's vertical
+                // space for the icon and a complete line of scaled label text.
+                it.setPadding(it.paddingLeft, 0, it.paddingRight, 0)
                 it.tag = cell
                 addView(it)
             }
             when (content) {
                 is CellContent.App -> {
                     view.bind(content.app)
+                    view.setAppNameVisible(showAppNames)
                     view.setOnClickListener { onAppClick?.invoke(content.app) }
-                    view.setOnLongClickListener { anchor ->
-                        beginDrag(cell, content.app, anchor)
-                        // The drag (or, without movement, the context menu) handles the rest.
-                        true
-                    }
+                    view.bindOptions(
+                        onOptions = { anchor -> onAppOptions?.invoke(cell, content.app, anchor) },
+                        onTouchHold = { anchor -> beginDrag(cell, content, anchor) },
+                    )
                 }
                 is CellContent.FolderCell -> {
                     view.bindContent(
@@ -255,11 +315,13 @@ class WorkspaceView @JvmOverloads constructor(
                         label = content.folder.title,
                         description = content.folder.title,
                     )
+                    // A tile reused from an app still needs to show the folder's own name.
+                    view.setAppNameVisible(true)
                     view.setOnClickListener { onCellClick?.invoke(content) }
-                    view.setOnLongClickListener { anchor ->
-                        onFolderLongClick?.invoke(content.folder, anchor)
-                        true
-                    }
+                    view.bindOptions(
+                        onOptions = { anchor -> onFolderLongClick?.invoke(content.folder, anchor) },
+                        onTouchHold = { anchor -> beginDrag(cell, content, anchor) },
+                    )
                 }
             }
         }
@@ -283,6 +345,7 @@ class WorkspaceView @JvmOverloads constructor(
 
         val cellW = cellWidth(width)
         val cellH = cellHeight(height)
+        if (dragContent is CellContent.FolderCell && (cellW != lastCellW || cellH != lastCellH)) cancelDrag()
         lastCellW = cellW
         lastCellH = cellH
         // Guard against degenerate layouts (tiny windows) where the padding would
@@ -324,9 +387,10 @@ class WorkspaceView @JvmOverloads constructor(
     private companion object {
         const val FLING_VELOCITY = 1200f
         const val MAX_FLING_DRIFT_DP = 100f
+        const val PAGE_SWIPE_DP = 56f
         const val DRAGGED_ALPHA = 0.45f
         const val HIGHLIGHT_INSET_DP = 6
-        const val HIGHLIGHT_RADIUS_DP = 20f
-        const val HIGHLIGHT_COLOR = 0x2E4CAF50
+        const val HIGHLIGHT_RADIUS_DP = 12f
+        const val HIGHLIGHT_ALPHA = 41 // 16% dragged state layer.
     }
 }

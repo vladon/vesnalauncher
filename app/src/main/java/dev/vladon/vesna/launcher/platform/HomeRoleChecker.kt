@@ -34,5 +34,6 @@ class HomeRoleChecker(private val appContext: Context) {
             return roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
         }
         return Intent(android.provider.Settings.ACTION_HOME_SETTINGS)
+            .takeIf { it.resolveActivity(appContext.packageManager) != null }
     }
 }

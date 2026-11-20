@@ -9,49 +9,80 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <FrameLayout
-            android:id="@+id/drawer_handle"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:contentDescription="@string/drawer_handle_hint">
+        <ImageButton
+            android:id="@+id/drawer_close"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/home_control_icon_button"
+            android:contentDescription="@string/drawer_close"
+            android:focusable="true"
+            android:padding="0dp"
+            android:scaleType="center"
+            android:src="@drawable/ic_close_drawer"
+            android:tooltipText="@string/drawer_close" />
 
-            <View
-                android:id="@+id/handle_bar"
-                android:layout_width="64dp"
-                android:layout_height="4dp"
-                android:layout_gravity="center"
-                android:background="@drawable/handle_bar" />
-        </FrameLayout>
-
-        <EditText
-            android:id="@+id/drawer_search"
+        <LinearLayout
+            android:id="@+id/drawer_search_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="8dp"
             android:background="@drawable/search_field_background"
-            android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="10dp"
-            android:hint="@string/drawer_search_hint"
-            android:imeOptions="actionDone"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            android:maxLines="1"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="10dp"
-            android:textColor="@color/icon_label_color"
-            android:textColorHint="#66FFFFFF"
-            android:textSize="15sp" />
+            android:gravity="center_vertical"
+            android:minHeight="56dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/drawer_search"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@null"
+                android:drawableStart="@drawable/ic_search"
+                android:drawablePadding="12dp"
+                android:fontFamily="@font/inter_regular"
+                android:hint="@string/drawer_search_hint"
+                android:imeOptions="actionDone|flagNoPersonalizedLearning"
+                android:importantForAutofill="no"
+                android:inputType="textNoSuggestions"
+                android:letterSpacing="0.03125"
+                android:minHeight="56dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="8dp"
+                android:paddingVertical="8dp"
+                android:singleLine="true"
+                android:textColor="@color/home_control_on_surface"
+                android:textColorHint="@color/vesna_on_surface_variant"
+                android:textCursorDrawable="@drawable/drawer_search_cursor"
+                android:textSize="16sp" />
+
+            <ImageButton
+                android:id="@+id/drawer_clear_search"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/home_control_states"
+                android:contentDescription="@string/drawer_clear_search"
+                android:focusable="true"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_clear_search"
+                android:tooltipText="@string/drawer_clear_search"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/drawer_no_results"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:accessibilityLiveRegion="polite"
+            android:fontFamily="@font/inter_regular"
             android:padding="24dp"
             android:text="@string/drawer_no_results"
-            android:textColor="@color/hint_color"
-            android:textSize="15sp"
+            android:textColor="@color/vesna_on_surface_variant"
+            android:textSize="14sp"
             android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView
@@ -59,7 +90,6 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:clipToPadding="false"
             android:scrollbars="vertical" />
     </LinearLayout>
 </merge>

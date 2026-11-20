@@ -13,16 +13,16 @@
 
     <TextView
         android:id="@+id/app_label"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
+        android:background="@drawable/workspace_label_backing"
         android:ellipsize="end"
+        android:fontFamily="@font/inter_medium"
         android:gravity="center"
         android:maxLines="1"
-        android:shadowColor="#88000000"
-        android:shadowDx="0"
-        android:shadowDy="1"
-        android:shadowRadius="2"
+        android:letterSpacing="0.041667"
+        android:paddingHorizontal="4dp"
         android:textColor="@color/icon_label_color"
         android:textSize="12sp" />
 </merge>

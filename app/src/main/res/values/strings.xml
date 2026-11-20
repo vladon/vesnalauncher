@@ -2,33 +2,75 @@
     <string name="app_name">Vesna Launcher</string>
 
     <!-- Default launcher prompt -->
-    <string name="banner_set_default_home">Set Vesna as your default launcher</string>
     <string name="menu_set_default_home">Set as default launcher</string>
+    <string name="settings_default_launcher">Default launcher</string>
+    <string name="settings_default_home_setup">Choose Vesna to open it when you press Home.</string>
+    <string name="settings_default_home_active">Vesna is your default launcher.</string>
+    <string name="settings_default_home_unavailable">Android does not offer a Home app picker on this device.</string>
+
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_show_app_names">Show app names</string>
+    <string name="settings_show_app_names_detail">On Home, in the dock, in the app drawer, and in folders</string>
 
     <!-- Workspace / dock context menus -->
     <string name="menu_add_to_workspace">Add to workspace</string>
     <string name="menu_remove_from_workspace">Remove from workspace</string>
     <string name="menu_add_to_dock">Add to dock</string>
+    <string name="menu_move_to_page">Move to page…</string>
     <string name="menu_remove_from_dock">Remove from dock</string>
     <string name="menu_app_info">App info</string>
+    <string name="shortcut_options">Shortcut options</string>
+    <string name="home_options">Home options</string>
     <string name="menu_launcher_settings">Vesna settings</string>
     <string name="menu_wallpaper">Set wallpaper</string>
+    <string name="menu_default_launcher">Default launcher</string>
+    <string name="menu_add_workspace_page">Add home page</string>
+    <string name="menu_remove_empty_workspace_page">Remove empty page</string>
+    <string name="menu_reorder_workspace_page">Reorder this page…</string>
 
-    <string name="workspace_empty_hint">Long-press here for options</string>
-    <string name="toast_workspace_full">The workspace is full</string>
+    <string name="workspace_previous_page">Previous home page</string>
+    <string name="workspace_next_page">Next home page</string>
+    <string name="workspace_page_position">Home page %1$d of %2$d</string>
+    <string name="workspace_choose_page">Go to page…</string>
+    <string name="workspace_page_number">Home page %1$d</string>
+    <string name="reorder_page_position">Move to position %1$d</string>
+
+    <string name="workspace_empty_hint">Open Home options to customize this page</string>
+    <string name="toast_workspace_full">This home page is full</string>
+    <string name="toast_workspace_page_not_empty">Only empty home pages can be removed</string>
+    <string name="toast_workspace_page_reordered">Home page reordered</string>
+    <string name="toast_workspace_page_order_changed">Home pages changed. Open Home options to try again.</string>
+    <string name="toast_shortcut_moved">Shortcut moved</string>
+    <string name="toast_folder_moved">Folder moved</string>
+    <string name="toast_no_move_destination">Free a space on another home page first</string>
+    <string name="toast_move_destination_full">That home page is full</string>
+    <string name="toast_move_unavailable">This move is no longer available</string>
+    <string name="app_launch_failed">Could not open the app</string>
+    <string name="toast_app_info_unavailable">App info is unavailable</string>
     <string name="toast_dock_full">The dock is full</string>
 
     <!-- Folders -->
     <string name="folder_default_title">Folder</string>
     <string name="folder_rename">Rename folder</string>
+    <string name="folder_name">Folder name</string>
+    <string name="folder_name_required">Enter a folder name.</string>
+    <string name="folder_rename_save">Save</string>
     <string name="folder_remove_from_folder">Remove from folder</string>
+    <string name="folder_removal_no_room">Not enough room on this page. Move or remove shortcuts to make room.</string>
     <string name="folder_open_hint">Folder with %1$d apps</string>
     <string name="folder_remove">Remove folder</string>
 
     <!-- Drawer accessibility -->
-    <string name="drawer_handle_hint">Open or close the app drawer</string>
+    <string name="drawer_open">Open app drawer</string>
+    <string name="drawer_close">Close app drawer</string>
+    <string name="drawer_title">App drawer</string>
     <string name="drawer_search_hint">Search apps</string>
-    <string name="drawer_no_results">Nothing found</string>
+    <string name="drawer_search_hint_compact">Search</string>
+    <string name="drawer_clear_search">Clear search</string>
+    <string name="drawer_no_results">No matching apps</string>
 
     <!-- About / settings -->
     <string name="about_version_fmt">Version %1$s</string>

@@ -9,4 +9,5 @@ data class Folder(
     val id: Long,
     val title: String,
     val cellIndex: Int,
+    val pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
 )

@@ -1,28 +1,21 @@
 # ADR-PAGE-1: Workspace page identity and its migration
 
-**Status:** Proposed — **not accepted**. Decision prerequisites are listed
-[below](#decision-prerequisites); none of them holds yet.
+**Status:** Accepted for persistence and migration (Room version 4).
+Page-management UI is not part of this decision.
 **Date:** 2026-11-19
 **Gates:** [ENG-101](../engineering/BACKLOG.md#eng-101-workspace-page-identities-and-schema-migration)
 (page identities + schema migration) and, transitively, ENG-102 (widgets occupy
 grid cells). The ADR candidate is tracked as
 [ADR-PAGE-1 in BACKLOG.md](../engineering/BACKLOG.md#adr-page-1-workspace-page-identity-and-its-migration).
 
-This document **proposes** the identity model for workspace pages and the
-**shape of the migration** away from the shipped single-page Room v3 schema.
-The concrete schema version number is fixed **at this ADR's acceptance** — not
-before, not at implementation. UI behavior, page-management interactions, and
-other product decisions stay open and are listed as prerequisites. Research
-candidate `HOME-104` (workspace page management via drag) remains a candidate, not a requirement: it is
-unimplemented and its matrix status is unsupported
-([REQUIREMENTS_TRACEABILITY.md](../engineering/REQUIREMENTS_TRACEABILITY.md#home-screen-and-workspace-pages),
-[RESEARCH_HANDOFF.md](../engineering/RESEARCH_HANDOFF.md#known-weaknesses-in-the-research-matrix)).
+This decision establishes stable page identity and an additive migration away
+from the published single-page Room v3 schema. Vesna still renders the default
+4×5 page. `HOME-104` (page management via drag) remains an unapproved research
+candidate and is not consumed by this change.
 
 ## Context (shipped state, source-verified)
 
-App 0.4.1 (tag `v0.4.1`; the `data/` and
-`workspace/` main sources are byte-identical between the tag and this branch —
-verified by an empty `git diff v0.4.1..HEAD` over those directories):
+Published Vesna 0.4.2:
 
 - [Room v3](../../app/src/main/java/dev/vladon/vesna/launcher/data/LauncherDatabase.kt)
   (`version = 3`, `exportSchema = false`), database `vesna-launcher.db`.
@@ -79,9 +72,9 @@ verified by an empty `git diff v0.4.1..HEAD` over those directories):
 | **C. Visual order stored in each item** — dense per-item sequence numbers | Rejected | Same renumbering problem, worse (per item). Dock slot renumbering is affordable at ≤4 entries with no other positional data; workspace items already carry stable cells that must not churn. Conflates identity with display order. |
 | **D. Stable opaque page IDs + page-level ordered metadata** — a `pages` table with opaque row IDs (same convention as `folders`) plus a `rank` column | **Preferred proposal** | Identities never change; reordering pages updates *k* rank values, zero item rewrites; ordering metadata lives on the few pages, not on the many items; the table generalizes cleanly to folders and later widgets. |
 
-## Proposed model (indicative — exact DDL and schema version assigned at acceptance)
+## Accepted model
 
-- New `pages` table: opaque autogen `id` (Long, mirroring the `folders`
+- New `workspace_pages` table: opaque autogen `id` (Long, mirroring the `folders`
   convention) and `rank` for display order. **No `UNIQUE` on `rank`**: reorder
   transactions may transiently hold duplicate ranks; the total order is
   `(rank, id)` — deterministic without a constraint.
@@ -101,12 +94,8 @@ verified by an empty `git diff v0.4.1..HEAD` over those directories):
   inside the existing `mutationMutex`; the model adds no new synchronization.
   This invariant binds **normal writes** once the model is implemented — it is
   enforced on the write path, before persisting.
-- **Legacy tolerance is separate and unchanged.** Rows that already violate
-  the invariant (malformed legacy data) are preserved verbatim and keep
-  rendering through the existing read-time tolerance (the resolver ignores
-  invalid and duplicate cells). This proposal commits to no rewrite of such
-  rows; their explicit treatment is an open decision
-  ([below](#migration-from-the-shipped-v3-schema)).
+- Legacy invalid and duplicate cells remain stored unchanged. The resolver's
+  existing read-time tolerance still applies.
 
 ## Invariants along the existing transaction paths
 
@@ -140,42 +129,20 @@ verified by an empty `git diff v0.4.1..HEAD` over those directories):
 One Room migration in the established additive style, executed inside Room's
 migration transaction:
 
-1. Create `pages`; insert **one default page** — a deterministic fixed
-   identifier, `rank = 0` (exact value assigned with the DDL).
-2. Add the (nullable) page reference column to `workspace_items` and to
-   `folders`.
-3. **Default-page assignment:** every *valid* top-level workspace entry
-   (`container = 'WORKSPACE'`, `folderId IS NULL`) and every folder row is
-   assigned to the default page. Keys (`packageName`, `className`,
-   `userSerial`), `cellIndex` positions, and `folderId` membership links are
-   retained untouched. Dock rows get no page; folder members get no page of
-   their own.
+1. Create `workspace_pages` and insert default page ID `1`, rank `0`.
+2. Add nullable indexed `pageId` foreign keys to `workspace_items` and
+   `folders`. Page references restrict deletion of a referenced page.
+3. Assign all top-level non-dock items and all folders to the default page.
+   IDs, app keys, profile serials, cell positions, and folder links are
+   unchanged. Dock rows and folder members receive no page of their own.
 4. **Empty tables:** migrate to the schema containing just the default page;
    the seeded flag — not migration — governs re-seeding.
 
-**Malformed legacy data — preserve; treatment decided, then tested.** The
-migration must complete on any v3 file Room can open, including empty tables,
-and must not fall back destructively (`fallbackToDestructiveMigration` is not
-used today and stays unused). Rows it cannot interpret are **preserved
-verbatim** — never dropped or rewritten by this proposal. Their explicit
-treatment is an **open decision prerequisite**; candidate treatments on the
-table, none committed here:
-
-- `container` outside `{WORKSPACE, DOCK}` — options include mirroring the
-  existing read fallback (`toDomain` maps unknown names to `WORKSPACE`) or
-  surfacing the anomaly for explicit repair.
-- `folderId` referencing no folder row — options include detaching the row to
-  a top-level entry or another defined placement; note that today such rows
-  silently disappear from every surface (the resolver groups by existing
-  folder IDs). The old folder-relative `cellIndex` may or may not be reused —
-  to be decided, not assumed.
-- Out-of-range or colliding `cellIndex` — preserved verbatim; read-time
-  tolerance continues to apply (the resolver already ignores invalid and
-  duplicate cells). The migration performs **no silent reordering** under any
-  of the options.
-
-Whatever treatment is decided must be implemented in the migration **and
-exercised by the verification harness** (malformed fixtures below).
+**Malformed legacy data:** Unknown top-level container names keep their
+stored value and follow the existing workspace fallback, on the default page.
+Dangling folder members retain their existing folder IDs and remain hidden.
+Out-of-range or colliding positions are preserved; migration never silently
+reorders or drops them. The migration harness exercises these cases.
 
 If a migration ever fails, Room aborts the transaction and the v3 file remains
 intact (atomicity); there is no runtime data-wiping catch. The mitigation for
@@ -188,18 +155,13 @@ page plus dock
 ([`SeedPlanner`](../../app/src/main/java/dev/vladon/vesna/launcher/workspace/SeedPlanner.kt));
 a pre-flag upgrading layout is adopted via `markSeeded` untouched; a
 user-emptied workspace never re-seeds (the flag is deliberately not derived
-from table emptiness). Package events never create pages; page creation can
-only enter through the add path, whose policy is an open decision above. The
-default page persists even when it holds no locating records.
+from table emptiness). App adds never create pages. The default page persists
+even when it holds no locating records.
 
 ## Durability, restart, and rollback limits
 
-- All page state lives in Room plus the prefs flag — nothing page-related is
-  held in memory — so restart and reboot preserve the layout by the same
-  mechanism QA-004A verifies for schema and data. Process-death and reboot
-  durability themselves are **not yet verified**: the QA-004A harness
-  explicitly excludes them, and the QA-004 restart/reboot run is a
-  prerequisite below.
+- Page state lives in Room. `workspace_seeded` remains in shared preferences
+  and is not changed by the migration.
 - **Forward-only.** No in-app down-migration is provided. After the
   migration, an older app build cannot open the newer database file (Room's
   version check fails). Rollback options beyond uninstall/clear-data: a
@@ -214,62 +176,33 @@ default page persists even when it holds no locating records.
 
 ## Schema export and migration verification (QA-004A pattern)
 
-- Adopted as part of this proposal: **enable Room schema export with schema
-  JSONs under version control** (`exportSchema` is `false` today, and was
-  `false` in `v0.4.1` — the shipped release has **no** exported schema;
-  QA-004A had to reconstruct v1/v2 DDL from tags `v0.1.0`/`v0.2.0`). From this
-  migration on, each schema version is pinned in git, and fixtures are built
-  from exported schemas rather than hand-transcribed DDL.
-- The next migration extends the
-  [QA-004A harness](../../app/src/androidTest/java/dev/vladon/vesna/launcher/data/RoomMigrationQaTest.kt)
-  unchanged in method — authentic schema seeded into an isolated disposable
-  file, migrated through the unmodified production `LauncherDatabase.build`,
-  Room's own post-migration validation on open, production DB never touched —
-  with:
-  - the v3 base fixture sourced **either** from a verified reconstruction of
-    the shipped schema (QA-004A's own method) **or** from a schema export
-    generated by building the exact `v0.4.1` tree with the exporter enabled —
-    no pre-existing export exists to consume;
-  - malformed fixtures (unknown `container`, dangling `folderId`,
-    out-of-range/colliding `cellIndex`, empty tables) exercising **whatever
-    malformed-row treatment is decided** — and until one is decided, asserting
-    only preservation (no rows dropped, no silent rewrites) and a successful
-    open;
-  - assertions that default-page assignment happened and that keys, positions,
-    and folder links survived; page-scope invariants hold after reopen;
-  - repeat the on-device force-stop, reboot, and empty-layout verification
-    against the new schema using the procedure in
-    [VESNA-QA-004B](../engineering/verification/VESNA-QA-004B.md). Update the
-    traceability row in the same change.
+- Room schemas are exported under `app/schemas` starting at version 4.
+- The [Room migration harness](../../app/src/androidTest/java/dev/vladon/vesna/launcher/data/RoomMigrationQaTest.kt)
+  opens isolated historical databases through the production builder. It
+  checks migrations from versions 1, 2 and 3, including malformed rows and
+  an empty v3 layout, and verifies the migrated database on reopen.
+- Repository tests cover page-scoped cell occupancy, moving and unpinning
+  duplicate app keys on different pages, rank changes without rewriting pins,
+  and dissolving folders onto their own page.
+- On the dedicated API 35 `Vesna_Pages_V4_QA` emulator, the debug candidate
+  opened a copy of the signed 0.4.2 database and assigned the default page
+  without changing any of its 18 placement rows, folder data, or seeded
+  preference. The layout survived a guest reboot. A seeded empty v3 fixture
+  stayed empty after migration. The same build passed all 23 instrumentation
+  tests. The home hierarchy was checked in light mode and again in dark mode
+  at 1.3× font scale; this was not a keyboard or TalkBack audit.
 
-## Decision prerequisites
+## Decisions left for page management
 
-This ADR is **Proposed**. It becomes accepted only when all of the following
-hold; none is granted by this document:
+Page creation, deletion, display-order gestures, page-count limits, and
+cross-page drags are not exposed in this change. Adds target the current
+page and return the existing full-page error; removing a folder returns
+members only to its own page and refuses if they do not fit. There is no
+automatic page creation or retirement.
 
-1. **QA baseline:** recorded runs for the existing QA-004A harness *and* the
-   QA-004 restart/reboot remainder, on the dedicated API 35 AVD, linked from
-   [REQUIREMENTS_TRACEABILITY.md](../engineering/REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids).
-2. **Approved product semantics:** owner approval of the page-management
-   decisions this model leaves open — page-count bounds; creation/deletion
-   and reorder interactions; the add path (**cross-page scan order** and
-   whether adds past capacity **auto-create pages** or refuse);
-   **empty-page retirement** (whether/when a page with no locating records is
-   deleted); **folder dissolution when the folder's page lacks space** for all
-   returning members (refuse vs. distribute); and whether **cross-page moves**
-   are offered at all. `HOME-104` stays a
-   research candidate: its scenario must be authored on the research branch
-   ([ENG-107](../engineering/BACKLOG.md#eng-107-research-matrix-fix-ups-research-branch-not-trunk))
-   before trunk consumes the ID.
-3. **Malformed-row treatment:** the explicit normalization policy for the
-   legacy-data cases above, decided before implementation and covered by the
-   verification harness.
-4. **Schema version number:** fixed **at this ADR's acceptance** and recorded
-   in the accepted ADR — not before, not at implementation. All binding
-   constraints of the proposed model (write-path invariants, migration shape)
-   are **dormant until acceptance**: none of this document constrains
-   implementation before that point; ENG-101 then implements against the
-   accepted number.
+Before consuming `HOME-104`, record the page-management behavior on the
+[research branch](../engineering/BACKLOG.md#eng-107-research-matrix-fix-ups-research-branch-not-trunk)
+and get product approval for the interactions.
 
 Out of scope for this ADR: UI features of any kind, widgets
 ([ADR-WIDGET-1](../engineering/BACKLOG.md#adr-widget-1-widget-host-cleanup)),
@@ -288,7 +221,3 @@ or implied by this document.
 - Planning: [ENG-101](../engineering/BACKLOG.md#eng-101-workspace-page-identities-and-schema-migration)
   · [VESNA-QA-004](../engineering/BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done)
   · [traceability: home screen and workspace pages](../engineering/REQUIREMENTS_TRACEABILITY.md#home-screen-and-workspace-pages)
-- Evidence at drafting time: QA-004A harness added by commit `14ec712`
-  (verified: `app/src/androidTest/.../RoomMigrationQaTest.kt`, 1 file,
-  +271); `data/`+`workspace/` main sources identical between tag `v0.4.1` and
-  this branch (verified: empty `git diff v0.4.1..HEAD` over those paths).

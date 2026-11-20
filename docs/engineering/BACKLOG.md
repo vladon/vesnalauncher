@@ -144,14 +144,10 @@ the dedicated API 26 AVD).
 
 ### ENG-101: Workspace page identities and schema migration
 
-Introduce stable page identifiers so the workspace can grow beyond one 4×5 page.
-The **page identity ADR ([ADR-PAGE-1](#adr-page-1-workspace-page-identity-and-its-migration))
-fixes both the identity model and the Room schema version** — the schema version
-is not pre-committed before the ADR. Rides the migration discipline established
-by `MIGRATION_1_2`/`MIGRATION_2_3`. Research candidate: `HOME-104` (workspace
-page management via drag) — currently unimplemented, with its matrix status
-unsupported ([REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md#home-screen-and-workspace-pages)); the `HOME-104` scenario must exist on the research branch
-before trunk consumes the ID.
+Stable page identifiers and the additive Room 3→4 migration follow
+[ADR-PAGE-1](../adr/0001-workspace-page-identity.md). The launcher still
+shows a single 4×5 default page. Page-management interactions remain a separate
+product decision; `HOME-104` is still a research candidate.
 
 ### ENG-102: Widget host — lifecycle only
 
@@ -239,9 +235,8 @@ ADR).
 
 ### ADR-PAGE-1: Workspace page identity and its migration
 
-How pages are identified (stable IDs vs. index), how cell indices encode page
-membership, and the Room migration shape (schema version fixed by this ADR,
-not before). Gates ENG-101.
+Accepted for storage and migration: [ADR 0001](../adr/0001-workspace-page-identity.md)
+defines stable page IDs, page-local cells, and Room schema version 4.
 
 ### ADR-WIDGET-1: Widget host cleanup
 
@@ -250,11 +245,9 @@ removal, behavior across restore and reboot. Gates ENG-102.
 
 ### ADR-BACKUP-1: Backup and privacy policy
 
-Decides whether platform backup stays enabled (it may) and defines the scope of
-what is backed up; states whether an explicit in-app backup/restore feature
-exists at all. Must state the privacy position explicitly (no analytics, no
-tracking, layout data only). Gates ENG-106. Draft:
-[ADR 0002 — Backup and privacy](../adr/0002-backup-and-privacy.md) (Proposed).
+[ADR 0002 — Backup and privacy](../adr/0002-backup-and-privacy.md) drafts scoped
+Android device-to-device transfer only. No cloud backup, analytics, tracking,
+or in-app export. Implementation remains gated on review and transport tests.
 
 ---
 
