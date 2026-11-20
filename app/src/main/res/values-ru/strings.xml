@@ -48,6 +48,7 @@
     <string name="toast_no_move_destination">Сначала освободите место на другой странице</string>
     <string name="toast_move_destination_full">На этой странице нет места</string>
     <string name="toast_move_unavailable">Перемещение больше недоступно</string>
+    <string name="toast_app_info_unavailable">Не удалось открыть сведения о приложении</string>
     <string name="toast_dock_full">Док заполнен</string>
 
     <!-- Папки -->

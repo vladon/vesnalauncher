@@ -27,6 +27,7 @@ enum class LauncherMessage {
     WORKSPACE_FULL, DOCK_FULL, WORKSPACE_PAGE_NOT_EMPTY,
     SHORTCUT_MOVED, FOLDER_MOVED, NO_MOVE_DESTINATION, MOVE_DESTINATION_FULL, MOVE_UNAVAILABLE,
     WORKSPACE_PAGE_REORDERED, WORKSPACE_PAGE_ORDER_CHANGED,
+    APP_INFO_UNAVAILABLE,
 }
 
 /** Everything the launcher UI renders. */
@@ -118,6 +119,10 @@ class LauncherController(
             // recover the list instead of leaving a dead icon around.
             scope.launch { refresh() }
         }
+    }
+
+    internal fun openAppInfo(app: LauncherApp) {
+        if (!appLauncher.openAppInfo(app)) _messages.tryEmit(LauncherMessage.APP_INFO_UNAVAILABLE)
     }
 
     /** Appends a new page (capped at [MAX_WORKSPACE_PAGES]) and selects it; a no-op at the cap. */

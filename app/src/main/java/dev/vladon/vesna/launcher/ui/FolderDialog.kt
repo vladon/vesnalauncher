@@ -1,9 +1,6 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -37,6 +34,7 @@ internal class FolderDialog(
     context: Context,
     private val folder: Folder,
     private val onLaunch: (LauncherApp) -> Unit,
+    private val onAppInfo: (LauncherApp) -> Unit,
     private val onRemoveFromFolder: (LauncherApp) -> Unit,
     private val onRename: () -> Unit,
     private val onRemoveFolder: () -> Unit,
@@ -103,12 +101,7 @@ internal class FolderDialog(
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_REMOVE_FROM_FOLDER -> onRemoveFromFolder(app)
-                MENU_APP_INFO -> anchor.context.startActivity(
-                    Intent(
-                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.fromParts("package", app.packageName, null),
-                    ),
-                )
+                MENU_APP_INFO -> onAppInfo(app)
             }
             true
         }

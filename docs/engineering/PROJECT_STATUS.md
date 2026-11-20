@@ -157,6 +157,8 @@ list means it was not performed, nothing more.
   profile-scoped discovery, pinning, and removal were device-verified
   afterwards by [VESNA-QA-003C](verification/VESNA-QA-003C.md) (2026-11-19,
   API 35 AVD).
+- [Profile-aware App info](#profile-aware-app-info) was verified later with
+  identical Personal and Work copies of the same app on Android 15.
 - The last published release is `0.4.2` (version code 7, Room schema 3).
   The signed [0.4.1 → 0.4.2 upgrade](verification/VESNA-QA-0.4.2-UPGRADE.md)
   preserved all workspace, dock, and folder data on Android 15.
@@ -547,6 +549,20 @@ focus has a visible ring, and a non-touch action never starts a drag.
   layouts, English and Russian up to 200% text, RTL, and both navigation modes.
   Debug lint passed; `ShortcutActionsTest` and `DrawerSearchTest` passed on
   both emulators. TalkBack speech and physical devices were not checked.
+
+### Profile-aware App info
+
+**App info** on a workspace shortcut, dock shortcut, drawer entry, or
+folder member opens Android Settings for that app's profile. Vesna uses
+the selected entry's user serial and does not fall back to another profile.
+
+- Android 15 with the same fixture app installed in Personal and Work:
+  the previous build opened user 0's Settings from the Work Home shortcut.
+  The fixed build opened Work Settings (user 10) from all four surfaces.
+  Personal entries from the drawer and the same folder opened user 0.
+- Android 8 opened personal Clock's App info from Home. Neither emulator
+  needed Vesna to hold the default Home role. Debug lint passed. Physical
+  devices and organization-managed profile policies were not tested.
 
 ## Where to go next
 

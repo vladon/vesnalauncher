@@ -3,9 +3,7 @@ package dev.vladon.vesna.launcher.ui
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
@@ -451,6 +449,7 @@ class HomeActivity : ComponentActivity() {
             context = this,
             folder = folder,
             onLaunch = { controller.launch(it) },
+            onAppInfo = { controller.openAppInfo(it) },
             onRemoveFromFolder = { controller.removeFromFolder(it, folder.id) },
             onRename = { promptFolderRename(folder.id) },
             onRemoveFolder = { controller.removeFolder(folder.id) },
@@ -552,6 +551,7 @@ class HomeActivity : ComponentActivity() {
             LauncherMessage.MOVE_UNAVAILABLE -> getString(R.string.toast_move_unavailable)
             LauncherMessage.WORKSPACE_PAGE_REORDERED -> getString(R.string.toast_workspace_page_reordered)
             LauncherMessage.WORKSPACE_PAGE_ORDER_CHANGED -> getString(R.string.toast_workspace_page_order_changed)
+            LauncherMessage.APP_INFO_UNAVAILABLE -> getString(R.string.toast_app_info_unavailable)
         }
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
@@ -603,7 +603,7 @@ class HomeActivity : ComponentActivity() {
                     pinId, destinationId -> controller.movePinToPage(pinId, cell, pageId, destinationId)
                 }
                 MENU_REMOVE -> controller.removeFromWorkspace(app, cell, pageId)
-                MENU_APP_INFO -> showAppInfo(app)
+                MENU_APP_INFO -> controller.openAppInfo(app)
             }
             true
         }
@@ -649,7 +649,7 @@ class HomeActivity : ComponentActivity() {
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_REMOVE -> controller.removeFromDock(pinId)
-                MENU_APP_INFO -> showAppInfo(app)
+                MENU_APP_INFO -> controller.openAppInfo(app)
             }
             true
         }
@@ -666,7 +666,7 @@ class HomeActivity : ComponentActivity() {
             when (item.itemId) {
                 MENU_ADD_TO_WORKSPACE -> controller.addToWorkspace(app, pageId)
                 MENU_ADD_TO_DOCK -> controller.addToDock(app)
-                MENU_APP_INFO -> showAppInfo(app)
+                MENU_APP_INFO -> controller.openAppInfo(app)
             }
             true
         }
@@ -735,15 +735,6 @@ class HomeActivity : ComponentActivity() {
             getString(R.string.menu_wallpaper),
         )
         startActivity(intent)
-    }
-
-    private fun showAppInfo(app: LauncherApp) {
-        startActivity(
-            Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", app.packageName, null),
-            ),
-        )
     }
 
     private companion object {

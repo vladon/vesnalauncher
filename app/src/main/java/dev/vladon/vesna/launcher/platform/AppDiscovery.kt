@@ -93,13 +93,29 @@ class AppLauncher(private val appContext: Context) {
      * without crashing, but the list itself is still correct.
      */
     fun launch(app: LauncherApp): Boolean {
-        return try {
+        return tryStart {
             if (app.key.userSerial == MAIN_PROFILE_SERIAL || launcherApps == null) {
                 appContext.startActivity(mainProfileIntent(app))
             } else {
                 val user = userManager.getUserForSerialNumber(app.key.userSerial) ?: return false
                 launcherApps.startMainActivity(ComponentName(app.key.packageName, app.key.className), user, null, null)
             }
+        }
+    }
+
+    /** Opens the application's Settings page in the profile selected in Vesna. */
+    internal fun openAppInfo(app: LauncherApp): Boolean {
+        val launcher = launcherApps ?: return false
+        val key = app.key
+        return tryStart {
+            val user = userManager.getUserForSerialNumber(key.userSerial) ?: return false
+            launcher.startAppDetailsActivity(ComponentName(key.packageName, key.className), user, null, null)
+        }
+    }
+
+    private inline fun tryStart(start: () -> Unit): Boolean =
+        try {
+            start()
             true
         } catch (e: ActivityNotFoundException) {
             // Stale entry: activity was disabled or removed since the last discovery pass.
@@ -111,7 +127,6 @@ class AppLauncher(private val appContext: Context) {
             // Work profile is turned off or in quiet mode.
             false
         }
-    }
 
     private fun mainProfileIntent(app: LauncherApp): Intent =
         Intent(Intent.ACTION_MAIN)
