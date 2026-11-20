@@ -697,6 +697,21 @@ transaction. If a slot update fails, the saved dock stays unchanged.
   existing icons without replacing their saved pins. The original fixture
   layout was restored afterward.
 
+### Atomic uninstall cleanup
+
+When an uninstall leaves a folder empty or with one member, Vesna saves the
+pin removal and the resulting folder layout together. This covers both live
+package events and startup cleanup.
+
+- On Android 8 and 15, forcing folder deletion to fail left partial placements
+  on the prior build. The fixed build rolled back every affected row. Retrying
+  removed only the uninstalled profile's pins and returned the remaining app
+  to the folder's original cell on its original page. The six focused package
+  and folder tests passed on both versions; debug lint passed.
+- On Android 15, uninstalling a test app while Vesna was running or force-stopped
+  dissolved the two-app folder and restored Camera to its original slot. All
+  original fixture placements were preserved.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

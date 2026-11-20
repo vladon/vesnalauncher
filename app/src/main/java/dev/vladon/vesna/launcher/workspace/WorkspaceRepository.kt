@@ -256,9 +256,13 @@ class WorkspaceRepository(
 
     suspend fun removeFromDock(pinId: Long) = mutationMutex.withLock { dao.deleteDockPin(pinId) }
 
-    /** Removes every layout entry of an uninstalled package in one profile. */
+    /** Removes an uninstalled package's pins and resolves affected folders in the same transaction. */
     suspend fun removeAllForPackage(packageName: String, userSerial: Long) = mutationMutex.withLock {
-        dao.deleteByPackage(packageName, userSerial)
+        db.withTransaction {
+            val affectedFolders = dao.folderIdsForPackage(packageName, userSerial)
+            dao.deleteByPackage(packageName, userSerial)
+            for (folderId in affectedFolders) dissolveIfSparse(folderId)
+        }
     }
 
     /** Removes pins only for uninstalled packages; unavailable pins keep their positions. */
@@ -266,15 +270,20 @@ class WorkspaceRepository(
         launchableKeys: Set<AppKey>,
         isPackageInstalled: (String, Long) -> Boolean,
     ) = mutationMutex.withLock {
+        // Check package availability before opening the database write transaction.
+        val uninstalledPins = ArrayList<Long>()
         val packageInstalled = HashMap<Pair<String, Long>, Boolean>()
         for (item in dao.getAll()) {
             if (AppKey(item.packageName, item.className, item.userSerial) in launchableKeys) continue
             val installed = packageInstalled.getOrPut(item.packageName to item.userSerial) {
                 isPackageInstalled(item.packageName, item.userSerial)
             }
-            if (!installed) dao.deleteById(item.id)
+            if (!installed) uninstalledPins.add(item.id)
         }
-        normalizeFolders()
+        db.withTransaction {
+            for (id in uninstalledPins) dao.deleteById(id)
+            normalizeFolders()
+        }
     }
 
     /** Dissolves folders that hold fewer than two members. */
@@ -582,7 +591,7 @@ class WorkspaceRepository(
      * to the folder's grid cell, an empty folder is deleted.
      */
     private suspend fun dissolveIfSparse(folderId: Long) {
-        val members = dao.getAll().filter { it.folderId == folderId }
+        val members = dao.firstTwoFolderMembers(folderId)
         when (members.size) {
             0 -> folderDao.deleteById(folderId)
             1 -> {

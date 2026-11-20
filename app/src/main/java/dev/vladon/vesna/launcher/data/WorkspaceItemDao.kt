@@ -14,6 +14,9 @@ interface WorkspaceItemDao {
     @Query("SELECT * FROM workspace_items")
     suspend fun getAll(): List<WorkspaceItemEntity>
 
+    @Query("SELECT * FROM workspace_items WHERE folderId = :folderId LIMIT 2")
+    suspend fun firstTwoFolderMembers(folderId: Long): List<WorkspaceItemEntity>
+
     @Insert
     suspend fun insert(item: WorkspaceItemEntity): Long
 
@@ -54,6 +57,12 @@ interface WorkspaceItemDao {
 
     @Query("DELETE FROM workspace_items WHERE id = :id AND container = 'DOCK' AND folderId IS NULL")
     suspend fun deleteDockPin(id: Long)
+
+    @Query(
+        "SELECT DISTINCT folderId FROM workspace_items " +
+            "WHERE packageName = :packageName AND userSerial = :userSerial AND folderId IS NOT NULL",
+    )
+    suspend fun folderIdsForPackage(packageName: String, userSerial: Long): List<Long>
 
     @Query("DELETE FROM workspace_items WHERE packageName = :packageName AND userSerial = :userSerial")
     suspend fun deleteByPackage(packageName: String, userSerial: Long)
