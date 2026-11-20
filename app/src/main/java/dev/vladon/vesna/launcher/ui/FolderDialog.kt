@@ -8,7 +8,6 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
-import android.widget.PopupMenu
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.R
@@ -47,10 +46,7 @@ class FolderDialog(
         list.layoutManager = GridLayoutManager(context, GRID_COLUMNS)
         adapter = FolderContentsAdapter(
             onItemClick = onLaunch,
-            onItemLongClick = { app ->
-                showItemMenu(context, app)
-                true
-            },
+            onItemOptions = ::showItemMenu,
         )
         list.adapter = adapter
 
@@ -80,15 +76,14 @@ class FolderDialog(
         adapter.submitList(state.folderContents[folder.id].orEmpty())
     }
 
-    private fun showItemMenu(context: Context, app: LauncherApp) {
-        val anchor = dialog.window?.decorView ?: return
-        val popup = PopupMenu(context, anchor)
-        popup.menu.add(0, MENU_REMOVE_FROM_FOLDER, 0, context.getString(R.string.folder_remove_from_folder))
-        popup.menu.add(0, MENU_APP_INFO, 1, context.getString(R.string.menu_app_info))
+    private fun showItemMenu(app: LauncherApp, anchor: View) {
+        val popup = vesnaPopupMenu(anchor)
+        popup.menu.add(0, MENU_REMOVE_FROM_FOLDER, 0, R.string.folder_remove_from_folder)
+        popup.menu.add(0, MENU_APP_INFO, 1, R.string.menu_app_info)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_REMOVE_FROM_FOLDER -> onRemoveFromFolder(app)
-                MENU_APP_INFO -> context.startActivity(
+                MENU_APP_INFO -> anchor.context.startActivity(
                     Intent(
                         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                         Uri.fromParts("package", app.packageName, null),

@@ -21,6 +21,7 @@
     <string name="menu_add_to_dock">Добавить в док</string>
     <string name="menu_remove_from_dock">Убрать из дока</string>
     <string name="menu_app_info">О приложении</string>
+    <string name="shortcut_options">Действия с ярлыком</string>
     <string name="home_options">Меню рабочего стола</string>
     <string name="menu_launcher_settings">Настройки Vesna</string>
     <string name="menu_wallpaper">Сменить обои</string>

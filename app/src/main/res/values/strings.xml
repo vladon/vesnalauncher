@@ -21,6 +21,7 @@
     <string name="menu_add_to_dock">Add to dock</string>
     <string name="menu_remove_from_dock">Remove from dock</string>
     <string name="menu_app_info">App info</string>
+    <string name="shortcut_options">Shortcut options</string>
     <string name="home_options">Home options</string>
     <string name="menu_launcher_settings">Vesna settings</string>
     <string name="menu_wallpaper">Set wallpaper</string>

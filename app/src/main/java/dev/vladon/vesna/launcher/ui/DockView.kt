@@ -28,6 +28,7 @@ class DockView @JvmOverloads constructor(
 ) : LinearLayout(context, attrs) {
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
+    internal var onAppOptions: ((DockPin, View) -> Unit)? = null
 
     internal var showAppNames = true
         set(value) {
@@ -156,10 +157,10 @@ class DockView @JvmOverloads constructor(
             view.bind(app)
             view.setAppNameVisible(showAppNames)
             view.setOnClickListener { onAppClick?.invoke(app) }
-            view.setOnLongClickListener { anchor ->
-                beginDrag(pin, anchor)
-                true
-            }
+            view.bindOptions(
+                onOptions = { anchor -> onAppOptions?.invoke(pin, anchor) },
+                onTouchHold = { anchor -> beginDrag(pin, anchor) },
+            )
             addView(view)
         }
     }

@@ -35,6 +35,7 @@ class WorkspaceView @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
+    internal var onAppOptions: ((Int, LauncherApp, View) -> Unit)? = null
 
     /** A workspace cell was tapped: an app (launch) or a folder (open). */
     var onCellClick: ((CellContent) -> Unit)? = null
@@ -275,11 +276,10 @@ class WorkspaceView @JvmOverloads constructor(
                     view.bind(content.app)
                     view.setAppNameVisible(showAppNames)
                     view.setOnClickListener { onAppClick?.invoke(content.app) }
-                    view.setOnLongClickListener { anchor ->
-                        beginDrag(cell, content.app, anchor)
-                        // The drag (or, without movement, the context menu) handles the rest.
-                        true
-                    }
+                    view.bindOptions(
+                        onOptions = { anchor -> onAppOptions?.invoke(cell, content.app, anchor) },
+                        onTouchHold = { anchor -> beginDrag(cell, content.app, anchor) },
+                    )
                 }
                 is CellContent.FolderCell -> {
                     view.bindContent(
@@ -290,11 +290,10 @@ class WorkspaceView @JvmOverloads constructor(
                     // A tile reused from an app still needs to show the folder's own name.
                     view.setAppNameVisible(true)
                     view.setOnClickListener { onCellClick?.invoke(content) }
-                    view.setOnLongClickListener { anchor ->
+                    view.bindOptions(onOptions = { anchor ->
                         longPressed = true
                         onFolderLongClick?.invoke(content.folder, anchor)
-                        true
-                    }
+                    })
                 }
             }
         }

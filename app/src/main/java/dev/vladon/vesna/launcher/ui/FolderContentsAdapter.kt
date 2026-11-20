@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.annotation.SuppressLint
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -10,7 +11,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 /** Grid adapter for the contents of an open folder. */
 class FolderContentsAdapter(
     private val onItemClick: (LauncherApp) -> Unit,
-    private val onItemLongClick: (LauncherApp) -> Boolean,
+    private val onItemOptions: (LauncherApp, View) -> Unit,
 ) : ListAdapter<LauncherApp, FolderContentsAdapter.Holder>(DIFF) {
 
     class Holder(val view: AppIconView) : RecyclerView.ViewHolder(view)
@@ -22,7 +23,7 @@ class FolderContentsAdapter(
         val app = getItem(position)
         holder.view.bind(app)
         holder.view.setOnClickListener { onItemClick(app) }
-        holder.view.setOnLongClickListener { onItemLongClick(app) }
+        holder.view.bindOptions(onOptions = { anchor -> onItemOptions(app, anchor) })
     }
 
     private companion object {

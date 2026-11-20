@@ -31,6 +31,7 @@ class DrawerView @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
+    internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
     /** Long-press on a drawer item arms a drag from the drawer (drag layer drives). */
     var onItemDragStarted: ((LauncherApp, View) -> Unit)? = null
@@ -71,7 +72,11 @@ class DrawerView @JvmOverloads constructor(
                 hideKeyboard()
                 onAppClick?.invoke(it)
             },
-            onItemLongClick = { app, anchor ->
+            onItemOptions = { app, anchor ->
+                hideKeyboard()
+                onItemOptions?.invoke(app, anchor)
+            },
+            onItemTouchHold = { app, anchor ->
                 hideKeyboard()
                 onItemDragStarted?.invoke(app, anchor)
                 // While armed, the drag layer owns subsequent MOVE events; the UP
@@ -92,7 +97,6 @@ class DrawerView @JvmOverloads constructor(
                         else -> false
                     }
                 }
-                true
             },
         )
         list = findViewById(R.id.drawer_list)

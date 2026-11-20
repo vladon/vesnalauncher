@@ -37,6 +37,7 @@ exercised; everything else is source-verified only.
 | Home options (unreleased) | A named overflow button above the dock opens Settings, wallpaper, and applicable launcher and page actions without a long-press. | Android 8 and 15 emulator verification; see [Home options](#home-options). |
 | Drawer search | Case-insensitive substring filter (`AppSearch`). **Clear search** restores the ordered grid and returns focus to the field; results stay above the keyboard. | `AppSearchTest` (5 JVM tests); `DrawerSearchTest` and real Home checks on Android 8 and 15. |
 | Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
+| Shortcut options (unreleased) | On a focused app or folder tile, press **Shift+F10** or the **Menu** key. Android accessibility exposes **Shortcut options**. Touch long-press and drag remain available. | See [Shortcut options](#shortcut-options) for Android 8 and 15 emulator verification. |
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
 | Package events | `PackageChangeMonitor` uses profile-scoped `LauncherApps` callbacks; disabled apps retain their pins | [VESNA-QA-003A](verification/VESNA-QA-003.md) verified drawer changes after install, update, disable/re-enable, and uninstall. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified work-profile pinning and uninstall. [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall across all three containers. [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disable/re-enable retains placements across a launcher restart. All four records use API 35. |
 | Persistence | Room `vesna-launcher.db`, schema version 4. The 3→4 migration adds stable workspace page IDs without changing the dock or existing cells. | Production Room migrated a copy of the signed 0.4.2 database on API 35 with all 18 placements, the folder, and the seeding flag intact. See [ADR-PAGE-1](../adr/0001-workspace-page-identity.md). Historical API 35 migration and reboot evidence is in [VESNA-QA-004](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done). |
@@ -307,6 +308,25 @@ search, or hide user-created folder titles.
   activation. Android 15 used gesture and three-button navigation. Debug lint
   and `DrawerSearchTest` passed; TalkBack speech and physical devices were not
   checked.
+
+### Shortcut options
+
+On a focused tile in the workspace, dock, app drawer, or an open folder, press
+**Shift+F10** or the **Menu** key to open the same actions as touch long-press.
+Android accessibility exposes those actions as **Shortcut options**. Keyboard
+focus has a visible ring, and a non-touch action never starts a drag.
+
+- Android 8: the Menu key opened workspace and dock options and Back returned
+  focus to the tile. Android 15: Shift+F10 opened folder and drawer options.
+  Back preserved the focused search result and its query; keyboard activation
+  pinned that result to the current workspace page.
+- Injected touch events still opened the touch-hold menu, moved a shortcut
+  between workspace cells, and dragged a drawer result to Home. Only test
+  placements were removed during cleanup; original placements were unchanged.
+- Checked Light and Dark focus rings and popups, compact 320 dp and wide 610 dp
+  layouts, English and Russian up to 200% text, RTL, and both navigation modes.
+  Debug lint passed; `ShortcutActionsTest` and `DrawerSearchTest` passed on
+  both emulators. TalkBack speech and physical devices were not checked.
 
 ## Where to go next
 

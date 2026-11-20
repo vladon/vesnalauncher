@@ -7,13 +7,10 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.ContextThemeWrapper
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -133,6 +130,9 @@ class HomeActivity : ComponentActivity() {
         val controller = graph.controller
 
         workspace.onAppClick = { controller.launch(it) }
+        workspace.onAppOptions = { cell, app, anchor ->
+            showWorkspaceItemMenu(anchor, app, cell, renderedState.activePageId)
+        }
         workspace.onCellClick = { content ->
             if (content is CellContent.FolderCell) showFolderDialog(content.folder)
         }
@@ -149,6 +149,7 @@ class HomeActivity : ComponentActivity() {
         }
 
         dock.onAppClick = { controller.launch(it) }
+        dock.onAppOptions = { pin, anchor -> showDockItemMenu(anchor, pin.app, pin.id) }
         dock.onDragStarted = { pin, _ ->
             dragSource = DragSource(
                 pin.app, Container.DOCK, -1, renderedState.activePageId,
@@ -161,6 +162,7 @@ class HomeActivity : ComponentActivity() {
         }
 
         drawer.onAppClick = { controller.launch(it) }
+        drawer.onItemOptions = { app, anchor -> showDrawerItemMenu(anchor, app, renderedState.activePageId) }
         drawer.onItemDragStarted = { app, _ ->
             dragSource = DragSource(app, Container.WORKSPACE, -1, renderedState.activePageId, fromDrawer = true)
         }
@@ -437,7 +439,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showFolderMenu(folder: Folder, anchor: View) {
-        val popup = PopupMenu(this, anchor)
+        val popup = vesnaPopupMenu(anchor)
         popup.menu.add(0, MENU_FOLDER_RENAME, 0, R.string.folder_rename)
         popup.menu.add(0, MENU_FOLDER_REMOVE, 1, R.string.folder_remove)
         popup.setOnMenuItemClickListener { item ->
@@ -535,7 +537,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp, cell: Int, pageId: Long) {
-        val popup = PopupMenu(this, anchor)
+        val popup = vesnaPopupMenu(anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_ADD_TO_DOCK, 0, R.string.menu_add_to_dock)
         popup.menu.add(0, MENU_REMOVE, 1, R.string.menu_remove_from_workspace)
@@ -552,7 +554,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showDockItemMenu(anchor: View, app: LauncherApp, pinId: Long) {
-        val popup = PopupMenu(this, anchor)
+        val popup = vesnaPopupMenu(anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_REMOVE, 0, R.string.menu_remove_from_dock)
         popup.menu.add(0, MENU_APP_INFO, 1, R.string.menu_app_info)
@@ -567,7 +569,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showDrawerItemMenu(anchor: View, app: LauncherApp, pageId: Long) {
-        val popup = PopupMenu(this, anchor)
+        val popup = vesnaPopupMenu(anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_ADD_TO_WORKSPACE, 0, R.string.menu_add_to_workspace)
         popup.menu.add(0, MENU_ADD_TO_DOCK, 1, R.string.menu_add_to_dock)
@@ -584,8 +586,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showLauncherMenu() {
-        val menuContext = ContextThemeWrapper(this, R.style.ThemeOverlay_Vesna_HomeOptions)
-        val popup = PopupMenu(menuContext, homeOptionsButton, Gravity.START)
+        val popup = vesnaPopupMenu(homeOptionsButton)
         popup.menu.add(0, MENU_SETTINGS, 0, R.string.menu_launcher_settings)
         popup.menu.add(0, MENU_WALLPAPER, 1, R.string.menu_wallpaper)
         val graph = VesnaApplication.graph(this)
