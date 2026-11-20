@@ -40,18 +40,27 @@ class LauncherAppsAppDiscovery(private val appContext: Context) : AppDiscovery {
 
     override fun discover(): List<LauncherApp> {
         val result = ArrayList<LauncherApp>()
+        val packageManager = appContext.packageManager
+        val densityDpi = appContext.resources.displayMetrics.densityDpi
         for (profile in launcherApps.profiles) {
             val userSerial = userManager.getSerialNumberForUser(profile)
+            // Android returns the original label for an unbadged profile.
+            // Once it does, skip the call for the rest of that profile.
+            var badgeLabels = true
             for (activity in launcherApps.getActivityList(null, profile)) {
                 val component = activity.componentName
                 // Vesna's own settings entry is reachable from the workspace menu; it
                 // does not belong in the drawer.
                 if (component.packageName == appContext.packageName) continue
+                val label = activity.label.toString().ifBlank { component.packageName }
+                val profileLabel = if (badgeLabels) packageManager.getUserBadgedLabel(label, profile) else label
+                badgeLabels = profileLabel !== label
                 result.add(
                     LauncherApp(
                         key = AppKey(component.packageName, component.className, userSerial),
-                        label = activity.label.toString().ifBlank { component.packageName },
-                        icon = activity.getBadgedIcon(appContext.resources.displayMetrics.densityDpi),
+                        label = label,
+                        icon = activity.getBadgedIcon(densityDpi),
+                        badgedLabel = if (badgeLabels) profileLabel.toString() else null,
                     ),
                 )
             }

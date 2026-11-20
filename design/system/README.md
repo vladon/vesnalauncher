@@ -152,6 +152,8 @@ The bundled files are static Latin and Cyrillic subsets of [Inter from Google Fo
 
 Use sentence case and scalable `sp` for type. Allow row and button labels to wrap. Ellipsize app grid labels after their available lines and expose the full app name and profile to accessibility services. Verify Latin and Cyrillic, long localized labels, mixed-script names and Android's 200% font setting. [Compose typography tokens](https://github.com/androidx/androidx/blob/androidx-main/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/TypeScaleTokens.kt) · [Nunito](https://fonts.google.com/specimen/Nunito) · [Inter](https://github.com/rsms/inter) · [Android scalable content](https://developer.android.com/develop/ui/compose/accessibility/scalable-content)
 
+Use Android's localized badged label for an app tile's accessible name. Keep the visible label, sorting, and search based on the unbadged app name. Continue exposing the accessible name when **Show app names** is off.
+
 ## Shape, elevation and motion
 
 Use the Material shape scale of 0, 4, 8, 12, 16 and 28 dp, plus Full for pills. Use Extra Large (28 dp) for basic dialogs and top sheet corners, and Medium (12 dp) for Vesna app-owned icon wells and drag highlights. In Compose, Full is a percentage-based shape. Let each Material component supply its default shape and elevations.

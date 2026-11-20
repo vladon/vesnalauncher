@@ -152,7 +152,7 @@ class AppIconView @JvmOverloads constructor(
         bindContent(
             icon = freshDrawable(app.icon),
             label = app.label,
-            description = app.label,
+            description = app.accessibilityLabel,
         )
     }
 

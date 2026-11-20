@@ -564,6 +564,24 @@ the selected entry's user serial and does not fall back to another profile.
   needed Vesna to hold the default Home role. Debug lint passed. Physical
   devices and organization-managed profile policies were not tested.
 
+### Accessible Work app names
+
+App tiles on Home, in the dock, in the drawer, and in folders use Android's
+localized profile label for accessibility. Visible captions and drawer
+search still use the app's original name. Turning off **Show app names**
+does not hide the accessible name or the visual profile badge.
+
+- Android 15 exposed `QA Fixture` and `Work QA Fixture` as distinct
+  accessible names when the same app was installed in both profiles.
+  Verified Work names across all four surfaces, both copies together in
+  the drawer and in a folder, and the drawer with visual captions hidden
+  at 200% text. Searching for the accessibility-only prefix did not match
+  the fixture.
+- Android 8 retained the personal app name. The focused drawer regression
+  for profile-only name updates and unchanged search passed on Android 8
+  and 15; debug lint passed. TalkBack speech, physical devices, and custom
+  organization-provided labels were not checked.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

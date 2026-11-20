@@ -41,6 +41,7 @@ class DrawerAppsAdapter(
             @SuppressLint("DiffUtilEquals")
             override fun areContentsTheSame(oldItem: LauncherApp, newItem: LauncherApp): Boolean =
                 oldItem.label == newItem.label &&
+                    oldItem.accessibilityLabel == newItem.accessibilityLabel &&
                     oldItem.icon?.constantState == newItem.icon?.constantState
         }
     }

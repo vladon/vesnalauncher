@@ -149,6 +149,25 @@ class DrawerSearchTest {
     }
 
     @Test
+    fun profileDescriptionsDistinguishCopiesAndUpdateWithoutChangingSearch() {
+        val personal = fixture.first()
+        val work = personal.copy(key = personal.key.copy(userSerial = 10), badgedLabel = "Marigold (Work)")
+        onDrawer { it.submitApps(listOf(personal, work)) }
+        setQuery("Marigold")
+        assertFirstDrawerRow(listOf("Marigold", "Marigold (Work)"))
+
+        onDrawer {
+            it.showAppNames = false
+            it.submitApps(listOf(personal, work.copy(badgedLabel = "Marigold (Managed)")))
+        }
+        assertFirstDrawerRow(listOf("Marigold", "Marigold (Managed)"))
+
+        setQuery("Managed")
+        assertVisibleLabels(emptyList())
+        assertNoResults(true)
+    }
+
+    @Test
     fun typingFromDrawerControlsStartsAndContinuesSearch() {
         // A real navigation key leaves touch mode so drawer buttons can receive focus.
         InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_TAB)
@@ -290,7 +309,7 @@ class DrawerSearchTest {
         assertFirstDrawerRow(fixture.take(4).map { it.label }, minCellWidth, focused = fixture.first().label)
     }
 
-    private fun assertFirstDrawerRow(expected: List<String>, minWidth: Int, focused: String? = null) {
+    private fun assertFirstDrawerRow(expected: List<String>, minWidth: Int = 0, focused: String? = null) {
         val deadline = SystemClock.uptimeMillis() + 5_000
         var labels: List<String> = emptyList()
         while (SystemClock.uptimeMillis() < deadline) {
