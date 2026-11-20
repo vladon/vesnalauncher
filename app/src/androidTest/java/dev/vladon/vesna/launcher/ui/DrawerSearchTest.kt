@@ -8,6 +8,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -225,6 +226,56 @@ class DrawerSearchTest {
             typeKey(host, KeyEvent.KEYCODE_ENTER)
             assertEquals(listOf(fixture[2].key), launched)
         }
+    }
+
+    @Test
+    fun appRefreshKeepsTheVisibleRowButClearingSearchResetsToTheNewestTop() {
+        val tools = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
+        val before = List(4) { app("dev.vladon.fixture.before$it", ".Main", "Before $it") }
+        val added = List(4) { app("dev.vladon.fixture.added$it", ".Main", "Tool added $it") }
+        val latest = app("dev.vladon.fixture.latest", ".Main", "Latest")
+        onDrawer { it.submitApps(before + tools) }
+        setQuery("tool")
+        assertVisibleLabels(tools.map { it.label })
+        onDrawer { host ->
+            val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+            (list.layoutManager as GridLayoutManager).scrollToPositionWithOffset(40, -12)
+        }
+        assertFirstVisibleApp(tools[40].label, offset = -12)
+
+        onDrawer { it.submitApps(before + added + tools) }
+        assertVisibleLabels((added + tools).map { it.label })
+        assertFirstVisibleApp(tools[40].label, offset = -12)
+
+        onDrawer { it.submitApps(before + tools) }
+        assertVisibleLabels(tools.map { it.label })
+        assertFirstVisibleApp(tools[40].label, offset = -12)
+
+        onDrawer { host ->
+            host.findViewById<View>(R.id.drawer_clear_search).performClick()
+            // The refresh may replace the pending async result of clearing the query.
+            host.submitApps(listOf(latest) + before + tools)
+        }
+        assertVisibleLabels((listOf(latest) + before + tools).map { it.label })
+        assertFirstVisibleApp(latest.label, offset = 0)
+    }
+
+    private fun assertFirstVisibleApp(expected: String, offset: Int) {
+        val deadline = SystemClock.uptimeMillis() + 5_000
+        var actual: CharSequence? = null
+        var actualOffset: Int? = null
+        while (SystemClock.uptimeMillis() < deadline) {
+            onDrawer { host ->
+                val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+                val layout = list.layoutManager as GridLayoutManager
+                val child = layout.findViewByPosition(layout.findFirstVisibleItemPosition())
+                actual = child?.contentDescription
+                actualOffset = child?.let { layout.getDecoratedTop(it) - list.paddingTop }
+            }
+            if (expected == actual && offset == actualOffset) return
+            SystemClock.sleep(50)
+        }
+        throw AssertionError("Expected $expected at offset $offset, found $actual at $actualOffset")
     }
 
     private fun typeKey(host: View, keyCode: Int, metaState: Int = 0) {

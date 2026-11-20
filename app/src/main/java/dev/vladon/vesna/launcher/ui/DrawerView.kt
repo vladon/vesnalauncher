@@ -64,6 +64,8 @@ class DrawerView @JvmOverloads constructor(
     private var quickLaunchResult: LauncherApp? = null
     private var enterTarget: LauncherApp? = null
     private var searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
+    private var resetScrollOnCommit = false
+    private val commitScrollReset = Runnable(::resetScrollAfterFilter)
 
     private var isOpen = false
 
@@ -156,7 +158,7 @@ class DrawerView @JvmOverloads constructor(
             object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                 override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-                override fun afterTextChanged(s: android.text.Editable?) = applyFilter()
+                override fun afterTextChanged(s: android.text.Editable?) = applyFilter(resetScroll = true)
             },
         )
         searchField.setOnEditorActionListener { field, actionId, _ ->
@@ -189,14 +191,21 @@ class DrawerView @JvmOverloads constructor(
         return super.dispatchKeyEvent(event)
     }
 
-    private fun applyFilter() {
+    private fun applyFilter(resetScroll: Boolean) {
+        // A package refresh can supersede a pending search diff. Carry the reset
+        // forward to the result list that actually commits.
+        if (resetScroll) resetScrollOnCommit = true
         val query = searchField.text?.toString().orEmpty()
         val filtered = appSearch.filter(query)
         // ListAdapter may still be applying its diff when Enter is pressed.
         quickLaunchResult = if (query.isNotBlank()) filtered.singleOrNull() else null
-        adapter.submitList(filtered)
+        adapter.submitList(filtered, if (resetScrollOnCommit) commitScrollReset else null)
         clearSearchButton.isVisible = query.isNotEmpty()
         noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
+    }
+
+    private fun resetScrollAfterFilter() {
+        resetScrollOnCommit = false
         list.scrollToPosition(0)
     }
 
@@ -212,7 +221,7 @@ class DrawerView @JvmOverloads constructor(
 
     fun submitApps(apps: List<LauncherApp>) {
         appSearch = AppSearch(apps)
-        applyFilter()
+        applyFilter(resetScroll = false)
     }
 
     /** Keeps drawer controls and results within the visible area, including above the IME. */
