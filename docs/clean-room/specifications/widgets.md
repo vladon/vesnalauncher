@@ -44,6 +44,10 @@ Derived from `observations/widgets.md` and settings inventory
   final placement; canceling must abort placement.
 - R-WIDGET-100.4: Newly placed widgets present resize handles immediately
   plus a settings entry point; dismissing resize keeps the placement.
+- R-WIDGET-100.5: After the user checks the consent dialog's "always
+  allow" once, subsequent placements of that provider skip the consent
+  dialog entirely (verified: the platform honors the pre-approval; Vesna
+  must not add its own re-prompt on top).
 
 ## WIDGET-101 — Widget resize
 

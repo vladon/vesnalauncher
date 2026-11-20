@@ -144,6 +144,12 @@ its feature ID. These describe externally observable behavior only.
 - And an "item removed" snackbar with an Undo action appears for a short
   period
 
+### AT-WIDGET-103 — Consent pre-approval is honored
+- Given a widget provider the user has pre-approved via the consent
+  dialog's "always allow" checkbox
+- When the user places another widget from that provider
+- Then placement completes without re-showing the consent dialog
+
 ## Dock
 
 ### AT-DOCK-100 — Dock configuration surface
@@ -160,6 +166,20 @@ its feature ID. These describe externally observable behavior only.
 - When the workspace is shown
 - Then the dock renders as a single row of icons without labels or a
   background plate, above the search bar
+
+### AT-DOCK-102 — Dock-toggle gesture owns its stream
+- Given a dock-toggle gesture is assigned (e.g. swipe up) and a
+  conflicting gestures-section binding exists on the same gesture
+- When the user performs the gesture on the workspace
+- Then exactly ONE action fires: the dock toggle, never the conflicting
+  system-panel action
+- And the gesture result is identical regardless of the swipe's start
+  zone on the workspace
+
+### AT-DOCK-103 — Dock config persists across restart
+- Given a customized dock (count, pages, background, presentation mode)
+- When the launcher process is force-stopped and restarted
+- Then every dock setting and its contents restore exactly
 
 ## Folders
 

@@ -48,3 +48,12 @@ approved inventory-derived structure plus verified rendering.
 - R-DOCK-100.7: Optional dock background plate with style options.
 - R-DOCK-100.8: Overlay presentation mode with auto-close and
   position-remembering options for dock-toggle workflows.
+- R-DOCK-100.9: Dock contents and configuration persist across launcher
+  restarts (workspace-level persistence verified; dock-specific state must
+  survive identically).
+- R-DOCK-100.10: A dock-toggle gesture must route through the same
+  gesture-dispatch precedence as all other workspace gestures — Nova
+  counter-example recorded (OBS-GESTURE-112): its workspace swipe-up
+  binding ("Expand quick settings") preempted the drawer-open gesture from
+  both swipe zones; Vesna's gesture router must give ONE owner per gesture
+  stream and route system-panel actions through that same dispatcher.
