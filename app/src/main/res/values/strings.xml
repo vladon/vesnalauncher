@@ -14,6 +14,7 @@
     <string name="menu_launcher_settings">Vesna settings</string>
     <string name="menu_wallpaper">Set wallpaper</string>
     <string name="menu_add_workspace_page">Add home page</string>
+    <string name="menu_remove_empty_workspace_page">Remove empty page</string>
 
     <string name="workspace_previous_page">Previous home page</string>
     <string name="workspace_next_page">Next home page</string>
@@ -21,6 +22,7 @@
 
     <string name="workspace_empty_hint">Long-press here for options</string>
     <string name="toast_workspace_full">This home page is full</string>
+    <string name="toast_workspace_page_not_empty">Only empty home pages can be removed</string>
     <string name="toast_dock_full">The dock is full</string>
 
     <!-- Folders -->

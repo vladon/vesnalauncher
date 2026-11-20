@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.workspace
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.room.withTransaction
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
@@ -19,7 +20,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
 
-/** Hard cap on workspace pages. Pages are never removed; the UI disables page creation at this size. */
+/** Hard cap on workspace pages; removing an empty extra page frees a slot. */
 internal const val MAX_WORKSPACE_PAGES = 8
 
 /**
@@ -65,13 +66,13 @@ class WorkspaceRepository(
      */
     suspend fun seedOrAdopt(items: List<WorkspaceItem>): Boolean = mutationMutex.withLock {
         if (dao.getAll().isNotEmpty() || folderDao.getAll().isNotEmpty()) {
-            prefs.edit().putBoolean(KEY_SEEDED, true).apply()
+            prefs.edit { putBoolean(KEY_SEEDED, true) }
             return@withLock false
         }
         db.withTransaction {
             dao.insertAll(items.map { it.toEntity() })
         }
-        prefs.edit().putBoolean(KEY_SEEDED, true).apply()
+        prefs.edit { putBoolean(KEY_SEEDED, true) }
         true
     }
 
@@ -90,17 +91,27 @@ class WorkspaceRepository(
         db.workspacePageDao().insert(WorkspacePageEntity(rank = nextRank))
     }
 
+    /** Removes an empty extra page without changing any other page or placement. */
+    internal suspend fun removeEmptyPage(pageId: Long): Boolean = mutationMutex.withLock {
+        if (pageId == DEFAULT_WORKSPACE_PAGE_ID || db.workspacePageDao().deleteIfEmpty(pageId) == 0) {
+            return@withLock false
+        }
+        if (savedActivePageId() == pageId) {
+            prefs.edit { remove(KEY_ACTIVE_PAGE) }
+        }
+        true
+    }
+
     /** The page selected in the last session; the default page until one is stored. */
     fun savedActivePageId(): Long = prefs.getLong(KEY_ACTIVE_PAGE, DEFAULT_WORKSPACE_PAGE_ID)
 
     /**
      * Persists [pageId] as the selected page under its own preference key and
-     * returns false when the page does not exist. Pages are never removed, so a
-     * stored selection stays valid across processes.
+     * returns false when the page does not exist.
      */
     suspend fun selectPage(pageId: Long): Boolean = mutationMutex.withLock {
         if (db.workspacePageDao().getById(pageId) == null) return@withLock false
-        prefs.edit().putLong(KEY_ACTIVE_PAGE, pageId).apply()
+        prefs.edit { putLong(KEY_ACTIVE_PAGE, pageId) }
         true
     }
 

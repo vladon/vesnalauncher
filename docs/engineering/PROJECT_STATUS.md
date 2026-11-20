@@ -168,8 +168,11 @@ list means it was not performed, nothing more.
 
 The local `workspace-page-controls` branch builds on the 0.4.3 storage work; it
 does not change the Room schema or the last published release. New pages are
-empty, and adding or moving an app acts on the displayed page. Page deletion,
-reordering, and dragging between pages are not available.
+empty, and adding or moving an app acts on the displayed page. Long-press an
+empty extra page and choose **Remove empty page** to free a slot and return to
+the first Home page. The first page and pages with saved shortcuts or folders
+cannot be removed, even if a saved shortcut is not currently visible. Page
+reordering and dragging between pages are not available.
 
 - All 41 JVM tests and 34 instrumentation tests passed; the instrumentation
   suite ran on both Android 8 (API 26) and Android 15 (API 35). Debug lint had no
@@ -183,6 +186,12 @@ reordering, and dragging between pages are not available.
   Verified 48 dp targets, color contrast, visible keyboard focus, English and
   Russian labels, accessibility position/count, and mirrored RTL gestures.
   Spoken TalkBack announcements and physical-device behavior were not verified.
+- The eight focused page tests passed on both emulators for empty-page removal.
+  The Home menu restored **Add home page** after a removal at the cap, retained
+  the first page across restart, and preserved all 20 saved placements and the
+  folder on Android 15. Android 8 hid the pager after removing the only extra
+  page. The new menu row fit at 320 dp and 1.6× type in English and Russian;
+  touch selection and visible D-pad focus and activation were verified.
 
 ## Where to go next
 

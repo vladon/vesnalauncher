@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.data.FolderEntity
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.data.toDomain
@@ -134,6 +135,46 @@ class WorkspaceRepositoryPagesTest {
     }
 
     @Test
+    fun onlyAnEmptyExtraPageCanBeRemoved() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_remove_empty_page"
+        context.deleteSharedPreferences(prefsName)
+        try {
+            val dao = db.workspaceItemDao()
+            val folders = db.folderDao()
+            val repository = WorkspaceRepository(dao, db, folders, context.getSharedPreferences(prefsName, Context.MODE_PRIVATE))
+            val occupied = checkNotNull(repository.createPage())
+            val empty = checkNotNull(repository.createPage())
+            val folderPage = checkNotNull(repository.createPage())
+            val app = LauncherApp(AppKey("qa.saved", "Main"), "Saved", null)
+            assertTrue(repository.insertWorkspaceAt(app, 0, occupied))
+            assertTrue(repository.insertIntoDock(app, 1))
+            folders.insert(FolderEntity(title = "Saved folder", cellIndex = 0, pageId = folderPage))
+            val savedItems = dao.getAll()
+            val savedFolders = folders.getAll()
+            val initialPages = repository.pages.first()
+
+            assertFalse(repository.removeEmptyPage(DEFAULT_WORKSPACE_PAGE_ID))
+            assertFalse(repository.removeEmptyPage(occupied))
+            assertFalse(repository.removeEmptyPage(folderPage))
+            assertEquals(initialPages, repository.pages.first())
+
+            assertTrue(repository.selectPage(empty))
+            assertTrue(repository.removeEmptyPage(empty))
+            assertEquals(DEFAULT_WORKSPACE_PAGE_ID, repository.savedActivePageId())
+            // Removing a middle page must not reassign any ID, rank, or saved content.
+            assertEquals(initialPages.filterNot { it.id == empty }, repository.pages.first())
+            assertEquals(savedItems, dao.getAll())
+            assertEquals(savedFolders, folders.getAll())
+        } finally {
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
+    @Test
     fun selectionUsesItsOwnPreferenceKeyAndSurvivesRepositoryRecreation() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
@@ -258,12 +299,14 @@ class WorkspaceRepositoryPagesTest {
             val second = controller.state.first { it.pageIds.size == 2 && it.activePageId == it.pageIds.last() }
             val secondPageId = second.pageIds.last()
             assertTrue(second.workspaceCells.isEmpty())
+            assertTrue(second.canRemoveActivePage)
 
             // A drawer insert lands on the rendered page only.
             controller.insertWorkspaceAt(apps[5], cell = 0, pageId = secondPageId)
             val placed = controller.state.first { it.workspaceCells.isNotEmpty() }
             assertEquals(secondPageId, placed.activePageId)
             assertEquals(mapOf(0 to CellContent.App(apps[5])), placed.workspaceCells)
+            assertFalse(placed.canRemoveActivePage)
 
             // Selecting another page re-projects that page's own cells.
             controller.selectWorkspacePage(DEFAULT_WORKSPACE_PAGE_ID)
@@ -279,6 +322,20 @@ class WorkspaceRepositoryPagesTest {
             repository.items.first { items -> items.none { it.pageId == secondPageId } }
             assertEquals(CellContent.App(apps[5]), controller.state.value.workspaceCells.getValue(1))
             assertEquals(CellContent.App(apps[4]), controller.state.value.workspaceCells.getValue(0))
+
+            // A disabled or undiscovered app still has a saved pin on its page.
+            val unavailable = LauncherApp(AppKey("qa.unavailable", "Main"), "Unavailable", null)
+            assertTrue(repository.insertWorkspaceAt(unavailable, cell = 0, pageId = secondPageId))
+            controller.selectWorkspacePage(secondPageId)
+            controller.state.first { it.activePageId == secondPageId && it.isWorkspaceEmpty && !it.canRemoveActivePage }
+
+            repository.removeFromWorkspace(unavailable, cell = 0, pageId = secondPageId)
+            controller.state.first { it.activePageId == secondPageId && it.canRemoveActivePage }
+            controller.removeEmptyWorkspacePage(secondPageId)
+            val afterRemoval = controller.state.first { it.pageIds == listOf(DEFAULT_WORKSPACE_PAGE_ID) }
+            assertEquals(DEFAULT_WORKSPACE_PAGE_ID, afterRemoval.activePageId)
+            assertEquals(backOnDefault.workspaceCells, afterRemoval.workspaceCells)
+            assertEquals(backOnDefault.dockPins, afterRemoval.dockPins)
             assertEquals(1, discovery.calls)
         } finally {
             scope.cancel()

@@ -23,7 +23,7 @@ import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
 
 /** Non-fatal feedback from launcher actions, mapped to user-visible strings by the UI. */
-enum class LauncherMessage { WORKSPACE_FULL, DOCK_FULL }
+enum class LauncherMessage { WORKSPACE_FULL, DOCK_FULL, WORKSPACE_PAGE_NOT_EMPTY }
 
 /** Everything the launcher UI renders. */
 data class LauncherUiState(
@@ -35,6 +35,7 @@ data class LauncherUiState(
     /** Workspace page IDs in display order; [activePageId] names the rendered page. */
     val pageIds: List<Long> = emptyList(),
     val activePageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
+    val canRemoveActivePage: Boolean = false,
 ) {
     val isWorkspaceEmpty: Boolean get() = workspaceCells.isEmpty()
 }
@@ -59,7 +60,7 @@ class LauncherController(
     private val pageActionMutex = Mutex()
     private val _apps = MutableStateFlow<List<LauncherApp>>(emptyList())
 
-    /** The page selected in the last session; updated by [selectWorkspacePage] and [createWorkspacePage]. */
+    /** The selected page ID; stale IDs on startup resolve to the primary page. */
     private val _activePageId = MutableStateFlow(workspaceRepository.savedActivePageId())
 
     /** Shared page list so [state] and [createWorkspacePage] observe the same emissions. */
@@ -77,9 +78,8 @@ class LauncherController(
             pages,
             _activePageId,
         ) { apps, items, folders, pageList, activePageId ->
-            // Every nonempty page snapshot must carry a selection that is in the
-            // list: the stored preference may briefly lag the page list or be
-            // stale, so fall back to the first page (default rank first).
+            // The stored ID can outlive a deleted page if the process stopped
+            // between the Room write and the preference update.
             val selection = pageList.firstOrNull { it.id == activePageId }?.id
                 ?: pageList.firstOrNull()?.id
                 ?: DEFAULT_WORKSPACE_PAGE_ID
@@ -91,6 +91,8 @@ class LauncherController(
                 folderContents = WorkspaceResolver.folderContents(items, apps),
                 pageIds = pageList.map { it.id },
                 activePageId = selection,
+                canRemoveActivePage = selection != DEFAULT_WORKSPACE_PAGE_ID &&
+                    items.none { it.pageId == selection } && folders.none { it.pageId == selection },
             )
         }.stateIn(scope, SharingStarted.Eagerly, LauncherUiState())
 
@@ -130,6 +132,20 @@ class LauncherController(
         scope.launch {
             pageActionMutex.withLock {
                 if (workspaceRepository.selectPage(pageId)) _activePageId.value = pageId
+            }
+        }
+    }
+
+    /** Removes the captured page only if it is still active and has no saved content. */
+    fun removeEmptyWorkspacePage(pageId: Long) {
+        scope.launch {
+            pageActionMutex.withLock {
+                if (pageId == DEFAULT_WORKSPACE_PAGE_ID || _activePageId.value != pageId) return@withLock
+                if (workspaceRepository.removeEmptyPage(pageId)) {
+                    _activePageId.value = DEFAULT_WORKSPACE_PAGE_ID
+                } else {
+                    _messages.tryEmit(LauncherMessage.WORKSPACE_PAGE_NOT_EMPTY)
+                }
             }
         }
     }

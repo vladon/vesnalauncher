@@ -441,6 +441,7 @@ class HomeActivity : ComponentActivity() {
         val text = when (message) {
             LauncherMessage.WORKSPACE_FULL -> getString(R.string.toast_workspace_full)
             LauncherMessage.DOCK_FULL -> getString(R.string.toast_dock_full)
+            LauncherMessage.WORKSPACE_PAGE_NOT_EMPTY -> getString(R.string.toast_workspace_page_not_empty)
         }
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
@@ -532,8 +533,12 @@ class HomeActivity : ComponentActivity() {
         ) {
             popup.menu.add(0, MENU_SET_DEFAULT, 2, R.string.menu_set_default_home)
         }
-        if (renderedState.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
+        val page = renderedState
+        if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
             popup.menu.add(0, MENU_ADD_WORKSPACE_PAGE, 3, R.string.menu_add_workspace_page)
+        }
+        if (page.canRemoveActivePage) {
+            popup.menu.add(0, MENU_REMOVE_WORKSPACE_PAGE, 4, R.string.menu_remove_empty_workspace_page)
         }
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
@@ -542,6 +547,7 @@ class HomeActivity : ComponentActivity() {
                 MENU_SET_DEFAULT -> graph.homeRoleChecker.defaultHomeRequestIntent()
                     ?.let { defaultHomeRequest.launch(it) }
                 MENU_ADD_WORKSPACE_PAGE -> controller.createWorkspacePage()
+                MENU_REMOVE_WORKSPACE_PAGE -> controller.removeEmptyWorkspacePage(page.activePageId)
             }
             true
         }
@@ -576,5 +582,6 @@ class HomeActivity : ComponentActivity() {
         const val MENU_FOLDER_RENAME = 8
         const val MENU_FOLDER_REMOVE = 9
         const val MENU_ADD_WORKSPACE_PAGE = 10
+        const val MENU_REMOVE_WORKSPACE_PAGE = 11
     }
 }
