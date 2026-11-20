@@ -1,30 +1,41 @@
 package dev.vladon.vesna.launcher.settings
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -33,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,12 +58,20 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -62,6 +82,9 @@ internal enum class DefaultHomeState { ACTIVE, AVAILABLE, UNAVAILABLE }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsScreen(
+    page: SettingsPage,
+    onNavigate: (SettingsPage) -> Unit,
+    onResetInputFocus: () -> Unit,
     versionName: String,
     defaultHome: DefaultHomeState,
     onSetDefaultHome: () -> Unit,
@@ -70,29 +93,158 @@ internal fun SettingsScreen(
     showAppNames: Boolean,
     onShowAppNamesChanged: (Boolean) -> Unit,
 ) {
+    val inSubpage = page != SettingsPage.ROOT
+    val up = { onNavigate(SettingsPage.ROOT) }
+    BackHandler(enabled = inSubpage, onBack = up)
+    val titleHeight = with(LocalDensity.current) { MaterialTheme.typography.titleLarge.lineHeight.toDp() }
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.menu_launcher_settings)) }) },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        stringResource(page.title),
+                        modifier = Modifier.semantics { heading() },
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                navigationIcon = {
+                    if (inSubpage) {
+                        IconButton(onClick = up, modifier = Modifier.settingsFocusRing()) {
+                            Icon(
+                                painterResource(R.drawable.ic_settings_back),
+                                contentDescription = stringResource(R.string.settings_back_to_root),
+                            )
+                        }
+                    }
+                },
+                expandedHeight = maxOf(64.dp, titleHeight * 2 + 8.dp),
+            )
+        },
         containerColor = MaterialTheme.colorScheme.surface,
     ) { contentPadding ->
-        Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.TopCenter) {
-            Column(
-                Modifier
-                    .widthIn(max = 560.dp)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
-            ) {
-                DefaultLauncherSetup(defaultHome, onSetDefaultHome)
-                HorizontalDivider(Modifier.padding(vertical = 24.dp))
-                ThemeSettings(themeMode, onThemeSelected)
-                Spacer(Modifier.height(8.dp))
-                AppNamesSetting(showAppNames, onShowAppNamesChanged)
-                HorizontalDivider(Modifier.padding(vertical = 24.dp))
-                AboutContent(versionName)
+        Box(
+            Modifier.fillMaxSize().padding(contentPadding).imePadding(),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            key(page) {
+                Column(
+                    Modifier
+                        .widthIn(max = 560.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(remember { ScrollState(0) })
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
+                ) {
+                    when (page) {
+                        SettingsPage.ROOT -> SettingsDirectory(defaultHome, onNavigate, onResetInputFocus)
+                        SettingsPage.DEFAULT_LAUNCHER -> DefaultLauncherSetup(defaultHome, onSetDefaultHome)
+                        SettingsPage.APPEARANCE -> {
+                            ThemeSettings(themeMode, onThemeSelected)
+                            Spacer(Modifier.height(8.dp))
+                            AppNamesSetting(showAppNames, onShowAppNamesChanged)
+                        }
+                        SettingsPage.ABOUT -> AboutContent(versionName)
+                    }
+                }
             }
         }
     }
 }
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SettingsDirectory(
+    defaultHome: DefaultHomeState,
+    onNavigate: (SettingsPage) -> Unit,
+    onResetInputFocus: () -> Unit,
+) {
+    var query by remember { mutableStateOf("") }
+    var focused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val searchLabel = stringResource(R.string.settings_search)
+    val colors = MaterialTheme.colorScheme
+    // While the IME is visible, let Android handle Back before changing the search state.
+    BackHandler(enabled = !WindowInsets.isImeVisible && (focused || query.isNotEmpty())) {
+        onResetInputFocus()
+        query = ""
+    }
+    OutlinedTextField(
+        value = query,
+        onValueChange = { query = it },
+        modifier = Modifier
+            .fillMaxWidth()
+            .settingsFocusRing()
+            .onFocusChanged { focused = it.isFocused }
+            .semantics { contentDescription = searchLabel },
+        placeholder = { Text(searchLabel) },
+        leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { query = "" }, modifier = Modifier.settingsFocusRing()) {
+                    Icon(
+                        painterResource(R.drawable.ic_clear_search),
+                        contentDescription = stringResource(R.string.drawer_clear_search),
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
+        shape = CircleShape,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = colors.surfaceContainerHigh,
+            unfocusedContainerColor = colors.surfaceContainerHigh,
+        ),
+    )
+    Spacer(Modifier.height(16.dp))
+    val term = query.trim()
+    var found = false
+    for (destination in SettingsPage.entries) {
+        val summary = when (destination) {
+            SettingsPage.ROOT -> continue
+            SettingsPage.DEFAULT_LAUNCHER -> stringResource(defaultHome.summary)
+            SettingsPage.APPEARANCE -> stringResource(R.string.settings_appearance_detail)
+            SettingsPage.ABOUT -> stringResource(R.string.settings_about_detail)
+        }
+        val title = stringResource(destination.title)
+        if (!title.contains(term, ignoreCase = true) &&
+            !summary.contains(term, ignoreCase = true) &&
+            !(destination == SettingsPage.APPEARANCE &&
+                stringResource(R.string.settings_show_app_names).contains(term, ignoreCase = true))
+        ) continue
+        found = true
+        key(destination) {
+            ListItem(
+                headlineContent = { Text(title) },
+                supportingContent = { Text(summary) },
+                trailingContent = { Icon(painterResource(R.drawable.ic_settings_forward), contentDescription = null) },
+                modifier = Modifier.settingsFocusRing(radius = 12.dp).clickable(role = Role.Button) {
+                    keyboard?.hide()
+                    focusManager.clearFocus()
+                    onNavigate(destination)
+                },
+            )
+        }
+    }
+    if (!found) {
+        Text(
+            stringResource(R.string.settings_search_empty),
+            modifier = Modifier.padding(16.dp).semantics { liveRegion = LiveRegionMode.Polite },
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.onSurfaceVariant,
+        )
+    }
+}
+
+private val DefaultHomeState.summary: Int
+    get() = when (this) {
+        DefaultHomeState.ACTIVE -> R.string.settings_default_home_active
+        DefaultHomeState.AVAILABLE -> R.string.settings_default_home_setup
+        DefaultHomeState.UNAVAILABLE -> R.string.settings_default_home_unavailable
+    }
 
 @Composable
 private fun ThemeSettings(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
@@ -136,17 +288,7 @@ private fun AppNamesSetting(visible: Boolean, onVisibilityChanged: (Boolean) -> 
 @Composable
 private fun DefaultLauncherSetup(state: DefaultHomeState, onSetDefaultHome: () -> Unit) {
     Text(
-        text = stringResource(R.string.settings_default_launcher),
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.semantics { heading() },
-    )
-    Spacer(Modifier.height(8.dp))
-    Text(
-        text = stringResource(when (state) {
-            DefaultHomeState.ACTIVE -> R.string.settings_default_home_active
-            DefaultHomeState.AVAILABLE -> R.string.settings_default_home_setup
-            DefaultHomeState.UNAVAILABLE -> R.string.settings_default_home_unavailable
-        }),
+        text = stringResource(state.summary),
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

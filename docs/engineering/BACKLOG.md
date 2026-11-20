@@ -178,6 +178,12 @@ with a trunk settings structure to hang it on. Note: settings **reset** is not
 part of this item — it belongs to the backup/reset policy
 ([ENG-106](#eng-106-backuprestore-policy), research `BACKUP-101`).
 
+`NT-SETTING-01` implements clean Settings entry, named page links, and
+keyboard-first Back for the current destinations. See the
+[Android verification](verification/VESNA-QA-SETTINGS-NAVIGATION.md).
+The broader `SETT-110` work for breadcrumb results and highlighting individual
+controls remains separate from the destination search verified there.
+
 ### ENG-105: Cards surface
 
 `CARDS-100` is condition-triggered content. Blocked on the **product/privacy

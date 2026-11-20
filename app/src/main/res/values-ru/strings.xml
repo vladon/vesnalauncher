@@ -8,6 +8,13 @@
     <string name="settings_default_home_active">Vesna — ваш лаунчер по умолчанию.</string>
     <string name="settings_default_home_unavailable">Android не позволяет выбрать лаунчер на этом устройстве.</string>
 
+    <string name="settings_appearance">Внешний вид</string>
+    <string name="settings_appearance_detail">Тема и названия приложений</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_about_detail">Версия, лицензия и исходный код</string>
+    <string name="settings_search">Поиск по настройкам</string>
+    <string name="settings_search_empty">Настройки не найдены</string>
+    <string name="settings_back_to_root">Назад к настройкам Vesna</string>
     <string name="settings_theme">Тема</string>
     <string name="settings_theme_system">Как в системе</string>
     <string name="settings_theme_light">Светлая</string>
