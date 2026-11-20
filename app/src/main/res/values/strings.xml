@@ -21,8 +21,10 @@
     <string name="menu_add_to_dock">Add to dock</string>
     <string name="menu_remove_from_dock">Remove from dock</string>
     <string name="menu_app_info">App info</string>
+    <string name="home_options">Home options</string>
     <string name="menu_launcher_settings">Vesna settings</string>
     <string name="menu_wallpaper">Set wallpaper</string>
+    <string name="menu_default_launcher">Default launcher</string>
     <string name="menu_add_workspace_page">Add home page</string>
     <string name="menu_remove_empty_workspace_page">Remove empty page</string>
 
@@ -30,7 +32,7 @@
     <string name="workspace_next_page">Next home page</string>
     <string name="workspace_page_position">Home page %1$d of %2$d</string>
 
-    <string name="workspace_empty_hint">Long-press here for options</string>
+    <string name="workspace_empty_hint">Open Home options to customize this page</string>
     <string name="toast_workspace_full">This home page is full</string>
     <string name="toast_workspace_page_not_empty">Only empty home pages can be removed</string>
     <string name="toast_dock_full">The dock is full</string>

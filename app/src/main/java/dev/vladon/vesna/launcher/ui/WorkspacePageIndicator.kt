@@ -30,13 +30,13 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(
-            resolveSize(ceil((count * STEP_DP + STEP_DP) * density).toInt(), widthMeasureSpec),
+            resolveSize(ceil(minOf((count + 1) * STEP_DP, MAX_WIDTH_DP) * density).toInt(), widthMeasureSpec),
             MeasureSpec.getSize(heightMeasureSpec),
         )
     }
 
     override fun onDraw(canvas: Canvas) {
-        val step = STEP_DP * density
+        val step = minOf(STEP_DP * density, width / (count + 1f))
         val y = height / 2f
         val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
         for (index in 0 until count) {
@@ -55,5 +55,7 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
 
     private companion object {
         const val STEP_DP = 12f
+        // Leave 16 dp at each side of the full Home control row on a 320 dp display.
+        const val MAX_WIDTH_DP = 80f
     }
 }

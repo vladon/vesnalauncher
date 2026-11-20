@@ -3,8 +3,8 @@
     <!-- Subtle dim over the live wallpaper so white labels stay readable. -->
     <color name="workspace_scrim">#33000000</color>
     <color name="vesna_surface">#F9FAEF</color>
+    <color name="vesna_surface_container">#EDEFE4</color>
     <color name="icon_label_color">#FFFFFF</color>
-    <color name="hint_color">#B3FFFFFF</color>
     <color name="vesna_green">#4CAF50</color>
     <color name="vesna_green_dark">#2E7D32</color>
     <color name="launcher_icon_background">#34A853</color>

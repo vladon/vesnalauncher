@@ -21,8 +21,10 @@
     <string name="menu_add_to_dock">Добавить в док</string>
     <string name="menu_remove_from_dock">Убрать из дока</string>
     <string name="menu_app_info">О приложении</string>
+    <string name="home_options">Меню рабочего стола</string>
     <string name="menu_launcher_settings">Настройки Vesna</string>
     <string name="menu_wallpaper">Сменить обои</string>
+    <string name="menu_default_launcher">Основной лаунчер</string>
     <string name="menu_add_workspace_page">Добавить страницу</string>
     <string name="menu_remove_empty_workspace_page">Удалить страницу</string>
 
@@ -30,7 +32,7 @@
     <string name="workspace_next_page">Следующая страница рабочего стола</string>
     <string name="workspace_page_position">Страница рабочего стола %1$d из %2$d</string>
 
-    <string name="workspace_empty_hint">Долгое нажатие откроет меню</string>
+    <string name="workspace_empty_hint">Откройте меню рабочего стола, чтобы настроить страницу</string>
     <string name="toast_workspace_full">Эта страница рабочего стола заполнена</string>
     <string name="toast_workspace_page_not_empty">Удалить можно только пустые страницы</string>
     <string name="toast_dock_full">Док заполнен</string>

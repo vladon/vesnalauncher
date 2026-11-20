@@ -7,6 +7,8 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.ContextThemeWrapper
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
@@ -51,6 +53,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var drawer: DrawerView
     private lateinit var homeContent: FrameLayout
     private lateinit var homeControls: View
+    private lateinit var homeOptionsButton: View
     private lateinit var openDrawerButton: View
     private lateinit var emptyHint: TextView
     private lateinit var pageControls: View
@@ -114,6 +117,8 @@ class HomeActivity : ComponentActivity() {
         applyAppNameVisibility(appearance.showAppNames)
         homeContent = findViewById(R.id.home_content)
         homeControls = findViewById(R.id.home_controls)
+        homeOptionsButton = findViewById(R.id.home_options)
+        homeOptionsButton.setOnClickListener { showLauncherMenu() }
         openDrawerButton = findViewById(R.id.home_open_drawer)
         openDrawerButton.setOnClickListener { openDrawer() }
         emptyHint = findViewById(R.id.workspace_empty_hint)
@@ -132,7 +137,7 @@ class HomeActivity : ComponentActivity() {
             if (content is CellContent.FolderCell) showFolderDialog(content.folder)
         }
         workspace.onFolderLongClick = { folder, anchor -> showFolderMenu(folder, anchor) }
-        workspace.onEmptyAreaLongClick = { showLauncherMenu() }
+        workspace.onEmptyAreaLongClick = ::showLauncherMenu
         workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
         workspace.onDragStarted = { cell, app, _ ->
@@ -579,14 +584,15 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showLauncherMenu() {
-        val popup = PopupMenu(this, dock)
+        val menuContext = ContextThemeWrapper(this, R.style.ThemeOverlay_Vesna_HomeOptions)
+        val popup = PopupMenu(menuContext, homeOptionsButton, Gravity.START)
         popup.menu.add(0, MENU_SETTINGS, 0, R.string.menu_launcher_settings)
         popup.menu.add(0, MENU_WALLPAPER, 1, R.string.menu_wallpaper)
         val graph = VesnaApplication.graph(this)
         if (!graph.homeRoleChecker.isDefaultHome() &&
             graph.homeRoleChecker.defaultHomeRequestIntent() != null
         ) {
-            popup.menu.add(0, MENU_SET_DEFAULT, 2, R.string.menu_set_default_home)
+            popup.menu.add(0, MENU_SET_DEFAULT, 2, R.string.menu_default_launcher)
         }
         val page = renderedState
         if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {

@@ -22,4 +22,21 @@
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
+
+    <style name="ThemeOverlay.Vesna.HomeOptions" parent="">
+        <item name="android:popupMenuStyle">@style/Widget.Vesna.HomeOptions</item>
+        <item name="android:textAppearanceLargePopupMenu">@style/TextAppearance.Vesna.HomeOptions</item>
+        <item name="android:colorControlHighlight">@color/home_control_focus_press</item>
+    </style>
+
+    <style name="Widget.Vesna.HomeOptions" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">@drawable/home_options_menu_background</item>
+    </style>
+
+    <style name="TextAppearance.Vesna.HomeOptions" parent="android:TextAppearance.Material.Body1">
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:textColor">@color/home_control_on_surface</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.007143</item>
+    </style>
 </resources>

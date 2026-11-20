@@ -29,11 +29,12 @@ exercised; everything else is source-verified only.
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
 | Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
-| Workspace pages (unreleased) | Long-press empty Home space → **Add home page**. Up to eight 4×5 pages; swipe horizontally or use the arrows above the shared dock. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls). |
+| Workspace pages (unreleased) | **Home options → Add home page**. Up to eight 4×5 pages; swipe horizontally or use the arrows above the shared dock. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls). |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
 | App drawer access (unreleased) | Tap the labeled app-grid button above the dock or swipe up. Close with the drawer button or Android Back; keyboard focus returns to the invoking control. | Android 8 and 15 touch, accessibility hierarchy, and Android 15 D-pad checks; see [App drawer access](#app-drawer-access). |
+| Home options (unreleased) | A named overflow button above the dock opens Settings, wallpaper, and applicable launcher and page actions without a long-press. | Android 8 and 15 emulator verification; see [Home options](#home-options). |
 | Drawer search | Case-insensitive substring filter (`AppSearch`). **Clear search** restores the ordered grid and returns focus to the field; results stay above the keyboard. | `AppSearchTest` (5 JVM tests); `DrawerSearchTest` and real Home checks on Android 8 and 15. |
 | Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
@@ -171,9 +172,9 @@ list means it was not performed, nothing more.
 
 The local `workspace-page-controls` branch builds on the 0.4.3 storage work; it
 does not change the Room schema or the last published release. New pages are
-empty, and adding or moving an app acts on the displayed page. Long-press an
-empty extra page and choose **Remove empty page** to free a slot and return to
-the first Home page. The first page and pages with saved shortcuts or folders
+empty, and adding or moving an app acts on the displayed page. On an empty
+extra page, open **Home options → Remove empty page** to free a slot and return
+to the first Home page. The first page and pages with saved shortcuts or folders
 cannot be removed, even if a saved shortcut is not currently visible. Page
 reordering and dragging between pages are not available.
 
@@ -195,6 +196,27 @@ reordering and dragging between pages are not available.
   folder on Android 15. Android 8 hid the pager after removing the only extra
   page. The new menu row fit at 320 dp and 1.6× type in English and Russian;
   touch selection and visible D-pad focus and activation were verified.
+
+### Home options
+
+Tap the **Home options** button above the dock or long-press empty Home space
+to open the same menu. The button works even when all 20 workspace cells
+are occupied. Use it to reach Vesna Settings, the wallpaper picker, the
+default-launcher chooser, and page actions when available.
+
+- Android 8: tapped the new button on a full Home, opened Settings, and compared
+  the menu with long-press. The drawer hid the button while open. Icon positions
+  and persisted placements did not change.
+- Android 15: Tab and D-pad opened the menu and selected Settings, and Back
+  returned focus to the button when dismissing the menu. At eight pages, all
+  four controls kept 48 dp targets in a 320 dp window. **Add home page** was
+  hidden at the cap, **Remove empty page** was absent on populated Home, and
+  adding/removing two test pages left the original pages and placements intact.
+- Checked Light and Dark at 320 dp and 610 dp, English and Russian at up to
+  200% text, RTL, and gesture and three-button navigation. Opened the wallpaper
+  chooser and canceled without changing the wallpaper. Debug lint passed, as
+  did all eight `WorkspaceRepositoryPagesTest` cases on both emulators.
+  TalkBack speech and physical devices were not checked.
 
 ### App drawer access
 
@@ -232,9 +254,9 @@ focus so another query can be typed immediately.
 ### Default launcher setup
 
 Open **Vesna Launcher** from the current launcher, then choose **Set as default
-launcher** in Vesna Settings. Android owns the selection. The Home
-long-press menu still offers setup when Vesna is not selected. The old Home
-banner no longer covers shortcuts or consumes grid space.
+launcher** in Vesna Settings. Android owns the selection. **Home options →
+Default launcher** opens the same system selection when Vesna is not selected.
+The old Home banner no longer covers shortcuts or consumes grid space.
 
 - Android 15 opened the Home role chooser from Settings with D-pad input;
   cancellation kept the old default. Confirming through the Home menu's
