@@ -148,6 +148,67 @@ before the feature leaves beta; P3 = polish.
   again; Vesna adds no re-prompt of its own.
 - Accept: AT-WIDGET-103 (verified working in the platform — preserve it).
 
+## NT-DOCK-04 (P2) — Dock fixed during workspace page swipes
+- Spec: R-DOCK-100.11.
+- Page navigation never moves or hides the dock; multi-page docks scroll
+  only via their own page gesture.
+- Accept: page-swipe asserted with the dock pixel-stable.
+
+## NT-DOCK-05 (P2) — Dependent options visibly explain their dependency
+- Spec: R-DOCK-100.12.
+- Options disabled by an unmet dependency (e.g. "auto-close on app launch"
+  without a toggle gesture) are greyed WITH their explanatory subtitle —
+  never silently disabled without explanation.
+- Accept: the dependency state is asserted visible next to the control.
+
+## NT-WIDGET-01 (P2) — Resize-mode settings affordance
+- Spec: R-WIDGET-101.5.
+- Resize mode entry pairs the handles with an explicit settings affordance
+  (edit control + discovery toast) — widget settings reachable without a
+  long-press.
+- Accept: the affordance is asserted present in placement-time resize mode.
+
+## NT-DRAWER-04 (P1) — One explicit grid-dimension notation
+- Gap: Nova's drawer label "6 ✕ 5" reads rows×columns while its desktop
+  label "6 ✕ 5" renders columns×rows — identical notation, opposite
+  meanings, adjacent pages. Spec: R-DRAWER-101.5.
+- Every grid dimension label uses explicit units ("6 columns × 5 rows").
+- Accept: no bare A ✕ B dimension label anywhere in settings.
+
+## NT-SETTING-01 (P1) — Settings opens clean, every page deep-linkable
+- Gap: settings state (page/scroll/query/focus) persisted across
+  force-stops, landing sessions in a focused garbage search field that
+  swallowed navigation. Spec: R-SETT-112.1, R-SETT-112.2, R-SETT-112.3.
+- Cold open lands on the root with no focus; every named page has a deep
+  link; BACK dismisses the keyboard before leaking keystrokes.
+- Accept: cold-open asserts root+no-focus; each page's deep link asserted
+  from a dirty prior state.
+
+## NT-SETTING-02 (P2) — Unsaved-changes dialogs fully actionable
+- Spec: R-SETT-112.4.
+- Discard/Save dialogs keep both options enabled and state what would be
+  lost.
+- Accept: the dialog asserted with both options actionable (Nova's pattern —
+  preserve; its greyed-Save variant in the builder is covered by
+  NT-CARDS-10).
+
+## NT-GESTURE-01 (P1) — Single-owner gesture routing
+- Gap: binding-dependent precedence (QS binding preempted the drawer gesture
+  zone-independently; notifications fired from neither). Spec:
+  R-GESTURE-112.1, R-GESTURE-112.2, R-GESTURE-112.4.
+- ONE owner per gesture stream, zone-independent; system-panel actions route
+  through the same dispatcher; every gesture target has a deterministic
+  non-gesture affordance.
+- Accept: AT-DOCK-102's ownership branch + the grid-icon affordance
+  asserted reachable.
+
+## NT-GESTURE-02 (P2) — Assignment dialogs confirm or undo
+- Spec: R-GESTURE-112.3.
+- Assignment changes apply only with confirmation (or an undo path); the
+  dialog names its target gesture prominently beyond the title.
+- Accept: a wrong-gesture tap asserted recoverable without reassignment
+  through the menu.
+
 ---
 
 Traceability: every ticket's acceptance scenario lives in

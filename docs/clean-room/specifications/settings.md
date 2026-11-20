@@ -43,3 +43,28 @@ Derived from `observations/settings.md` (OBS-SETT-001..011) and
 - R-SETT-111.1: Vesna has NO paid tier; every settings row is functional
   (independent product decision — Nova's gating recorded as reference
   only).
+
+## SETT-112 — Settings state and navigation hygiene (verified)
+
+- Research-verified on Nova 8.9.9 Prime across the 2026-11-19/20 sessions
+  (the recurring navigation failures): Nova's settings app persists the
+  page, scroll position, search query text, AND field focus across
+  navigation AND force-stops — reopening landed on a stale search page
+  holding garbage, focused, with the keyboard up, repeatedly swallowing
+  navigation input. A deterministic deep link to the settings ACTIVITY
+  (not the named page) was the working escape.
+
+### Vesna requirements
+
+- R-SETT-112.1: Opening settings lands on the ROOT page (or a defined
+  default) with NO search text, NO field focus, and NO keyboard — saved
+  page/scroll/search state restores only through explicit navigation, never
+  on cold open (Nova counter-example recorded: a stale focused search field
+  survived force-stops and swallowed an entire session's navigation).
+- R-SETT-112.2: Every named settings page has a deterministic deep link
+  that lands on that page from any prior state.
+- R-SETT-112.3: With the search field focused, BACK dismisses the keyboard
+  first and never leaks keystrokes into other surfaces.
+- R-SETT-112.4: Unsaved-changes dialogs disable nothing silently: both
+  options are always actionable, and the dialog states what would be lost
+  (Nova's Discard/Save pattern, verified working — preserve it).

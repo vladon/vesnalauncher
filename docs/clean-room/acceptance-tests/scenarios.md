@@ -261,3 +261,27 @@ its feature ID. These describe externally observable behavior only.
 - Then it persists across an app restart
 - And the folder's editor shows its rules and enabled state in one
   surface
+
+## Gestures
+
+### AT-GESTURE-112 — Single-owner routing and assignment safety
+- Given a gestures-section binding and a separate drawer-open configuration
+  exist for the same gesture
+- When the gesture is performed from any start zone on the workspace
+- Then exactly ONE bound action fires, identically from every zone
+- And the bound action never silently changes through a misread dialog
+- And every gesture target remains reachable through a deterministic
+  non-gesture affordance
+
+## Settings
+
+### AT-SETTING-112 — Settings opens clean and deep-links land true
+- Given the settings app was previously left on a subpage with search text
+  and focus
+- When the user cold-opens settings
+- Then it opens on the root page with no search text, no field focus, and
+  no keyboard
+- When the user opens a named page via its deep link from any prior state
+- Then that exact page is shown
+- And with the search field focused, BACK dismisses the keyboard without
+  leaking keystrokes into other surfaces

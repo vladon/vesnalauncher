@@ -48,3 +48,30 @@ Derived from `observations/gestures.md` and the gesture catalog inventory
   the gesture assignments (Nova: App drawer ▸ "Open App Drawer" with its
   own gesture type + gear; the gestures-section "Swipe up" binding is
   independent and does not gate drawer opening).
+
+## GESTURE-112 — Gesture routing precedence and assignment safety (verified)
+
+- Research-verified on Nova 8.9.9 Prime (OBS-GESTURE-112; the complete
+  binding/precedence cycle). Nova's workspace swipe-up routing is
+  BINDING-DEPENDENT: an "Expand quick settings" binding FIRES and preempts
+  the drawer-open gesture from BOTH swipe zones, while an "Expand
+  notifications" binding fires from neither. Assignment dialogs AUTO-APPLY
+  on tap with the dialog identity only in the title — a misread title
+  silently mutates the wrong gesture.
+
+### Vesna requirements
+
+- R-GESTURE-112.1: ONE owner per gesture stream: every workspace gesture
+  has exactly one bound action, resolved identically regardless of the
+  swipe's start zone (Nova counter-example: the same binding fired from one
+  zone pattern but not another).
+- R-GESTURE-112.2: System-panel actions (quick settings, notifications)
+  route through the SAME dispatcher as launcher gestures — they never
+  preempt or bypass a configured launcher gesture.
+- R-GESTURE-112.3: Gesture assignment dialogs confirm or offer undo —
+  silent auto-apply on the wrong gesture must be impossible, and the dialog
+  names its target gesture prominently (not only in its title).
+- R-GESTURE-112.4: Every gesture target has a deterministic non-gesture
+  affordance (Nova: the search pill's grid icon opens the drawer when the
+  swipe route is ambiguous) — no behavior is reachable ONLY through a
+  gesture whose routing can conflict.
