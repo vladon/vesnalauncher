@@ -26,6 +26,7 @@ import dev.vladon.vesna.launcher.platform.PackageEvent
 enum class LauncherMessage {
     WORKSPACE_FULL, DOCK_FULL, WORKSPACE_PAGE_NOT_EMPTY,
     SHORTCUT_MOVED, NO_MOVE_DESTINATION, MOVE_DESTINATION_FULL, MOVE_UNAVAILABLE,
+    WORKSPACE_PAGE_REORDERED, WORKSPACE_PAGE_ORDER_CHANGED,
 }
 
 /** Everything the launcher UI renders. */
@@ -149,6 +150,19 @@ class LauncherController(
                 } else {
                     _messages.tryEmit(LauncherMessage.WORKSPACE_PAGE_NOT_EMPTY)
                 }
+            }
+        }
+    }
+
+    /** Reorders the active page without changing the selected ID or its contents. */
+    internal fun reorderWorkspacePage(pageId: Long, destinationIndex: Int, displayedOrder: List<Long>) {
+        scope.launch {
+            pageActionMutex.withLock {
+                val moved = _activePageId.value == pageId &&
+                    workspaceRepository.reorderPage(pageId, destinationIndex, displayedOrder)
+                _messages.tryEmit(
+                    if (moved) LauncherMessage.WORKSPACE_PAGE_REORDERED else LauncherMessage.WORKSPACE_PAGE_ORDER_CHANGED,
+                )
             }
         }
     }

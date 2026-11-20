@@ -30,18 +30,23 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class WorkspaceRepositoryPagesTest {
     @Test
-    fun pageOrderDoesNotChangePinIdentityOrCellOccupancy() = runBlocking {
+    fun reorderingShiftsPagesAndKeepsSelectionAndSavedContentsOnTheirOriginalIds() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
             .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_workspace_page_reorder"
+        context.deleteSharedPreferences(prefsName)
         try {
             val pages = db.workspacePageDao()
             val first = pages.getAll().single().id
-            val second = pages.insert(WorkspacePageEntity(rank = 1))
-            val repository = WorkspaceRepository(
-                db.workspaceItemDao(), db, db.folderDao(),
-                context.getSharedPreferences("qa_workspace_pages", Context.MODE_PRIVATE),
-            )
+            val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            val repository = WorkspaceRepository(db.workspaceItemDao(), db, db.folderDao(), prefs)
+            val second = requireNotNull(repository.createPage())
+            val removed = requireNotNull(repository.createPage())
+            val third = requireNotNull(repository.createPage())
+            val fourth = requireNotNull(repository.createPage())
+            assertTrue(repository.removeEmptyPage(removed))
+            assertTrue(repository.selectPage(second))
             val app = LauncherApp(AppKey("qa.pin", "Main"), "Pin", null)
             val other = LauncherApp(AppKey("qa.other", "Main"), "Other", null)
             assertTrue(repository.insertWorkspaceAt(app, 0, first))
@@ -50,16 +55,57 @@ class WorkspaceRepositoryPagesTest {
             assertFalse(repository.insertWorkspaceAt(other, 1, Long.MAX_VALUE))
             assertTrue(repository.insertWorkspaceAt(other, 1, first))
             assertTrue(repository.moveWithinWorkspace(app, 0, 1, second))
+            assertTrue(repository.insertIntoDock(other, 0))
+            db.folderDao().insert(FolderEntity(title = "Saved folder", cellIndex = 5, pageId = second))
             val before = repository.items.first().sortedBy { it.id }
 
-            pages.updateRank(second, -1)
-
-            assertEquals(listOf(second, first), pages.getAll().map { it.id })
+            val savedFolders = db.folderDao().getAll()
+            val initial = listOf(first, second, third, fourth)
+            val reordered = listOf(first, third, fourth, second)
+            assertTrue(repository.reorderPage(second, destinationIndex = 3, displayedOrder = initial))
+            val recreated = WorkspaceRepository(db.workspaceItemDao(), db, db.folderDao(), prefs)
+            assertEquals(reordered, recreated.pages.first().map { it.id })
+            assertEquals(second, recreated.savedActivePageId())
+            assertEquals(savedFolders, db.folderDao().getAll())
             assertEquals(before, repository.items.first().sortedBy { it.id })
             assertEquals(mapOf(0 to app, 1 to other), WorkspaceResolver.workspaceApps(before, listOf(app, other), first))
             assertEquals(mapOf(1 to app), WorkspaceResolver.workspaceApps(before, listOf(app, other), second))
             repository.removeFromWorkspace(app, cell = 1, pageId = second)
-            assertEquals(before.filter { it.pageId == first }, repository.items.first().sortedBy { it.id })
+            assertEquals(before.filterNot { it.pageId == second }, repository.items.first().sortedBy { it.id })
+            assertTrue(repository.reorderPage(second, destinationIndex = 1, displayedOrder = reordered))
+            assertEquals(initial, recreated.pages.first().map { it.id })
+        } finally {
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
+    @Test
+    fun reorderingRejectsTheFixedFirstPageAndOutdatedPositions() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        try {
+            val repository = WorkspaceRepository(
+                db.workspaceItemDao(), db, db.folderDao(),
+                context.getSharedPreferences("qa_workspace_page_reorder", Context.MODE_PRIVATE),
+            )
+            val first = DEFAULT_WORKSPACE_PAGE_ID
+            val second = requireNotNull(repository.createPage())
+            val third = requireNotNull(repository.createPage())
+            val initial = listOf(first, second, third)
+            assertFalse(repository.reorderPage(first, destinationIndex = 1, displayedOrder = initial))
+            assertFalse(repository.reorderPage(second, destinationIndex = 0, displayedOrder = initial))
+            assertEquals(initial, repository.pages.first().map { it.id })
+
+            assertTrue(repository.reorderPage(third, destinationIndex = 1, displayedOrder = initial))
+            val reordered = listOf(first, third, second)
+            assertFalse(repository.reorderPage(second, destinationIndex = 2, displayedOrder = initial))
+            assertEquals(reordered, repository.pages.first().map { it.id })
+
+            assertTrue(repository.removeEmptyPage(second))
+            assertFalse(repository.reorderPage(third, destinationIndex = 2, displayedOrder = reordered))
+            assertEquals(listOf(first, third), repository.pages.first().map { it.id })
         } finally {
             db.close()
         }

@@ -29,7 +29,7 @@ exercised; everything else is source-verified only.
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
 | Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
-| Workspace pages (unreleased) | **Home options → Add home page**. Up to eight 4×5 pages; swipe horizontally or use the arrows above the shared dock. **Shortcut options → Move to page…** moves a Home shortcut to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls) and [Move a shortcut between pages](#move-a-shortcut-between-pages). |
+| Workspace pages (unreleased) | **Home options** adds, reorders, and removes eligible pages. Swipe or use the arrows above the shared dock to navigate up to eight 4×5 pages. **Shortcut options → Move to page…** moves a Home shortcut to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls), [Reorder Home pages](#reorder-home-pages) and [Move a shortcut between pages](#move-a-shortcut-between-pages). |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
@@ -176,8 +176,8 @@ does not change the Room schema or the last published release. New pages are
 empty; ordinary pinning and drag-and-drop act on the displayed page. On an
 empty extra page, open **Home options → Remove empty page** to free a slot and return
 to the first Home page. The first page and pages with saved shortcuts or folders
-cannot be removed, even if a saved shortcut is not currently visible. Page
-reordering and dragging between pages are not available.
+cannot be removed, even if a saved shortcut is not currently visible. Dragging
+between pages is not available.
 
 - All 41 JVM tests and 34 instrumentation tests passed; the instrumentation
   suite ran on both Android 8 (API 26) and Android 15 (API 35). Debug lint had no
@@ -197,6 +197,25 @@ reordering and dragging between pages are not available.
   folder on Android 15. Android 8 hid the pager after removing the only extra
   page. The new menu row fit at 320 dp and 1.6× type in English and Russian;
   touch selection and visible D-pad focus and activation were verified.
+
+### Reorder Home pages
+
+With at least three pages, go to the page you want to move and open
+**Home options → Reorder this page…**. Pick its new position. Pages in between
+shift; the first page stays fixed. The moved page stays selected, with its
+shortcuts and folders in the same cells and the shared dock unchanged.
+
+- Android 8 touch verification moved page three to position two. The action
+  was hidden on the first page and when fewer than three pages existed.
+- Android 15 D-pad verification moved a populated page from position two
+  to six. Back canceled the chooser and returned focus to Home options.
+  The new order and selected page survived a force-stop and restart without
+  changes to any shortcut, folder, or dock rows.
+- All eleven `WorkspaceRepositoryPagesTest` cases passed on both emulators.
+  Debug lint passed. The native menu was checked in Light and Dark, at compact
+  and wide widths, at 200% text size, in English and Russian, and with RTL
+  page controls and localized digits. TalkBack speech and physical devices
+  were not checked.
 
 ### Move a shortcut between pages
 

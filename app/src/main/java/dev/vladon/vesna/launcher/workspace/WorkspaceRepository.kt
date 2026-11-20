@@ -106,6 +106,34 @@ class WorkspaceRepository(
         true
     }
 
+    /** Moves a page to its new display index, shifting the pages in between. */
+    internal suspend fun reorderPage(pageId: Long, destinationIndex: Int, displayedOrder: List<Long>): Boolean =
+        mutationMutex.withLock {
+            val sourceIndex = displayedOrder.indexOf(pageId)
+            if (sourceIndex <= 0 || pageId == DEFAULT_WORKSPACE_PAGE_ID ||
+                destinationIndex !in 1..displayedOrder.lastIndex || destinationIndex == sourceIndex
+            ) return@withLock false
+
+            val pageDao = db.workspacePageDao()
+            val pages = pageDao.getAll()
+            // The chooser names positions, so reject a choice from an older order.
+            if (pages.size != displayedOrder.size || pages.indices.any { pages[it].id != displayedOrder[it] }) {
+                return@withLock false
+            }
+
+            db.withTransaction {
+                val step = if (destinationIndex > sourceIndex) 1 else -1
+                var index = sourceIndex
+                while (index != destinationIndex) {
+                    val next = index + step
+                    pageDao.updateRank(pages[next].id, pages[index].rank)
+                    index = next
+                }
+                pageDao.updateRank(pageId, pages[destinationIndex].rank)
+            }
+            true
+        }
+
     /** The page selected in the last session; the default page until one is stored. */
     fun savedActivePageId(): Long = prefs.getLong(KEY_ACTIVE_PAGE, DEFAULT_WORKSPACE_PAGE_ID)
 

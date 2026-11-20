@@ -507,6 +507,8 @@ class HomeActivity : ComponentActivity() {
             LauncherMessage.NO_MOVE_DESTINATION -> getString(R.string.toast_no_move_destination)
             LauncherMessage.MOVE_DESTINATION_FULL -> getString(R.string.toast_move_destination_full)
             LauncherMessage.MOVE_UNAVAILABLE -> getString(R.string.toast_move_unavailable)
+            LauncherMessage.WORKSPACE_PAGE_REORDERED -> getString(R.string.toast_workspace_page_reordered)
+            LauncherMessage.WORKSPACE_PAGE_ORDER_CHANGED -> getString(R.string.toast_workspace_page_order_changed)
         }
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
@@ -636,6 +638,10 @@ class HomeActivity : ComponentActivity() {
         if (page.canRemoveActivePage) {
             popup.menu.add(0, MENU_REMOVE_WORKSPACE_PAGE, 4, R.string.menu_remove_empty_workspace_page)
         }
+        val position = page.pageIds.indexOf(page.activePageId)
+        if (page.pageIds.size > 2 && position > 0) {
+            popup.menu.add(0, MENU_REORDER_WORKSPACE_PAGE, 5, R.string.menu_reorder_workspace_page)
+        }
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_SETTINGS -> startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
@@ -644,8 +650,25 @@ class HomeActivity : ComponentActivity() {
                     ?.let { defaultHomeRequest.launch(it) }
                 MENU_ADD_WORKSPACE_PAGE -> controller.createWorkspacePage()
                 MENU_REMOVE_WORKSPACE_PAGE -> controller.removeEmptyWorkspacePage(page.activePageId)
+                MENU_REORDER_WORKSPACE_PAGE -> homeOptionsButton.post { showReorderPageMenu(page, position) }
             }
             true
+        }
+        popup.show()
+    }
+
+    private fun showReorderPageMenu(page: LauncherUiState, position: Int) {
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !homeOptionsButton.isShown) return
+
+        val popup = vesnaPopupMenu(homeOptionsButton)
+        for (index in 1..page.pageIds.lastIndex) {
+            if (index == position) continue
+            val number = index + 1
+            popup.menu.add(0, number, number, getString(R.string.reorder_page_position, number))
+                .setOnMenuItemClickListener {
+                    controller.reorderWorkspacePage(page.activePageId, index, page.pageIds)
+                    true
+                }
         }
         popup.show()
     }
@@ -680,5 +703,6 @@ class HomeActivity : ComponentActivity() {
         const val MENU_ADD_WORKSPACE_PAGE = 10
         const val MENU_REMOVE_WORKSPACE_PAGE = 11
         const val MENU_MOVE_TO_PAGE = 12
+        const val MENU_REORDER_WORKSPACE_PAGE = 13
     }
 }
