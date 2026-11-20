@@ -29,7 +29,7 @@ exercised; everything else is source-verified only.
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
 | Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
-| Workspace pages (unreleased) | **Home options** adds, reorders, and removes eligible pages. Swipe or use the arrows above the shared dock to navigate up to eight 4×5 pages. **Shortcut options → Move to page…** moves a Home shortcut to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls), [Reorder Home pages](#reorder-home-pages) and [Move a shortcut between pages](#move-a-shortcut-between-pages). |
+| Workspace pages (unreleased) | **Home options** adds, reorders, and removes eligible pages. Swipe or use the arrows above the shared dock to navigate up to eight 4×5 pages. **Shortcut options → Move to page…** moves a shortcut or folder to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls), [Reorder Home pages](#reorder-home-pages), [Move a shortcut between pages](#move-a-shortcut-between-pages), and [Move a folder between pages](#move-a-folder-between-pages). |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
@@ -234,6 +234,25 @@ With only one page, the action is hidden.
   RTL with localized page numbers, and both navigation modes. Debug lint and
   all ten `WorkspaceRepositoryPagesTest` cases passed on both emulators.
   TalkBack speech and physical devices were not checked.
+
+### Move a folder between pages
+
+Long-press a folder on Home, or open **Shortcut options** with **Shift+F10**,
+the **Menu** key, or Android accessibility. Choose **Move to page…** and
+select another page with room. The folder moves into the first free cell
+with its name and apps intact. The source page stays selected.
+
+- On Android 8, touch selection moved a two-app folder and skipped a full
+  page. On Android 15, D-pad selection moved the folder after a canceled
+  choice restored focus. The folder reopened with both apps after a
+  force-stop and restart, and no shortcut rows changed during the move.
+- All 13 page tests passed on both emulators, including stale source and
+  full or removed destination handling. Debug lint passed.
+- Checked Light and Dark with gesture and three-button navigation, English,
+  compact Russian at 200% type, and wide RTL. New menu labels fit, and the
+  destination rows measured 48 dp high. The existing Russian rename row
+  truncates at 320 dp and 200% type. TalkBack speech and physical devices
+  were not checked.
 
 ### Home options
 

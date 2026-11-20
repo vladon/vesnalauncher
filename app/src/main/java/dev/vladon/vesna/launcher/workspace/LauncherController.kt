@@ -25,7 +25,7 @@ import dev.vladon.vesna.launcher.platform.PackageEvent
 /** Non-fatal feedback from launcher actions, mapped to user-visible strings by the UI. */
 enum class LauncherMessage {
     WORKSPACE_FULL, DOCK_FULL, WORKSPACE_PAGE_NOT_EMPTY,
-    SHORTCUT_MOVED, NO_MOVE_DESTINATION, MOVE_DESTINATION_FULL, MOVE_UNAVAILABLE,
+    SHORTCUT_MOVED, FOLDER_MOVED, NO_MOVE_DESTINATION, MOVE_DESTINATION_FULL, MOVE_UNAVAILABLE,
     WORKSPACE_PAGE_REORDERED, WORKSPACE_PAGE_ORDER_CHANGED,
 }
 
@@ -232,13 +232,25 @@ class LauncherController(
 
     internal fun movePinToPage(pinId: Long, cell: Int, pageId: Long, destinationId: Long) {
         scope.launch {
-            val message = when (workspaceRepository.movePinToPage(pinId, cell, pageId, destinationId)) {
-                PageMoveResult.MOVED -> LauncherMessage.SHORTCUT_MOVED
-                PageMoveResult.FULL -> LauncherMessage.MOVE_DESTINATION_FULL
-                PageMoveResult.UNAVAILABLE -> LauncherMessage.MOVE_UNAVAILABLE
-            }
-            _messages.tryEmit(message)
+            reportPageMove(workspaceRepository.movePinToPage(pinId, cell, pageId, destinationId), LauncherMessage.SHORTCUT_MOVED)
         }
+    }
+
+    internal suspend fun folderPageMoveOptions(folder: Folder): PageMoveOptions? =
+        workspaceRepository.folderPageMoveOptions(folder)
+
+    internal fun moveFolderToPage(folder: Folder, destinationId: Long) {
+        scope.launch {
+            reportPageMove(workspaceRepository.moveFolderToPage(folder, destinationId), LauncherMessage.FOLDER_MOVED)
+        }
+    }
+
+    private fun reportPageMove(result: PageMoveResult, success: LauncherMessage) {
+        _messages.tryEmit(when (result) {
+            PageMoveResult.MOVED -> success
+            PageMoveResult.FULL -> LauncherMessage.MOVE_DESTINATION_FULL
+            PageMoveResult.UNAVAILABLE -> LauncherMessage.MOVE_UNAVAILABLE
+        })
     }
 
     /** Dock-internal reorder to [slot]. */

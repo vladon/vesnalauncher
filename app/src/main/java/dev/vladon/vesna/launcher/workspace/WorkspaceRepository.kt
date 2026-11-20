@@ -22,7 +22,7 @@ internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
 internal enum class PageMoveResult { MOVED, FULL, UNAVAILABLE }
 
 internal data class PageMoveTarget(val id: Long, val number: Int)
-internal data class PageMoveOptions(val pinId: Long, val pages: List<PageMoveTarget>)
+internal data class PageMoveOptions(val sourceId: Long, val pages: List<PageMoveTarget>)
 
 /** Hard cap on workspace pages; removing an empty extra page frees a slot. */
 internal const val MAX_WORKSPACE_PAGES = 8
@@ -167,15 +167,7 @@ class WorkspaceRepository(
         mutationMutex.withLock {
             val items = dao.getAll()
             val source = workspacePinAt(items, key, pageId, cell) ?: return@withLock null
-            val folders = folderDao.getAll()
-            val pages = buildList {
-                db.workspacePageDao().getAll().forEachIndexed { index, page ->
-                    if (page.id != pageId &&
-                        GridCanvas.firstFreeCell(occupiedCells(items, folders, page.id)) != null
-                    ) add(PageMoveTarget(page.id, index + 1))
-                }
-            }
-            PageMoveOptions(source.id, pages)
+            PageMoveOptions(source.id, pageMoveTargets(pageId, items, folderDao.getAll()))
         }
 
     /** Moves the same pin into the first free cell, without changing the selected page. */
@@ -192,6 +184,42 @@ class WorkspaceRepository(
             dao.updatePlacement(source.id, Container.WORKSPACE.name, destinationCell, destinationId)
             PageMoveResult.MOVED
         }
+
+    /** Reads eligible destinations only if the selected folder is still in its source cell. */
+    internal suspend fun folderPageMoveOptions(folder: Folder): PageMoveOptions? = mutationMutex.withLock {
+        val folders = folderDao.getAll()
+        val source = folders.atPlacement(folder) ?: return@withLock null
+        PageMoveOptions(source.id, pageMoveTargets(folder.pageId, dao.getAll(), folders))
+    }
+
+    /** Changes only the folder's placement; its members still belong to the same folder ID. */
+    internal suspend fun moveFolderToPage(folder: Folder, destinationId: Long): PageMoveResult =
+        mutationMutex.withLock {
+            if (folder.pageId == destinationId || db.workspacePageDao().getById(destinationId) == null) {
+                return@withLock PageMoveResult.UNAVAILABLE
+            }
+            val folders = folderDao.getAll()
+            val source = folders.atPlacement(folder) ?: return@withLock PageMoveResult.UNAVAILABLE
+            val destinationCell = GridCanvas.firstFreeCell(occupiedCells(dao.getAll(), folders, destinationId))
+                ?: return@withLock PageMoveResult.FULL
+            folderDao.update(source.copy(pageId = destinationId, cellIndex = destinationCell))
+            PageMoveResult.MOVED
+        }
+
+    private fun List<FolderEntity>.atPlacement(folder: Folder): FolderEntity? =
+        firstOrNull { it.id == folder.id && it.pageId == folder.pageId && it.cellIndex == folder.cellIndex }
+
+    private suspend fun pageMoveTargets(
+        pageId: Long,
+        items: List<WorkspaceItemEntity>,
+        folders: List<FolderEntity>,
+    ): List<PageMoveTarget> = buildList {
+        db.workspacePageDao().getAll().forEachIndexed { index, page ->
+            if (page.id != pageId && GridCanvas.firstFreeCell(occupiedCells(items, folders, page.id)) != null) {
+                add(PageMoveTarget(page.id, index + 1))
+            }
+        }
+    }
 
     /**
      * Appends the app to the dock; false when the dock is full. Only top-level

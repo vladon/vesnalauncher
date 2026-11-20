@@ -417,7 +417,7 @@ class WorkspaceRepositoryPagesTest {
             val selectedId = before.single { it.pageId == source && it.cellIndex == 3 }.id
 
             val choices = requireNotNull(repository.pageMoveOptions(app.key, cell = 3, pageId = source))
-            assertEquals(selectedId, choices.pinId)
+            assertEquals(selectedId, choices.sourceId)
             assertEquals(listOf(PageMoveTarget(destination, number = 3)), choices.pages)
             assertEquals(PageMoveResult.MOVED, repository.movePinToPage(selectedId, 3, source, destination))
             assertEquals(
@@ -454,16 +454,98 @@ class WorkspaceRepositoryPagesTest {
             assertTrue(repository.removeEmptyPage(retiredTarget))
             val fullLayout = dao.getAll().sortedBy { it.id }
 
-            assertEquals(PageMoveResult.FULL, repository.movePinToPage(choice.pinId, 0, origin, target))
-            assertEquals(PageMoveResult.UNAVAILABLE, repository.movePinToPage(choice.pinId, 0, origin, retiredTarget))
+            assertEquals(PageMoveResult.FULL, repository.movePinToPage(choice.sourceId, 0, origin, target))
+            assertEquals(PageMoveResult.UNAVAILABLE, repository.movePinToPage(choice.sourceId, 0, origin, retiredTarget))
             assertEquals(fullLayout, dao.getAll().sortedBy { it.id })
 
             repository.removeFromWorkspace(app, cell = 0, pageId = target)
             repository.removeFromWorkspace(app, cell = 0, pageId = origin)
             assertTrue(repository.insertWorkspaceAt(app, 0, origin))
             val replacementLayout = dao.getAll().sortedBy { it.id }
-            assertEquals(PageMoveResult.UNAVAILABLE, repository.movePinToPage(choice.pinId, 0, origin, target))
+            assertEquals(PageMoveResult.UNAVAILABLE, repository.movePinToPage(choice.sourceId, 0, origin, target))
             assertEquals(replacementLayout, dao.getAll().sortedBy { it.id })
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun folderMoveSkipsFullPagesAndOnlyUpdatesTheSelectedFoldersPlacement() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        try {
+            val dao = db.workspaceItemDao()
+            val folders = db.folderDao()
+            val repository = WorkspaceRepository(
+                dao, db, folders, context.getSharedPreferences("qa_workspace_page_moves", Context.MODE_PRIVATE),
+            )
+            val source = DEFAULT_WORKSPACE_PAGE_ID
+            val full = requireNotNull(repository.createPage())
+            val destination = requireNotNull(repository.createPage())
+            val one = LauncherApp(AppKey("qa.folder.one", "Main"), "One", null)
+            val two = LauncherApp(AppKey("qa.folder.two", "Main"), "Two", null)
+            assertTrue(repository.insertWorkspaceAt(one, 7, source))
+            assertTrue(repository.insertWorkspaceAt(two, 8, source))
+            assertTrue(repository.createFolderFromDrop(
+                two, 7, "Tools", WorkspaceRepository.FolderDropSource.Workspace(8), source,
+            ))
+            val selected = folders.getAll().single()
+            val folder = Folder(selected.id, selected.title, selected.cellIndex, source)
+            for (cell in 0 until GridCanvas.CAPACITY) {
+                assertTrue(repository.insertWorkspaceAt(one, cell, full))
+            }
+            assertTrue(repository.insertWorkspaceAt(two, 0, destination))
+            folders.insert(FolderEntity(title = "Tools", cellIndex = 1, pageId = destination))
+            val savedItems = dao.getAll().sortedBy { it.id }
+            val savedFolders = folders.getAll().sortedBy { it.id }
+
+            assertEquals(listOf(PageMoveTarget(destination, number = 3)), repository.folderPageMoveOptions(folder)?.pages)
+            assertEquals(PageMoveResult.MOVED, repository.moveFolderToPage(folder, destination))
+            assertEquals(
+                savedFolders.map { if (it.id == selected.id) it.copy(pageId = destination, cellIndex = 2) else it },
+                folders.getAll().sortedBy { it.id },
+            )
+            assertEquals(savedItems, dao.getAll().sortedBy { it.id })
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun folderMoveRejectsStalePlacementsAndDestinations() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        try {
+            val folders = db.folderDao()
+            val repository = WorkspaceRepository(
+                db.workspaceItemDao(), db, folders, context.getSharedPreferences("qa_workspace_page_moves", Context.MODE_PRIVATE),
+            )
+            val source = DEFAULT_WORKSPACE_PAGE_ID
+            val target = requireNotNull(repository.createPage())
+            val retired = requireNotNull(repository.createPage())
+            val id = folders.insert(FolderEntity(title = "Tools", cellIndex = 0, pageId = source))
+            val folder = Folder(id, "Tools", 0, source)
+            val pin = LauncherApp(AppKey("qa.folder.pin", "Main"), "Pin", null)
+            val choices = requireNotNull(repository.folderPageMoveOptions(folder))
+            assertEquals(listOf(target, retired), choices.pages.map { it.id })
+            assertTrue(repository.removeEmptyPage(retired))
+            for (cell in 0 until GridCanvas.CAPACITY) {
+                assertTrue(repository.insertWorkspaceAt(pin, cell, target))
+            }
+            val snapshot = folders.getAll()
+            assertEquals(PageMoveResult.FULL, repository.moveFolderToPage(folder, target))
+            assertEquals(PageMoveResult.UNAVAILABLE, repository.moveFolderToPage(folder, retired))
+            assertEquals(snapshot, folders.getAll())
+
+            repository.removeFromWorkspace(pin, cell = 0, pageId = target)
+            assertEquals(PageMoveResult.MOVED, repository.moveFolderToPage(folder, target))
+            val moved = folders.getAll()
+            val anotherPage = requireNotNull(repository.createPage())
+            assertNull(repository.folderPageMoveOptions(folder))
+            assertEquals(PageMoveResult.UNAVAILABLE, repository.moveFolderToPage(folder, anotherPage))
+            assertEquals(moved, folders.getAll())
         } finally {
             db.close()
         }

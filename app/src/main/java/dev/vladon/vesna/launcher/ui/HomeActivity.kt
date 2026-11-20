@@ -35,6 +35,7 @@ import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
 import dev.vladon.vesna.launcher.workspace.MAX_WORKSPACE_PAGES
+import dev.vladon.vesna.launcher.workspace.PageMoveOptions
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -441,10 +442,16 @@ class HomeActivity : ComponentActivity() {
     private fun showFolderMenu(folder: Folder, anchor: View) {
         val popup = vesnaPopupMenu(anchor)
         popup.menu.add(0, MENU_FOLDER_RENAME, 0, R.string.folder_rename)
-        popup.menu.add(0, MENU_FOLDER_REMOVE, 1, R.string.folder_remove)
+        if (renderedState.pageIds.size > 1) {
+            popup.menu.add(0, MENU_MOVE_TO_PAGE, 1, R.string.menu_move_to_page)
+        }
+        popup.menu.add(0, MENU_FOLDER_REMOVE, 2, R.string.folder_remove)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_FOLDER_RENAME -> promptFolderRename(folder)
+                MENU_MOVE_TO_PAGE -> showMovePageMenu(anchor, folder.pageId, { controller.folderPageMoveOptions(folder) }) {
+                    _, destinationId -> controller.moveFolderToPage(folder, destinationId)
+                }
                 MENU_FOLDER_REMOVE -> controller.removeFolder(folder.id)
             }
             true
@@ -504,6 +511,7 @@ class HomeActivity : ComponentActivity() {
             LauncherMessage.DOCK_FULL -> getString(R.string.toast_dock_full)
             LauncherMessage.WORKSPACE_PAGE_NOT_EMPTY -> getString(R.string.toast_workspace_page_not_empty)
             LauncherMessage.SHORTCUT_MOVED -> getString(R.string.toast_shortcut_moved)
+            LauncherMessage.FOLDER_MOVED -> getString(R.string.toast_folder_moved)
             LauncherMessage.NO_MOVE_DESTINATION -> getString(R.string.toast_no_move_destination)
             LauncherMessage.MOVE_DESTINATION_FULL -> getString(R.string.toast_move_destination_full)
             LauncherMessage.MOVE_UNAVAILABLE -> getString(R.string.toast_move_unavailable)
@@ -554,7 +562,9 @@ class HomeActivity : ComponentActivity() {
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_ADD_TO_DOCK -> controller.addToDock(app)
-                MENU_MOVE_TO_PAGE -> anchor.post { showMovePageMenu(anchor, app, cell, pageId) }
+                MENU_MOVE_TO_PAGE -> showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
+                    pinId, destinationId -> controller.movePinToPage(pinId, cell, pageId, destinationId)
+                }
                 MENU_REMOVE -> controller.removeFromWorkspace(app, cell, pageId)
                 MENU_APP_INFO -> showAppInfo(app)
             }
@@ -563,9 +573,14 @@ class HomeActivity : ComponentActivity() {
         popup.show()
     }
 
-    private fun showMovePageMenu(anchor: View, app: LauncherApp, cell: Int, pageId: Long) {
+    private fun showMovePageMenu(
+        anchor: View,
+        pageId: Long,
+        loadOptions: suspend () -> PageMoveOptions?,
+        move: (sourceId: Long, destinationId: Long) -> Unit,
+    ) = anchor.post {
         lifecycleScope.launch {
-            val options = controller.pageMoveOptions(app, cell, pageId)
+            val options = loadOptions()
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
                 renderedState.activePageId != pageId || !anchor.isAttachedToWindow || !anchor.isShown
             ) return@launch
@@ -581,7 +596,7 @@ class HomeActivity : ComponentActivity() {
             for (target in options.pages) {
                 popup.menu.add(0, target.number, target.number, getString(R.string.move_page_number, target.number))
                     .setOnMenuItemClickListener {
-                        controller.movePinToPage(options.pinId, cell, pageId, target.id)
+                        move(options.sourceId, target.id)
                         true
                     }
             }

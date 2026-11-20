@@ -43,9 +43,10 @@
     <string name="toast_workspace_page_reordered">Home page reordered</string>
     <string name="toast_workspace_page_order_changed">Home pages changed. Open Home options to try again.</string>
     <string name="toast_shortcut_moved">Shortcut moved</string>
+    <string name="toast_folder_moved">Folder moved</string>
     <string name="toast_no_move_destination">Free a space on another home page first</string>
     <string name="toast_move_destination_full">That home page is full</string>
-    <string name="toast_move_unavailable">That shortcut or home page is no longer available</string>
+    <string name="toast_move_unavailable">This move is no longer available</string>
     <string name="toast_dock_full">The dock is full</string>
 
     <!-- Folders -->
