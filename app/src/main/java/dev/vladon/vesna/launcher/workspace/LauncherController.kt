@@ -220,9 +220,8 @@ class LauncherController(
     }
 
     /** Returns a member of [folderId] to the first free grid cell (dissolves sparse folders). */
-    fun removeFromFolder(pinId: Long, folderId: Long) {
-        scope.launch { workspaceRepository.removeFromFolder(pinId, folderId) }
-    }
+    internal suspend fun removeFromFolder(pinId: Long, folderId: Long): FolderRemovalResult =
+        workspaceRepository.removeFromFolder(pinId, folderId)
 
     /** Renames a folder. */
     fun renameFolder(folderId: Long, title: String) {
@@ -230,9 +229,8 @@ class LauncherController(
     }
 
     /** Removes a folder, returning members to free grid cells. */
-    fun removeFolder(folderId: Long) {
-        scope.launch { workspaceRepository.removeFolder(folderId) }
-    }
+    internal suspend fun removeFolder(folderId: Long): FolderRemovalResult =
+        workspaceRepository.removeFolder(folderId)
 
     /** Workspace → dock drag at [slot] from [pageId]; emits [LauncherMessage.DOCK_FULL] when full. */
     fun moveWorkspaceToDock(app: LauncherApp, fromCell: Int, slot: Int, pageId: Long) {

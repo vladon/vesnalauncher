@@ -20,6 +20,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
 internal enum class PageMoveResult { MOVED, FULL, UNAVAILABLE }
+internal enum class FolderRemovalResult { REMOVED, NO_ROOM, UNAVAILABLE }
 
 internal data class PageMoveTarget(val id: Long, val number: Int)
 internal data class PageMoveOptions(val sourceId: Long, val pages: List<PageMoveTarget>)
@@ -538,20 +539,20 @@ class WorkspaceRepository(
     /**
      * Returns the selected pin of [folderId] to the first free grid cell. If the folder
      * dissolves, its last member returns to the folder cell in the same transaction.
-     * Returns false if the folder or membership is missing or the workspace is full.
+     * Reports insufficient space separately from a missing folder or membership.
      */
-    suspend fun removeFromFolder(pinId: Long, folderId: Long): Boolean = mutationMutex.withLock {
+    internal suspend fun removeFromFolder(pinId: Long, folderId: Long): FolderRemovalResult = mutationMutex.withLock {
         val items = dao.getAll()
-        if (items.none { it.id == pinId && it.folderId == folderId }) return@withLock false
-        val folder = folderDao.getById(folderId) ?: return@withLock false
-        val pageId = folder.pageId ?: return@withLock false
+        if (items.none { it.id == pinId && it.folderId == folderId }) return@withLock FolderRemovalResult.UNAVAILABLE
+        val folder = folderDao.getById(folderId) ?: return@withLock FolderRemovalResult.UNAVAILABLE
+        val pageId = folder.pageId ?: return@withLock FolderRemovalResult.UNAVAILABLE
         val occupied = occupiedCells(items, folderDao.getAll(), pageId)
-        val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
+        val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock FolderRemovalResult.NO_ROOM
         db.withTransaction {
             dao.updatePlacement(pinId, Container.WORKSPACE.name, cell, pageId)
             dissolveIfSparse(folder.id)
         }
-        true
+        FolderRemovalResult.REMOVED
     }
 
     /** Renames a folder. Returns false when the folder does not exist. */
@@ -562,17 +563,17 @@ class WorkspaceRepository(
     }
 
     /**
-     * Removes a folder, returning every member to distinct free grid cells in
-     * order. Returns false without mutating when the folder does not exist or the
-     * grid cannot fit all members.
+     * Removes a folder, returning every member to distinct free grid cells in order.
+     * Reports insufficient space or a missing folder without changing any placement.
      */
-    suspend fun removeFolder(folderId: Long): Boolean = mutationMutex.withLock {
-        val folder = folderDao.getById(folderId) ?: return@withLock false
-        val members = dao.getAll().filter { it.folderId == folderId }.sortedBy { it.cellIndex }
-        val pageId = folder.pageId ?: return@withLock false
-        val occupied = occupiedCells(dao.getAll(), folderDao.getAll(), pageId, excludedFolderId = folder.id)
+    internal suspend fun removeFolder(folderId: Long): FolderRemovalResult = mutationMutex.withLock {
+        val folder = folderDao.getById(folderId) ?: return@withLock FolderRemovalResult.UNAVAILABLE
+        val pageId = folder.pageId ?: return@withLock FolderRemovalResult.UNAVAILABLE
+        val items = dao.getAll()
+        val members = items.filter { it.folderId == folderId }.sortedBy { it.cellIndex }
+        val occupied = occupiedCells(items, folderDao.getAll(), pageId, excludedFolderId = folder.id)
         val freeCells = (0 until GridCanvas.CAPACITY).filter { it !in occupied }
-        if (members.size > freeCells.size) return@withLock false
+        if (members.size > freeCells.size) return@withLock FolderRemovalResult.NO_ROOM
         db.withTransaction {
             folderDao.deleteById(folderId)
             for ((index, member) in members.withIndex()) {
@@ -580,7 +581,7 @@ class WorkspaceRepository(
                 dao.updatePlacement(member.id, Container.WORKSPACE.name, cell, pageId)
             }
         }
-        true
+        FolderRemovalResult.REMOVED
     }
 
     /**

@@ -44,6 +44,7 @@ import dev.vladon.vesna.launcher.settings.VesnaTheme
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
 import dev.vladon.vesna.launcher.workspace.Folder
+import dev.vladon.vesna.launcher.workspace.FolderRemovalResult
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
@@ -92,8 +93,8 @@ class HomeActivity : ComponentActivity() {
     private var folderDialog: FolderDialog? = null
     private data class FolderRename(val folderId: Long, val host: ComposeView)
     private var folderRename: FolderRename? = null
-    private var launchFailure: Job? = null
-    private val launchFailureSnackbar by lazy { createLaunchFailureSnackbar() }
+    private var snackbarJob: Job? = null
+    private val homeSnackbar by lazy { createHomeSnackbar() }
     private var renderedState = LauncherUiState()
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
@@ -243,14 +244,14 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun onStop() {
-        launchFailure?.cancel()
+        snackbarJob?.cancel()
         super.onStop()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
-            launchFailure?.cancel()
+            snackbarJob?.cancel()
             pendingPageMenu?.cancel()
             pendingPageMenu = null
             activePopup?.dismiss()
@@ -475,12 +476,16 @@ class HomeActivity : ComponentActivity() {
             folder = folder,
             onLaunch = { launchApp(it) },
             onAppInfo = { controller.openAppInfo(it) },
-            onRemoveFromFolder = { pinId -> controller.removeFromFolder(pinId, folder.id) },
+            onRemoveFromFolder = { pinId ->
+                removeFolderItems(folder.pageId) { controller.removeFromFolder(pinId, folder.id) }
+            },
             onRename = { promptFolderRename(folder.id) },
-            onRemoveFolder = { controller.removeFolder(folder.id) },
+            onRemoveFolder = {
+                removeFolderItems(folder.pageId) { controller.removeFolder(folder.id) }
+            },
             onShowPopup = ::showPopup,
             onDismissed = {
-                launchFailure?.cancel()
+                snackbarJob?.cancel()
                 folderDialog = null
             },
         )
@@ -503,7 +508,7 @@ class HomeActivity : ComponentActivity() {
                 MENU_MOVE_TO_PAGE -> showMovePageMenu(anchor, folder.pageId, { controller.folderPageMoveOptions(folder) }) {
                     _, destinationId -> controller.moveFolderToPage(folder, destinationId)
                 }
-                MENU_FOLDER_REMOVE -> controller.removeFolder(folder.id)
+                MENU_FOLDER_REMOVE -> removeFolderItems(folder.pageId) { controller.removeFolder(folder.id) }
             }
             true
         }
@@ -570,17 +575,32 @@ class HomeActivity : ComponentActivity() {
 
     private fun launchApp(app: LauncherApp): Boolean {
         if (controller.launch(app)) return true
-        launchFailure?.cancel()
-        val folder = folderDialog
-        val message = getString(R.string.app_launch_failed)
-        launchFailure = lifecycleScope.launch {
-            if (folder != null) folder.showLaunchFailure(message)
-            else launchFailureSnackbar.showSnackbar(message)
-        }
+        showSnackbar(R.string.app_launch_failed, folderDialog)
         return false
     }
 
-    private fun createLaunchFailureSnackbar(): SnackbarHostState {
+    private fun removeFolderItems(pageId: Long, remove: suspend () -> FolderRemovalResult) {
+        val dialog = folderDialog
+        lifecycleScope.launch {
+            if (remove() == FolderRemovalResult.NO_ROOM &&
+                dialog === folderDialog && renderedState.activePageId == pageId &&
+                lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+            ) {
+                showSnackbar(R.string.folder_removal_no_room, dialog)
+            }
+        }
+    }
+
+    private fun showSnackbar(messageId: Int, dialog: FolderDialog?) {
+        snackbarJob?.cancel()
+        val message = getString(messageId)
+        snackbarJob = lifecycleScope.launch {
+            if (dialog != null) dialog.showSnackbar(message)
+            else homeSnackbar.showSnackbar(message)
+        }
+    }
+
+    private fun createHomeSnackbar(): SnackbarHostState {
         val state = SnackbarHostState()
         val host = ComposeView(this)
         // Draw after the elevated drawer without adding a shadow to the host.

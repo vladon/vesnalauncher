@@ -144,7 +144,7 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(setOf(target.packageName, dock.packageName), members.map { it.packageName }.toSet())
             assertTrue(members.all { it.pageId == null })
 
-            assertTrue(repository.removeFromFolder(dockPinId, folder.id))
+            assertEquals(FolderRemovalResult.REMOVED, repository.removeFromFolder(dockPinId, folder.id))
 
             assertNull(db.folderDao().getById(folder.id))
             val items = dao.getAll().map { it.toDomain() }

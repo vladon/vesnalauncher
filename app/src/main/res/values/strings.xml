@@ -59,6 +59,7 @@
     <string name="folder_name_required">Enter a folder name.</string>
     <string name="folder_rename_save">Save</string>
     <string name="folder_remove_from_folder">Remove from folder</string>
+    <string name="folder_removal_no_room">Not enough room on this page. Move or remove shortcuts to make room.</string>
     <string name="folder_open_hint">Folder with %1$d apps</string>
     <string name="folder_remove">Remove folder</string>
 

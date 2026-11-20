@@ -753,6 +753,25 @@ outdated action cannot move a different member.
   Android 8 and 15, and debug lint passed. The original emulator layouts and
   settings were restored.
 
+### Feedback when a Home page cannot fit folder shortcuts
+
+If a page cannot fit the shortcuts, **Remove from folder** and **Remove folder**
+leave the layout untouched. Vesna explains how to make room on the surface
+where the action started. An open folder stays open when removal fails.
+
+- On Android 15 with all 20 cells occupied, both actions previously failed
+  silently, and **Remove folder** closed the dialog. The fixed build showed
+  the message from both dialog actions and the Home folder menu. Removing one
+  Home shortcut let the same two-member folder be removed; the members took
+  the freed cell and the old folder cell.
+- In Light at 130% and Dark at 200%, the full message and folder controls were
+  visible, shortcut names stayed accessible, and the keyboard Menu key opened
+  the selected shortcut's actions. The displayed snackbar colors matched the
+  Vesna inverse roles. TalkBack speech and the Russian layout were not tested.
+- Six focused tests passed each on Android 8 and 15. They covered preserving
+  every saved row on a full secondary page and retrying both actions after
+  freeing space. Debug lint passed.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

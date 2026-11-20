@@ -48,7 +48,7 @@ internal class FolderDialog(
 ) {
 
     private val host = ComposeView(context)
-    private val launchFailureSnackbar = SnackbarHostState()
+    private val snackbar = SnackbarHostState()
     private val list = LayoutInflater.from(context).inflate(R.layout.dialog_folder, null) as FolderGridView
     private val appNames = GridAppNames(list)
     private val adapter = FolderContentsAdapter(
@@ -74,17 +74,14 @@ internal class FolderDialog(
                     text = {
                         Column {
                             AndroidView(factory = { list }, modifier = Modifier.fillMaxWidth().weight(1f, fill = false))
-                            SnackbarHost(launchFailureSnackbar)
+                            SnackbarHost(snackbar)
                         }
                     },
                     confirmButton = {
                         TextButton(onClick = onRename) { Text(stringResource(R.string.folder_rename)) }
                     },
                     dismissButton = {
-                        TextButton(onClick = {
-                            onRemoveFolder()
-                            dismiss()
-                        }) { Text(stringResource(R.string.folder_remove)) }
+                        TextButton(onClick = onRemoveFolder) { Text(stringResource(R.string.folder_remove)) }
                     },
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 )
@@ -100,8 +97,8 @@ internal class FolderDialog(
         onDismissed()
     }
 
-    suspend fun showLaunchFailure(message: String) {
-        launchFailureSnackbar.showSnackbar(message)
+    suspend fun showSnackbar(message: String) {
+        snackbar.showSnackbar(message)
     }
 
     fun update(state: LauncherUiState) {
