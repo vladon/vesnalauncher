@@ -616,6 +616,22 @@ does not hide the accessible name or the visual profile badge.
   and 15; debug lint passed. TalkBack speech, physical devices, and custom
   organization-provided labels were not checked.
 
+### Batched app catalogue refresh
+
+Android can report several apps becoming available or unavailable at once.
+Vesna now refreshes its catalogue once per nonempty batch. Real uninstall
+events still retain the package and profile so only its own pins are removed.
+
+- An Android 15 callback probe with 12 package names reduced refresh requests
+  from 12 to one for each availability callback, with and without the
+  replacing flag. Empty batches emitted no request. This measured requests,
+  not refresh latency; a live multi-package OS event was not exercised.
+- On Android 15, a real fixture appeared in the open drawer after installation.
+  Updating and temporarily disabling it preserved its saved Home pin.
+  Re-enabling it restored the search result; uninstall removed only the
+  fixture pin. The search query and launcher process stayed active during the
+  update, disable, enable, and uninstall checks. Debug lint passed.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —
