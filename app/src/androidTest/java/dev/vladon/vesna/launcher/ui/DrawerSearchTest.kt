@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.os.SystemClock
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -9,6 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
@@ -140,6 +142,39 @@ class DrawerSearchTest {
 
         setQuery("cafe tools")
         assertVisibleLabels(listOf("Café Tools"))
+    }
+
+    @Test
+    fun typingFromDrawerControlsStartsAndContinuesSearch() {
+        // A real navigation key leaves touch mode so drawer buttons can receive focus.
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_TAB)
+        onDrawer { host ->
+            val search = host.findViewById<EditText>(R.id.drawer_search)
+            assertTrue(host.findViewById<View>(R.id.drawer_close).requestFocus())
+            typeKey(host, KeyEvent.KEYCODE_Q, KeyEvent.META_CTRL_ON)
+            assertEquals("", search.text.toString())
+            assertTrue(host.findViewById<View>(R.id.drawer_close).hasFocus())
+            typeKey(host, KeyEvent.KEYCODE_Q, KeyEvent.META_SHIFT_ON)
+            assertTrue(search.hasFocus())
+            assertEquals("Q", search.text.toString())
+        }
+        assertVisibleLabels(listOf("Quokka"))
+
+        onDrawer { host ->
+            val search = host.findViewById<EditText>(R.id.drawer_search)
+            search.setSelection(0)
+            assertTrue(host.findViewById<View>(R.id.drawer_clear_search).requestFocus())
+            typeKey(host, KeyEvent.KEYCODE_U)
+            assertTrue(search.hasFocus())
+            assertEquals("Qu", search.text.toString())
+        }
+        assertVisibleLabels(listOf("Quokka"))
+    }
+
+    private fun typeKey(host: View, keyCode: Int, metaState: Int = 0) {
+        val time = SystemClock.uptimeMillis()
+        host.dispatchKeyEvent(KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0, metaState))
+        host.dispatchKeyEvent(KeyEvent(time, time, KeyEvent.ACTION_UP, keyCode, 0, metaState))
     }
 
     /** Runs [block] on the main thread with the DrawerView added in setUp. */

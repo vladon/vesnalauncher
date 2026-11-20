@@ -3,6 +3,7 @@ package dev.vladon.vesna.launcher.ui
 import android.content.Context
 import android.os.SystemClock
 import android.util.AttributeSet
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -138,6 +139,18 @@ class DrawerView @JvmOverloads constructor(
         updateDrawerFocusability()
         visibility = GONE
         animate().setDuration(ANIMATION_MS).setInterpolator(PathInterpolator(0.2f, 0f, 0f, 1f))
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (isOpen && !searchField.hasFocus() && event.action == KeyEvent.ACTION_DOWN &&
+            !event.isCtrlPressed && !event.isMetaPressed && event.isPrintingKey && event.unicodeChar != 0 &&
+            searchField.requestFocus()
+        ) {
+            // Append to the existing query and let EditText handle the original key,
+            // including modifiers and composing accents.
+            searchField.setSelection(searchField.length())
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun applyFilter() {
