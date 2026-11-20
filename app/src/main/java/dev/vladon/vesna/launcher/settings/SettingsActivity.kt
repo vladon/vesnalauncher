@@ -3,21 +3,32 @@ package dev.vladon.vesna.launcher.settings
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.vladon.vesna.launcher.VesnaApplication
 
 /** The app entry point for default launcher setup, appearance, and About. */
 class SettingsActivity : ComponentActivity() {
     private lateinit var appearance: AppearancePreferences
+    private val navigation: SettingsNavigation by viewModels {
+        viewModelFactory { initializer { SettingsNavigation(SettingsPage.fromIntent(intent)) } }
+    }
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var showAppNames by mutableStateOf(true)
@@ -40,23 +51,46 @@ class SettingsActivity : ComponentActivity() {
                 }
             }
             VesnaTheme(dark = dark) {
-                SettingsScreen(
-                    versionName = version,
-                    defaultHome = defaultHome,
-                    onSetDefaultHome = ::requestDefaultHome,
-                    themeMode = themeMode,
-                    onThemeSelected = ::selectTheme,
-                    showAppNames = showAppNames,
-                    onShowAppNamesChanged = ::changeAppNameVisibility,
-                )
+                key(navigation.entry) {
+                    SettingsScreen(
+                        page = navigation.page,
+                        onNavigate = { navigation.page = it },
+                        onResetInputFocus = ::parkWindowFocus,
+                        versionName = version,
+                        defaultHome = defaultHome,
+                        onSetDefaultHome = ::requestDefaultHome,
+                        themeMode = themeMode,
+                        onThemeSelected = ::selectTheme,
+                        showAppNames = showAppNames,
+                        onShowAppNamesChanged = ::changeAppNameVisibility,
+                    )
+                }
             }
         }
+        parkWindowFocus()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        WindowCompat.getInsetsController(window, window.decorView).hide(WindowInsetsCompat.Type.ime())
+        navigation.open(intent)
+        parkWindowFocus()
     }
 
     override fun onResume() {
         super.onResume()
         readAppearance()
         refreshDefaultHome()
+    }
+
+    private fun parkWindowFocus() {
+        // Keep initial keyboard focus off search, including on Android 8 and in non-touch mode.
+        findViewById<ViewGroup>(android.R.id.content).apply {
+            descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
+            isFocusableInTouchMode = true
+            requestFocus()
+        }
     }
 
     private fun readAppearance() {
@@ -94,5 +128,17 @@ class SettingsActivity : ComponentActivity() {
         packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
     } catch (e: PackageManager.NameNotFoundException) {
         ""
+    }
+}
+
+/** Keeps an explicitly selected page through resize/rotation, not through a cold launch. */
+private class SettingsNavigation(initialPage: SettingsPage) : ViewModel() {
+    var page by mutableStateOf(initialPage)
+    var entry by mutableIntStateOf(0)
+        private set
+
+    fun open(intent: Intent) {
+        page = SettingsPage.fromIntent(intent)
+        entry++
     }
 }
