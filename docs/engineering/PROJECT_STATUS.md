@@ -453,6 +453,22 @@ of the new results, even if an app refresh arrives at the same time.
   gesture navigation. Debug lint passed. TalkBack speech and physical
   devices were not checked.
 
+When one installed app changes the column of a visible shortcut, the drawer
+keeps that shortcut at the same height. Scrolling to a different row changes
+what the next refresh preserves. Editing or clearing search still resets to
+the top.
+
+- Removing one app above the visible results previously made Tool 40 vanish
+  from the viewport. Now Tool 40 stays at its original offset during removal
+  and reinsertion, and a later scroll anchors the newly visible row. Five
+  focused drawer tests passed on both Android 8 and 15, as did debug lint.
+- On Android 8 in compact Dark at 200% and Android 15 in Light at 130%,
+  uninstalling and reinstalling a test app above the visible rows moved
+  Chrome and Clock across columns respectively without changing their
+  vertical bounds. Clearing the query returned to the top with search
+  focused. Named 48 dp controls and both palettes were checked; TalkBack
+  speech was not tested.
+
 ### Keyboard search
 
 With the app drawer open, start typing to focus search and filter the grid.

@@ -37,6 +37,7 @@ Pinned spec: [`specifications/app-drawer.md`](https://github.com/vladon/vesnalau
 | `DRAWER-104` | (research matrix claims acceptance complete) | — | Named scenarios absent from research inventory | **Pointer only** — matrix status unsupported; no trunk action |
 | `DRAWER-105` | Mistakenly reuses the ID `R-DRAWER-103.1`; its cards surface conflicts with the later `CARDS-100` | — | — | **Blocked** — ID reuse must be repaired in the research matrix; see the cards row |
 | `R-DRAWER-103.1` | **Contact opt-in** | — | — | **Independent item** — kept separate from the `DRAWER-105`/`CARDS-100` conflict; no trunk work |
+| — (Vesna drawer behavior) | Keep the visible row during app catalogue refresh | `DrawerView` uses the committed diff's app positions to retain the visible shortcut and offset; editing or clearing search still resets to the top | [Drawer refresh](PROJECT_STATUS.md#drawer-refresh): one-app removal/reinsertion with an exact offset check and native install/uninstall | **Verified on API 26 and 35.** |
 
 ## Home screen and workspace pages
 

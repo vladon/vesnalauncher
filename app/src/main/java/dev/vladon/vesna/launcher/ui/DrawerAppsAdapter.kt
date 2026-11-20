@@ -13,9 +13,14 @@ class DrawerAppsAdapter(
     private val onItemClick: (LauncherApp) -> Unit,
     private val onItemOptions: (LauncherApp, View) -> Unit,
     private val onItemTouchHold: (LauncherApp, View) -> Unit,
+    private val onAppsCommitted: () -> Unit,
 ) : ListAdapter<LauncherApp, DrawerAppsAdapter.Holder>(DIFF) {
 
     class Holder(val view: AppIconView) : RecyclerView.ViewHolder(view)
+
+    override fun onCurrentListChanged(previousList: List<LauncherApp>, currentList: List<LauncherApp>) {
+        onAppsCommitted()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder =
         Holder(AppIconView(parent.context).apply { useSurfaceLabel() })

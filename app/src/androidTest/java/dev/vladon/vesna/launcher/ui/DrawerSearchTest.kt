@@ -282,6 +282,40 @@ class DrawerSearchTest {
     }
 
     @Test
+    fun refreshingByOneAppKeepsTheFirstVisibleShortcutAtTheSameHeight() {
+        val tools = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
+        val anchored = tools[40]
+        onDrawer { it.submitApps(tools) }
+        setQuery("tool")
+        assertVisibleLabels(tools.map { it.label })
+        onDrawer { host ->
+            val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+            (list.layoutManager as GridLayoutManager).scrollToPositionWithOffset(40, -12)
+        }
+        assertFirstVisibleApp(anchored.label, offset = -12)
+
+        val fewer = tools.drop(1)
+        onDrawer { it.submitApps(fewer) }
+        assertVisibleLabels(fewer.map { it.label })
+        assertAppOffset(anchored.label, offset = -12)
+
+        onDrawer { it.submitApps(tools) }
+        assertVisibleLabels(tools.map { it.label })
+        assertAppOffset(anchored.label, offset = -12)
+
+        // Scrolling to a different row gives the next refresh a new anchor.
+        onDrawer { host ->
+            val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+            (list.layoutManager as GridLayoutManager).scrollToPositionWithOffset(60, -20)
+        }
+        assertFirstVisibleApp(tools[60].label, offset = -20)
+        onDrawer { it.submitApps(fewer) }
+        assertVisibleLabels(fewer.map { it.label })
+        assertAppOffset(tools[60].label, offset = -20)
+        onDrawer { assertEquals("tool", it.findViewById<EditText>(R.id.drawer_search).text.toString()) }
+    }
+
+    @Test
     fun drawerFitsTilesInsideSideInsetsAndKeepsTheFocusedAppOnResize() {
         var minCellWidth = 0
         onDrawer { host ->
@@ -344,6 +378,24 @@ class DrawerSearchTest {
             SystemClock.sleep(50)
         }
         throw AssertionError("Expected $expected at offset $offset, found $actual at $actualOffset")
+    }
+
+    private fun assertAppOffset(label: String, offset: Int) {
+        val deadline = SystemClock.uptimeMillis() + 5_000
+        var actual: Int? = null
+        while (SystemClock.uptimeMillis() < deadline) {
+            onDrawer { host ->
+                val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+                val layout = list.layoutManager as GridLayoutManager
+                val view = (0 until list.childCount).firstNotNullOfOrNull { index ->
+                    list.getChildAt(index).takeIf { it.contentDescription == label }
+                }
+                actual = view?.let { layout.getDecoratedTop(it) - list.paddingTop }
+            }
+            if (actual == offset) return
+            SystemClock.sleep(50)
+        }
+        throw AssertionError("Expected $label at offset $offset after refresh, found it at $actual")
     }
 
     private fun typeKey(host: View, keyCode: Int, metaState: Int = 0) {

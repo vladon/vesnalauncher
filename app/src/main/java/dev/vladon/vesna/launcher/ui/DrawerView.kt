@@ -21,6 +21,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.AppSearch
 import dev.vladon.vesna.launcher.apps.LauncherApp
 
@@ -69,6 +70,7 @@ class DrawerView @JvmOverloads constructor(
     private var searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
     private var resetScrollOnCommit = false
     private val commitScrollReset = Runnable(::resetScrollAfterFilter)
+    private var refreshAnchor: AppKey? = null
 
     private var isOpen = false
 
@@ -105,6 +107,7 @@ class DrawerView @JvmOverloads constructor(
                     }
                 }
             },
+            onAppsCommitted = ::keepVisibleRowAfterRefresh,
         )
         list = findViewById(R.id.drawer_list)
         list.layoutManager = grid
@@ -209,7 +212,44 @@ class DrawerView @JvmOverloads constructor(
 
     private fun resetScrollAfterFilter() {
         resetScrollOnCommit = false
+        refreshAnchor = null
         list.scrollToPosition(0)
+    }
+
+    private fun keepVisibleRowAfterRefresh() {
+        if (!isOpen || resetScrollOnCommit || !list.canScrollVertically(-1)) {
+            refreshAnchor = null
+            return
+        }
+        val top = list.paddingTop
+        val bottom = list.height - list.paddingBottom
+        // The diff has updated adapter positions, but the attached children still
+        // describe the viewport the user is looking at, even if they scrolled
+        // while the diff was running. Prefer the previous anchor only if it is
+        // still on the first visible row; a refresh can move it sideways.
+        val apps = adapter.currentList
+        var anchorPosition = RecyclerView.NO_POSITION
+        var anchorTop = 0
+        for (i in 0 until grid.childCount) {
+            val tile = grid.getChildAt(i) ?: continue
+            val tileTop = grid.getDecoratedTop(tile)
+            if (grid.getDecoratedBottom(tile) <= top || tileTop >= bottom) continue
+            if (anchorPosition != RecyclerView.NO_POSITION && tileTop != anchorTop) break
+            val position = list.getChildAdapterPosition(tile)
+            if (position == RecyclerView.NO_POSITION) continue
+            if (anchorPosition == RecyclerView.NO_POSITION) {
+                anchorPosition = position
+                anchorTop = tileTop
+            }
+            if (apps[position].key == refreshAnchor) {
+                anchorPosition = position
+                break
+            }
+        }
+        refreshAnchor = apps.getOrNull(anchorPosition)?.key
+        if (anchorPosition != RecyclerView.NO_POSITION) {
+            grid.scrollToPositionWithOffset(anchorPosition, anchorTop - top)
+        }
     }
 
     private fun launchApp(app: LauncherApp) {
