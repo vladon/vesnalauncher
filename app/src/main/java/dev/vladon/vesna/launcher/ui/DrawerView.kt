@@ -7,11 +7,13 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,9 +23,8 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 
 /**
- * Full-height app drawer that slides up over the workspace. Opened by a swipe-up
- * gesture on the workspace or by tapping the handle; closed by tapping the handle,
- * a downward fling, or the back button.
+ * Full-height app drawer above Home. Opens by button or swipe-up, and closes
+ * by button, downward fling, or Android Back.
  */
 class DrawerView @JvmOverloads constructor(
     context: Context,
@@ -41,7 +42,7 @@ class DrawerView @JvmOverloads constructor(
     var onOpenedChanged: ((Boolean) -> Unit)? = null
 
     private val list: RecyclerView
-    private val handle: ViewGroup
+    private val closeButton: View
     private val searchField: EditText
     private val noResultsView: TextView
     private val adapter: DrawerAppsAdapter
@@ -53,7 +54,7 @@ class DrawerView @JvmOverloads constructor(
 
     private var allApps: List<LauncherApp> = emptyList()
 
-    val isOpen: Boolean get() = visibility == VISIBLE
+    private var isOpen = false
 
     init {
         inflate(context, R.layout.view_drawer, this)
@@ -113,11 +114,12 @@ class DrawerView @JvmOverloads constructor(
             }
         }
 
-        handle = findViewById(R.id.drawer_handle)
-        handle.setOnClickListener { if (isOpen) close() else open() }
-
+        closeButton = findViewById(R.id.drawer_close)
+        closeButton.setOnClickListener { close() }
+        ViewCompat.setAccessibilityPaneTitle(this, context.getString(R.string.drawer_title))
+        updateDrawerFocusability()
         visibility = GONE
-        translationY = height.toFloat()
+        animate().setDuration(ANIMATION_MS).setInterpolator(PathInterpolator(0.2f, 0f, 0f, 1f))
     }
 
     private fun applyFilter() {
@@ -138,7 +140,7 @@ class DrawerView @JvmOverloads constructor(
         applyFilter()
     }
 
-    /** Pads the drawer content so handle and list clear the system bars. */
+    /** Pads the close button and list so they clear the system bars. */
     fun applySystemBarInsets(top: Int, bottom: Int) {
         findViewById<ViewGroup>(R.id.drawer_content).setPadding(0, top, 0, 0)
         list.setPadding(0, 0, 0, bottom)
@@ -146,27 +148,46 @@ class DrawerView @JvmOverloads constructor(
 
     fun open() {
         if (isOpen) return
+        animate().cancel()
+        isOpen = true
+        if (visibility != VISIBLE) translationY = height.toFloat()
         visibility = VISIBLE
-        animate().translationY(0f).setDuration(ANIMATION_MS).start()
+        updateDrawerFocusability()
+        if (height > 0) animate().translationY(0f).start()
         onOpenedChanged?.invoke(true)
+        closeButton.requestFocus()
     }
 
     fun close() {
         if (!isOpen) return
+        animate().cancel()
+        isOpen = false
+        updateDrawerFocusability()
         searchField.setText("")
         searchField.clearFocus()
         hideKeyboard()
-        animate().translationY(height.toFloat())
-            .setDuration(ANIMATION_MS)
-            .withEndAction { visibility = GONE }
-            .start()
+        if (height == 0) {
+            visibility = GONE
+        } else {
+            animate().translationY(height.toFloat())
+                .withEndAction { if (!isOpen) visibility = GONE }
+                .start()
+        }
         onOpenedChanged?.invoke(false)
+    }
+
+    private fun updateDrawerFocusability() {
+        descendantFocusability = if (isOpen) FOCUS_BEFORE_DESCENDANTS else FOCUS_BLOCK_DESCENDANTS
+        importantForAccessibility =
+            if (isOpen) IMPORTANT_FOR_ACCESSIBILITY_AUTO else IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        // Keep the drawer off-screen below the parent when closed.
-        if (!isOpen && animation == null) translationY = h.toFloat()
+        if (isOpen && oldh == 0) {
+            translationY = h.toFloat()
+            animate().translationY(0f).start()
+        }
     }
 
     /**

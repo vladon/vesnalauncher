@@ -254,6 +254,9 @@ class WorkspaceView @JvmOverloads constructor(
         for ((cell, content) in cells) {
             val existing = findChildForCell(cell)
             val view = existing ?: AppIconView(context).also {
+                // The grid already insets each cell. Keep the tile's vertical
+                // space for the icon and a complete line of scaled label text.
+                it.setPadding(it.paddingLeft, 0, it.paddingRight, 0)
                 it.tag = cell
                 addView(it)
             }

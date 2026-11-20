@@ -45,6 +45,9 @@ class HomeActivity : ComponentActivity() {
     private lateinit var workspace: WorkspaceView
     private lateinit var dock: DockView
     private lateinit var drawer: DrawerView
+    private lateinit var homeContent: FrameLayout
+    private lateinit var homeControls: View
+    private lateinit var openDrawerButton: View
     private lateinit var emptyHint: TextView
     private lateinit var pageControls: View
     private lateinit var previousPage: View
@@ -65,6 +68,7 @@ class HomeActivity : ComponentActivity() {
     private var dragSource: DragSource? = null
     private var drawerClosedForDrag = false
     private var rootDragMoved = false
+    private var drawerReturnFocus: View? = null
     private var folderDialog: FolderDialog? = null
     private var folderDialogJob: Job? = null
     private var renderedState = LauncherUiState()
@@ -91,6 +95,10 @@ class HomeActivity : ComponentActivity() {
         workspace = findViewById(R.id.workspace)
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
+        homeContent = findViewById(R.id.home_content)
+        homeControls = findViewById(R.id.home_controls)
+        openDrawerButton = findViewById(R.id.home_open_drawer)
+        openDrawerButton.setOnClickListener { openDrawer() }
         emptyHint = findViewById(R.id.workspace_empty_hint)
         defaultHomeBanner = findViewById(R.id.banner_default_home)
         pageControls = findViewById(R.id.workspace_page_controls)
@@ -109,7 +117,7 @@ class HomeActivity : ComponentActivity() {
         }
         workspace.onFolderLongClick = { folder, anchor -> showFolderMenu(folder, anchor) }
         workspace.onEmptyAreaLongClick = { showLauncherMenu() }
-        workspace.onSwipeUp = { drawer.open() }
+        workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
         workspace.onDragStarted = { cell, app, _ ->
             dragSource = DragSource(app, Container.WORKSPACE, cell, renderedState.activePageId, fromDrawer = false)
@@ -138,10 +146,7 @@ class HomeActivity : ComponentActivity() {
         drawer.onItemDragReleased = { app, anchor ->
             onDragReleased(Container.WORKSPACE, anchor.left.toFloat(), anchor.top.toFloat(), moved = false, cancelled = false, app, anchor)
         }
-        drawer.onOpenedChanged = { opened ->
-            backCallback.isEnabled = opened
-            updatePageControlsVisibility()
-        }
+        drawer.onOpenedChanged = ::onDrawerOpenedChanged
 
         val dragLayer = findViewById<LauncherDragLayer>(R.id.launcher_root)
         dragLayer.dragInterceptor = { ev ->
@@ -212,7 +217,7 @@ class HomeActivity : ComponentActivity() {
             val position = state.pageIds.indexOf(state.activePageId)
             val hadPreviousFocus = previousPage.hasFocus()
             val hadNextFocus = nextPage.hasFocus()
-            updatePageControlsVisibility()
+            pageControls.isVisible = state.pageIds.size > 1
             previousPage.isEnabled = position > 0
             nextPage.isEnabled = position in 0 until state.pageIds.lastIndex
             previousPage.alpha = if (previousPage.isEnabled) 1f else 0.38f
@@ -220,17 +225,31 @@ class HomeActivity : ComponentActivity() {
             if (pageControls.isVisible) {
                 if (hadPreviousFocus && !previousPage.isEnabled) nextPage.requestFocus()
                 if (hadNextFocus && !nextPage.isEnabled) previousPage.requestFocus()
+            } else if (hadPreviousFocus || hadNextFocus) {
+                openDrawerButton.requestFocus()
             }
             pageIndicator.bind(position, state.pageIds.size)
-            updateWorkspaceBottom()
         }
     }
 
-    private fun updatePageControlsVisibility() {
-        pageControls.visibility = when {
-            renderedState.pageIds.size <= 1 -> View.GONE
-            backCallback.isEnabled -> View.INVISIBLE
-            else -> View.VISIBLE
+    private fun openDrawer() {
+        if (dragSource == null) drawer.open()
+    }
+
+    private fun onDrawerOpenedChanged(opened: Boolean) {
+        backCallback.isEnabled = opened
+        if (opened) drawerReturnFocus = homeContent.findFocus()
+        // The drawer animates over Home, but only the active surface handles
+        // keyboard traversal and accessibility navigation.
+        homeContent.descendantFocusability =
+            if (opened) FrameLayout.FOCUS_BLOCK_DESCENDANTS else FrameLayout.FOCUS_BEFORE_DESCENDANTS
+        homeContent.importantForAccessibility =
+            if (opened) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        homeControls.visibility = if (opened) View.INVISIBLE else View.VISIBLE
+        if (!opened) {
+            val target = drawerReturnFocus
+            drawerReturnFocus = null
+            if (target?.isShown != true || !target.requestFocus()) openDrawerButton.requestFocus()
         }
     }
 
@@ -450,7 +469,7 @@ class HomeActivity : ComponentActivity() {
         val root = findViewById<View>(R.id.launcher_root)
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Preserve the space reserved for the dock and the page controls.
+            // Preserve the space reserved for the dock and Home controls.
             workspace.setPadding(0, bars.top, 0, workspace.paddingBottom)
             dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, bars.bottom + dock.paddingTop)
             drawer.applySystemBarInsets(top = bars.top, bottom = bars.bottom)
@@ -463,12 +482,12 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun updateWorkspaceBottom() {
-        val params = pageControls.layoutParams as FrameLayout.LayoutParams
+        val params = homeControls.layoutParams as FrameLayout.LayoutParams
         if (params.bottomMargin != dock.height) {
             params.bottomMargin = dock.height
-            pageControls.layoutParams = params
+            homeControls.layoutParams = params
         }
-        val bottom = dock.height + if (renderedState.pageIds.size > 1) params.height else 0
+        val bottom = dock.height + params.height
         if (workspace.paddingBottom != bottom) {
             workspace.setPadding(0, workspace.paddingTop, 0, bottom)
         }

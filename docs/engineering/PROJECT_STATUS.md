@@ -33,6 +33,7 @@ exercised; everything else is source-verified only.
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
+| App drawer access (unreleased) | Tap the labeled app-grid button above the dock or swipe up. Close with the drawer button or Android Back; keyboard focus returns to the invoking control. | Android 8 and 15 touch, accessibility hierarchy, and Android 15 D-pad checks; see [App drawer access](#app-drawer-access). |
 | Drawer search | Case-insensitive substring filter (`AppSearch`), empty state, clear restores full list; drawer never re-orders | `AppSearchTest` (5 JVM tests); on-device `DrawerSearchTest` |
 | Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
@@ -192,6 +193,25 @@ reordering and dragging between pages are not available.
   folder on Android 15. Android 8 hid the pager after removing the only extra
   page. The new menu row fit at 320 dp and 1.6× type in English and Russian;
   touch selection and visible D-pad focus and activation were verified.
+
+### App drawer access
+
+The Home and drawer buttons are 48 dp targets. The Home button is available on
+a single page and next to the pager with more pages. The drawer stays opaque
+and keeps Home out of keyboard and accessibility traversal while open.
+
+- `DrawerSearchTest` passed on Android 8 (API 26) and 15 (API 35); debug lint
+  reported no errors. Both emulators exercised touch opening and closing;
+  Android 15 also verified swipe-up, Tab/D-pad entry, and focus restoration
+  from both the close button and Android Back.
+- The controls fit 320, 411, and 610 dp layouts, with gesture and three-button
+  navigation, English and Russian labels, and RTL ordering. The 320 dp Home
+  retained all 20 grid tiles and a complete label line at 1.6× type. Android 15
+  repainted the controls on a live system night-mode change without a manual
+  relaunch.
+- A drawer drag on a secondary Home page still landed on that page. Removing
+  the test pin restored the exact original placement and folder rows. TalkBack
+  speech and handheld-device behavior were not verified.
 
 ## Where to go next
 
