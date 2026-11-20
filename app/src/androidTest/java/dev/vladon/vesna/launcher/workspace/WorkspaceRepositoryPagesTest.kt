@@ -551,6 +551,49 @@ class WorkspaceRepositoryPagesTest {
         }
     }
 
+    @Test
+    fun folderDragChangesOnlyTheFolderCellAndRejectsOccupiedOrStaleDrops() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        try {
+            val items = db.workspaceItemDao()
+            val folders = db.folderDao()
+            val repository = WorkspaceRepository(
+                items, db, folders, context.getSharedPreferences("qa_workspace_page_moves", Context.MODE_PRIVATE),
+            )
+            val page = requireNotNull(repository.createPage())
+            val one = LauncherApp(AppKey("qa.folder.one", "Main"), "One", null)
+            val two = LauncherApp(AppKey("qa.folder.two", "Main"), "Two", null)
+            assertTrue(repository.insertWorkspaceAt(one, 0, page))
+            assertTrue(repository.insertWorkspaceAt(two, 1, page))
+            assertTrue(repository.createFolderFromDrop(
+                two, 0, "Tools", WorkspaceRepository.FolderDropSource.Workspace(1), page,
+            ))
+            val source = folders.getAll().single()
+            val folder = Folder(source.id, source.title, source.cellIndex, page)
+            assertTrue(repository.insertWorkspaceAt(one, 4, page))
+            folders.insert(FolderEntity(title = "Tools", cellIndex = 5, pageId = page))
+            assertTrue(repository.insertWorkspaceAt(two, 7, DEFAULT_WORKSPACE_PAGE_ID))
+            val beforeItems = items.getAll().sortedBy { it.id }
+            val beforeFolders = folders.getAll().sortedBy { it.id }
+
+            for (invalid in listOf(-1, 0, 4, 5, GridCanvas.CAPACITY)) {
+                assertFalse(repository.moveFolderWithinPage(folder, invalid))
+            }
+            assertEquals(beforeFolders, folders.getAll().sortedBy { it.id })
+            assertTrue(repository.moveFolderWithinPage(folder, 7))
+            assertFalse(repository.moveFolderWithinPage(folder, 6))
+            assertEquals(
+                beforeFolders.map { if (it.id == folder.id) it.copy(cellIndex = 7) else it },
+                folders.getAll().sortedBy { it.id },
+            )
+            assertEquals(beforeItems, items.getAll().sortedBy { it.id })
+        } finally {
+            db.close()
+        }
+    }
+
     private class CountingDiscovery(private val apps: List<LauncherApp>) : AppDiscovery {
         var calls = 0
             private set

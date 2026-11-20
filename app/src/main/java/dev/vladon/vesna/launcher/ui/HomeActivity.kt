@@ -143,6 +143,7 @@ class HomeActivity : ComponentActivity() {
             if (content is CellContent.FolderCell) showFolderDialog(content.folder)
         }
         workspace.onFolderLongClick = { folder, anchor -> showFolderMenu(folder, anchor) }
+        workspace.onFolderDrop = controller::moveFolderWithinPage
         workspace.onEmptyAreaLongClick = ::showLauncherMenu
         workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
@@ -271,7 +272,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun openDrawer() {
-        if (dragSource == null) drawer.open()
+        if (dragSource == null && !workspace.isDragging) drawer.open()
     }
 
     private fun onDrawerOpenedChanged(opened: Boolean) {
@@ -302,7 +303,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun stepPage(forward: Boolean) {
-        if (dragSource != null || backCallback.isEnabled) return
+        if (dragSource != null || workspace.isDragging || backCallback.isEnabled) return
         val state = renderedState
         val current = state.pageIds.indexOf(state.activePageId)
         if (current < 0) return
@@ -311,7 +312,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showPagePicker(anchor: View) {
-        if (dragSource != null || backCallback.isEnabled || !anchor.isShown) return
+        if (dragSource != null || workspace.isDragging || backCallback.isEnabled || !anchor.isShown) return
         val state = renderedState
         val activeIndex = state.pageIds.indexOf(state.activePageId)
         if (state.pageIds.size < 2 || activeIndex < 0) return

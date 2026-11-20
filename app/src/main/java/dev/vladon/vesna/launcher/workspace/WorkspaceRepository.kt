@@ -206,6 +206,19 @@ class WorkspaceRepository(
             PageMoveResult.MOVED
         }
 
+    /** Moves a folder to an empty cell on its current page without touching its members. */
+    internal suspend fun moveFolderWithinPage(folder: Folder, toCell: Int): Boolean = mutationMutex.withLock {
+        if (!GridCanvas.isValidCell(toCell) || toCell == folder.cellIndex) return@withLock false
+        val folders = folderDao.getAll()
+        val source = folders.atPlacement(folder) ?: return@withLock false
+        if (folders.any { it.pageId == folder.pageId && it.cellIndex == toCell } ||
+            dao.getAll().any { it.isOnPage(folder.pageId) && it.cellIndex == toCell }
+        ) return@withLock false
+
+        folderDao.update(source.copy(cellIndex = toCell))
+        true
+    }
+
     private fun List<FolderEntity>.atPlacement(folder: Folder): FolderEntity? =
         firstOrNull { it.id == folder.id && it.pageId == folder.pageId && it.cellIndex == folder.cellIndex }
 

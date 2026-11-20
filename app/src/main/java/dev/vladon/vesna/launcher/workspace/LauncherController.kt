@@ -245,6 +245,10 @@ class LauncherController(
         }
     }
 
+    internal fun moveFolderWithinPage(folder: Folder, toCell: Int) {
+        scope.launch { workspaceRepository.moveFolderWithinPage(folder, toCell) }
+    }
+
     private fun reportPageMove(result: PageMoveResult, success: LauncherMessage) {
         _messages.tryEmit(when (result) {
             PageMoveResult.MOVED -> success

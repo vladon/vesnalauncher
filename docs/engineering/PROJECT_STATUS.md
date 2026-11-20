@@ -36,7 +36,7 @@ exercised; everything else is source-verified only.
 | App drawer access (unreleased) | Tap the labeled app-grid button above the dock or swipe up. Close with the drawer button or Android Back. The drawer fits up to four columns to the available width and keeps its scroll position when apps change. | Android 8 and 15 emulator verification; see [App drawer access](#app-drawer-access), [Narrow drawer layouts](#narrow-drawer-layouts), and [Drawer refresh](#drawer-refresh). |
 | Home options (unreleased) | A named overflow button above the dock opens Settings, wallpaper, and applicable launcher and page actions without a long-press. | Android 8 and 15 emulator verification; see [Home options](#home-options). |
 | Drawer search | Start typing with a keyboard anywhere in the open drawer. Press **Enter** in the search field to open the sole match. Substring search ignores case, repeated spaces, Latin accents and the dots on Russian `ё`, without changing labels or drawer order. **Clear search** restores the grid and returns focus to the field. | See [Keyboard search](#keyboard-search), [Drawer search matching](#drawer-search-matching) and [Drawer search recovery](#drawer-search-recovery). |
-| Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
+| Drag-and-drop | App pins move across workspace and dock. Folders can be dragged to empty cells on their current Home page. | Android 8 and 15 folder-drag verification; see [Move a folder on the same page](#move-a-folder-on-the-same-page) and [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids). |
 | Shortcut options (unreleased) | On a focused app or folder tile, press **Shift+F10** or the **Menu** key. Android accessibility exposes **Shortcut options**. Touch long-press and drag remain available. | See [Shortcut options](#shortcut-options) for Android 8 and 15 emulator verification. |
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
 | Package events | `PackageChangeMonitor` uses profile-scoped `LauncherApps` callbacks; disabled apps retain their pins | [VESNA-QA-003A](verification/VESNA-QA-003.md) verified drawer changes after install, update, disable/re-enable, and uninstall. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified work-profile pinning and uninstall. [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall across all three containers. [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disable/re-enable retains placements across a launcher restart. All four records use API 35. |
@@ -270,6 +270,23 @@ with its name and apps intact. The source page stays selected.
   destination rows measured 48 dp high. The existing Russian rename row
   truncates at 320 dp and 200% type. TalkBack speech and physical devices
   were not checked.
+
+### Move a folder on the same page
+
+Hold a folder and drag it to an empty Home cell. The target highlights during
+the drag, and the folder keeps its name and apps. Dropping on an occupied
+cell, over the dock, or outside the grid leaves it in place. Holding without
+moving still opens the folder menu.
+
+- Android 8 and 15 verified valid and invalid drops, the stationary-hold
+  menu, unchanged member rows, and placement across restart. On Android 15,
+  a grid resize canceled a pending drag, and Shift+F10 still opened the
+  folder menu and returned focus after dismissal.
+- Checked the empty target highlight and no highlight on an occupied cell.
+  Verified Light and Dark at 200% text with gesture and three-button
+  navigation. Existing Home labels can clip vertically at 320 dp and 200%.
+- All 14 `WorkspaceRepositoryPagesTest` cases passed on both emulators;
+  debug lint passed. TalkBack speech and physical devices were not checked.
 
 ### Home options
 
