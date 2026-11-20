@@ -54,9 +54,6 @@ class DockView @JvmOverloads constructor(
         null
 
     private val density = resources.displayMetrics.density
-    var boundCount: Int = 0
-        private set
-
     private var dragSourceApp: LauncherApp? = null
     private var dragAnchor: android.view.View? = null
     private var dragTargetSlot: Int? = null
@@ -165,9 +162,9 @@ class DockView @JvmOverloads constructor(
     }
 
     fun bind(pins: List<DockPin>) {
-        boundCount = minOf(pins.size, GridCanvas.DOCK_CAPACITY)
+        val count = minOf(pins.size, GridCanvas.DOCK_CAPACITY)
         removeAllViews()
-        for (index in 0 until boundCount) {
+        for (index in 0 until count) {
             val pin = pins[index]
             val app = pin.app
             val view = AppIconView(context)

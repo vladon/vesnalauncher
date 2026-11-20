@@ -294,7 +294,7 @@ class HomeActivity : ComponentActivity() {
         renderedState = state
         folderDialog?.update(state)
         if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
-        if (state.dockPins != previous.dockPins) dock.bind(state.dockPins)
+        if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
         if (state.apps != previous.apps) drawer.submitApps(state.apps)
         emptyHint.isVisible = state.isWorkspaceEmpty
         if (state.pageIds != previous.pageIds || state.activePageId != previous.activePageId) {
@@ -387,9 +387,7 @@ class HomeActivity : ComponentActivity() {
         val source = dragSource ?: return
         if (wy >= dock.top) {
             workspace.showDropHighlight(null)
-            val canAccept = source.container == Container.DOCK ||
-                dock.boundCount < GridCanvas.DOCK_CAPACITY
-            dock.showSlotHighlight(if (canAccept) dock.slotAtLocalX(wx - dock.left) else null)
+            dock.showSlotHighlight(dockDropColumn(source, wx))
             return
         }
         dock.showSlotHighlight(null)
@@ -425,27 +423,7 @@ class HomeActivity : ComponentActivity() {
             return
         }
 
-        val overDock = wy >= dock.top
-        when {
-            overDock && source.fromDrawer ->
-                controller.insertIntoDock(app, dock.slotAtLocalX(wx - dock.left))
-            overDock && source.container == Container.WORKSPACE ->
-                controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(wx - dock.left), source.pageId)
-            overDock && source.container == Container.DOCK ->
-                controller.reorderDock(source.dockPinId, dock.slotAtLocalX(wx - dock.left))
-            !overDock && source.fromDrawer ->
-                workspace.cellAtLocal(wx, wy)?.let { cell ->
-                    commitOnCell(source, app, cell)
-                }
-            !overDock && source.container == Container.WORKSPACE ->
-                workspace.cellAtLocal(wx, wy)?.let { cell ->
-                    if (cell != source.fromCell) commitOnCell(source, app, cell)
-                }
-            !overDock && source.container == Container.DOCK ->
-                workspace.cellAtLocal(wx, wy)?.let { cell ->
-                    commitOnCell(source, app, cell)
-                }
-        }
+        commitDrop(source, wx, wy)
     }
 
     /** Root-driven drag release (drawer sources; the drawer closes mid-gesture). */
@@ -456,7 +434,7 @@ class HomeActivity : ComponentActivity() {
         dragSource = null
         drawerClosedForDrag = false
         if (source == null) return
-        if (rootDragMoved) commitGridDrop(source, x, y, overDock = y >= dock.top)
+        if (rootDragMoved) commitDrop(source, x, y)
         rootDragMoved = false
     }
 
@@ -468,23 +446,26 @@ class HomeActivity : ComponentActivity() {
         drawerClosedForDrag = false
     }
 
-    /**
-     * Commits a root-driven grid release: dock insert/move, or the shared cell
-     * routing ([commitOnCell]). Drawer sources carry Container.WORKSPACE, so the
-     * fromDrawer discriminator must be checked before the container arms.
-     */
-    private fun commitGridDrop(source: DragSource, x: Float, y: Float, overDock: Boolean) {
-        val app = source.app
-        if (overDock) {
+    private fun dockDropColumn(source: DragSource, x: Float): Int? =
+        renderedState.dock.dropColumn(dock.slotAtLocalX(x - dock.left), reordering = source.container == Container.DOCK)
+
+    private fun commitDrop(source: DragSource, x: Float, y: Float) {
+        if (y >= dock.top) {
+            val column = dockDropColumn(source, x)
+            if (column == null) {
+                if (source.container != Container.DOCK) showMessage(LauncherMessage.DOCK_FULL)
+                return
+            }
+            val slot = renderedState.dock.savedSlot(column)
             when {
-                source.fromDrawer -> controller.insertIntoDock(app, dock.slotAtLocalX(x))
-                source.container == Container.DOCK -> controller.reorderDock(source.dockPinId, dock.slotAtLocalX(x))
-                else -> controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(x), source.pageId)
+                source.fromDrawer -> controller.insertIntoDock(source.app, slot)
+                source.container == Container.DOCK -> controller.reorderDock(source.dockPinId, slot)
+                else -> controller.moveWorkspaceToDock(source.app, source.fromCell, slot, source.pageId)
             }
             return
         }
         val cell = workspace.cellAtLocal(x, y) ?: return
-        commitOnCell(source, app, cell)
+        if (cell != source.fromCell) commitOnCell(source, source.app, cell)
     }
 
     private fun showFolderDialog(folder: Folder) {

@@ -666,6 +666,24 @@ the visible icons. Mirroring the dock does not change the stored order.
   padded tile edges, and an empty highlight slot. Debug lint passed;
   TalkBack speech and physical devices were not checked.
 
+### Dock drop previews
+
+The dock previews the position a dropped icon will actually occupy. In a
+partial dock, trailing space targets the last visible position when reordering
+or the next open position when adding. Hidden but saved pins still use capacity.
+
+- On Android 15, dragging one of three icons over the fourth column highlighted
+  the fourth column before the fix but saved the icon in the third. The fixed
+  reorder highlighted the third column. Inserting into a two-icon dock also
+  highlighted and filled the third column. A Dark RTL reorder verified the
+  mirrored result.
+- A drawer drag filled the fourth saved slot. Disabling that test app hid its
+  icon without freeing its slot; another drop showed no insertion highlight
+  and changed no saved rows. Re-enabling the app restored the same pin.
+- All 21 focused instrumentation tests passed on Android 8 and 15. The 15
+  focused JVM tests and debug lint passed. Physical devices and TalkBack were
+  not checked.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

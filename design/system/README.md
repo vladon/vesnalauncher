@@ -193,6 +193,10 @@ Use Material component motion defaults. For the custom drawer, track the finger 
   Dock drag hit testing and highlights follow the rendered columns from the
   start edge, including in RTL. Changing layout direction mirrors the visual
   order without changing the stored order.
+  The dock packs visible icons toward the start. Dragging across trailing space
+  highlights the last possible position for that drag. Temporarily unavailable
+  favorites remain saved and count toward capacity; a full dock does not show
+  an insertion highlight.
 - **App drawer.** Use an opaque Material surface with inset search and a scrollable app grid. Use up to four columns, choosing the largest count that gives each cell 64 dp after horizontal insets. In layouts with fewer than four columns, use 8 dp search margins and the short **Search** hint. Keep the viewport in place when installed apps refresh. Start at the top of the new results when the query changes or clears. Restore focus by app identity when that app remains visible. If an active drag cannot continue through a layout change, restore the original position.
 - **Folders.** Keep apps in their saved order in a scrollable grid inside the Material dialog. Use the same column rule as the drawer: up to four columns, 64 dp per cell after the dialog's content insets when space permits. Reflow the grid when the open dialog changes size. Keep rename and remove actions visible while the apps scroll.
 - **Settings and About.** Use a small Material app bar, a `surface` canvas and standard list items for available actions. Place the Vesna lockup or mark on About. Settings offers a single-select Theme group and a **Show app names** switch. Hiding app labels preserves icon positions, touch targets, accessible app names, and folder titles.

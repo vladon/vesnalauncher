@@ -6,6 +6,21 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 /** A rendered dock tile keeps the ID of its persisted pin. */
 data class DockPin(val id: Long, val app: LauncherApp)
 
+/** Saved order includes unavailable pins; the visible dock packs the remaining icons. */
+data class DockLayout(val savedOrder: List<Long>, val pins: List<DockPin>) {
+    internal fun dropColumn(column: Int, reordering: Boolean): Int? {
+        val last = if (reordering) pins.lastIndex else {
+            if (savedOrder.size >= GridCanvas.DOCK_CAPACITY) return null
+            pins.size
+        }
+        return if (last < 0) null else column.coerceIn(0, last)
+    }
+
+    /** Convert a visual destination to its index in the saved order, or append. */
+    internal fun savedSlot(column: Int): Int =
+        pins.getOrNull(column)?.let { savedOrder.indexOf(it.id) } ?: savedOrder.size
+}
+
 /**
  * Pure projection of persisted layout items onto live apps. Unavailable apps
  * are hidden without changing their stored positions. Items inside folders
@@ -54,12 +69,13 @@ internal object WorkspaceResolver {
             }
     }
 
-    /** Dock pins ordered by position; unavailable apps and folder members are skipped. */
-    fun dockPins(items: List<WorkspaceItem>, appsByKey: Map<AppKey, LauncherApp>): List<DockPin> {
-        return items.asSequence()
-            .filter { it.container == Container.DOCK && it.folderId == null }
+    /** Only top-level pins consume dock capacity; unavailable pins are not drawn. */
+    fun dockLayout(items: List<WorkspaceItem>, appsByKey: Map<AppKey, LauncherApp>): DockLayout {
+        val saved = items.filter { it.container == Container.DOCK && it.folderId == null }
             .sortedBy { it.cellIndex }
-            .mapNotNull { item -> appsByKey[item.key]?.let { DockPin(item.id, it) } }
-            .toList()
+        return DockLayout(
+            savedOrder = saved.map { it.id },
+            pins = saved.mapNotNull { item -> appsByKey[item.key]?.let { DockPin(item.id, it) } },
+        )
     }
 }
