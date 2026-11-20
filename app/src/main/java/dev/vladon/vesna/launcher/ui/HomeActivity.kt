@@ -53,7 +53,6 @@ class HomeActivity : ComponentActivity() {
     private lateinit var previousPage: View
     private lateinit var nextPage: View
     private lateinit var pageIndicator: WorkspacePageIndicator
-    private lateinit var defaultHomeBanner: TextView
 
     /** The icon currently being dragged across workspace and dock. */
     private data class DragSource(
@@ -83,9 +82,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private val defaultHomeRequest =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            // The role result arrives as a fresh HOME intent or an onStart re-check.
-        }
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,7 +97,6 @@ class HomeActivity : ComponentActivity() {
         openDrawerButton = findViewById(R.id.home_open_drawer)
         openDrawerButton.setOnClickListener { openDrawer() }
         emptyHint = findViewById(R.id.workspace_empty_hint)
-        defaultHomeBanner = findViewById(R.id.banner_default_home)
         pageControls = findViewById(R.id.workspace_page_controls)
         previousPage = findViewById(R.id.workspace_previous_page)
         nextPage = findViewById(R.id.workspace_next_page)
@@ -170,12 +166,6 @@ class HomeActivity : ComponentActivity() {
 
         onBackPressedDispatcher.addCallback(this, backCallback)
 
-        defaultHomeBanner.setOnClickListener {
-            graph.homeRoleChecker.defaultHomeRequestIntent()?.let { intent ->
-                defaultHomeRequest.launch(intent)
-            }
-        }
-
         applySystemBarInsets()
 
         lifecycleScope.launch {
@@ -194,11 +184,6 @@ class HomeActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // Pressing HOME while the drawer is open closes it.
         drawer.close()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        defaultHomeBanner.isVisible = !VesnaApplication.graph(this).homeRoleChecker.isDefaultHome()
     }
 
     private fun render(state: LauncherUiState) {

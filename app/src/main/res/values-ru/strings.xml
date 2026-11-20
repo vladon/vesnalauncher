@@ -2,8 +2,11 @@
     <string name="app_name">Vesna Launcher</string>
 
     <!-- Выбор лаунчера по умолчанию -->
-    <string name="banner_set_default_home">Сделать Vesna лаунчером по умолчанию</string>
     <string name="menu_set_default_home">Установить основным лаунчером</string>
+    <string name="settings_default_launcher">Лаунчер по умолчанию</string>
+    <string name="settings_default_home_setup">Выберите Vesna, чтобы он открывался при нажатии кнопки «Домой».</string>
+    <string name="settings_default_home_active">Vesna — ваш лаунчер по умолчанию.</string>
+    <string name="settings_default_home_unavailable">Android не позволяет выбрать лаунчер на этом устройстве.</string>
 
     <!-- Меню рабочего стола и дока -->
     <string name="menu_add_to_workspace">Добавить на рабочий стол</string>

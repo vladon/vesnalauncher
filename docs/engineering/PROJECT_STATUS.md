@@ -39,9 +39,9 @@ exercised; everything else is source-verified only.
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
 | Package events | `PackageChangeMonitor` uses profile-scoped `LauncherApps` callbacks; disabled apps retain their pins | [VESNA-QA-003A](verification/VESNA-QA-003.md) verified drawer changes after install, update, disable/re-enable, and uninstall. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified work-profile pinning and uninstall. [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall across all three containers. [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disable/re-enable retains placements across a launcher restart. All four records use API 35. |
 | Persistence | Room `vesna-launcher.db`, schema version 4. The 3→4 migration adds stable workspace page IDs without changing the dock or existing cells. | Production Room migrated a copy of the signed 0.4.2 database on API 35 with all 18 placements, the folder, and the seeding flag intact. See [ADR-PAGE-1](../adr/0001-workspace-page-identity.md). Historical API 35 migration and reboot evidence is in [VESNA-QA-004](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done). |
-| Settings / About | `SettingsActivity` (Compose + Material 3) with app and version info | Source only |
+| Settings / About | Vesna Settings opens from the app icon and offers Android default-launcher setup above the version, license, and source link. | See [Default launcher setup](#default-launcher-setup) for Android 8 and 15 emulator verification. |
 
-**Explicitly not implemented:** widgets, icon packs, themes, fuzzy search, drawer
+**Explicitly not implemented:** widgets, icon packs, manual theme selection, fuzzy search, drawer
 search-result match highlighting, search beyond substring. The Android manifest
 sets `android:allowBackup="true"` (platform default behavior), but a dedicated
 backup/restore feature does not exist; the backup/privacy ADR candidate in
@@ -226,6 +226,25 @@ focus so another query can be typed immediately.
   and Russian labels, and RTL placement. The drawer grid ended at the visible
   keyboard boundary on both Android versions; the final app could be scrolled
   fully above the keyboard on Android 15. TalkBack speech was not verified.
+
+### Default launcher setup
+
+Open **Vesna Launcher** from the current launcher, then choose **Set as default
+launcher** in Vesna Settings. Android owns the selection. The Home
+long-press menu still offers setup when Vesna is not selected. The old Home
+banner no longer covers shortcuts or consumes grid space.
+
+- Android 15 opened the Home role chooser from Settings with D-pad input;
+  cancellation kept the old default. Confirming through the Home menu's
+  chooser selected Vesna, and reopening Settings showed the selected status.
+  All 20 workspace and dock placement rows and the folder were unchanged.
+- Android 8 opened Android's **Default apps → Home app** picker from Settings.
+  The compact 20-shortcut Home preserved all its tiles, and tapping a shortcut
+  in the formerly covered first row launched its app.
+- Verified 48 dp targets, visible keyboard focus, Light and Dark, 320 dp and
+  610 dp layouts, 1.6× text, English and Russian, right-to-left alignment, and
+  scrollable About content. `DrawerSearchTest` passed on both emulators and
+  lint reported no errors. TalkBack speech and physical devices were not checked.
 
 ## Where to go next
 

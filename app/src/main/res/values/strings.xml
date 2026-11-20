@@ -2,8 +2,11 @@
     <string name="app_name">Vesna Launcher</string>
 
     <!-- Default launcher prompt -->
-    <string name="banner_set_default_home">Set Vesna as your default launcher</string>
     <string name="menu_set_default_home">Set as default launcher</string>
+    <string name="settings_default_launcher">Default launcher</string>
+    <string name="settings_default_home_setup">Choose Vesna to open it when you press Home.</string>
+    <string name="settings_default_home_active">Vesna is your default launcher.</string>
+    <string name="settings_default_home_unavailable">Android does not offer a Home app picker on this device.</string>
 
     <!-- Workspace / dock context menus -->
     <string name="menu_add_to_workspace">Add to workspace</string>

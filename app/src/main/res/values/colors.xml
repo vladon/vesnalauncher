@@ -3,7 +3,6 @@
     <!-- Subtle dim over the live wallpaper so white labels stay readable. -->
     <color name="workspace_scrim">#33000000</color>
     <color name="drawer_background">#15191F</color>
-    <color name="banner_background">#E61E2530</color>
     <color name="icon_label_color">#F2FFFFFF</color>
     <color name="hint_color">#B3FFFFFF</color>
     <color name="vesna_green">#4CAF50</color>
