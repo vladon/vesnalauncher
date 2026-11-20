@@ -28,7 +28,7 @@ exercised; everything else is source-verified only.
 | Capability | Implementation anchors | Verification |
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
-| Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
+| Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; compact cells make room for enlarged labels without moving pins | `GridCanvasTest`, `WorkspaceResolverTest`, and [Home labels at large text sizes](#home-labels-at-large-text-sizes) |
 | Workspace pages (unreleased) | **Home options** adds, reorders, and removes eligible pages. Swipe or use the arrows to step through up to eight 4×5 pages, or use the dots or **Home options → Go to page…** to jump directly. **Shortcut options → Move to page…** moves a shortcut or folder to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls), [Jump to a Home page](#jump-to-a-home-page), [Reorder Home pages](#reorder-home-pages), [Move a shortcut between pages](#move-a-shortcut-between-pages), and [Move a folder between pages](#move-a-folder-between-pages). |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
@@ -284,9 +284,25 @@ moving still opens the folder menu.
   folder menu and returned focus after dismissal.
 - Checked the empty target highlight and no highlight on an occupied cell.
   Verified Light and Dark at 200% text with gesture and three-button
-  navigation. Existing Home labels can clip vertically at 320 dp and 200%.
+  navigation.
 - All 14 `WorkspaceRepositoryPagesTest` cases passed on both emulators;
   debug lint passed. TalkBack speech and physical devices were not checked.
+
+### Home labels at large text sizes
+
+On compact Home grids, app and folder artwork shrinks when needed to fit a
+complete line of scaled text. Long names still ellipsize horizontally; the
+full accessible names, tap targets, and saved positions stay unchanged.
+
+- Android 8 (Dark, three-button) and 15 (Light, gesture) showed the complete
+  line at 320 dp and 200% text. Measured Home targets were at least
+  68 × 71 dp. Normal text kept full-size artwork at 320 and 600 dp.
+- Verified app launch, folder opening, and the keyboard shortcut menu with
+  focus return. The white text and opaque wallpaper backing provide
+  15.88:1 contrast. TalkBack speech and physical devices were not checked.
+- `WorkspaceLabelLayoutTest` reproduced clipping on the previous build and
+  passed on both emulators with English app and Cyrillic folder names.
+  Debug build and lint passed.
 
 ### Home options
 

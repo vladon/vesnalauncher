@@ -43,6 +43,25 @@ class AppIconView @JvmOverloads constructor(
         labelView = findViewById(R.id.app_label)
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY) return
+
+        // In a fixed Home cell, LinearLayout measures the artwork first and can
+        // leave a scaled label shorter than its text. Keep the full line and
+        // let FIT_CENTER shrink the artwork instead of shrinking the type.
+        val line = labelView.layout ?: return
+        val lineHeight = line.getLineBottom(0) + labelView.compoundPaddingTop + labelView.compoundPaddingBottom
+        val artworkHeight = iconView.measuredHeight - (lineHeight - labelView.measuredHeight)
+        if (artworkHeight <= 0 || artworkHeight >= iconView.measuredHeight) return
+
+        val artwork = iconView.layoutParams
+        val preferredHeight = artwork.height
+        artwork.height = artworkHeight
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        artwork.height = preferredHeight
+    }
+
     /** Tiles on an opaque drawer or folder surface don't need wallpaper label treatment. */
     internal fun useSurfaceLabel() {
         labelView.setTextColor(context.getColor(R.color.home_control_on_surface))
