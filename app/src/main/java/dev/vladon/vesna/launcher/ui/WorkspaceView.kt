@@ -23,8 +23,8 @@ import kotlin.math.max
  * Cell geometry comes from [GridCanvas].
  *
  * Touch model:
- * - tap launches, a long press on empty space opens the launcher menu, an upward
- *   fling anywhere opens the drawer;
+ * - tap launches, a long press on empty space opens the launcher menu; an upward
+ *   fling opens the drawer and a horizontal swipe selects an adjacent page;
  * - long-pressing an icon starts a drag session: the view dims the icon, reports
  *   progress in workspace-local coordinates and lets [HomeActivity] decide the drop
  *   target (grid cell or dock); highlights are drawn via [showDropHighlight].
@@ -40,6 +40,7 @@ class WorkspaceView @JvmOverloads constructor(
     var onCellClick: ((CellContent) -> Unit)? = null
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
+    var onSwipePage: ((forward: Boolean) -> Unit)? = null
 
     /** Long press on a folder cell: menu (rename / remove folder). */
     var onFolderLongClick: ((Folder, View) -> Unit)? = null
@@ -79,11 +80,11 @@ class WorkspaceView @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    // Touch-event plumbing: a child (icon) holding the gesture routes MOVE/UP through
-    // onInterceptTouchEvent, while empty-area gestures (no child target) reach both
-    // hooks with the same MotionEvent instance. Feeding from both hooks covers all
-    // paths; the identity check prevents feeding any single event twice.
-    private var lastIntercepted: MotionEvent? = null
+    // Observe the whole stream, whether an app child or the empty grid owns it.
+    private var downX = 0f
+    private var downY = 0f
+    private var pageSwipe = false
+    private var longPressed = false
 
     private val gestureDetector = GestureDetector(
         context,
@@ -108,30 +109,41 @@ class WorkspaceView @JvmOverloads constructor(
         // Long press on any empty part of the grid.
         isLongClickable = true
         setOnLongClickListener {
+            longPressed = true
             onEmptyAreaLongClick?.invoke()
             true
         }
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.actionMasked) {
-            MotionEvent.ACTION_MOVE,
-            MotionEvent.ACTION_UP,
-            MotionEvent.ACTION_CANCEL,
-            -> {
-                lastIntercepted = ev
-                gestureDetector.onTouchEvent(ev)
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val action = ev.actionMasked
+        if (action == MotionEvent.ACTION_DOWN) {
+            downX = ev.x
+            downY = ev.y
+            pageSwipe = false
+            longPressed = false
+        } else if (action == MotionEvent.ACTION_MOVE && !longPressed && !pageSwipe) {
+            val dx = abs(ev.x - downX)
+            pageSwipe = dx >= PAGE_SWIPE_DP * density && dx > abs(ev.y - downY) * 1.5f
+            if (pageSwipe) {
+                // Cancel the pressed child or the empty grid before handling release.
+                val cancel = MotionEvent.obtain(ev)
+                cancel.action = MotionEvent.ACTION_CANCEL
+                gestureDetector.onTouchEvent(cancel)
+                super.dispatchTouchEvent(cancel)
+                cancel.recycle()
             }
         }
-        return false
-    }
-
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (ev !== lastIntercepted) {
-            gestureDetector.onTouchEvent(ev)
+        if (pageSwipe) {
+            if (action == MotionEvent.ACTION_UP) {
+                val dx = ev.x - downX
+                val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+                if (abs(dx) >= PAGE_SWIPE_DP * density) onSwipePage?.invoke((dx < 0f) != rtl)
+            }
+            return true
         }
-        lastIntercepted = null
-        return super.onTouchEvent(ev)
+        if (!longPressed) gestureDetector.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
     }
 
     // The dragged icon keeps the touch stream, so the drag itself is observed by an
@@ -155,6 +167,7 @@ class WorkspaceView @JvmOverloads constructor(
 
     /** Starts a drag for the icon at [cell]; the item dims until it is dropped. */
     private fun beginDrag(cell: Int, app: LauncherApp, anchor: View) {
+        longPressed = true
         dragSourceApp = app
         dragAnchor = anchor
         dragMoved = false
@@ -183,6 +196,11 @@ class WorkspaceView @JvmOverloads constructor(
         invalidate()
         if (app == null) return
         onDragReleased?.invoke(x, y, moved, cancelled, app, anchor)
+    }
+
+    internal fun cancelDrag() {
+        val anchor = dragAnchor ?: return
+        endDrag(0f, 0f, cancelled = true, anchor)
     }
 
     /** Shows (cell != null) or hides the drop-target highlight for drag sessions. */
@@ -257,6 +275,7 @@ class WorkspaceView @JvmOverloads constructor(
                     )
                     view.setOnClickListener { onCellClick?.invoke(content) }
                     view.setOnLongClickListener { anchor ->
+                        longPressed = true
                         onFolderLongClick?.invoke(content.folder, anchor)
                         true
                     }
@@ -324,6 +343,7 @@ class WorkspaceView @JvmOverloads constructor(
     private companion object {
         const val FLING_VELOCITY = 1200f
         const val MAX_FLING_DRIFT_DP = 100f
+        const val PAGE_SWIPE_DP = 56f
         const val DRAGGED_ALPHA = 0.45f
         const val HIGHLIGHT_INSET_DP = 6
         const val HIGHLIGHT_RADIUS_DP = 20f

@@ -57,7 +57,4 @@ interface WorkspaceItemDao {
 
     @Query("DELETE FROM workspace_items WHERE packageName = :packageName AND userSerial = :userSerial")
     suspend fun deleteByPackage(packageName: String, userSerial: Long)
-
-    @Query("DELETE FROM workspace_items")
-    suspend fun deleteAll()
 }

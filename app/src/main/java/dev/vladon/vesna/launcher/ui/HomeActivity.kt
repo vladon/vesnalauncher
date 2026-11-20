@@ -5,10 +5,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
@@ -31,6 +31,7 @@ import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
+import dev.vladon.vesna.launcher.workspace.MAX_WORKSPACE_PAGES
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -45,6 +46,10 @@ class HomeActivity : ComponentActivity() {
     private lateinit var dock: DockView
     private lateinit var drawer: DrawerView
     private lateinit var emptyHint: TextView
+    private lateinit var pageControls: View
+    private lateinit var previousPage: View
+    private lateinit var nextPage: View
+    private lateinit var pageIndicator: WorkspacePageIndicator
     private lateinit var defaultHomeBanner: TextView
 
     /** The icon currently being dragged across workspace and dock. */
@@ -52,7 +57,7 @@ class HomeActivity : ComponentActivity() {
         val app: LauncherApp,
         val container: Container,
         val fromCell: Int,
-        val anchor: View,
+        val pageId: Long,
         val fromDrawer: Boolean,
         val dockPinId: Long = 0,
     )
@@ -62,6 +67,7 @@ class HomeActivity : ComponentActivity() {
     private var rootDragMoved = false
     private var folderDialog: FolderDialog? = null
     private var folderDialogJob: Job? = null
+    private var renderedState = LauncherUiState()
 
     private val controller
         get() = VesnaApplication.graph(this).controller
@@ -87,6 +93,12 @@ class HomeActivity : ComponentActivity() {
         drawer = findViewById(R.id.drawer)
         emptyHint = findViewById(R.id.workspace_empty_hint)
         defaultHomeBanner = findViewById(R.id.banner_default_home)
+        pageControls = findViewById(R.id.workspace_page_controls)
+        previousPage = findViewById(R.id.workspace_previous_page)
+        nextPage = findViewById(R.id.workspace_next_page)
+        pageIndicator = findViewById(R.id.workspace_page_indicator)
+        previousPage.setOnClickListener { stepPage(forward = false) }
+        nextPage.setOnClickListener { stepPage(forward = true) }
 
         val graph = VesnaApplication.graph(this)
         val controller = graph.controller
@@ -98,31 +110,38 @@ class HomeActivity : ComponentActivity() {
         workspace.onFolderLongClick = { folder, anchor -> showFolderMenu(folder, anchor) }
         workspace.onEmptyAreaLongClick = { showLauncherMenu() }
         workspace.onSwipeUp = { drawer.open() }
-        workspace.onDragStarted = { cell, app, anchor ->
-            dragSource = DragSource(app, Container.WORKSPACE, cell, anchor, fromDrawer = false)
+        workspace.onSwipePage = ::stepPage
+        workspace.onDragStarted = { cell, app, _ ->
+            dragSource = DragSource(app, Container.WORKSPACE, cell, renderedState.activePageId, fromDrawer = false)
         }
-        workspace.onDragProgress = { x, y -> updateDragTarget(Container.WORKSPACE, x, y) }
+        workspace.onDragProgress = ::updateDragTarget
         workspace.onDragReleased = { x, y, moved, cancelled, app, anchor ->
             onDragReleased(Container.WORKSPACE, x, y, moved, cancelled, app, anchor)
         }
 
         dock.onAppClick = { controller.launch(it) }
-        dock.onDragStarted = { pin, anchor ->
-            dragSource = DragSource(pin.app, Container.DOCK, fromCell = -1, anchor, fromDrawer = false, dockPinId = pin.id)
+        dock.onDragStarted = { pin, _ ->
+            dragSource = DragSource(
+                pin.app, Container.DOCK, -1, renderedState.activePageId,
+                fromDrawer = false, dockPinId = pin.id,
+            )
         }
-        dock.onDragProgress = { x, y -> updateDragTarget(Container.DOCK, x + dock.left, y + dock.top) }
+        dock.onDragProgress = { x, y -> updateDragTarget(x + dock.left, y + dock.top) }
         dock.onDragReleased = { x, y, moved, cancelled, app, anchor ->
             onDragReleased(Container.DOCK, x + dock.left, y + dock.top, moved, cancelled, app, anchor)
         }
 
         drawer.onAppClick = { controller.launch(it) }
-        drawer.onItemDragStarted = { app, anchor ->
-            dragSource = DragSource(app, Container.WORKSPACE, fromCell = -1, anchor, fromDrawer = true)
+        drawer.onItemDragStarted = { app, _ ->
+            dragSource = DragSource(app, Container.WORKSPACE, -1, renderedState.activePageId, fromDrawer = true)
         }
         drawer.onItemDragReleased = { app, anchor ->
             onDragReleased(Container.WORKSPACE, anchor.left.toFloat(), anchor.top.toFloat(), moved = false, cancelled = false, app, anchor)
         }
-        drawer.onOpenedChanged = { backCallback.isEnabled = it }
+        drawer.onOpenedChanged = { opened ->
+            backCallback.isEnabled = opened
+            updatePageControlsVisibility()
+        }
 
         val dragLayer = findViewById<LauncherDragLayer>(R.id.launcher_root)
         dragLayer.dragInterceptor = { ev ->
@@ -137,7 +156,7 @@ class HomeActivity : ComponentActivity() {
                         drawerClosedForDrag = true
                         drawer.close()
                     }
-                    updateDragTarget(Container.WORKSPACE, ev.x, ev.y)
+                    updateDragTarget(ev.x, ev.y)
                 }
                 MotionEvent.ACTION_UP -> onRootDragReleased(ev.x, ev.y)
                 MotionEvent.ACTION_CANCEL -> onRootDragCancelled()
@@ -178,10 +197,50 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun render(state: LauncherUiState) {
-        workspace.bind(state.workspaceCells)
-        dock.bind(state.dockPins)
-        drawer.submitApps(state.apps)
+        val previous = renderedState
+        if (state.activePageId != previous.activePageId) {
+            workspace.cancelDrag()
+            onRootDragCancelled()
+            folderDialog?.dismiss()
+        }
+        renderedState = state
+        if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
+        if (state.dockPins != previous.dockPins) dock.bind(state.dockPins)
+        if (state.apps != previous.apps) drawer.submitApps(state.apps)
         emptyHint.isVisible = state.isWorkspaceEmpty
+        if (state.pageIds != previous.pageIds || state.activePageId != previous.activePageId) {
+            val position = state.pageIds.indexOf(state.activePageId)
+            val hadPreviousFocus = previousPage.hasFocus()
+            val hadNextFocus = nextPage.hasFocus()
+            updatePageControlsVisibility()
+            previousPage.isEnabled = position > 0
+            nextPage.isEnabled = position in 0 until state.pageIds.lastIndex
+            previousPage.alpha = if (previousPage.isEnabled) 1f else 0.38f
+            nextPage.alpha = if (nextPage.isEnabled) 1f else 0.38f
+            if (pageControls.isVisible) {
+                if (hadPreviousFocus && !previousPage.isEnabled) nextPage.requestFocus()
+                if (hadNextFocus && !nextPage.isEnabled) previousPage.requestFocus()
+            }
+            pageIndicator.bind(position, state.pageIds.size)
+            updateWorkspaceBottom()
+        }
+    }
+
+    private fun updatePageControlsVisibility() {
+        pageControls.visibility = when {
+            renderedState.pageIds.size <= 1 -> View.GONE
+            backCallback.isEnabled -> View.INVISIBLE
+            else -> View.VISIBLE
+        }
+    }
+
+    private fun stepPage(forward: Boolean) {
+        if (dragSource != null || backCallback.isEnabled) return
+        val state = renderedState
+        val current = state.pageIds.indexOf(state.activePageId)
+        if (current < 0) return
+        val step = if (forward) 1 else -1
+        state.pageIds.getOrNull(current + step)?.let(controller::selectWorkspacePage)
     }
 
     /**
@@ -190,7 +249,7 @@ class HomeActivity : ComponentActivity() {
      * caller). The dock zone wins when the finger is over it; elsewhere the grid
      * cell decides. Unacceptable targets show no highlight (drop returns home).
      */
-    private fun updateDragTarget(container: Container, wx: Float, wy: Float) {
+    private fun updateDragTarget(wx: Float, wy: Float) {
         val source = dragSource ?: return
         if (wy >= dock.top) {
             workspace.showDropHighlight(null)
@@ -225,8 +284,8 @@ class HomeActivity : ComponentActivity() {
 
         if (!moved) {
             when {
-                source.fromDrawer -> showDrawerItemMenu(anchor, app)
-                container == Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app, source.fromCell)
+                source.fromDrawer -> showDrawerItemMenu(anchor, app, source.pageId)
+                container == Container.WORKSPACE -> showWorkspaceItemMenu(anchor, app, source.fromCell, source.pageId)
                 else -> showDockItemMenu(anchor, app, source.dockPinId)
             }
             return
@@ -237,7 +296,7 @@ class HomeActivity : ComponentActivity() {
             overDock && source.fromDrawer ->
                 controller.insertIntoDock(app, dock.slotAtLocalX(wx - dock.left))
             overDock && source.container == Container.WORKSPACE ->
-                controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(wx - dock.left))
+                controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(wx - dock.left), source.pageId)
             overDock && source.container == Container.DOCK ->
                 controller.reorderDock(source.dockPinId, dock.slotAtLocalX(wx - dock.left))
             !overDock && source.fromDrawer ->
@@ -268,6 +327,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun onRootDragCancelled() {
+        dragSource = null
+        workspace.showDropHighlight(null)
+        dock.showSlotHighlight(null)
         rootDragMoved = false
         drawerClosedForDrag = false
     }
@@ -283,7 +345,7 @@ class HomeActivity : ComponentActivity() {
             when {
                 source.fromDrawer -> controller.insertIntoDock(app, dock.slotAtLocalX(x))
                 source.container == Container.DOCK -> controller.reorderDock(source.dockPinId, dock.slotAtLocalX(x))
-                else -> controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(x))
+                else -> controller.moveWorkspaceToDock(app, source.fromCell, dock.slotAtLocalX(x), source.pageId)
             }
             return
         }
@@ -353,16 +415,17 @@ class HomeActivity : ComponentActivity() {
     private fun commitOnCell(source: DragSource, app: LauncherApp, cell: Int) {
         when (val content = workspace.contentAt(cell)) {
             null -> when {
-                source.fromDrawer -> controller.insertWorkspaceAt(app, cell)
+                source.fromDrawer -> controller.insertWorkspaceAt(app, cell, source.pageId)
                 source.container == Container.WORKSPACE ->
-                    controller.moveWithinWorkspace(app, source.fromCell, cell)
-                else -> controller.moveDockToWorkspace(source.dockPinId, cell)
+                    controller.moveWithinWorkspace(app, source.fromCell, cell, source.pageId)
+                else -> controller.moveDockToWorkspace(source.dockPinId, cell, source.pageId)
             }
             is CellContent.App -> controller.createFolderFromDrop(
                 app,
                 cell,
                 getString(R.string.folder_default_title),
                 source.folderDropSource(),
+                source.pageId,
             )
             is CellContent.FolderCell -> controller.addToFolder(app, content.folder.id, source.folderDropSource())
         }
@@ -386,28 +449,31 @@ class HomeActivity : ComponentActivity() {
         val root = findViewById<View>(R.id.launcher_root)
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Preserve the dock space reserved below the grid; only the status
-            // bar offset changes here.
+            // Preserve the space reserved for the dock and the page controls.
             workspace.setPadding(0, bars.top, 0, workspace.paddingBottom)
             dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, bars.bottom + dock.paddingTop)
             drawer.applySystemBarInsets(top = bars.top, bottom = bars.bottom)
             insets
         }
-        // The dock overlays the full-bleed workspace grid, so its measured height
-        // (which already includes the navigation inset) must be reserved as
-        // workspace bottom padding; otherwise the last grid row is hidden behind
-        // the dock. The dock is a workspace sibling, so this cannot loop: only a
-        // real dock height change touches the padding.
+        // The dock overlays the workspace and includes the navigation inset.
         dock.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
-            val height = bottom - top
-            if (height == oldBottom - oldTop || height == workspace.paddingBottom) {
-                return@addOnLayoutChangeListener
-            }
-            workspace.setPadding(0, workspace.paddingTop, 0, height)
+            if (bottom - top != oldBottom - oldTop) updateWorkspaceBottom()
         }
     }
 
-    private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp, cell: Int) {
+    private fun updateWorkspaceBottom() {
+        val params = pageControls.layoutParams as FrameLayout.LayoutParams
+        if (params.bottomMargin != dock.height) {
+            params.bottomMargin = dock.height
+            pageControls.layoutParams = params
+        }
+        val bottom = dock.height + if (renderedState.pageIds.size > 1) params.height else 0
+        if (workspace.paddingBottom != bottom) {
+            workspace.setPadding(0, workspace.paddingTop, 0, bottom)
+        }
+    }
+
+    private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp, cell: Int, pageId: Long) {
         val popup = PopupMenu(this, anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_ADD_TO_DOCK, 0, R.string.menu_add_to_dock)
@@ -416,7 +482,7 @@ class HomeActivity : ComponentActivity() {
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_ADD_TO_DOCK -> controller.addToDock(app)
-                MENU_REMOVE -> controller.removeFromWorkspace(app, cell)
+                MENU_REMOVE -> controller.removeFromWorkspace(app, cell, pageId)
                 MENU_APP_INFO -> showAppInfo(app)
             }
             true
@@ -439,7 +505,7 @@ class HomeActivity : ComponentActivity() {
         popup.show()
     }
 
-    private fun showDrawerItemMenu(anchor: View, app: LauncherApp) {
+    private fun showDrawerItemMenu(anchor: View, app: LauncherApp, pageId: Long) {
         val popup = PopupMenu(this, anchor)
         val controller = VesnaApplication.graph(this).controller
         popup.menu.add(0, MENU_ADD_TO_WORKSPACE, 0, R.string.menu_add_to_workspace)
@@ -447,7 +513,7 @@ class HomeActivity : ComponentActivity() {
         popup.menu.add(0, MENU_APP_INFO, 2, R.string.menu_app_info)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                MENU_ADD_TO_WORKSPACE -> controller.addToWorkspace(app)
+                MENU_ADD_TO_WORKSPACE -> controller.addToWorkspace(app, pageId)
                 MENU_ADD_TO_DOCK -> controller.addToDock(app)
                 MENU_APP_INFO -> showAppInfo(app)
             }
@@ -466,12 +532,16 @@ class HomeActivity : ComponentActivity() {
         ) {
             popup.menu.add(0, MENU_SET_DEFAULT, 2, R.string.menu_set_default_home)
         }
+        if (renderedState.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
+            popup.menu.add(0, MENU_ADD_WORKSPACE_PAGE, 3, R.string.menu_add_workspace_page)
+        }
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_SETTINGS -> startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
                 MENU_WALLPAPER -> startWallpaperPicker()
                 MENU_SET_DEFAULT -> graph.homeRoleChecker.defaultHomeRequestIntent()
                     ?.let { defaultHomeRequest.launch(it) }
+                MENU_ADD_WORKSPACE_PAGE -> controller.createWorkspacePage()
             }
             true
         }
@@ -505,5 +575,6 @@ class HomeActivity : ComponentActivity() {
         const val MENU_SET_DEFAULT = 7
         const val MENU_FOLDER_RENAME = 8
         const val MENU_FOLDER_REMOVE = 9
+        const val MENU_ADD_WORKSPACE_PAGE = 10
     }
 }

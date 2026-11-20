@@ -13,9 +13,14 @@
     <string name="menu_app_info">О приложении</string>
     <string name="menu_launcher_settings">Настройки Vesna</string>
     <string name="menu_wallpaper">Сменить обои</string>
+    <string name="menu_add_workspace_page">Добавить страницу</string>
+
+    <string name="workspace_previous_page">Предыдущая страница рабочего стола</string>
+    <string name="workspace_next_page">Следующая страница рабочего стола</string>
+    <string name="workspace_page_position">Страница рабочего стола %1$d из %2$d</string>
 
     <string name="workspace_empty_hint">Долгое нажатие откроет меню</string>
-    <string name="toast_workspace_full">Рабочий стол заполнен</string>
+    <string name="toast_workspace_full">Эта страница рабочего стола заполнена</string>
     <string name="toast_dock_full">Док заполнен</string>
 
     <!-- Папки -->

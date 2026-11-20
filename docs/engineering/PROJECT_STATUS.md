@@ -29,6 +29,7 @@ exercised; everything else is source-verified only.
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
 | Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
+| Workspace pages (unreleased) | Long-press empty Home space → **Add home page**. Up to eight 4×5 pages; swipe horizontally or use the arrows above the shared dock. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls). |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
@@ -162,6 +163,26 @@ list means it was not performed, nothing more.
   placements, the folder and its members, and the seeding flag. Lint reported
   0 errors and 20 warnings. The minified release APK was built unsigned;
   its package, version, and ZIP alignment were checked locally.
+
+### Workspace page controls
+
+The local `workspace-page-controls` branch builds on the 0.4.3 storage work; it
+does not change the Room schema or the last published release. New pages are
+empty, and adding or moving an app acts on the displayed page. Page deletion,
+reordering, and dragging between pages are not available.
+
+- All 41 JVM tests and 34 instrumentation tests passed; the instrumentation
+  suite ran on both Android 8 (API 26) and Android 15 (API 35). Debug lint had no
+  errors.
+- On Android 15, a drawer drag and a drawer-menu pin landed on page two. A
+  force-stop and relaunch restored that page and both pins. The original
+  18 placement rows, the folder, and the shared dock were unchanged. The Home
+  menu stopped offering creation at eight pages.
+- The page controls were checked at 320, 411, and 610 dp widths, with gesture
+  and three-button navigation, and in Light and Dark at up to 1.6× font scale.
+  Verified 48 dp targets, color contrast, visible keyboard focus, English and
+  Russian labels, accessibility position/count, and mirrored RTL gestures.
+  Spoken TalkBack announcements and physical-device behavior were not verified.
 
 ## Where to go next
 

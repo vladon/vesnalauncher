@@ -10,12 +10,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
@@ -30,6 +32,9 @@ data class LauncherUiState(
     val dockPins: List<DockPin> = emptyList(),
     val folders: Map<Long, Folder> = emptyMap(),
     val folderContents: Map<Long, List<LauncherApp>> = emptyMap(),
+    /** Workspace page IDs in display order; [activePageId] names the rendered page. */
+    val pageIds: List<Long> = emptyList(),
+    val activePageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
 ) {
     val isWorkspaceEmpty: Boolean get() = workspaceCells.isEmpty()
 }
@@ -51,23 +56,41 @@ class LauncherController(
 ) {
 
     private val refreshMutex = Mutex()
+    private val pageActionMutex = Mutex()
     private val _apps = MutableStateFlow<List<LauncherApp>>(emptyList())
+
+    /** The page selected in the last session; updated by [selectWorkspacePage] and [createWorkspacePage]. */
+    private val _activePageId = MutableStateFlow(workspaceRepository.savedActivePageId())
+
+    /** Shared page list so [state] and [createWorkspacePage] observe the same emissions. */
+    private val pages: StateFlow<List<WorkspacePageEntity>> =
+        workspaceRepository.pages.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     private val _messages = MutableSharedFlow<LauncherMessage>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
 
     val state: StateFlow<LauncherUiState> =
-        combine<List<LauncherApp>, List<WorkspaceItem>, List<Folder>, LauncherUiState>(
+        combine<List<LauncherApp>, List<WorkspaceItem>, List<Folder>, List<WorkspacePageEntity>, Long, LauncherUiState>(
             _apps,
             workspaceRepository.items,
             workspaceRepository.folders,
-        ) { apps, items, folders ->
+            pages,
+            _activePageId,
+        ) { apps, items, folders, pageList, activePageId ->
+            // Every nonempty page snapshot must carry a selection that is in the
+            // list: the stored preference may briefly lag the page list or be
+            // stale, so fall back to the first page (default rank first).
+            val selection = pageList.firstOrNull { it.id == activePageId }?.id
+                ?: pageList.firstOrNull()?.id
+                ?: DEFAULT_WORKSPACE_PAGE_ID
             LauncherUiState(
                 apps = apps,
-                workspaceCells = WorkspaceResolver.workspaceCells(items, apps, folders),
+                workspaceCells = WorkspaceResolver.workspaceCells(items, apps, folders, selection),
                 dockPins = WorkspaceResolver.dockPins(items, apps),
                 folders = folders.associateBy { it.id },
                 folderContents = WorkspaceResolver.folderContents(items, apps),
+                pageIds = pageList.map { it.id },
+                activePageId = selection,
             )
         }.stateIn(scope, SharingStarted.Eagerly, LauncherUiState())
 
@@ -91,9 +114,29 @@ class LauncherController(
         }
     }
 
-    /** Drawer/app-source insert into an empty workspace [cell]. */
-    fun insertWorkspaceAt(app: LauncherApp, cell: Int) {
-        scope.launch { workspaceRepository.insertWorkspaceAt(app, cell) }
+    /** Appends a new page (capped at [MAX_WORKSPACE_PAGES]) and selects it; a no-op at the cap. */
+    fun createWorkspacePage() {
+        scope.launch {
+            pageActionMutex.withLock {
+                val pageId = workspaceRepository.createPage() ?: return@withLock
+                pages.first { pageList -> pageList.any { it.id == pageId } }
+                if (workspaceRepository.selectPage(pageId)) _activePageId.value = pageId
+            }
+        }
+    }
+
+    /** Selects an existing page and persists the choice for the next process; a no-op for unknown IDs. */
+    fun selectWorkspacePage(pageId: Long) {
+        scope.launch {
+            pageActionMutex.withLock {
+                if (workspaceRepository.selectPage(pageId)) _activePageId.value = pageId
+            }
+        }
+    }
+
+    /** Drawer/app-source insert into an empty workspace [cell] on [pageId]. */
+    fun insertWorkspaceAt(app: LauncherApp, cell: Int, pageId: Long) {
+        scope.launch { workspaceRepository.insertWorkspaceAt(app, cell, pageId) }
     }
 
     /** Drawer-source insert into the dock at [slot]; emits DOCK_FULL when full. */
@@ -105,10 +148,10 @@ class LauncherController(
         }
     }
 
-    /** Creates a folder at [targetCell] from a drop of [dragged] onto its occupant. */
-    internal fun createFolderFromDrop(dragged: LauncherApp, targetCell: Int, defaultTitle: String, source: WorkspaceRepository.FolderDropSource) {
+    /** Creates a folder at [targetCell] on [pageId] from a drop of [dragged] onto its occupant. */
+    internal fun createFolderFromDrop(dragged: LauncherApp, targetCell: Int, defaultTitle: String, source: WorkspaceRepository.FolderDropSource, pageId: Long) {
         scope.launch {
-            workspaceRepository.createFolderFromDrop(dragged, targetCell, defaultTitle, source)
+            workspaceRepository.createFolderFromDrop(dragged, targetCell, defaultTitle, source, pageId)
         }
     }
 
@@ -132,23 +175,23 @@ class LauncherController(
         scope.launch { workspaceRepository.removeFolder(folderId) }
     }
 
-    /** Workspace → dock drag at [slot]; emits [LauncherMessage.DOCK_FULL] when full. */
-    fun moveWorkspaceToDock(app: LauncherApp, fromCell: Int, slot: Int) {
+    /** Workspace → dock drag at [slot] from [pageId]; emits [LauncherMessage.DOCK_FULL] when full. */
+    fun moveWorkspaceToDock(app: LauncherApp, fromCell: Int, slot: Int, pageId: Long) {
         scope.launch {
-            if (workspaceRepository.moveWorkspaceToDock(app, fromCell, slot) == DockMoveResult.FULL) {
+            if (workspaceRepository.moveWorkspaceToDock(app, fromCell, slot, pageId) == DockMoveResult.FULL) {
                 _messages.tryEmit(LauncherMessage.DOCK_FULL)
             }
         }
     }
 
-    /** Dock → workspace drag onto an empty [cell]; no-op when the cell is occupied. */
-    fun moveDockToWorkspace(pinId: Long, cell: Int) {
-        scope.launch { workspaceRepository.moveDockToWorkspace(pinId, cell) }
+    /** Dock → workspace drag onto an empty [cell] of [pageId]; no-op when the cell is occupied. */
+    fun moveDockToWorkspace(pinId: Long, cell: Int, pageId: Long) {
+        scope.launch { workspaceRepository.moveDockToWorkspace(pinId, cell, pageId) }
     }
 
-    /** Moves the selected workspace pin from [fromCell] to [toCell]. */
-    fun moveWithinWorkspace(app: LauncherApp, fromCell: Int, toCell: Int) {
-        scope.launch { workspaceRepository.moveWithinWorkspace(app, fromCell, toCell) }
+    /** Moves the workspace pin from [fromCell] to [toCell] on [pageId]. */
+    fun moveWithinWorkspace(app: LauncherApp, fromCell: Int, toCell: Int, pageId: Long) {
+        scope.launch { workspaceRepository.moveWithinWorkspace(app, fromCell, toCell, pageId) }
     }
 
     /** Dock-internal reorder to [slot]. */
@@ -156,14 +199,15 @@ class LauncherController(
         scope.launch { workspaceRepository.reorderDock(pinId, slot) }
     }
 
-    fun addToWorkspace(app: LauncherApp) {
+    /** Places [app] into the first free cell of [pageId]; emits WORKSPACE_FULL when that page is full. */
+    fun addToWorkspace(app: LauncherApp, pageId: Long) {
         scope.launch {
-            if (!workspaceRepository.addToWorkspace(app)) _messages.tryEmit(LauncherMessage.WORKSPACE_FULL)
+            if (!workspaceRepository.addToWorkspace(app, pageId)) _messages.tryEmit(LauncherMessage.WORKSPACE_FULL)
         }
     }
 
-    fun removeFromWorkspace(app: LauncherApp, cell: Int) {
-        scope.launch { workspaceRepository.removeFromWorkspace(app, cell) }
+    fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long) {
+        scope.launch { workspaceRepository.removeFromWorkspace(app, cell, pageId) }
     }
 
     fun addToDock(app: LauncherApp) {
@@ -179,18 +223,15 @@ class LauncherController(
     /**
      * Refreshes launchable apps, seeds the layout on first run, and removes pins
      * for packages uninstalled while the launcher was not running.
-     * Serialized with a mutex so overlapping package events cannot double-seed.
+     * Serialized with a mutex so overlapping package events cannot double-seed;
+     * [WorkspaceRepository.seedOrAdopt] additionally keeps the adopt-or-seed
+     * decision atomic against pins placed before the first seed completes.
      */
     private suspend fun refresh() = refreshMutex.withLock {
         val apps = withContext(Dispatchers.IO) { discovery.discover() }
         _apps.value = apps
         if (!workspaceRepository.isSeeded() && apps.isNotEmpty()) {
-            if (workspaceRepository.isEmpty()) {
-                workspaceRepository.seed(SeedPlanner.plan(apps))
-            } else {
-                // A pre-existing layout (upgrading install): keep it, just adopt it.
-                workspaceRepository.markSeeded()
-            }
+            workspaceRepository.seedOrAdopt(SeedPlanner.plan(apps))
         }
         withContext(Dispatchers.IO) {
             workspaceRepository.pruneUninstalled(apps.mapTo(HashSet()) { it.key }, discovery::isPackageInstalled)

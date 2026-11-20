@@ -10,4 +10,13 @@
     <color name="vesna_green">#4CAF50</color>
     <color name="vesna_green_dark">#2E7D32</color>
     <color name="launcher_icon_background">#34A853</color>
+
+    <!-- Vesna Material 3 roles for the opaque workspace page controls. -->
+    <color name="workspace_page_surface">#E8E9DE</color>
+    <color name="workspace_page_primary">#49672E</color>
+    <color name="workspace_page_outline">#74796D</color>
+    <color name="workspace_page_secondary">#57624A</color>
+    <color name="workspace_page_on_surface">#1A1D16</color>
+    <color name="workspace_page_hover">#141A1D16</color>
+    <color name="workspace_page_focus_press">#1A1A1D16</color>
 </resources>

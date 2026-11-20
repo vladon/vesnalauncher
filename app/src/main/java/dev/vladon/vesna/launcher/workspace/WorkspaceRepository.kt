@@ -9,6 +9,7 @@ import dev.vladon.vesna.launcher.data.FolderEntity
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
 import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
+import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.data.toDomain
 import dev.vladon.vesna.launcher.data.toEntity
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
+
+/** Hard cap on workspace pages. Pages are never removed; the UI disables page creation at this size. */
+internal const val MAX_WORKSPACE_PAGES = 8
 
 /**
  * Room-backed store of the launcher layout: which apps sit in which workspace
@@ -40,6 +44,9 @@ class WorkspaceRepository(
             list.mapNotNull { row -> row.pageId?.let { Folder(row.id, row.title, row.cellIndex, it) } }
         }
 
+    /** All pages in display order (rank, then id). */
+    val pages: Flow<List<WorkspacePageEntity>> = db.workspacePageDao().observeAll()
+
     /**
      * Whether the initial seeding already happened. Deliberately not derived from
      * table emptiness: a user who removed every icon must not get the default
@@ -48,20 +55,53 @@ class WorkspaceRepository(
      */
     fun isSeeded(): Boolean = prefs.getBoolean(KEY_SEEDED, false)
 
-    /** Marks an existing (pre-flag) layout as adopted without touching it. */
-    fun markSeeded() {
-        prefs.edit().putBoolean(KEY_SEEDED, true).apply()
-    }
-
-    suspend fun isEmpty(): Boolean = dao.getAll().isEmpty() && folderDao.getAll().isEmpty()
-
-    /** Replaces the whole layout; used once for the initial seeding of a fresh install. */
-    suspend fun seed(items: List<WorkspaceItem>) = mutationMutex.withLock {
+    /**
+     * Seeds a fresh install with [items], or adopts a pre-existing layout without
+     * touching it. The emptiness check runs under [mutationMutex] together with
+     * both outcomes, so a pin placed before the first seed completes can neither
+     * be wiped by a racing seed nor adopted-as-is without the flag: the layout it
+     * creates is kept and marked as seeded. Returns true when the layout was
+     * seeded, false when an existing layout was adopted.
+     */
+    suspend fun seedOrAdopt(items: List<WorkspaceItem>): Boolean = mutationMutex.withLock {
+        if (dao.getAll().isNotEmpty() || folderDao.getAll().isNotEmpty()) {
+            prefs.edit().putBoolean(KEY_SEEDED, true).apply()
+            return@withLock false
+        }
         db.withTransaction {
-            dao.deleteAll()
             dao.insertAll(items.map { it.toEntity() })
         }
         prefs.edit().putBoolean(KEY_SEEDED, true).apply()
+        true
+    }
+
+    // Pages ----------------------------------------------------------------------
+
+    /**
+     * Appends a new page after every existing one and returns its ID, or null when
+     * [MAX_WORKSPACE_PAGES] pages already exist. The rank continues from the current
+     * maximum, and the cap check runs before the insert under [mutationMutex], so
+     * concurrent creations can neither exceed the cap nor produce equal ranks.
+     */
+    suspend fun createPage(): Long? = mutationMutex.withLock {
+        val existing = db.workspacePageDao().getAll()
+        if (existing.size >= MAX_WORKSPACE_PAGES) return@withLock null
+        val nextRank = (existing.maxOfOrNull { it.rank } ?: -1) + 1
+        db.workspacePageDao().insert(WorkspacePageEntity(rank = nextRank))
+    }
+
+    /** The page selected in the last session; the default page until one is stored. */
+    fun savedActivePageId(): Long = prefs.getLong(KEY_ACTIVE_PAGE, DEFAULT_WORKSPACE_PAGE_ID)
+
+    /**
+     * Persists [pageId] as the selected page under its own preference key and
+     * returns false when the page does not exist. Pages are never removed, so a
+     * stored selection stays valid across processes.
+     */
+    suspend fun selectPage(pageId: Long): Boolean = mutationMutex.withLock {
+        if (db.workspacePageDao().getById(pageId) == null) return@withLock false
+        prefs.edit().putLong(KEY_ACTIVE_PAGE, pageId).apply()
+        true
     }
 
     /** Places the app into the first free grid cell (folder cells are occupied). */
@@ -441,5 +481,6 @@ class WorkspaceRepository(
 
     private companion object {
         const val KEY_SEEDED = "workspace_seeded"
+        const val KEY_ACTIVE_PAGE = "workspace_active_page"
     }
 }

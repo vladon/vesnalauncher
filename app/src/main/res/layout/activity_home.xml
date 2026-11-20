@@ -26,6 +26,44 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom" />
 
+    <LinearLayout
+        android:id="@+id/workspace_page_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:background="@drawable/workspace_page_track"
+        android:gravity="center_vertical"
+        android:padding="0dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/workspace_previous_page"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/workspace_page_button"
+            android:contentDescription="@string/workspace_previous_page"
+            android:focusable="true"
+            android:scaleType="center"
+            android:src="@drawable/ic_workspace_previous_page" />
+
+        <dev.vladon.vesna.launcher.ui.WorkspacePageIndicator
+            android:id="@+id/workspace_page_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:accessibilityLiveRegion="polite"
+            android:importantForAccessibility="yes" />
+
+        <ImageButton
+            android:id="@+id/workspace_next_page"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/workspace_page_button"
+            android:contentDescription="@string/workspace_next_page"
+            android:focusable="true"
+            android:scaleType="center"
+            android:src="@drawable/ic_workspace_next_page" />
+    </LinearLayout>
+
     <TextView
         android:id="@+id/banner_default_home"
         android:layout_width="wrap_content"

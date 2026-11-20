@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="workspace_page_surface">#282B24</color>
+    <color name="workspace_page_primary">#AFD18C</color>
+    <color name="workspace_page_outline">#8E9286</color>
+    <color name="workspace_page_secondary">#BFCBAE</color>
+    <color name="workspace_page_on_surface">#E2E3D9</color>
+    <color name="workspace_page_hover">#14E2E3D9</color>
+    <color name="workspace_page_focus_press">#1AE2E3D9</color>
+</resources>
