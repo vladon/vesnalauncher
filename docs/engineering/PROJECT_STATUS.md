@@ -33,7 +33,7 @@ exercised; everything else is source-verified only.
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
-| App drawer access (unreleased) | Tap the labeled app-grid button above the dock or swipe up. Close with the drawer button or Android Back; keyboard focus returns to the invoking control. While the drawer is open, app-list refreshes no longer jump to the top. | Android 8 and 15 emulator verification; see [App drawer access](#app-drawer-access) and [Drawer refresh](#drawer-refresh). |
+| App drawer access (unreleased) | Tap the labeled app-grid button above the dock or swipe up. Close with the drawer button or Android Back. The drawer fits up to four columns to the available width and keeps its scroll position when apps change. | Android 8 and 15 emulator verification; see [App drawer access](#app-drawer-access), [Narrow drawer layouts](#narrow-drawer-layouts), and [Drawer refresh](#drawer-refresh). |
 | Home options (unreleased) | A named overflow button above the dock opens Settings, wallpaper, and applicable launcher and page actions without a long-press. | Android 8 and 15 emulator verification; see [Home options](#home-options). |
 | Drawer search | Start typing with a keyboard anywhere in the open drawer. Press **Enter** in the search field to open the sole match. Substring search ignores case, repeated spaces, Latin accents and the dots on Russian `ё`, without changing labels or drawer order. **Clear search** restores the grid and returns focus to the field. | See [Keyboard search](#keyboard-search), [Drawer search matching](#drawer-search-matching) and [Drawer search recovery](#drawer-search-recovery). |
 | Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
@@ -310,6 +310,24 @@ and keeps Home out of keyboard and accessibility traversal while open.
 - A drawer drag on a secondary Home page still landed on that page. Removing
   the test pin restored the exact original placement and folder rows. TalkBack
   speech and handheld-device behavior were not verified.
+
+### Narrow drawer layouts
+
+The drawer keeps four columns when they fit. In narrower windows, it uses
+fewer columns to leave at least 64 dp per tile wherever that much space is
+available. System bars and cutouts are outside the grid and search area.
+The compact search bar uses a short localized hint and smaller side margins.
+
+- Android 8 verified two columns at 184 dp, three at 232 dp, and four at
+  320 dp. The 48 dp app art stayed intact, labels kept their full accessible
+  names, and keyboard search and touch Clear still worked.
+- Android 15 kept keyboard focus on the same app when shrinking from four
+  columns at 610 dp to three at 240 dp. Shift+F10 still opened its menu.
+  Checked the Russian search hint and mirrored RTL order at the narrow width.
+- Verified both themes at 200% text, both navigation modes, and unchanged
+  Home placement rows. All seven `DrawerSearchTest` cases passed on both
+  emulators, including reflow around side insets. Debug lint passed.
+  Physical devices and TalkBack speech were not checked.
 
 ### Drawer refresh
 

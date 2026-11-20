@@ -14,14 +14,16 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
+import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppSearch
 import dev.vladon.vesna.launcher.apps.LauncherApp
-import dev.vladon.vesna.launcher.workspace.GridCanvas
+import kotlin.math.ceil
 
 /**
  * Full-height app drawer above Home. Opens by button or swipe-up, and closes
@@ -48,8 +50,10 @@ class DrawerView @JvmOverloads constructor(
         set(value) { appNames.visible = value }
 
     private val list: RecyclerView
+    private val grid = GridLayoutManager(context, MAX_COLUMNS)
     private val appNames: GridAppNames
     private val closeButton: View
+    private val searchBar: View
     private val searchField: EditText
     private val clearSearchButton: View
     private val noResultsView: TextView
@@ -104,14 +108,14 @@ class DrawerView @JvmOverloads constructor(
             },
         )
         list = findViewById(R.id.drawer_list)
-        list.layoutManager = GridLayoutManager(context, GridCanvas.COLUMNS)
+        list.layoutManager = grid
         appNames = GridAppNames(list)
         list.adapter = adapter
         installDrawerFlingToClose()
 
         noResultsView = findViewById(R.id.drawer_no_results)
         searchField = findViewById(R.id.drawer_search)
-        val searchBar = findViewById<View>(R.id.drawer_search_bar)
+        searchBar = findViewById(R.id.drawer_search_bar)
         searchField.setOnFocusChangeListener { _, focused ->
             searchBar.isActivated = focused
             if (!focused) {
@@ -225,8 +229,8 @@ class DrawerView @JvmOverloads constructor(
     }
 
     /** Keeps drawer controls and results within the visible area, including above the IME. */
-    internal fun applyContentInsets(top: Int, bottom: Int) {
-        getChildAt(0).setPadding(0, top, 0, bottom)
+    internal fun applyContentInsets(insets: Insets) {
+        getChildAt(0).setPadding(insets.left, insets.top, insets.right, insets.bottom)
     }
 
     fun open() {
@@ -324,6 +328,20 @@ class DrawerView @JvmOverloads constructor(
         val height = getDefaultSize(suggestedMinimumHeight, heightMeasureSpec)
         setMeasuredDimension(width, height)
         val content = getChildAt(0)
+        val availableWidth = width - content.paddingLeft - content.paddingRight - list.paddingLeft - list.paddingRight
+        val density = resources.displayMetrics.density
+        val minCellWidth = ceil(MIN_CELL_WIDTH_DP * density).toInt()
+        val columns = (availableWidth / minCellWidth).coerceIn(1, MAX_COLUMNS)
+        val compact = columns < MAX_COLUMNS
+        if (compact != (grid.spanCount < MAX_COLUMNS)) {
+            searchField.setHint(if (compact) R.string.drawer_search_hint_compact else R.string.drawer_search_hint)
+            val sideMargin = ((if (compact) 8 else 16) * density + 0.5f).toInt()
+            searchBar.updateLayoutParams<MarginLayoutParams> {
+                leftMargin = sideMargin
+                rightMargin = sideMargin
+            }
+        }
+        grid.spanCount = columns
         content.measure(
             MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
@@ -339,6 +357,8 @@ class DrawerView @JvmOverloads constructor(
         LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
 
     private companion object {
+        const val MIN_CELL_WIDTH_DP = 64
+        const val MAX_COLUMNS = 4
         const val ANIMATION_MS = 250L
         const val MAX_FLING_DURATION_MS = 400L
     }

@@ -8,6 +8,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.graphics.Insets
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -23,6 +24,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.math.ceil
 
 /**
  * On-device regression for the drawer search (R-DRAWER-100.4 / R-DRAWER-101.1,
@@ -258,6 +260,53 @@ class DrawerSearchTest {
         }
         assertVisibleLabels((listOf(latest) + before + tools).map { it.label })
         assertFirstVisibleApp(latest.label, offset = 0)
+    }
+
+    @Test
+    fun drawerFitsTilesInsideSideInsetsAndKeepsTheFocusedAppOnResize() {
+        var minCellWidth = 0
+        onDrawer { host ->
+            minCellWidth = ceil(64 * host.resources.displayMetrics.density).toInt()
+            host.layoutParams = host.layoutParams.apply { width = minCellWidth * 4 }
+        }
+        assertFirstDrawerRow(fixture.take(4).map { it.label }, minCellWidth)
+
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_TAB)
+        onDrawer { host ->
+            val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+            assertTrue(list.findViewHolderForAdapterPosition(0)!!.itemView.requestFocus())
+            val side = minCellWidth / 4
+            host.applyContentInsets(Insets.of(side, 0, side, 0))
+        }
+        assertFirstDrawerRow(fixture.take(3).map { it.label }, minCellWidth, focused = fixture.first().label)
+
+        onDrawer { host ->
+            host.applyContentInsets(Insets.NONE)
+            host.layoutParams = host.layoutParams.apply { width = minCellWidth * 2 + minCellWidth / 2 }
+        }
+        assertFirstDrawerRow(fixture.take(2).map { it.label }, minCellWidth, focused = fixture.first().label)
+
+        onDrawer { host -> host.layoutParams = host.layoutParams.apply { width = minCellWidth * 4 } }
+        assertFirstDrawerRow(fixture.take(4).map { it.label }, minCellWidth, focused = fixture.first().label)
+    }
+
+    private fun assertFirstDrawerRow(expected: List<String>, minWidth: Int, focused: String? = null) {
+        val deadline = SystemClock.uptimeMillis() + 5_000
+        var labels: List<String> = emptyList()
+        while (SystemClock.uptimeMillis() < deadline) {
+            var ready = false
+            onDrawer { host ->
+                val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+                val first = list.getChildAt(0) ?: return@onDrawer
+                val row = (0 until list.childCount).map(list::getChildAt).takeWhile { it.top == first.top }
+                labels = row.map { it.contentDescription.toString() }
+                ready = labels == expected && row.all { it.width >= minWidth } &&
+                    (focused == null || list.findFocus()?.contentDescription?.toString() == focused)
+            }
+            if (ready) return
+            SystemClock.sleep(50)
+        }
+        throw AssertionError("Expected row $expected with tiles at least $minWidth px wide, found $labels")
     }
 
     private fun assertFirstVisibleApp(expected: String, offset: Int) {

@@ -62,6 +62,7 @@
     <string name="drawer_close">Close app drawer</string>
     <string name="drawer_title">App drawer</string>
     <string name="drawer_search_hint">Search apps</string>
+    <string name="drawer_search_hint_compact">Search</string>
     <string name="drawer_clear_search">Clear search</string>
     <string name="drawer_no_results">No matching apps</string>
 

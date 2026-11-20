@@ -62,6 +62,7 @@
     <string name="drawer_close">Закрыть список приложений</string>
     <string name="drawer_title">Список приложений</string>
     <string name="drawer_search_hint">Поиск приложений</string>
+    <string name="drawer_search_hint_compact">Поиск</string>
     <string name="drawer_clear_search">Очистить поиск</string>
     <string name="drawer_no_results">Приложения не найдены</string>
 
