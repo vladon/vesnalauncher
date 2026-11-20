@@ -42,6 +42,8 @@ class DrawerSearchTest {
         app("dev.vladon.fixture.fig", ".FigActivity", "Fig"),
         app("dev.vladon.fixture.cherry", ".CherryActivity", "Cherry"),
         app("dev.vladon.fixture.amber", ".AmberActivity", "amber fox"),
+        app("dev.vladon.fixture.reader", ".ReaderActivity", "Café\u00a0Reader"),
+        app("dev.vladon.fixture.pro", ".ProActivity", "Cafe\u0301 Reader Pro"),
     )
 
     private var scenario: ActivityScenario<SettingsActivity>? = null
@@ -120,6 +122,24 @@ class DrawerSearchTest {
         }
         assertVisibleLabels(fixture.map { it.label })
         assertNoResults(false)
+    }
+
+    @Test
+    fun internationalQueryKeepsOriginalLabelsAndUsesTheUpdatedAppList() {
+        val query = "  CAFE   READER  "
+        setQuery(query)
+        assertVisibleLabels(listOf("Café\u00a0Reader", "Cafe\u0301 Reader Pro"))
+        assertNoResults(false)
+
+        val renamed = fixture.map { app ->
+            if (app.key.packageName == "dev.vladon.fixture.reader") app.copy(label = "Café Tools") else app
+        }
+        onDrawer { it.submitApps(renamed) }
+        assertVisibleLabels(listOf("Cafe\u0301 Reader Pro"))
+        onDrawer { assertEquals(query, it.findViewById<EditText>(R.id.drawer_search).text.toString()) }
+
+        setQuery("cafe tools")
+        assertVisibleLabels(listOf("Café Tools"))
     }
 
     /** Runs [block] on the main thread with the DrawerView added in setUp. */

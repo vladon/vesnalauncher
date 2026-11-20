@@ -35,7 +35,7 @@ exercised; everything else is source-verified only.
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
 | App drawer access (unreleased) | Tap the labeled app-grid button above the dock or swipe up. Close with the drawer button or Android Back; keyboard focus returns to the invoking control. | Android 8 and 15 touch, accessibility hierarchy, and Android 15 D-pad checks; see [App drawer access](#app-drawer-access). |
 | Home options (unreleased) | A named overflow button above the dock opens Settings, wallpaper, and applicable launcher and page actions without a long-press. | Android 8 and 15 emulator verification; see [Home options](#home-options). |
-| Drawer search | Case-insensitive substring filter (`AppSearch`). **Clear search** restores the ordered grid and returns focus to the field; results stay above the keyboard. | `AppSearchTest` (5 JVM tests); `DrawerSearchTest` and real Home checks on Android 8 and 15. |
+| Drawer search | Substring search ignores case, repeated spaces, Latin accents and the dots on Russian `ё`. Matches retain their original labels and drawer order. **Clear search** restores the grid and returns focus to the field. | See [Drawer search matching](#drawer-search-matching) and [Drawer search recovery](#drawer-search-recovery). |
 | Drag-and-drop | Workspace, dock, and drawer routes through `LauncherDragLayer` and the controller | The recorded device cases include dock-to-workspace moves and workspace moves to an empty cell. [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids) |
 | Shortcut options (unreleased) | On a focused app or folder tile, press **Shift+F10** or the **Menu** key. Android accessibility exposes **Shortcut options**. Touch long-press and drag remain available. | See [Shortcut options](#shortcut-options) for Android 8 and 15 emulator verification. |
 | Folders | `Folder` cell and `FolderDialog` for opening, renaming, and removing members | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover selected-member removal, creation and removal rollback, and uninstall-driven dissolution. [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders) |
@@ -251,6 +251,21 @@ focus so another query can be typed immediately.
   and Russian labels, and RTL placement. The drawer grid ended at the visible
   keyboard boundary on both Android versions; the final app could be scrolled
   fully above the keyboard on Android 15. TalkBack speech was not verified.
+
+### Drawer search matching
+
+Type `cafe reader` to find **Café Reader**, or `елки` to find **Ёлки**.
+Extra spaces and Unicode width variants are accepted. Search still matches
+one contiguous substring in the app label; it does not reorder words or
+results. App labels and the text you type are shown unchanged.
+
+- Eight `AppSearchTest` JVM cases passed, including Greek sigma and preserving
+  distinctions such as Russian `й` and Japanese voicing. Both
+  `DrawerSearchTest` cases passed on Android 8 and 15: accented labels matched
+  in order, and a label refresh updated the results without rewriting the query.
+- In the live drawer, mixed case and repeated spaces found **Custom Locale**
+  on Android 8 and **YT Music** on Android 15. Clear restored the original
+  visible order and search focus. Debug lint passed.
 
 ### Default launcher setup
 

@@ -58,7 +58,7 @@ class DrawerView @JvmOverloads constructor(
     private val minFlingDistancePx =
         3 * ViewConfiguration.get(context).scaledTouchSlop
 
-    private var allApps: List<LauncherApp> = emptyList()
+    private var appSearch = AppSearch(emptyList())
 
     private var isOpen = false
 
@@ -142,7 +142,7 @@ class DrawerView @JvmOverloads constructor(
 
     private fun applyFilter() {
         val query = searchField.text?.toString().orEmpty()
-        val filtered = AppSearch.filter(allApps, query)
+        val filtered = appSearch.filter(query)
         adapter.submitList(filtered)
         clearSearchButton.isVisible = query.isNotEmpty()
         noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
@@ -155,7 +155,7 @@ class DrawerView @JvmOverloads constructor(
     }
 
     fun submitApps(apps: List<LauncherApp>) {
-        allApps = apps
+        appSearch = AppSearch(apps)
         applyFilter()
     }
 
