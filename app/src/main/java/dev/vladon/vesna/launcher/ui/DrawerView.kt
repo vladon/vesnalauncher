@@ -40,7 +40,12 @@ class DrawerView @JvmOverloads constructor(
     var onItemDragMoved: ((LauncherApp, View) -> Unit)? = null
     var onOpenedChanged: ((Boolean) -> Unit)? = null
 
+    internal var showAppNames: Boolean
+        get() = appNames.visible
+        set(value) { appNames.visible = value }
+
     private val list: RecyclerView
+    private val appNames: GridAppNames
     private val closeButton: View
     private val searchField: EditText
     private val clearSearchButton: View
@@ -92,6 +97,7 @@ class DrawerView @JvmOverloads constructor(
         )
         list = findViewById(R.id.drawer_list)
         list.layoutManager = GridLayoutManager(context, GridCanvas.COLUMNS)
+        appNames = GridAppNames(list)
         list.adapter = adapter
         installDrawerFlingToClose()
 

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -27,6 +28,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -65,6 +67,8 @@ internal fun SettingsScreen(
     onSetDefaultHome: () -> Unit,
     themeMode: ThemeMode,
     onThemeSelected: (ThemeMode) -> Unit,
+    showAppNames: Boolean,
+    onShowAppNamesChanged: (Boolean) -> Unit,
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.menu_launcher_settings)) }) },
@@ -81,6 +85,8 @@ internal fun SettingsScreen(
                 DefaultLauncherSetup(defaultHome, onSetDefaultHome)
                 HorizontalDivider(Modifier.padding(vertical = 24.dp))
                 ThemeSettings(themeMode, onThemeSelected)
+                Spacer(Modifier.height(8.dp))
+                AppNamesSetting(showAppNames, onShowAppNamesChanged)
                 HorizontalDivider(Modifier.padding(vertical = 24.dp))
                 AboutContent(versionName)
             }
@@ -113,6 +119,18 @@ private fun ThemeSettings(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
             )
         }
     }
+}
+
+@Composable
+private fun AppNamesSetting(visible: Boolean, onVisibilityChanged: (Boolean) -> Unit) {
+    ListItem(
+        headlineContent = { Text(stringResource(R.string.settings_show_app_names)) },
+        supportingContent = { Text(stringResource(R.string.settings_show_app_names_detail)) },
+        trailingContent = { Switch(checked = visible, onCheckedChange = null) },
+        modifier = Modifier
+            .settingsFocusRing(radius = 12.dp)
+            .toggleable(value = visible, role = Role.Switch, onValueChange = onVisibilityChanged),
+    )
 }
 
 @Composable

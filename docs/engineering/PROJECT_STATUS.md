@@ -41,6 +41,7 @@ exercised; everything else is source-verified only.
 | Persistence | Room `vesna-launcher.db`, schema version 4. The 3→4 migration adds stable workspace page IDs without changing the dock or existing cells. | Production Room migrated a copy of the signed 0.4.2 database on API 35 with all 18 placements, the folder, and the seeding flag intact. See [ADR-PAGE-1](../adr/0001-workspace-page-identity.md). Historical API 35 migration and reboot evidence is in [VESNA-QA-004](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done). |
 | Settings / About | Vesna Settings opens from the app icon and offers Android default-launcher setup above the version, license, and source link. | See [Default launcher setup](#default-launcher-setup) for Android 8 and 15 emulator verification. |
 | Appearance (unreleased) | **Vesna settings → Theme** offers System, Light and Dark. Vesna saves the mode locally and applies it to Settings and native launcher surfaces independently of the wallpaper. | See [Appearance](#appearance) for Android 8 and 15 emulator verification. |
+| App names (unreleased) | **Vesna settings → Show app names** hides or restores app labels on Home, in the dock, in the drawer, and in folders. Folder titles, accessible app names, and icon positions stay the same. | See [App names](#app-names) for Android 8 and 15 emulator verification. |
 
 **Explicitly not implemented:** widgets, icon packs, fuzzy search, drawer
 search-result match highlighting, search beyond substring. The Android manifest
@@ -266,6 +267,24 @@ surface text color.
 - Debug APKs built, lint passed, and `DrawerSearchTest` passed on both
   emulators. Physical devices, TalkBack speech, work-profile badges, and a
   bright/busy wallpaper matrix were not rerun for this change.
+
+### App names
+
+Turn **Show app names** off in Vesna Settings to hide app labels. The choice
+survives restarts and defaults to on. It does not rename apps, change drawer
+search, or hide user-created folder titles.
+
+- Android 8 and 15 retained the same Home activity, icon and touch-target bounds,
+  accessible app names, and saved placements after toggling. Android 8 kept
+  labels off after a process restart and launched Clock from an unlabeled result.
+- On Android 15, both folder members kept their accessible names with labels
+  hidden. Restoring labels kept an active drawer query and updated the results
+  and additional tiles brought into view by scrolling.
+- Checked the switch in Light and Dark, 320 dp and 610 dp, English and Russian,
+  up to 200% text, plus RTL alignment and visible keyboard focus with D-pad
+  activation. Android 15 used gesture and three-button navigation. Debug lint
+  and `DrawerSearchTest` passed; TalkBack speech and physical devices were not
+  checked.
 
 ## Where to go next
 

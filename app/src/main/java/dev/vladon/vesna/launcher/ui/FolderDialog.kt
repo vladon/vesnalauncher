@@ -33,11 +33,17 @@ class FolderDialog(
 
     private val dialog: AlertDialog
     private val adapter: FolderContentsAdapter
+    private val appNames: GridAppNames
     private var currentTitle: String = folder.title
+
+    internal var showAppNames: Boolean
+        get() = appNames.visible
+        set(value) { appNames.visible = value }
 
     init {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_folder, null)
         val list = view.findViewById<RecyclerView>(R.id.folder_list)
+        appNames = GridAppNames(list)
         list.layoutManager = GridLayoutManager(context, GRID_COLUMNS)
         adapter = FolderContentsAdapter(
             onItemClick = onLaunch,

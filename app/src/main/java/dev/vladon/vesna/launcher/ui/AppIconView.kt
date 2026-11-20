@@ -44,6 +44,11 @@ class AppIconView @JvmOverloads constructor(
         labelView.background = null
     }
 
+    internal fun setAppNameVisible(visible: Boolean) {
+        // Keep the label's space so neither the artwork nor the touch target moves.
+        labelView.visibility = if (visible) VISIBLE else INVISIBLE
+    }
+
     fun bind(app: LauncherApp) {
         bindContent(
             icon = freshDrawable(app.icon),

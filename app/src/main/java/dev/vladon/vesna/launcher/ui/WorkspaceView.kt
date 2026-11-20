@@ -65,6 +65,16 @@ class WorkspaceView @JvmOverloads constructor(
     private val cellVPadPx = (4 * density).toInt()
 
     private var boundContent: Map<Int, CellContent> = emptyMap()
+    internal var showAppNames = true
+        set(value) {
+            if (field == value) return
+            field = value
+            for (index in 0 until childCount) {
+                val view = getChildAt(index) as AppIconView
+                if (boundContent[view.tag as Int] is CellContent.App) view.setAppNameVisible(value)
+            }
+        }
+
     private var lastCellW = 0
     private var lastCellH = 0
 
@@ -263,6 +273,7 @@ class WorkspaceView @JvmOverloads constructor(
             when (content) {
                 is CellContent.App -> {
                     view.bind(content.app)
+                    view.setAppNameVisible(showAppNames)
                     view.setOnClickListener { onAppClick?.invoke(content.app) }
                     view.setOnLongClickListener { anchor ->
                         beginDrag(cell, content.app, anchor)
@@ -276,6 +287,8 @@ class WorkspaceView @JvmOverloads constructor(
                         label = content.folder.title,
                         description = content.folder.title,
                     )
+                    // A tile reused from an app still needs to show the folder's own name.
+                    view.setAppNameVisible(true)
                     view.setOnClickListener { onCellClick?.invoke(content) }
                     view.setOnLongClickListener { anchor ->
                         longPressed = true

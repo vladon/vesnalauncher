@@ -17,15 +17,18 @@ import dev.vladon.vesna.launcher.VesnaApplication
 
 /** The app entry point for default launcher setup, appearance, and About. */
 class SettingsActivity : ComponentActivity() {
+    private lateinit var appearance: AppearancePreferences
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
+    private var showAppNames by mutableStateOf(true)
     private var setupIntent: Intent? = null
     private val homeRequest =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { refreshDefaultHome() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        themeMode = ThemeMode.read(this)
+        appearance = AppearancePreferences(this)
+        readAppearance()
         enableEdgeToEdge()
         val version = readVersionName()
         setContent {
@@ -43,6 +46,8 @@ class SettingsActivity : ComponentActivity() {
                     onSetDefaultHome = ::requestDefaultHome,
                     themeMode = themeMode,
                     onThemeSelected = ::selectTheme,
+                    showAppNames = showAppNames,
+                    onShowAppNamesChanged = ::changeAppNameVisibility,
                 )
             }
         }
@@ -50,14 +55,24 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        themeMode = ThemeMode.read(this)
+        readAppearance()
         refreshDefaultHome()
+    }
+
+    private fun readAppearance() {
+        themeMode = appearance.themeMode
+        showAppNames = appearance.showAppNames
     }
 
     private fun selectTheme(mode: ThemeMode) {
         if (mode == themeMode) return
-        ThemeMode.save(this, mode)
+        appearance.themeMode = mode
         themeMode = mode
+    }
+
+    private fun changeAppNameVisibility(visible: Boolean) {
+        appearance.showAppNames = visible
+        showAppNames = visible
     }
 
     private fun refreshDefaultHome() {

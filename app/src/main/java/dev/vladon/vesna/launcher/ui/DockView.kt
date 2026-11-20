@@ -29,6 +29,15 @@ class DockView @JvmOverloads constructor(
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
 
+    internal var showAppNames = true
+        set(value) {
+            if (field == value) return
+            field = value
+            for (index in 0 until childCount) {
+                (getChildAt(index) as AppIconView).setAppNameVisible(value)
+            }
+        }
+
     /** The user lifted a dock icon by long-pressing it; a drag session has begun. */
     var onDragStarted: ((pin: DockPin, anchor: View) -> Unit)? = null
 
@@ -145,6 +154,7 @@ class DockView @JvmOverloads constructor(
             val view = AppIconView(context)
             view.layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
             view.bind(app)
+            view.setAppNameVisible(showAppNames)
             view.setOnClickListener { onAppClick?.invoke(app) }
             view.setOnLongClickListener { anchor ->
                 beginDrag(pin, anchor)

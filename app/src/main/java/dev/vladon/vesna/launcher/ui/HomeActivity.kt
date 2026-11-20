@@ -27,6 +27,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
@@ -74,7 +75,9 @@ class HomeActivity : ComponentActivity() {
     private var folderDialog: FolderDialog? = null
     private var folderDialogJob: Job? = null
     private var renderedState = LauncherUiState()
+    private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
+    private var showAppNames = true
 
     private val controller
         get() = VesnaApplication.graph(this).controller
@@ -89,7 +92,8 @@ class HomeActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     override fun attachBaseContext(newBase: Context) {
-        themeMode = ThemeMode.read(newBase)
+        appearance = AppearancePreferences(newBase)
+        themeMode = appearance.themeMode
         val night = themeMode.nightOverride
         // Override only the night bits; locale, density and other changes still come from Android.
         val context = if (night == null) newBase else newBase.createConfigurationContext(
@@ -107,6 +111,7 @@ class HomeActivity : ComponentActivity() {
         workspace = findViewById(R.id.workspace)
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
+        applyAppNameVisibility(appearance.showAppNames)
         homeContent = findViewById(R.id.home_content)
         homeControls = findViewById(R.id.home_controls)
         openDrawerButton = findViewById(R.id.home_open_drawer)
@@ -198,13 +203,26 @@ class HomeActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         // Settings can change the preference while Home is on the back stack.
-        if (ThemeMode.read(this) != themeMode) recreate()
+        if (appearance.themeMode != themeMode) {
+            recreate()
+            return
+        }
+        applyAppNameVisibility(appearance.showAppNames)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Pressing HOME while the drawer is open closes it.
         drawer.close()
+    }
+
+    private fun applyAppNameVisibility(visible: Boolean) {
+        if (showAppNames == visible) return
+        showAppNames = visible
+        workspace.showAppNames = visible
+        dock.showAppNames = visible
+        drawer.showAppNames = visible
+        folderDialog?.showAppNames = visible
     }
 
     private fun render(state: LauncherUiState) {
@@ -402,6 +420,7 @@ class HomeActivity : ComponentActivity() {
                 folderDialog = null
             },
         )
+        dialog.showAppNames = showAppNames
         folderDialog = dialog
         folderDialogJob = lifecycleScope.launch {
             controller.state.collect { state ->

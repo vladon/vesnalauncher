@@ -12,6 +12,8 @@
     <string name="settings_theme_system">System</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
+    <string name="settings_show_app_names">Show app names</string>
+    <string name="settings_show_app_names_detail">On Home, in the dock, in the app drawer, and in folders</string>
 
     <!-- Workspace / dock context menus -->
     <string name="menu_add_to_workspace">Add to workspace</string>
