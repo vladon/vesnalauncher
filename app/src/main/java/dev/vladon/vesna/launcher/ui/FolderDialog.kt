@@ -6,9 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
@@ -44,6 +47,7 @@ internal class FolderDialog(
 ) {
 
     private val host = ComposeView(context)
+    private val launchFailureSnackbar = SnackbarHostState()
     private val list = LayoutInflater.from(context).inflate(R.layout.dialog_folder, null) as FolderGridView
     private val appNames = GridAppNames(list)
     private val adapter = FolderContentsAdapter(
@@ -66,7 +70,12 @@ internal class FolderDialog(
                 AlertDialog(
                     onDismissRequest = ::dismiss,
                     title = { Text(currentTitle, maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                    text = { AndroidView(factory = { list }, modifier = Modifier.fillMaxWidth()) },
+                    text = {
+                        Column {
+                            AndroidView(factory = { list }, modifier = Modifier.fillMaxWidth().weight(1f, fill = false))
+                            SnackbarHost(launchFailureSnackbar)
+                        }
+                    },
                     confirmButton = {
                         TextButton(onClick = onRename) { Text(stringResource(R.string.folder_rename)) }
                     },
@@ -88,6 +97,10 @@ internal class FolderDialog(
         val parent = host.parent as? ViewGroup ?: return
         parent.removeView(host)
         onDismissed()
+    }
+
+    suspend fun showLaunchFailure(message: String) {
+        launchFailureSnackbar.showSnackbar(message)
     }
 
     fun update(state: LauncherUiState) {

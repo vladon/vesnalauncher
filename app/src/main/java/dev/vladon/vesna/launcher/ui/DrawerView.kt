@@ -33,7 +33,7 @@ class DrawerView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : ViewGroup(context, attrs) {
 
-    var onAppClick: ((LauncherApp) -> Unit)? = null
+    var onAppClick: ((LauncherApp) -> Boolean)? = null
     internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
     /** Long-press on a drawer item arms a drag from the drawer (drag layer drives). */
@@ -213,8 +213,7 @@ class DrawerView @JvmOverloads constructor(
     }
 
     private fun launchApp(app: LauncherApp) {
-        hideKeyboard()
-        onAppClick?.invoke(app)
+        if (onAppClick?.invoke(app) == true) hideKeyboard()
     }
 
     private fun hideKeyboard() {

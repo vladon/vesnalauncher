@@ -48,6 +48,7 @@
     <string name="toast_no_move_destination">Free a space on another home page first</string>
     <string name="toast_move_destination_full">That home page is full</string>
     <string name="toast_move_unavailable">This move is no longer available</string>
+    <string name="app_launch_failed">Could not open the app</string>
     <string name="toast_app_info_unavailable">App info is unavailable</string>
     <string name="toast_dock_full">The dock is full</string>
 

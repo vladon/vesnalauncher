@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
@@ -14,7 +15,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -80,6 +92,8 @@ class HomeActivity : ComponentActivity() {
     private var folderDialog: FolderDialog? = null
     private data class FolderRename(val folderId: Long, val host: ComposeView)
     private var folderRename: FolderRename? = null
+    private var launchFailure: Job? = null
+    private val launchFailureSnackbar by lazy { createLaunchFailureSnackbar() }
     private var renderedState = LauncherUiState()
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
@@ -139,7 +153,7 @@ class HomeActivity : ComponentActivity() {
         val graph = VesnaApplication.graph(this)
         val controller = graph.controller
 
-        workspace.onAppClick = { controller.launch(it) }
+        workspace.onAppClick = { launchApp(it) }
         workspace.onAppOptions = { cell, app, anchor ->
             showWorkspaceItemMenu(anchor, app, cell, renderedState.activePageId)
         }
@@ -159,7 +173,7 @@ class HomeActivity : ComponentActivity() {
             onDragReleased(Container.WORKSPACE, x, y, moved, cancelled, app, anchor)
         }
 
-        dock.onAppClick = { controller.launch(it) }
+        dock.onAppClick = { launchApp(it) }
         dock.onAppOptions = { pin, anchor -> showDockItemMenu(anchor, pin.app, pin.id) }
         dock.onDragStarted = { pin, _ ->
             dragSource = DragSource(
@@ -172,7 +186,7 @@ class HomeActivity : ComponentActivity() {
             onDragReleased(Container.DOCK, x + dock.left, y + dock.top, moved, cancelled, app, anchor)
         }
 
-        drawer.onAppClick = { controller.launch(it) }
+        drawer.onAppClick = ::launchApp
         drawer.onItemOptions = { app, anchor -> showDrawerItemMenu(anchor, app, renderedState.activePageId) }
         drawer.onItemDragStarted = { app, _ ->
             dragSource = DragSource(app, Container.WORKSPACE, -1, renderedState.activePageId, fromDrawer = true)
@@ -228,9 +242,15 @@ class HomeActivity : ComponentActivity() {
         applyAppNameVisibility(appearance.showAppNames)
     }
 
+    override fun onStop() {
+        launchFailure?.cancel()
+        super.onStop()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
+            launchFailure?.cancel()
             pendingPageMenu?.cancel()
             pendingPageMenu = null
             activePopup?.dismiss()
@@ -472,13 +492,16 @@ class HomeActivity : ComponentActivity() {
         val dialog = FolderDialog(
             context = this,
             folder = folder,
-            onLaunch = { controller.launch(it) },
+            onLaunch = { launchApp(it) },
             onAppInfo = { controller.openAppInfo(it) },
             onRemoveFromFolder = { controller.removeFromFolder(it, folder.id) },
             onRename = { promptFolderRename(folder.id) },
             onRemoveFolder = { controller.removeFolder(folder.id) },
             onShowPopup = ::showPopup,
-            onDismissed = { folderDialog = null },
+            onDismissed = {
+                launchFailure?.cancel()
+                folderDialog = null
+            },
         )
         dialog.showAppNames = showAppNames
         folderDialog = dialog
@@ -562,6 +585,43 @@ class HomeActivity : ComponentActivity() {
         fromDrawer -> FolderDropSource.Drawer
         container == Container.WORKSPACE -> FolderDropSource.Workspace(fromCell)
         else -> FolderDropSource.Dock(dockPinId)
+    }
+
+    private fun launchApp(app: LauncherApp): Boolean {
+        if (controller.launch(app)) return true
+        launchFailure?.cancel()
+        val folder = folderDialog
+        val message = getString(R.string.app_launch_failed)
+        launchFailure = lifecycleScope.launch {
+            if (folder != null) folder.showLaunchFailure(message)
+            else launchFailureSnackbar.showSnackbar(message)
+        }
+        return false
+    }
+
+    private fun createLaunchFailureSnackbar(): SnackbarHostState {
+        val state = SnackbarHostState()
+        val host = ComposeView(this)
+        // Draw after the elevated drawer without adding a shadow to the host.
+        host.translationZ = drawer.elevation
+        host.setContent {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(8.dp),
+                    contentAlignment = Alignment.BottomCenter,
+                ) {
+                    SnackbarHost(state)
+                }
+            }
+        }
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM,
+        )
+        findViewById<LauncherDragLayer>(R.id.launcher_root).addView(host, params)
+        ViewCompat.requestApplyInsets(host)
+        return state
     }
 
     private fun showMessage(message: LauncherMessage) {

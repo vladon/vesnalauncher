@@ -5,11 +5,14 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.apps.AppKey
+import dev.vladon.vesna.launcher.apps.LauncherApp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -78,6 +81,54 @@ class ShortcutActionsTest {
             home.onActivity { assertSame(original, it) }
         }
     }
+
+    @Test
+    fun rejectedDrawerLaunchAnnouncesFailureAndKeepsTheSearchEditable() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        // Present a stale drawer result without installing or disabling any package.
+        // The actual Home click handler still calls Android to start the activity.
+        val stale = LauncherApp(AppKey("dev.vladon.qa.missing", "dev.vladon.qa.missing.Main"), "Stale app")
+        ActivityScenario.launch(HomeActivity::class.java).use { home ->
+            home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+            assertTrue("The installed app list did not load", until {
+                var catalogueLoaded = false
+                home.onActivity {
+                    catalogueLoaded = it.findViewById<RecyclerView>(R.id.drawer_list).childCount > 0
+                }
+                catalogueLoaded
+            })
+            home.onActivity { activity ->
+                val drawer = activity.findViewById<DrawerView>(R.id.drawer)
+                val search = drawer.findViewById<EditText>(R.id.drawer_search)
+                drawer.submitApps(listOf(stale))
+                search.setText(stale.label)
+                assertTrue(search.requestFocus())
+            }
+            assertTrue("The stale result was not displayed", until {
+                var shown = false
+                home.onActivity {
+                    val tile = it.findViewById<RecyclerView>(R.id.drawer_list).getChildAt(0)
+                    shown = tile?.contentDescription == stale.label
+                }
+                shown
+            })
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_ENTER)
+            val message = instrumentation.targetContext.getString(R.string.app_launch_failed)
+            assertTrue("Launch failure message was not visible to accessibility", until {
+                automation.rootInActiveWindow?.hasVisibleText(message) == true
+            })
+            home.onActivity { activity ->
+                val search = activity.findViewById<EditText>(R.id.drawer_search)
+                assertTrue(search.isShown && search.hasFocus())
+                assertEquals(stale.label, search.text.toString())
+            }
+        }
+    }
+
+    private fun AccessibilityNodeInfo.hasVisibleText(expected: String): Boolean =
+        (isVisibleToUser && text?.toString() == expected) ||
+            (0 until childCount).any { getChild(it)?.hasVisibleText(expected) == true }
 
     private fun until(predicate: () -> Boolean): Boolean {
         val deadline = SystemClock.uptimeMillis() + 5_000

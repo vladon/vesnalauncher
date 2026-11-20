@@ -113,12 +113,11 @@ class LauncherController(
         }
     }
 
-    fun launch(app: LauncherApp) {
-        if (!appLauncher.launch(app)) {
-            // The icon was stale (app disabled/removed since the last discovery);
-            // recover the list instead of leaving a dead icon around.
-            scope.launch { refresh() }
-        }
+    internal fun launch(app: LauncherApp): Boolean {
+        if (appLauncher.launch(app)) return true
+        // A package change may have made the tile stale. Refresh the catalogue.
+        scope.launch { refresh() }
+        return false
     }
 
     internal fun openAppInfo(app: LauncherApp) {

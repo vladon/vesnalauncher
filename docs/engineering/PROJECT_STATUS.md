@@ -382,6 +382,21 @@ keeping the selected workspace page. An unsaved folder name is discarded.
   build and both `ShortcutActionsTest` cases passed after the fix on both
   emulators. Debug lint passed; physical devices were not checked.
 
+### App launch feedback
+
+If Android rejects an app launch, Vesna shows a Material snackbar and refreshes
+the app list. In the drawer, the search query, focus, and open keyboard stay in
+place. If launched from a folder, feedback appears inside the open dialog.
+
+- On Android 8 (Dark, 320 dp, 2× text, three-button navigation) and Android 15
+  (Light, 1.3× text, gesture navigation), pressing Enter on a stale search
+  result showed accessible feedback above the keyboard without clearing the
+  query or closing the keyboard. The successful Enter path still opened the app.
+- On Android 15, a rejected folder launch displayed feedback alongside the
+  folder contents and kept the rename and remove buttons visible.
+  Debug lint passed. TalkBack speech, Russian and RTL rendering, and physical
+  devices were not checked.
+
 ### App drawer access
 
 The Home and drawer buttons are 48 dp targets. The Home button is available on
