@@ -11,10 +11,14 @@ purchases, and no commercial analytics or tracking SDKs — and it never will.
 
 ## Features
 
-### Unreleased
+### 0.4.3 (unreleased)
 
 - Workspace pages now have stable IDs in storage. Existing layouts migrate to
   the default page without moving pins; the launcher still shows one page.
+- Drag or remove a shortcut without affecting another copy of the same app.
+  This covers the workspace, dock, and drops into folders.
+- Drop apps from the drawer onto another app to create a folder, or onto a
+  folder to add them. Existing workspace and dock shortcuts stay put.
 
 ### 0.4.2
 

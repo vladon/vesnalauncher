@@ -154,6 +154,14 @@ list means it was not performed, nothing more.
 - The last published release is `0.4.2` (version code 7, Room schema 3).
   The signed [0.4.1 → 0.4.2 upgrade](verification/VESNA-QA-0.4.2-UPGRADE.md)
   preserved all workspace, dock, and folder data on Android 15.
+- The local `0.4.3` candidate (version code 8, Room schema 4) passed 41 JVM
+  tests and all 29 instrumentation tests on each of two dedicated emulators:
+  Android 8/API 26 (`Vesna_Release_043_API26_QA`, fresh install) and Android
+  15/API 35 (`Vesna_Pages_V4_QA`). Home rendered on both. On API 35, the debug
+  candidate migrated a copy of the signed 0.4.2 database, preserving all 18
+  placements, the folder and its members, and the seeding flag. Lint reported
+  0 errors and 20 warnings. The minified release APK was built unsigned;
+  its package, version, and ZIP alignment were checked locally.
 
 ## Where to go next
 
