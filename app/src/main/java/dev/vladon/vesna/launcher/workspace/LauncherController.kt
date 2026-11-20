@@ -11,13 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import dev.vladon.vesna.launcher.apps.LauncherApp
-import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
@@ -68,41 +68,58 @@ class LauncherController(
         val byKey = apps.associateBy { it.key }
     }
 
+    private class LayoutProjection(
+        val catalogue: AppCatalogue,
+        val items: List<WorkspaceItem>,
+        val folders: List<Folder>,
+    ) {
+        val dock = WorkspaceResolver.dockLayout(items, catalogue.byKey)
+        val foldersById = folders.associateBy { it.id }
+        val folderContents = WorkspaceResolver.folderContents(items, catalogue.byKey)
+    }
+
     private val appCatalogue = MutableStateFlow(AppCatalogue(emptyList()))
 
     /** The selected page ID; stale IDs on startup resolve to the primary page. */
     private val _activePageId = MutableStateFlow(workspaceRepository.savedActivePageId())
 
-    /** Shared page list so [state] and [createWorkspacePage] observe the same emissions. */
-    private val pages: StateFlow<List<WorkspacePageEntity>> =
-        workspaceRepository.pages.stateIn(scope, SharingStarted.Eagerly, emptyList())
+    /** Shared page order so [state] and [createWorkspacePage] observe the same IDs. */
+    private val pageIds = workspaceRepository.pages
+        .map { pages -> pages.map { it.id } }
+        .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     private val _messages = MutableSharedFlow<LauncherMessage>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
 
+    // Page navigation changes the grid, not the global dock or saved folder contents.
+    private val layout = combine(
+        appCatalogue,
+        workspaceRepository.items,
+        workspaceRepository.folders,
+        ::LayoutProjection,
+    )
+
     val state: StateFlow<LauncherUiState> =
-        combine<AppCatalogue, List<WorkspaceItem>, List<Folder>, List<WorkspacePageEntity>, Long, LauncherUiState>(
-            appCatalogue,
-            workspaceRepository.items,
-            workspaceRepository.folders,
-            pages,
-            _activePageId,
-        ) { catalogue, items, folders, pageList, activePageId ->
+        combine(layout, pageIds, _activePageId) { layout, orderedIds, activePageId ->
             // The stored ID can outlive a deleted page if the process stopped
             // between the Room write and the preference update.
-            val selection = pageList.firstOrNull { it.id == activePageId }?.id
-                ?: pageList.firstOrNull()?.id
-                ?: DEFAULT_WORKSPACE_PAGE_ID
+            val selection = if (activePageId in orderedIds) {
+                activePageId
+            } else {
+                orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
+            }
             LauncherUiState(
-                apps = catalogue.apps,
-                workspaceCells = WorkspaceResolver.workspaceCells(items, catalogue.byKey, folders, selection),
-                dock = WorkspaceResolver.dockLayout(items, catalogue.byKey),
-                folders = folders.associateBy { it.id },
-                folderContents = WorkspaceResolver.folderContents(items, catalogue.byKey),
-                pageIds = pageList.map { it.id },
+                apps = layout.catalogue.apps,
+                workspaceCells = WorkspaceResolver.workspaceCells(
+                    layout.items, layout.catalogue.byKey, layout.folders, selection,
+                ),
+                dock = layout.dock,
+                folders = layout.foldersById,
+                folderContents = layout.folderContents,
+                pageIds = orderedIds,
                 activePageId = selection,
                 canRemoveActivePage = selection != DEFAULT_WORKSPACE_PAGE_ID &&
-                    items.none { it.pageId == selection } && folders.none { it.pageId == selection },
+                    layout.items.none { it.pageId == selection } && layout.folders.none { it.pageId == selection },
             )
         }.stateIn(scope, SharingStarted.Eagerly, LauncherUiState())
 
@@ -134,7 +151,7 @@ class LauncherController(
         scope.launch {
             pageActionMutex.withLock {
                 val pageId = workspaceRepository.createPage() ?: return@withLock
-                pages.first { pageList -> pageList.any { it.id == pageId } }
+                pageIds.first { pageId in it }
                 if (workspaceRepository.selectPage(pageId)) _activePageId.value = pageId
             }
         }

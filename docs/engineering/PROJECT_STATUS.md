@@ -650,6 +650,28 @@ profile.
   on both emulators; Android 15 also retained dock and folder order across page
   switches. The regression used simulated profile entries, not a live Work profile.
 
+### Reuse dock and folder projections during page switches
+
+Home page selection updates the grid without rebuilding the dock or folder
+contents. Changes to the saved layout or installed apps still refresh those
+surfaces.
+
+- In a two-page fixture with four dock shortcuts and twelve three-member
+  folders, ten switches previously rebuilt 40 dock shortcuts, 360 folder
+  shortcuts, and ten folder lookup maps. The new build rebuilt none of those
+  objects on Android 8 and 15. The probe counted rebuilt objects, not
+  end-to-end latency.
+- Five focused page and catalogue tests passed on both versions, including
+  hidden and restored Work shortcuts without changing saved placements.
+  Debug lint passed.
+- On Android 15 in Light at 130% text, dock order and positions stayed fixed
+  through two round trips between Home pages, and the folder reopened with
+  Drive and Files in the original order. On Android 8 in Dark at 200% text,
+  creating and removing a temporary page preserved the dock, and keyboard
+  navigation kept focus on an enabled, named page control. Original layouts
+  and settings were restored. TalkBack and physical-device timing were not
+  tested.
+
 ### Dock reordering in RTL
 
 Dock drag targets now use the same padded columns and layout direction as
