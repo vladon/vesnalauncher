@@ -68,6 +68,10 @@ Derived from `observations/widgets.md` and settings inventory
 - R-WIDGET-101.2: Widget min/max sizes are respected.
 - R-WIDGET-101.3: Optional overlap-while-resizing behavior per setting.
 - R-WIDGET-101.4: Widget corners follow the configurable corner radius.
+- R-WIDGET-101.5: Resize mode entry shows an explicit settings affordance
+  (Nova pairs the handles with an edit affordance and a "Tap to change
+  widget settings" toast) — placement-time discovery of widget settings
+  without a long-press.
 
 ## WIDGET-102 — Widget popup and removal with undo
 

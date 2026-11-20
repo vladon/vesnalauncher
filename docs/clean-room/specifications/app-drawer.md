@@ -57,6 +57,11 @@ behavior, not Vesna requirements (Vesna is ad-free by product definition).
 - R-DRAWER-101.3: Optional web suggestion rows; each opens the external
   service.
 - R-DRAWER-101.4: "Limit apps to one row" caps app result rows when enabled.
+- R-DRAWER-101.5 (label-order rule): grid dimension labels read consistently
+  — Nova reads its drawer "6 ✕ 5" as ROWS × COLUMNS while its desktop grid
+  label "6 ✕ 5" renders 6 COLUMNS — the same notation meant opposite things
+  on two adjacent settings pages (OBS-DOCK-003). Vesna uses one explicit
+  notation everywhere (e.g. "6 columns × 5 rows"), never a bare A ✕ B.
 
 ## DRAWER-102 — Drawer closing
 

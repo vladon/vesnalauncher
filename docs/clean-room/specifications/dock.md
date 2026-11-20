@@ -48,6 +48,13 @@ approved inventory-derived structure plus verified rendering.
 - R-DOCK-100.7: Optional dock background plate with style options.
 - R-DOCK-100.8: Overlay presentation mode with auto-close and
   position-remembering options for dock-toggle workflows.
+- R-DOCK-100.11: The dock stays FIXED while workspace pages swipe — page
+  navigation never moves or hides the dock (verified with a single dock
+  page; multi-page docks scroll only via their own page gesture).
+- R-DOCK-100.12: When "display as overlay" is on without a toggle gesture,
+  the "automatically close on app launch" option is disabled (greyed with
+  its best-with-gesture subtitle) — dependent options must visibly explain
+  their dependency.
 - R-DOCK-100.9: Dock contents and configuration persist across launcher
   restarts (workspace-level persistence verified; dock-specific state must
   survive identically).
