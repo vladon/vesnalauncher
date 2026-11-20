@@ -1,7 +1,9 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -25,6 +27,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
 import dev.vladon.vesna.launcher.workspace.Folder
@@ -71,6 +74,7 @@ class HomeActivity : ComponentActivity() {
     private var folderDialog: FolderDialog? = null
     private var folderDialogJob: Job? = null
     private var renderedState = LauncherUiState()
+    private lateinit var themeMode: ThemeMode
 
     private val controller
         get() = VesnaApplication.graph(this).controller
@@ -84,9 +88,20 @@ class HomeActivity : ComponentActivity() {
     private val defaultHomeRequest =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
+    override fun attachBaseContext(newBase: Context) {
+        themeMode = ThemeMode.read(newBase)
+        val night = themeMode.nightOverride
+        // Override only the night bits; locale, density and other changes still come from Android.
+        val context = if (night == null) newBase else newBase.createConfigurationContext(
+            Configuration().apply { uiMode = night },
+        )
+        super.attachBaseContext(context)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        applySystemBarAppearance(drawerOpened = false)
         setContentView(R.layout.activity_home)
 
         workspace = findViewById(R.id.workspace)
@@ -180,6 +195,12 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Settings can change the preference while Home is on the back stack.
+        if (ThemeMode.read(this) != themeMode) recreate()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Pressing HOME while the drawer is open closes it.
@@ -223,6 +244,7 @@ class HomeActivity : ComponentActivity() {
 
     private fun onDrawerOpenedChanged(opened: Boolean) {
         backCallback.isEnabled = opened
+        applySystemBarAppearance(drawerOpened = opened)
         if (opened) drawerReturnFocus = homeContent.findFocus()
         // The drawer animates over Home, but only the active surface handles
         // keyboard traversal and accessibility navigation.
@@ -235,6 +257,15 @@ class HomeActivity : ComponentActivity() {
             val target = drawerReturnFocus
             drawerReturnFocus = null
             if (target?.isShown != true || !target.requestFocus()) openDrawerButton.requestFocus()
+        }
+    }
+
+    private fun applySystemBarAppearance(drawerOpened: Boolean) {
+        val lightDrawer = drawerOpened &&
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = lightDrawer
+            isAppearanceLightNavigationBars = lightDrawer
         }
     }
 

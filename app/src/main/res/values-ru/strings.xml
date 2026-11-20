@@ -8,6 +8,11 @@
     <string name="settings_default_home_active">Vesna — ваш лаунчер по умолчанию.</string>
     <string name="settings_default_home_unavailable">Android не позволяет выбрать лаунчер на этом устройстве.</string>
 
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_system">Как в системе</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+
     <!-- Меню рабочего стола и дока -->
     <string name="menu_add_to_workspace">Добавить на рабочий стол</string>
     <string name="menu_remove_from_workspace">Убрать с рабочего стола</string>

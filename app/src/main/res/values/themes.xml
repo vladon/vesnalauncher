@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Launcher theme: transparent system bars over the live wallpaper.
-         minSdk 26 (Android 8.0) has native adaptive icons and vector drawables,
-         so a platform theme without AppCompat keeps start-up lean. -->
-    <style name="Theme.Vesna" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Vesna.Platform" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Vesna.Chrome" parent="Theme.Vesna.Platform">
+        <item name="android:colorAccent">@color/workspace_page_primary</item>
+        <item name="android:colorBackgroundFloating">@color/home_control_surface</item>
+    </style>
+
+    <style name="Theme.Vesna.Settings" parent="Theme.Vesna.Chrome">
+        <item name="android:windowBackground">@color/vesna_surface</item>
+    </style>
+
+    <!-- Keep Home transparent over the user's wallpaper in both palettes. -->
+    <style name="Theme.Vesna" parent="Theme.Vesna.Chrome">
         <item name="android:windowShowWallpaper">true</item>
         <item name="android:windowBackground">@color/workspace_scrim</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>

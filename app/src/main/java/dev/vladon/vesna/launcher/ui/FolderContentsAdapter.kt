@@ -1,7 +1,6 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.annotation.SuppressLint
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -17,7 +16,7 @@ class FolderContentsAdapter(
     class Holder(val view: AppIconView) : RecyclerView.ViewHolder(view)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder =
-        Holder(AppIconView(parent.context))
+        Holder(AppIconView(parent.context).apply { useSurfaceLabel() })
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val app = getItem(position)

@@ -41,6 +41,7 @@
         <activity
             android:name=".settings.SettingsActivity"
             android:exported="true"
+            android:theme="@style/Theme.Vesna.Settings"
             android:label="@string/app_name">
 
             <intent-filter>

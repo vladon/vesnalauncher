@@ -2,7 +2,7 @@ package dev.vladon.vesna.launcher.settings
 
 import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,19 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,50 +41,19 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import dev.vladon.vesna.launcher.R
-
-private val VesnaLightScheme = lightColorScheme(
-    primary = Color(0xFF49672E),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFCAEEA6),
-    secondary = Color(0xFF57624A),
-    surface = Color(0xFFF9FAEF),
-    onSurface = Color(0xFF1A1D16),
-    onSurfaceVariant = Color(0xFF44483E),
-    outline = Color(0xFF74796D),
-    outlineVariant = Color(0xFFC4C8BA),
-)
-
-private val VesnaDarkScheme = darkColorScheme(
-    primary = Color(0xFFAFD18C),
-    onPrimary = Color(0xFF1D3703),
-    primaryContainer = Color(0xFF324E18),
-    secondary = Color(0xFFBFCBAE),
-    surface = Color(0xFF11140E),
-    onSurface = Color(0xFFE2E3D9),
-    onSurfaceVariant = Color(0xFFC4C8BA),
-    outline = Color(0xFF8E9286),
-    outlineVariant = Color(0xFF44483E),
-)
-
-@Composable
-fun VesnaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = if (isSystemInDarkTheme()) VesnaDarkScheme else VesnaLightScheme,
-        content = content,
-    )
-}
 
 internal enum class DefaultHomeState { ACTIVE, AVAILABLE, UNAVAILABLE }
 
@@ -92,6 +63,8 @@ internal fun SettingsScreen(
     versionName: String,
     defaultHome: DefaultHomeState,
     onSetDefaultHome: () -> Unit,
+    themeMode: ThemeMode,
+    onThemeSelected: (ThemeMode) -> Unit,
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.menu_launcher_settings)) }) },
@@ -107,8 +80,37 @@ internal fun SettingsScreen(
             ) {
                 DefaultLauncherSetup(defaultHome, onSetDefaultHome)
                 HorizontalDivider(Modifier.padding(vertical = 24.dp))
+                ThemeSettings(themeMode, onThemeSelected)
+                HorizontalDivider(Modifier.padding(vertical = 24.dp))
                 AboutContent(versionName)
             }
+        }
+    }
+}
+
+@Composable
+private fun ThemeSettings(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_theme),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.semantics { heading() },
+    )
+    Spacer(Modifier.height(8.dp))
+    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (choice in ThemeMode.entries) {
+            val selected = choice == mode
+            val label = stringResource(when (choice) {
+                ThemeMode.SYSTEM -> R.string.settings_theme_system
+                ThemeMode.LIGHT -> R.string.settings_theme_light
+                ThemeMode.DARK -> R.string.settings_theme_dark
+            })
+            ListItem(
+                headlineContent = { Text(label) },
+                leadingContent = { RadioButton(selected = selected, onClick = null) },
+                modifier = Modifier
+                    .settingsFocusRing(radius = 12.dp)
+                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
+            )
         }
     }
 }
@@ -132,25 +134,9 @@ private fun DefaultLauncherSetup(state: DefaultHomeState, onSetDefaultHome: () -
     )
     if (state == DefaultHomeState.AVAILABLE) {
         Spacer(Modifier.height(16.dp))
-        var focused by remember { mutableStateOf(false) }
-        val focusColor = MaterialTheme.colorScheme.secondary
         Button(
             onClick = onSetDefaultHome,
-            modifier = Modifier
-                .heightIn(min = 48.dp)
-                .onFocusChanged { focused = it.isFocused }
-                .drawBehind {
-                    if (focused) {
-                        val offset = 3.dp.toPx()
-                        drawRoundRect(
-                            color = focusColor,
-                            topLeft = Offset(-offset, -offset),
-                            size = Size(size.width + 2 * offset, size.height + 2 * offset),
-                            cornerRadius = CornerRadius(size.height / 2 + offset),
-                            style = Stroke(2.dp.toPx()),
-                        )
-                    }
-                },
+            modifier = Modifier.heightIn(min = 48.dp).settingsFocusRing(),
         ) {
             Text(stringResource(R.string.menu_set_default_home), textAlign = TextAlign.Center)
         }
@@ -202,9 +188,28 @@ private fun AboutContent(versionName: String) {
         Spacer(Modifier.height(16.dp))
         OutlinedButton(
             onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, REPOSITORY_URL.toUri())) },
-            modifier = Modifier.heightIn(min = 48.dp),
+            modifier = Modifier.heightIn(min = 48.dp).settingsFocusRing(),
         ) {
             Text(stringResource(R.string.about_github), textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+private fun Modifier.settingsFocusRing(radius: Dp? = null): Modifier {
+    var focused by remember { mutableStateOf(false) }
+    val focusColor = MaterialTheme.colorScheme.secondary
+    return onFocusChanged { focused = it.isFocused }.drawBehind {
+        if (focused) {
+            // The center of the 2 dp stroke is 3 dp outside the control.
+            val offset = 3.dp.toPx()
+            drawRoundRect(
+                color = focusColor,
+                topLeft = Offset(-offset, -offset),
+                size = Size(size.width + 2 * offset, size.height + 2 * offset),
+                cornerRadius = CornerRadius((radius?.toPx() ?: size.height / 2) + offset),
+                style = Stroke(2.dp.toPx()),
+            )
         }
     }
 }

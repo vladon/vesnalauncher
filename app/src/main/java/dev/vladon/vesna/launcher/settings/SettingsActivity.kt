@@ -7,32 +7,57 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.view.WindowCompat
 import dev.vladon.vesna.launcher.VesnaApplication
 
-/** The app entry point for default launcher setup and About. */
+/** The app entry point for default launcher setup, appearance, and About. */
 class SettingsActivity : ComponentActivity() {
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
+    private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var setupIntent: Intent? = null
     private val homeRequest =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { refreshDefaultHome() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        themeMode = ThemeMode.read(this)
         enableEdgeToEdge()
         val version = readVersionName()
         setContent {
-            VesnaTheme {
-                SettingsScreen(versionName = version, defaultHome = defaultHome, onSetDefaultHome = ::requestDefaultHome)
+            val dark = themeMode.isDark(isSystemInDarkTheme())
+            SideEffect {
+                WindowCompat.getInsetsController(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = !dark
+                    isAppearanceLightNavigationBars = !dark
+                }
+            }
+            VesnaTheme(dark = dark) {
+                SettingsScreen(
+                    versionName = version,
+                    defaultHome = defaultHome,
+                    onSetDefaultHome = ::requestDefaultHome,
+                    themeMode = themeMode,
+                    onThemeSelected = ::selectTheme,
+                )
             }
         }
     }
 
     override fun onResume() {
         super.onResume()
+        themeMode = ThemeMode.read(this)
         refreshDefaultHome()
+    }
+
+    private fun selectTheme(mode: ThemeMode) {
+        if (mode == themeMode) return
+        ThemeMode.save(this, mode)
+        themeMode = mode
     }
 
     private fun refreshDefaultHome() {

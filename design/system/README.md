@@ -14,7 +14,7 @@ Vesna Launcher is a fast, free, open-source Android home launcher. Material Desi
 | [App icon exploration board](../vesna_launcher_icon_exploration_board.png) | Off-white field, two-tone V and an independent leaf. | The Android icon uses the simplified C composition for a clear silhouette at launcher size. Waves remain available as a visual motif for optional wallpaper and brand artwork. Android supplies the mask. |
 | [Visual style guide](../vesna_launcher_visual_style_guide.png) | Nunito and Inter, rounded controls, visible drawer search and an 8 dp spacing rhythm. | Fresh Teal is normalized to the branding board's `#2EC6B8`. The style guide shows `#2EC6BB`. The Material 3 type scale, color roles and components define the interface treatments in both themes. |
 
-White on the brand's Spring Green, Fresh Teal and Sky Blue measures 1.48:1, 2.12:1 and 2.12:1 respectively. Use the theme's foreground and container pairs for controls. The concept home screen's clock, weather, Google-branded search bar and decorative Vesna mark are visual references. Sample settings categories and the theme selector describe future UI. The current checkout already contains the workspace, dock, searchable drawer, folders and an About screen. [Product overview](../../PRODUCT.md) · [Launcher UI source](../../app/src/main/java/dev/vladon/vesna/launcher/ui/) · [About screen source](../../app/src/main/java/dev/vladon/vesna/launcher/settings/AboutScreen.kt)
+White on the brand's Spring Green, Fresh Teal and Sky Blue measures 1.48:1, 2.12:1 and 2.12:1 respectively. Use the theme's foreground and container pairs for controls. The concept home screen's clock, weather, Google-branded search bar and decorative Vesna mark are visual references. The current checkout contains the workspace, dock, searchable drawer, folders, and Settings with theme selection and About. [Product overview](../../PRODUCT.md) · [Launcher UI source](../../app/src/main/java/dev/vladon/vesna/launcher/ui/) · [Settings source](../../app/src/main/java/dev/vladon/vesna/launcher/settings/SettingsScreen.kt)
 
 ## Logo
 
@@ -58,7 +58,7 @@ The XML handoff maps to the existing Android manifest resource names. Adaptive i
 
 Leaf Green `#90D442`, Deep Teal `#006D68` and Icon Teal `#128C7D` are artwork stops. Spring waves and gradients belong to optional wallpaper and brand artwork. Use semantic Material roles for Vesna-owned controls and surfaces. Preserve external app icon colors and work-profile badges.
 
-Both branded schemes use Spring Green as the HCT seed in Material Color Utilities 0.3.0, with the Tonal Spot scheme and standard contrast. Primary is green, secondary is a quieter green and tertiary is teal. The default System preference follows Android night mode. Light and Dark override it. The proposed product uses the fixed Vesna schemes for these three modes. Wallpaper-derived UI colors would be a separate product preference. The Android themed app icon follows the host launcher independently. [Material Color Utilities](https://github.com/material-foundation/material-color-utilities) · [Material 3 theming on Android](https://developer.android.com/develop/ui/compose/designsystems/material3)
+Both branded schemes use Spring Green as the HCT seed in Material Color Utilities 0.3.0, with the Tonal Spot scheme and standard contrast. Primary is green, secondary is a quieter green and tertiary is teal. In **Vesna settings → Theme**, the default **System** preference follows Android night mode; **Light** and **Dark** override it with their fixed Vesna palettes. Wallpaper-derived UI colors would be a separate product preference. The Android themed app icon follows the host launcher independently. [Material Color Utilities](https://github.com/material-foundation/material-color-utilities) · [Material 3 theming on Android](https://developer.android.com/develop/ui/compose/designsystems/material3)
 
 ### Material color roles
 
@@ -130,6 +130,8 @@ On arbitrary wallpaper use the Vesna label backing `#18251E` with white text whe
 
 Use the 15 Material roles and the AndroidX baseline metrics with Vesna's font families. Nunito is used for display and headlines. Inter is used for titles, body and labels. Bundle the fonts locally during implementation, include the OFL notices with any redistributed font files and use Android sans-serif for missing families or glyphs.
 
+The bundled files are static Latin and Cyrillic subsets of [Inter from Google Fonts](https://github.com/google/fonts/tree/0b58fb370093f9a9f4ff785d94405710b79de67c/ofl/inter) (weights 400 and 500, optical size 14) and [Nunito from Google Fonts](https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/nunito) (weight 400). The original OFL notices ship in [app assets](../../app/src/main/assets/licenses/).
+
 | Role | Family | Size / line height in sp | Weight | Tracking in sp | Use |
 | --- | --- | --- | --- | --- | --- |
 | `displayLarge` | Nunito | 57 / 64 | 400 | -0.2 | Large brand-led display |
@@ -183,7 +185,7 @@ Use Material component motion defaults. For the custom drawer, track the finger 
 
 - **Home.** Put wallpaper behind the workspace and dock. Preserve saved cell coordinates and spans in the current 4 × 5 layout. Use the Vesna wallpaper label backing where necessary.
 - **App drawer.** Use an opaque Material surface with inset search and a scrollable app grid. Use four columns when 64 dp cells and gutters fit, and reflow at narrower widths. Restore focus by app identity when that app remains visible. If an active drag cannot continue through a layout change, restore the original position.
-- **Settings and About.** Use a small Material app bar, a `surface` canvas and standard list items for available actions. Place the Vesna lockup or mark on About. The Theme and app label controls in the preview illustrate the proposed patterns.
+- **Settings and About.** Use a small Material app bar, a `surface` canvas and standard list items for available actions. Place the Vesna lockup or mark on About. Settings offers a single-select Theme group; the app-label switch shown in the preview is illustrative.
 
 ## Android handoff and acceptance
 

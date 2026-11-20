@@ -40,8 +40,9 @@ exercised; everything else is source-verified only.
 | Package events | `PackageChangeMonitor` uses profile-scoped `LauncherApps` callbacks; disabled apps retain their pins | [VESNA-QA-003A](verification/VESNA-QA-003.md) verified drawer changes after install, update, disable/re-enable, and uninstall. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified work-profile pinning and uninstall. [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall across all three containers. [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disable/re-enable retains placements across a launcher restart. All four records use API 35. |
 | Persistence | Room `vesna-launcher.db`, schema version 4. The 3→4 migration adds stable workspace page IDs without changing the dock or existing cells. | Production Room migrated a copy of the signed 0.4.2 database on API 35 with all 18 placements, the folder, and the seeding flag intact. See [ADR-PAGE-1](../adr/0001-workspace-page-identity.md). Historical API 35 migration and reboot evidence is in [VESNA-QA-004](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done). |
 | Settings / About | Vesna Settings opens from the app icon and offers Android default-launcher setup above the version, license, and source link. | See [Default launcher setup](#default-launcher-setup) for Android 8 and 15 emulator verification. |
+| Appearance (unreleased) | **Vesna settings → Theme** offers System, Light and Dark. Vesna saves the mode locally and applies it to Settings and native launcher surfaces independently of the wallpaper. | See [Appearance](#appearance) for Android 8 and 15 emulator verification. |
 
-**Explicitly not implemented:** widgets, icon packs, manual theme selection, fuzzy search, drawer
+**Explicitly not implemented:** widgets, icon packs, fuzzy search, drawer
 search-result match highlighting, search beyond substring. The Android manifest
 sets `android:allowBackup="true"` (platform default behavior), but a dedicated
 backup/restore feature does not exist; the backup/privacy ADR candidate in
@@ -245,6 +246,26 @@ banner no longer covers shortcuts or consumes grid space.
   610 dp layouts, 1.6× text, English and Russian, right-to-left alignment, and
   scrollable About content. `DrawerSearchTest` passed on both emulators and
   lint reported no errors. TalkBack speech and physical devices were not checked.
+
+### Appearance
+
+**System** follows Android night mode; **Light** and **Dark** use the fixed
+Vesna palettes even when Android uses the opposite mode. The app keeps the
+user's wallpaper, installed app artwork, and workspace layout. Wallpaper labels
+use the design system's dark backing; drawer and folder labels use the active
+surface text color.
+
+- On Android 8 and 15, exercised manual overrides against the opposite Android
+  mode, restored the selected mode after stopping the process, and switched
+  System live from Android Dark to Light. Returning from Settings updated an
+  existing Home on Android 15. Workspace, dock, and folder records were unchanged.
+- Checked the rendered Settings and drawer in both palettes, on compact and
+  wide windows, with enlarged type, English and Russian labels, and RTL layout.
+  On Android 15, verified keyboard focus plus D-pad selection, opaque folder
+  surfaces, and both gesture and three-button navigation.
+- Debug APKs built, lint passed, and `DrawerSearchTest` passed on both
+  emulators. Physical devices, TalkBack speech, work-profile badges, and a
+  bright/busy wallpaper matrix were not rerun for this change.
 
 ## Where to go next
 

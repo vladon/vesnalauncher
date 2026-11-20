@@ -12,7 +12,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
@@ -59,7 +58,7 @@ class DrawerView @JvmOverloads constructor(
 
     init {
         inflate(context, R.layout.view_drawer, this)
-        background = ContextCompat.getDrawable(context, R.color.drawer_background)
+        setBackgroundResource(R.color.vesna_surface)
         elevation = 8 * density
 
         adapter = DrawerAppsAdapter(
