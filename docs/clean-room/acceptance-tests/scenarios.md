@@ -182,3 +182,62 @@ its feature ID. These describe externally observable behavior only.
 - Given an open folder window
 - When the user presses BACK
 - Then the window closes and the workspace is restored
+
+## Cards
+
+### AT-CARDS-100 — Render matrix enforcement
+- Given a configured card with Activate ON and its data permission granted
+- When a name-matching query is typed in the search surface
+- Then the card renders with live data
+- When the card's condition expires, is never satisfied, or becomes
+  satisfied later
+- Then the search-surface render state follows the condition exactly (no
+  stale render, no silent change), and expiry removes the condition row
+- And the plain drawer never renders the card in any condition state
+
+### AT-CARDS-101 — Permission enables the card in one step
+- Given a provider card whose data permission has not been granted
+- When the user grants the runtime permission through the standard dialog
+- Then the card enables immediately with no further connect step
+- And its empty state names the exact missing prerequisite
+
+### AT-CARDS-103 — Custom card lifecycle
+- Given the card builder with a name and at least one action
+- When the user saves
+- Then the card persists in the manager's custom section across restarts
+  and renders for name-matching queries with its action chips
+- And queries matching only an action's target app surface the target app,
+  not the card
+- When the user deletes the card from its details overflow
+- Then it disappears without a confirmation dialog
+
+### AT-CARDS-104 — Builder save gating with reasons
+- Given a builder with only a card name
+- Then Save is disabled with the live reason "Add at least one action to
+  save"
+- When the user attaches an action
+- Then Save enables and the reason disappears
+- When the user dismisses the builder with unsaved changes
+- Then the discard path provably destroys the draft (nothing persists)
+
+### AT-CARDS-105 — Scheduled location surfaces at go-live
+- Given a saved location with a schedule set to a future time and day
+- When that moment arrives
+- Then the location surfaces on the surfaces the schedule copy promises
+- And before the schedule it does not render
+- When the location is deleted
+- Then an undo snackbar appears and the schedule is removed with it
+
+## Drawer groups
+
+### AT-DRAWER-106 — Auto-folders render on enable
+- Given auto-organization generates folders with member apps
+- When the master toggle is turned ON
+- Then every generated folder renders in the drawer grid immediately —
+  no per-folder Enable required
+- And populated folders render labeled with their member apps; empty
+  generated folders do not render at all
+- When any folder's enabled state is changed
+- Then it persists across an app restart
+- And the folder's editor shows its rules and enabled state in one
+  surface

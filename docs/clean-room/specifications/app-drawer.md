@@ -139,3 +139,30 @@ Nova's free edition displays an advertisement banner inside the drawer
 policy is ad-free; no Vesna requirement is derived from this behavior. It is
 recorded because it explains layout space usage in Nova's drawer that Vesna
 will reclaim for content.
+
+## DRAWER-106 — Smart folders and drawer groups (verified)
+
+- Research-verified on Nova 8.9.9 Prime (OBS-DRAWER-112; the complete
+  enable/render/persistence cycle). Nova's management UI is fully
+  functional (tabs + auto-categorized folders with members) but its render
+  path shipped dark-by-default: every auto-generated folder starts
+  PER-FOLDER DISABLED behind a per-item ⋮ ▸ Enable menu; the master
+  "Smart Folders" toggle alone hides all of them. Once enabled, folders
+  render immediately (alphabetical position, live), persist across
+  restarts, and EMPTY folders render as bare unlabeled icons.
+
+### Vesna requirements
+
+- R-DRAWER-106.1: The master toggle is sufficient: ON = every generated
+  folder renders; per-folder granularity lives only in the folder's own
+  editor, never as a hidden second gate (Nova counter-example recorded:
+  seven folders, master ON, zero rendered until each was individually
+  enabled — a discoverability failure, not dead code).
+- R-DRAWER-106.2: First enablement of auto-organization is a first-run
+  choice presented once, surfacing the generated result immediately.
+- R-DRAWER-106.3: Empty generated folders are not rendered (no bare
+  unlabeled icons).
+- R-DRAWER-106.4: Folder/tab enable state persists across restarts
+  (verified pattern).
+- R-DRAWER-106.5: A generated folder's editor exposes its rules and its
+  enabled state in one surface.
