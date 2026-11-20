@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppSearch
 import dev.vladon.vesna.launcher.apps.LauncherApp
-import kotlin.math.ceil
 
 /**
  * Full-height app drawer above Home. Opens by button or swipe-up, and closes
@@ -50,7 +49,7 @@ class DrawerView @JvmOverloads constructor(
         set(value) { appNames.visible = value }
 
     private val list: RecyclerView
-    private val grid = GridLayoutManager(context, MAX_COLUMNS)
+    private val grid = GridLayoutManager(context, MAX_APP_GRID_COLUMNS)
     private val appNames: GridAppNames
     private val closeButton: View
     private val searchBar: View
@@ -330,10 +329,9 @@ class DrawerView @JvmOverloads constructor(
         val content = getChildAt(0)
         val availableWidth = width - content.paddingLeft - content.paddingRight - list.paddingLeft - list.paddingRight
         val density = resources.displayMetrics.density
-        val minCellWidth = ceil(MIN_CELL_WIDTH_DP * density).toInt()
-        val columns = (availableWidth / minCellWidth).coerceIn(1, MAX_COLUMNS)
-        val compact = columns < MAX_COLUMNS
-        if (compact != (grid.spanCount < MAX_COLUMNS)) {
+        val columns = appGridColumnCount(availableWidth, density)
+        val compact = columns < MAX_APP_GRID_COLUMNS
+        if (compact != (grid.spanCount < MAX_APP_GRID_COLUMNS)) {
             searchField.setHint(if (compact) R.string.drawer_search_hint_compact else R.string.drawer_search_hint)
             val sideMargin = ((if (compact) 8 else 16) * density + 0.5f).toInt()
             searchBar.updateLayoutParams<MarginLayoutParams> {
@@ -357,8 +355,6 @@ class DrawerView @JvmOverloads constructor(
         LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
 
     private companion object {
-        const val MIN_CELL_WIDTH_DP = 64
-        const val MAX_COLUMNS = 4
         const val ANIMATION_MS = 250L
         const val MAX_FLING_DURATION_MS = 400L
     }

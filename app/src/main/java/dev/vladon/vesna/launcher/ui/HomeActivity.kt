@@ -39,7 +39,6 @@ import dev.vladon.vesna.launcher.workspace.LauncherUiState
 import dev.vladon.vesna.launcher.workspace.MAX_WORKSPACE_PAGES
 import dev.vladon.vesna.launcher.workspace.PageMoveOptions
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -76,7 +75,6 @@ class HomeActivity : ComponentActivity() {
     private var rootDragMoved = false
     private var drawerReturnFocus: View? = null
     private var folderDialog: FolderDialog? = null
-    private var folderDialogJob: Job? = null
     private data class FolderRename(val folderId: Long, val host: ComposeView)
     private var folderRename: FolderRename? = null
     private var renderedState = LauncherUiState()
@@ -252,6 +250,7 @@ class HomeActivity : ComponentActivity() {
         }
         folderRename?.let { if (it.folderId !in state.folders) dismissFolderRename() }
         renderedState = state
+        folderDialog?.update(state)
         if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
         if (state.dockPins != previous.dockPins) dock.bind(state.dockPins)
         if (state.apps != previous.apps) drawer.submitApps(state.apps)
@@ -455,20 +454,12 @@ class HomeActivity : ComponentActivity() {
             onRemoveFromFolder = { controller.removeFromFolder(it, folder.id) },
             onRename = { promptFolderRename(folder.id) },
             onRemoveFolder = { controller.removeFolder(folder.id) },
-            onDismissed = {
-                folderDialogJob?.cancel()
-                folderDialog = null
-            },
+            onDismissed = { folderDialog = null },
         )
         dialog.showAppNames = showAppNames
         folderDialog = dialog
-        folderDialogJob = lifecycleScope.launch {
-            controller.state.collect { state ->
-                folderDialog?.update(state)
-                if (state.folders[folder.id] == null) folderDialog?.dismiss()
-            }
-        }
-        dialog.show()
+        dialog.show(homeContent, themeMode)
+        dialog.update(renderedState)
     }
 
     private fun showFolderMenu(folder: Folder, anchor: View) {

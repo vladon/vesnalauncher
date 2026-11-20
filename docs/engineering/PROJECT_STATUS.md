@@ -38,7 +38,7 @@ exercised; everything else is source-verified only.
 | Drawer search | Start typing with a keyboard anywhere in the open drawer. Press **Enter** in the search field to open the sole match. Substring search ignores case, repeated spaces, Latin accents and the dots on Russian `ё`, without changing labels or drawer order. **Clear search** restores the grid and returns focus to the field. | See [Keyboard search](#keyboard-search), [Drawer search matching](#drawer-search-matching) and [Drawer search recovery](#drawer-search-recovery). |
 | Drag-and-drop | App pins move across workspace and dock. Folders can be dragged to empty cells on their current Home page. | Android 8 and 15 folder-drag verification; see [Move a folder on the same page](#move-a-folder-on-the-same-page) and [Requirements traceability](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids). |
 | Shortcut options (unreleased) | On a focused app or folder tile, press **Shift+F10** or the **Menu** key. Android accessibility exposes **Shortcut options**. Touch long-press and drag remain available. | See [Shortcut options](#shortcut-options) for Android 8 and 15 emulator verification. |
-| Folders | `Folder` cell and `FolderDialog` for opening and removing members; both rename actions use `FolderRenameDialog` | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover member removal, rollback, and uninstall-driven dissolution. See [Rename a folder](#rename-a-folder) and [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders). |
+| Folders | `Folder` cell and a Material 3 `FolderDialog` with a responsive member grid; both rename actions use `FolderRenameDialog` | `WorkspaceResolverFolderTest` covers the projection. Device and Room tests cover member removal, rollback, and uninstall-driven dissolution. See [Compact folder layouts](#compact-folder-layouts), [Rename a folder](#rename-a-folder), and [Folder verification](REQUIREMENTS_TRACEABILITY.md#folders). |
 | Package events | `PackageChangeMonitor` uses profile-scoped `LauncherApps` callbacks; disabled apps retain their pins | [VESNA-QA-003A](verification/VESNA-QA-003.md) verified drawer changes after install, update, disable/re-enable, and uninstall. [VESNA-QA-003C](verification/VESNA-QA-003C.md) verified work-profile pinning and uninstall. [VESNA-QA-003D](verification/VESNA-QA-003D.md) verified uninstall across all three containers. [VESNA-QA-003F](verification/VESNA-QA-003F.md) verified disable/re-enable retains placements across a launcher restart. All four records use API 35. |
 | Persistence | Room `vesna-launcher.db`, schema version 4. The 3→4 migration adds stable workspace page IDs without changing the dock or existing cells. | Production Room migrated a copy of the signed 0.4.2 database on API 35 with all 18 placements, the folder, and the seeding flag intact. See [ADR-PAGE-1](../adr/0001-workspace-page-identity.md). Historical API 35 migration and reboot evidence is in [VESNA-QA-004](BACKLOG.md#vesna-qa-004-migration-and-restart-verification-done). |
 | Settings / About | Vesna Settings opens from the app icon and offers Android default-launcher setup above the version, license, and source link. | See [Default launcher setup](#default-launcher-setup) for Android 8 and 15 emulator verification. |
@@ -309,6 +309,23 @@ surrounding whitespace; a blank name shows an inline error without closing.
 - One Android 8 run crashed in Android's accessibility-state callback
   during an automated UI dump. Later open, cancel, and save checks on the
   same emulator did not reproduce the crash.
+
+### Compact folder layouts
+
+An open folder uses up to four columns, like the drawer, with at least
+64 dp per cell when space allows. Narrow windows show fewer columns without
+changing the member order. Members scroll independently of the dialog actions.
+
+- Android 8 and 15 showed 64 dp tiles at 240 dp and 200% text, compared
+  with the previous clipped 52 dp tiles. At 210 × 480 dp, the member list
+  scrolled to the last row and both actions stayed visible and usable.
+- Resized an open folder between two, three, and four columns while retaining
+  member order and keyboard focus. Checked member launch, shortcut options,
+  rename, removal, and focus return to the invoking Home tile.
+- Checked Light and Dark at normal and enlarged text, gesture and
+  three-button navigation, and Arabic RTL alignment. The existing drawer
+  resize test passed on both emulators; debug lint passed. TalkBack speech
+  and physical devices were not checked.
 
 ### Home labels at large text sizes
 
