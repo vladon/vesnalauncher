@@ -36,7 +36,7 @@ data class LauncherUiState(
     val workspaceCells: Map<Int, CellContent> = emptyMap(),
     val dock: DockLayout = DockLayout(emptyList(), emptyList()),
     val folders: Map<Long, Folder> = emptyMap(),
-    val folderContents: Map<Long, List<LauncherApp>> = emptyMap(),
+    val folderContents: Map<Long, List<FolderPin>> = emptyMap(),
     /** Workspace page IDs in display order; [activePageId] names the rendered page. */
     val pageIds: List<Long> = emptyList(),
     val activePageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
@@ -203,8 +203,8 @@ class LauncherController(
     }
 
     /** Returns a member of [folderId] to the first free grid cell (dissolves sparse folders). */
-    fun removeFromFolder(app: LauncherApp, folderId: Long) {
-        scope.launch { workspaceRepository.removeFromFolder(app, folderId) }
+    fun removeFromFolder(pinId: Long, folderId: Long) {
+        scope.launch { workspaceRepository.removeFromFolder(pinId, folderId) }
     }
 
     /** Renames a folder. */

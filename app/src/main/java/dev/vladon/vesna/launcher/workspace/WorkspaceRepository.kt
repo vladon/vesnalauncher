@@ -536,22 +536,19 @@ class WorkspaceRepository(
         packageName == key.packageName && className == key.className && userSerial == key.userSerial
 
     /**
-     * Returns a member of [folderId] to the first free grid cell. If the folder
+     * Returns the selected pin of [folderId] to the first free grid cell. If the folder
      * dissolves, its last member returns to the folder cell in the same transaction.
      * Returns false if the folder or membership is missing or the workspace is full.
      */
-    suspend fun removeFromFolder(app: LauncherApp, folderId: Long): Boolean = mutationMutex.withLock {
+    suspend fun removeFromFolder(pinId: Long, folderId: Long): Boolean = mutationMutex.withLock {
         val items = dao.getAll()
-        val entry = items.firstOrNull {
-            it.folderId == folderId && it.packageName == app.key.packageName &&
-                it.className == app.key.className && it.userSerial == app.key.userSerial
-        } ?: return@withLock false
+        if (items.none { it.id == pinId && it.folderId == folderId }) return@withLock false
         val folder = folderDao.getById(folderId) ?: return@withLock false
         val pageId = folder.pageId ?: return@withLock false
         val occupied = occupiedCells(items, folderDao.getAll(), pageId)
         val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
         db.withTransaction {
-            dao.updatePlacement(entry.id, Container.WORKSPACE.name, cell, pageId)
+            dao.updatePlacement(pinId, Container.WORKSPACE.name, cell, pageId)
             dissolveIfSparse(folder.id)
         }
         true

@@ -6,6 +6,9 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 /** A rendered dock tile keeps the ID of its persisted pin. */
 data class DockPin(val id: Long, val app: LauncherApp)
 
+/** A rendered folder tile keeps the ID of its persisted membership. */
+data class FolderPin(val id: Long, val app: LauncherApp)
+
 /** Saved order includes unavailable pins; the visible dock packs the remaining icons. */
 data class DockLayout(val savedOrder: List<Long>, val pins: List<DockPin>) {
     internal fun dropColumn(column: Int, reordering: Boolean): Int? {
@@ -56,16 +59,18 @@ internal object WorkspaceResolver {
         return cells
     }
 
-    /** Apps inside each folder, ordered by their in-folder position. */
+    /** Visible pins inside each folder, ordered by their saved positions. */
     fun folderContents(
         items: List<WorkspaceItem>,
         appsByKey: Map<AppKey, LauncherApp>,
-    ): Map<Long, List<LauncherApp>> {
+    ): Map<Long, List<FolderPin>> {
         return items.asSequence()
             .filter { it.folderId != null }
             .groupBy { it.folderId!! }
             .mapValues { (_, members) ->
-                members.sortedBy { it.cellIndex }.mapNotNull { appsByKey[it.key] }
+                members.sortedBy { it.cellIndex }.mapNotNull { item ->
+                    appsByKey[item.key]?.let { FolderPin(item.id, it) }
+                }
             }
     }
 

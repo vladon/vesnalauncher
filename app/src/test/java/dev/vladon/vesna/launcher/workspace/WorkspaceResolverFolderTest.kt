@@ -20,8 +20,8 @@ class WorkspaceResolverFolderTest {
     private val keyC = AppKey("com.c", "com.c.Main")
     private val keyD = AppKey("com.d", "com.d.Main")
 
-    private fun item(key: AppKey, cell: Int, folderId: Long? = null) =
-        WorkspaceItem(id = 0, key = key, container = Container.WORKSPACE, cellIndex = cell, folderId = folderId)
+    private fun item(key: AppKey, cell: Int, folderId: Long? = null, id: Long = 0) =
+        WorkspaceItem(id = id, key = key, container = Container.WORKSPACE, cellIndex = cell, folderId = folderId)
 
     @Test
     fun `folder members are excluded from top level cells`() {
@@ -63,14 +63,18 @@ class WorkspaceResolverFolderTest {
     }
 
     @Test
-    fun `folderContents groups members sorted by in folder position`() {
+    fun `folderContents keeps each copy of an app in saved position order`() {
         val items = listOf(
-            item(keyC, cell = 5, folderId = 7L),
-            item(keyA, cell = 1, folderId = 7L),
+            item(keyA, cell = 5, folderId = 7L, id = 17L),
+            item(keyC, cell = 3, folderId = 7L, id = 25L),
+            item(keyA, cell = 1, folderId = 7L, id = 30L),
         )
         val apps = mapOf(keyA to app(keyA), keyC to app(keyC))
         val contents = WorkspaceResolver.folderContents(items, apps)
-        assertEquals(listOf(keyA, keyC), contents.getValue(7L).map { it.key })
+        assertEquals(
+            listOf(FolderPin(30L, app(keyA)), FolderPin(25L, app(keyC)), FolderPin(17L, app(keyA))),
+            contents.getValue(7L),
+        )
     }
 
     @Test
@@ -80,7 +84,7 @@ class WorkspaceResolverFolderTest {
             item(keyD, cell = 2, folderId = 7L),
         )
         val contents = WorkspaceResolver.folderContents(items, mapOf(keyA to app(keyA)))
-        assertEquals(listOf(keyA), contents.getValue(7L).map { it.key })
+        assertEquals(listOf(keyA), contents.getValue(7L).map { it.app.key })
     }
 
     @Test

@@ -712,6 +712,25 @@ package events and startup cleanup.
   dissolved the two-app folder and restored Camera to its original slot. All
   original fixture placements were preserved.
 
+### Exact folder shortcut removal
+
+**Remove from folder** moves the selected shortcut, even when a folder contains
+another copy of the same app. The tile and its menu use the saved pin ID; an
+outdated action cannot move a different member.
+
+- On Android 15, removing the third tile from `[QA Fixture, Camera, QA Fixture]`
+  moved the first copy on the prior build. The fixed build moved the third
+  copy to the first free cell on its Home page and left `[QA Fixture, Camera]`
+  in the folder. No other placement changed.
+- The native replay passed with touch in light mode at 130% font scale and
+  with keyboard focus and the Menu key in dark mode at 200%. The shortcut
+  targets were at least 68 × 86 dp and held their full accessible names;
+  screenshots matched the Vesna menu and dialog color roles. TalkBack speech
+  was not tested.
+- Seven folder projection tests, six focused instrumentation tests on each of
+  Android 8 and 15, and debug lint passed. The original emulator layouts and
+  settings were restored.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

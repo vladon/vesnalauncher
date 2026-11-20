@@ -144,7 +144,7 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(setOf(target.packageName, dock.packageName), members.map { it.packageName }.toSet())
             assertTrue(members.all { it.pageId == null })
 
-            assertTrue(repository.removeFromFolder(dock, folder.id))
+            assertTrue(repository.removeFromFolder(dockPinId, folder.id))
 
             assertNull(db.folderDao().getById(folder.id))
             val items = dao.getAll().map { it.toDomain() }
@@ -419,6 +419,8 @@ class WorkspaceRepositoryPagesTest {
             assertTrue(repository.createFolderFromDrop(work, 2, "Both", WorkspaceRepository.FolderDropSource.Drawer, second))
             val folder = db.folderDao().getAll().single().id
             val savedItems = db.workspaceItemDao().getAll().sortedBy { it.id }
+            val personalMemberId = savedItems.single { it.folderId == folder && it.userSerial == 0L }.id
+            val workMemberId = savedItems.single { it.folderId == folder && it.userSerial == 10L }.id
 
             val discovery = CountingDiscovery(listOf(work, personal))
             val events = MutableSharedFlow<PackageEvent>()
@@ -429,14 +431,14 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(listOf(work, personal), both.apps)
             assertEquals(CellContent.App(work), both.workspaceCells[0])
             assertEquals(work, both.dock.pins.single().app)
-            assertEquals(listOf(personal, work), both.folderContents[folder])
+            assertEquals(listOf(FolderPin(personalMemberId, personal), FolderPin(workMemberId, work)), both.folderContents[folder])
 
             discovery.apps = listOf(personal)
             events.emit(PackageEvent.CatalogueChanged)
             val personalOnly = controller.state.first { it.apps == listOf(personal) }
             assertFalse(personalOnly.workspaceCells.containsKey(0))
             assertTrue(personalOnly.dock.pins.isEmpty())
-            assertEquals(listOf(personal), personalOnly.folderContents[folder])
+            assertEquals(listOf(FolderPin(personalMemberId, personal)), personalOnly.folderContents[folder])
             assertEquals(savedItems, db.workspaceItemDao().getAll().sortedBy { it.id })
 
             val updatedWork = work.copy(label = "Updated Work")
@@ -445,7 +447,10 @@ class WorkspaceRepositoryPagesTest {
             val restored = controller.state.first { it.apps == discovery.apps }
             assertEquals(CellContent.App(updatedWork), restored.workspaceCells[0])
             assertEquals(updatedWork, restored.dock.pins.single().app)
-            assertEquals(listOf(personal, updatedWork), restored.folderContents[folder])
+            assertEquals(
+                listOf(FolderPin(personalMemberId, personal), FolderPin(workMemberId, updatedWork)),
+                restored.folderContents[folder],
+            )
             controller.selectWorkspacePage(DEFAULT_WORKSPACE_PAGE_ID)
             val first = controller.state.first { it.activePageId == DEFAULT_WORKSPACE_PAGE_ID }
             assertEquals(CellContent.App(personal), first.workspaceCells[0])

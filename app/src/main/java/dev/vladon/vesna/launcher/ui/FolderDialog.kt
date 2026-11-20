@@ -27,6 +27,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.settings.VesnaTheme
 import dev.vladon.vesna.launcher.workspace.Folder
+import dev.vladon.vesna.launcher.workspace.FolderPin
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
 
 /**
@@ -39,7 +40,7 @@ internal class FolderDialog(
     private val folder: Folder,
     private val onLaunch: (LauncherApp) -> Unit,
     private val onAppInfo: (LauncherApp) -> Unit,
-    private val onRemoveFromFolder: (LauncherApp) -> Unit,
+    private val onRemoveFromFolder: (Long) -> Unit,
     private val onRename: () -> Unit,
     private val onRemoveFolder: () -> Unit,
     private val onShowPopup: (PopupMenu) -> Unit,
@@ -109,14 +110,14 @@ internal class FolderDialog(
         adapter.submitList(state.folderContents[folder.id].orEmpty())
     }
 
-    private fun showItemMenu(app: LauncherApp, anchor: View) {
+    private fun showItemMenu(pin: FolderPin, anchor: View) {
         val popup = vesnaPopupMenu(anchor)
         popup.menu.add(0, MENU_REMOVE_FROM_FOLDER, 0, R.string.folder_remove_from_folder)
         popup.menu.add(0, MENU_APP_INFO, 1, R.string.menu_app_info)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                MENU_REMOVE_FROM_FOLDER -> onRemoveFromFolder(app)
-                MENU_APP_INFO -> onAppInfo(app)
+                MENU_REMOVE_FROM_FOLDER -> onRemoveFromFolder(pin.id)
+                MENU_APP_INFO -> onAppInfo(pin.app)
             }
             true
         }

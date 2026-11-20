@@ -475,7 +475,7 @@ class HomeActivity : ComponentActivity() {
             folder = folder,
             onLaunch = { launchApp(it) },
             onAppInfo = { controller.openAppInfo(it) },
-            onRemoveFromFolder = { controller.removeFromFolder(it, folder.id) },
+            onRemoveFromFolder = { pinId -> controller.removeFromFolder(pinId, folder.id) },
             onRename = { promptFolderRename(folder.id) },
             onRemoveFolder = { controller.removeFolder(folder.id) },
             onShowPopup = ::showPopup,
