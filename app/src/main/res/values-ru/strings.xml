@@ -34,7 +34,8 @@
     <string name="workspace_previous_page">Предыдущая страница рабочего стола</string>
     <string name="workspace_next_page">Следующая страница рабочего стола</string>
     <string name="workspace_page_position">Страница рабочего стола %1$d из %2$d</string>
-    <string name="move_page_number">Страница %1$d</string>
+    <string name="workspace_choose_page">К странице…</string>
+    <string name="workspace_page_number">Страница %1$d</string>
     <string name="reorder_page_position">На позицию %1$d</string>
 
     <string name="workspace_empty_hint">Откройте меню рабочего стола, чтобы настроить страницу</string>

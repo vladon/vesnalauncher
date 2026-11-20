@@ -83,7 +83,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:accessibilityLiveRegion="polite"
-                    android:importantForAccessibility="yes" />
+                    android:background="@drawable/home_control_states"
+                    android:focusable="true"
+                    android:importantForAccessibility="yes"
+                    android:tooltipText="@string/workspace_choose_page" />
 
                 <ImageButton
                     android:id="@+id/workspace_next_page"

@@ -29,7 +29,7 @@ exercised; everything else is source-verified only.
 |---|---|---|
 | HOME role | `HomeActivity` declares `CATEGORY_HOME` (`singleTask`, `excludeFromRecents`); `HomeRoleChecker` (RoleManager on API 29+, `resolveActivity` fallback) and the system "choose home app" intent | Source only at the audit baseline; **device-verified** afterwards by the [VESNA-QA-002 run](verification/VESNA-QA-002.md) (2026-11-18, API 35 AVD) |
 | Workspace | Fixed 4×5 grid (`GridCanvas`), placement via `WorkspaceResolver` + `WorkspaceRepository`, Room-backed; persistence across process death/reboot is intended behavior | 17 JVM tests in `GridCanvasTest`, `WorkspaceResolverTest` |
-| Workspace pages (unreleased) | **Home options** adds, reorders, and removes eligible pages. Swipe or use the arrows above the shared dock to navigate up to eight 4×5 pages. **Shortcut options → Move to page…** moves a shortcut or folder to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls), [Reorder Home pages](#reorder-home-pages), [Move a shortcut between pages](#move-a-shortcut-between-pages), and [Move a folder between pages](#move-a-folder-between-pages). |
+| Workspace pages (unreleased) | **Home options** adds, reorders, and removes eligible pages. Swipe or use the arrows to step through up to eight 4×5 pages, or use the dots or **Home options → Go to page…** to jump directly. **Shortcut options → Move to page…** moves a shortcut or folder to another page with room. Vesna restores the last selected page. | Android 8 and 15 emulator verification; see [Workspace page controls](#workspace-page-controls), [Jump to a Home page](#jump-to-a-home-page), [Reorder Home pages](#reorder-home-pages), [Move a shortcut between pages](#move-a-shortcut-between-pages), and [Move a folder between pages](#move-a-folder-between-pages). |
 | Dock | Four slots aligned with workspace columns, ordering and reorder rules in `DockOrdering` | `DockOrderingTest` (9 tests) |
 | First-run seeding | `SeedPlanner` fills dock and first page once; a persisted "seeded" flag prevents re-seeding; user-emptied workspaces are never re-seeded | `SeedPlannerTest` (4 tests) |
 | App discovery | `LauncherApps`-based `AppDiscovery` across the main and managed profiles, sorted by `label.lowercase(Locale.ROOT)`, single `<queries>` manifest entry (no `QUERY_ALL_PACKAGES`) | Source only; discovery needs system services and is deliberately not exercised by tests |
@@ -197,6 +197,23 @@ between pages is not available.
   folder on Android 15. Android 8 hid the pager after removing the only extra
   page. The new menu row fit at 320 dp and 1.6× type in English and Russian;
   touch selection and visible D-pad focus and activation were verified.
+
+### Jump to a Home page
+
+Tap the page dots above the dock or choose **Home options → Go to page…** to
+jump directly to any Home page. The list marks the current page and includes
+full and empty pages. Both entry points are hidden when only one page exists.
+
+- On Android 8, touch navigated through both entry points, including a jump to
+  a full page. The dots measured 48 × 48 dp with two pages. Removing the extra
+  page hid the picker again and left the original layout unchanged.
+- On Android 15, Tab reached the dots, Back dismissed the menu with focus
+  restored, and D-pad selection jumped from the first page to the last.
+  That selection survived a force-stop and restart.
+- Checked Light and Dark, three-button and gesture navigation, checked-row
+  semantics, all eight rows at 320 dp in Russian at 200% text, and localized
+  RTL numerals and controls at 610 dp. Debug lint passed. TalkBack speech and
+  physical devices were not checked.
 
 ### Reorder Home pages
 

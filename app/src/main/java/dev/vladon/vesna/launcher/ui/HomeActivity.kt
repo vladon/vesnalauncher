@@ -20,6 +20,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -126,6 +127,10 @@ class HomeActivity : ComponentActivity() {
         pageIndicator = findViewById(R.id.workspace_page_indicator)
         previousPage.setOnClickListener { stepPage(forward = false) }
         nextPage.setOnClickListener { stepPage(forward = true) }
+        pageIndicator.setOnClickListener { showPagePicker(pageIndicator) }
+        ViewCompat.replaceAccessibilityAction(pageIndicator, ACTION_CLICK, getString(R.string.workspace_choose_page)) {
+            view, _ -> view.performClick()
+        }
 
         val graph = VesnaApplication.graph(this)
         val controller = graph.controller
@@ -249,6 +254,7 @@ class HomeActivity : ComponentActivity() {
             val position = state.pageIds.indexOf(state.activePageId)
             val hadPreviousFocus = previousPage.hasFocus()
             val hadNextFocus = nextPage.hasFocus()
+            val hadIndicatorFocus = pageIndicator.hasFocus()
             pageControls.isVisible = state.pageIds.size > 1
             previousPage.isEnabled = position > 0
             nextPage.isEnabled = position in 0 until state.pageIds.lastIndex
@@ -257,7 +263,7 @@ class HomeActivity : ComponentActivity() {
             if (pageControls.isVisible) {
                 if (hadPreviousFocus && !previousPage.isEnabled) nextPage.requestFocus()
                 if (hadNextFocus && !nextPage.isEnabled) previousPage.requestFocus()
-            } else if (hadPreviousFocus || hadNextFocus) {
+            } else if (hadPreviousFocus || hadNextFocus || hadIndicatorFocus) {
                 openDrawerButton.requestFocus()
             }
             pageIndicator.bind(position, state.pageIds.size)
@@ -302,6 +308,26 @@ class HomeActivity : ComponentActivity() {
         if (current < 0) return
         val step = if (forward) 1 else -1
         state.pageIds.getOrNull(current + step)?.let(controller::selectWorkspacePage)
+    }
+
+    private fun showPagePicker(anchor: View) {
+        if (dragSource != null || backCallback.isEnabled || !anchor.isShown) return
+        val state = renderedState
+        val activeIndex = state.pageIds.indexOf(state.activePageId)
+        if (state.pageIds.size < 2 || activeIndex < 0) return
+
+        val popup = vesnaPopupMenu(anchor)
+        state.pageIds.forEachIndexed { index, pageId ->
+            val number = index + 1
+            popup.menu.add(0, number, number, getString(R.string.workspace_page_number, number))
+                .setOnMenuItemClickListener {
+                    if (pageId != renderedState.activePageId) controller.selectWorkspacePage(pageId)
+                    true
+                }
+        }
+        popup.menu.setGroupCheckable(0, true, true)
+        popup.menu.findItem(activeIndex + 1).isChecked = true
+        popup.show()
     }
 
     /**
@@ -594,7 +620,7 @@ class HomeActivity : ComponentActivity() {
             }
             val popup = vesnaPopupMenu(anchor)
             for (target in options.pages) {
-                popup.menu.add(0, target.number, target.number, getString(R.string.move_page_number, target.number))
+                popup.menu.add(0, target.number, target.number, getString(R.string.workspace_page_number, target.number))
                     .setOnMenuItemClickListener {
                         move(options.sourceId, target.id)
                         true
@@ -647,15 +673,18 @@ class HomeActivity : ComponentActivity() {
             popup.menu.add(0, MENU_SET_DEFAULT, 2, R.string.menu_default_launcher)
         }
         val page = renderedState
+        if (page.pageIds.size > 1) {
+            popup.menu.add(0, MENU_CHOOSE_WORKSPACE_PAGE, 3, R.string.workspace_choose_page)
+        }
         if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
-            popup.menu.add(0, MENU_ADD_WORKSPACE_PAGE, 3, R.string.menu_add_workspace_page)
+            popup.menu.add(0, MENU_ADD_WORKSPACE_PAGE, 4, R.string.menu_add_workspace_page)
         }
         if (page.canRemoveActivePage) {
-            popup.menu.add(0, MENU_REMOVE_WORKSPACE_PAGE, 4, R.string.menu_remove_empty_workspace_page)
+            popup.menu.add(0, MENU_REMOVE_WORKSPACE_PAGE, 5, R.string.menu_remove_empty_workspace_page)
         }
         val position = page.pageIds.indexOf(page.activePageId)
         if (page.pageIds.size > 2 && position > 0) {
-            popup.menu.add(0, MENU_REORDER_WORKSPACE_PAGE, 5, R.string.menu_reorder_workspace_page)
+            popup.menu.add(0, MENU_REORDER_WORKSPACE_PAGE, 6, R.string.menu_reorder_workspace_page)
         }
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
@@ -663,6 +692,7 @@ class HomeActivity : ComponentActivity() {
                 MENU_WALLPAPER -> startWallpaperPicker()
                 MENU_SET_DEFAULT -> graph.homeRoleChecker.defaultHomeRequestIntent()
                     ?.let { defaultHomeRequest.launch(it) }
+                MENU_CHOOSE_WORKSPACE_PAGE -> homeOptionsButton.post { showPagePicker(homeOptionsButton) }
                 MENU_ADD_WORKSPACE_PAGE -> controller.createWorkspacePage()
                 MENU_REMOVE_WORKSPACE_PAGE -> controller.removeEmptyWorkspacePage(page.activePageId)
                 MENU_REORDER_WORKSPACE_PAGE -> homeOptionsButton.post { showReorderPageMenu(page, position) }
@@ -719,5 +749,6 @@ class HomeActivity : ComponentActivity() {
         const val MENU_REMOVE_WORKSPACE_PAGE = 11
         const val MENU_MOVE_TO_PAGE = 12
         const val MENU_REORDER_WORKSPACE_PAGE = 13
+        const val MENU_CHOOSE_WORKSPACE_PAGE = 14
     }
 }

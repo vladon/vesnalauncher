@@ -34,7 +34,8 @@
     <string name="workspace_previous_page">Previous home page</string>
     <string name="workspace_next_page">Next home page</string>
     <string name="workspace_page_position">Home page %1$d of %2$d</string>
-    <string name="move_page_number">Home page %1$d</string>
+    <string name="workspace_choose_page">Go to page…</string>
+    <string name="workspace_page_number">Home page %1$d</string>
     <string name="reorder_page_position">Move to position %1$d</string>
 
     <string name="workspace_empty_hint">Open Home options to customize this page</string>

@@ -5,10 +5,11 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import android.widget.Button
 import dev.vladon.vesna.launcher.R
 import kotlin.math.ceil
 
-/** A noninteractive page position indicator; the adjacent buttons own navigation. */
+/** A page picker button whose dots show the current page and total count. */
 class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val density = resources.displayMetrics.density
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -16,6 +17,8 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
     private val outline = context.getColor(R.color.vesna_outline)
     private var selected = -1
     private var count = 0
+
+    override fun getAccessibilityClassName(): CharSequence = Button::class.java.name
 
     fun bind(position: Int, pageCount: Int) {
         if (position == selected && pageCount == count) return
@@ -30,7 +33,10 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(
-            resolveSize(ceil(minOf((count + 1) * STEP_DP, MAX_WIDTH_DP) * density).toInt(), widthMeasureSpec),
+            resolveSize(
+                ceil(((count + 1) * STEP_DP).coerceIn(MIN_WIDTH_DP, MAX_WIDTH_DP) * density).toInt(),
+                widthMeasureSpec,
+            ),
             MeasureSpec.getSize(heightMeasureSpec),
         )
     }
@@ -55,6 +61,7 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
 
     private companion object {
         const val STEP_DP = 12f
+        const val MIN_WIDTH_DP = 48f
         // Leave 16 dp at each side of the full Home control row on a 320 dp display.
         const val MAX_WIDTH_DP = 80f
     }
