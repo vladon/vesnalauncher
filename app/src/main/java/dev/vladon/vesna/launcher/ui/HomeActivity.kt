@@ -1,6 +1,5 @@
 package dev.vladon.vesna.launcher.ui
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -9,13 +8,14 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.MotionEvent
 import android.view.View
-import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -29,6 +29,7 @@ import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.ThemeMode
+import dev.vladon.vesna.launcher.settings.VesnaTheme
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
 import dev.vladon.vesna.launcher.workspace.Folder
@@ -76,6 +77,8 @@ class HomeActivity : ComponentActivity() {
     private var drawerReturnFocus: View? = null
     private var folderDialog: FolderDialog? = null
     private var folderDialogJob: Job? = null
+    private data class FolderRename(val folderId: Long, val host: ComposeView)
+    private var folderRename: FolderRename? = null
     private var renderedState = LauncherUiState()
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
@@ -244,8 +247,10 @@ class HomeActivity : ComponentActivity() {
         if (state.activePageId != previous.activePageId) {
             workspace.cancelDrag()
             onRootDragCancelled()
+            dismissFolderRename()
             folderDialog?.dismiss()
         }
+        folderRename?.let { if (it.folderId !in state.folders) dismissFolderRename() }
         renderedState = state
         if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
         if (state.dockPins != previous.dockPins) dock.bind(state.dockPins)
@@ -448,7 +453,7 @@ class HomeActivity : ComponentActivity() {
             folder = folder,
             onLaunch = { controller.launch(it) },
             onRemoveFromFolder = { controller.removeFromFolder(it, folder.id) },
-            onRename = { f, title -> controller.renameFolder(f.id, title) },
+            onRename = { promptFolderRename(folder.id) },
             onRemoveFolder = { controller.removeFolder(folder.id) },
             onDismissed = {
                 folderDialogJob?.cancel()
@@ -475,7 +480,7 @@ class HomeActivity : ComponentActivity() {
         popup.menu.add(0, MENU_FOLDER_REMOVE, 2, R.string.folder_remove)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
-                MENU_FOLDER_RENAME -> promptFolderRename(folder)
+                MENU_FOLDER_RENAME -> promptFolderRename(folder.id)
                 MENU_MOVE_TO_PAGE -> showMovePageMenu(anchor, folder.pageId, { controller.folderPageMoveOptions(folder) }) {
                     _, destinationId -> controller.moveFolderToPage(folder, destinationId)
                 }
@@ -486,19 +491,31 @@ class HomeActivity : ComponentActivity() {
         popup.show()
     }
 
-    private fun promptFolderRename(folder: Folder) {
-        val input = EditText(this)
-        input.setText(folder.title)
-        input.setSelection(input.text.length)
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.folder_rename))
-            .setView(input)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val newTitle = input.text.toString().trim()
-                if (newTitle.isNotEmpty()) controller.renameFolder(folder.id, newTitle)
+    private fun promptFolderRename(folderId: Long) {
+        val folder = renderedState.folders[folderId] ?: return
+        dismissFolderRename()
+        val host = ComposeView(this)
+        folderRename = FolderRename(folderId, host)
+        host.setContent {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+                FolderRenameDialog(
+                    initialTitle = folder.title,
+                    onDismiss = ::dismissFolderRename,
+                    onSave = { title ->
+                        if (title != folder.title) controller.renameFolder(folderId, title)
+                        dismissFolderRename()
+                    },
+                )
             }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        }
+        // Compose supplies a separate dialog window; Home needs only a composition host.
+        homeContent.addView(host, 0, 0)
+    }
+
+    private fun dismissFolderRename() {
+        val rename = folderRename ?: return
+        folderRename = null
+        homeContent.removeView(rename.host)
     }
 
     /**

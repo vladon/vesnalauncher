@@ -7,7 +7,6 @@ import android.net.Uri
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.R
@@ -25,7 +24,7 @@ class FolderDialog(
     private val folder: Folder,
     private val onLaunch: (LauncherApp) -> Unit,
     private val onRemoveFromFolder: (LauncherApp) -> Unit,
-    private val onRename: (Folder, String) -> Unit,
+    private val onRename: () -> Unit,
     private val onRemoveFolder: (Folder) -> Unit,
     private val onDismissed: () -> Unit,
 ) {
@@ -53,7 +52,7 @@ class FolderDialog(
         dialog = AlertDialog.Builder(context)
             .setTitle(folder.title)
             .setView(view)
-            .setPositiveButton(R.string.folder_rename) { _, _ -> showRenamePrompt(context) }
+            .setPositiveButton(R.string.folder_rename, null)
             .setNegativeButton(R.string.folder_remove) { _, _ ->
                 onRemoveFolder(folder)
                 onDismissed()
@@ -62,7 +61,11 @@ class FolderDialog(
             .create()
     }
 
-    fun show() = dialog.show()
+    fun show() {
+        dialog.show()
+        // The rename prompt is modal to this list; keep the folder open behind it.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { onRename() }
+    }
 
     /** Closes the dialog (for example when the folder dissolved). */
     fun dismiss() = dialog.dismiss()
@@ -93,25 +96,6 @@ class FolderDialog(
             true
         }
         popup.show()
-    }
-
-    private fun showRenamePrompt(context: Context) {
-        val input = EditText(context)
-        input.setText(currentTitle)
-        input.setSelection(input.text.length)
-        AlertDialog.Builder(context)
-            .setTitle(context.getString(R.string.folder_rename))
-            .setView(input)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val newTitle = input.text.toString().trim()
-                if (newTitle.isNotEmpty() && newTitle != currentTitle) {
-                    onRename(folder, newTitle)
-                    currentTitle = newTitle
-                    dialog.setTitle(newTitle)
-                }
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
     }
 
     private companion object {

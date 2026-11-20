@@ -53,6 +53,9 @@
     <!-- Папки -->
     <string name="folder_default_title">Папка</string>
     <string name="folder_rename">Переименовать папку</string>
+    <string name="folder_name">Имя папки</string>
+    <string name="folder_name_required">Введите имя папки.</string>
+    <string name="folder_rename_save">Сохранить</string>
     <string name="folder_remove_from_folder">Убрать из папки</string>
     <string name="folder_open_hint">Папка с %1$d приложениями</string>
     <string name="folder_remove">Удалить папку</string>

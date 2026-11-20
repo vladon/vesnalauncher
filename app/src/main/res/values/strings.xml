@@ -53,6 +53,9 @@
     <!-- Folders -->
     <string name="folder_default_title">Folder</string>
     <string name="folder_rename">Rename folder</string>
+    <string name="folder_name">Folder name</string>
+    <string name="folder_name_required">Enter a folder name.</string>
+    <string name="folder_rename_save">Save</string>
     <string name="folder_remove_from_folder">Remove from folder</string>
     <string name="folder_open_hint">Folder with %1$d apps</string>
     <string name="folder_remove">Remove folder</string>
