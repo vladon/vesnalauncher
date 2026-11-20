@@ -3,13 +3,9 @@ package dev.vladon.vesna.launcher.data
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WorkspaceItemDao {
-
-    @Query("SELECT * FROM workspace_items")
-    fun observeAll(): Flow<List<WorkspaceItemEntity>>
 
     @Query("SELECT * FROM workspace_items")
     suspend fun getAll(): List<WorkspaceItemEntity>

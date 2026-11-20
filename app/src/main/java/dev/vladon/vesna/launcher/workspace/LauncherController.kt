@@ -92,12 +92,9 @@ class LauncherController(
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
 
     // Page navigation changes the grid, not the global dock or saved folder contents.
-    private val layout = combine(
-        appCatalogue,
-        workspaceRepository.items,
-        workspaceRepository.folders,
-        ::LayoutProjection,
-    )
+    private val layout = combine(appCatalogue, workspaceRepository.savedLayout) { catalogue, saved ->
+        LayoutProjection(catalogue, saved.items, saved.folders)
+    }
 
     val state: StateFlow<LauncherUiState> =
         combine(layout, pageIds, _activePageId) { layout, orderedIds, activePageId ->

@@ -772,6 +772,25 @@ where the action started. An open folder stays open when removal fails.
   every saved row on a full secondary page and retrying both actions after
   freeing space. Debug lint passed.
 
+### Read Home folders and shortcuts together
+
+Home reads saved folders and shortcuts in the same Room transaction before
+rendering either. Grouping or removing a folder can no longer combine newly
+saved memberships with an older list of folders, or vice versa.
+
+- The previous build emitted an empty grid on Android 8 and kept the loose
+  shortcuts alongside new folder metadata on Android 15. The fixed build
+  emitted only complete layouts through 12 group-and-remove cycles on each
+  version. This checked UI state emissions, not individual display frames.
+- On Android 15 in Light at 130% and Dark at 200%, dragging a test shortcut
+  onto Camera created a two-member folder. Renaming updated the open dialog
+  without changing its members. Uninstalling the test app closed the dialog
+  and restored the original Camera pin and dock. The dialog retained full
+  accessible shortcut names and at least 48 dp targets; Dark keyboard focus
+  was visible. TalkBack speech was not checked.
+- Eight focused tests passed on each Android version, as did debug lint.
+  No database schema change was needed.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

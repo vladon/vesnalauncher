@@ -14,11 +14,14 @@ import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -57,7 +60,7 @@ class WorkspaceRepositoryPagesTest {
             assertTrue(repository.moveWithinWorkspace(app, 0, 1, second))
             assertTrue(repository.insertIntoDock(other, 0))
             db.folderDao().insert(FolderEntity(title = "Saved folder", cellIndex = 5, pageId = second))
-            val before = repository.items.first().sortedBy { it.id }
+            val before = repository.savedLayout.first().items.sortedBy { it.id }
 
             val savedFolders = db.folderDao().getAll()
             val initial = listOf(first, second, third, fourth)
@@ -67,7 +70,7 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(reordered, recreated.pages.first().map { it.id })
             assertEquals(second, recreated.savedActivePageId())
             assertEquals(savedFolders, db.folderDao().getAll())
-            assertEquals(before, repository.items.first().sortedBy { it.id })
+            assertEquals(before, repository.savedLayout.first().items.sortedBy { it.id })
             val apps = listOf(app, other).associateBy { it.key }
             assertEquals(
                 mapOf(0 to CellContent.App(app), 1 to CellContent.App(other)),
@@ -75,7 +78,7 @@ class WorkspaceRepositoryPagesTest {
             )
             assertEquals(mapOf(1 to CellContent.App(app)), WorkspaceResolver.workspaceCells(before, apps, emptyList(), second))
             repository.removeFromWorkspace(app, cell = 1, pageId = second)
-            assertEquals(before.filterNot { it.pageId == second }, repository.items.first().sortedBy { it.id })
+            assertEquals(before.filterNot { it.pageId == second }, repository.savedLayout.first().items.sortedBy { it.id })
             assertTrue(repository.reorderPage(second, destinationIndex = 1, displayedOrder = reordered))
             assertEquals(initial, recreated.pages.first().map { it.id })
         } finally {
@@ -155,7 +158,8 @@ class WorkspaceRepositoryPagesTest {
             )
             assertEquals(DockMoveResult.MOVED, repository.moveWorkspaceToDock(dock, fromCell = 0, slot = 0, pageId = second))
             assertNull(dao.getAll().single { it.packageName == dock.packageName }.pageId)
-            assertEquals(listOf(DockPin(dockPinId, dock)), WorkspaceResolver.dockLayout(repository.items.first(), apps).pins)
+            val pins = WorkspaceResolver.dockLayout(repository.savedLayout.first().items, apps).pins
+            assertEquals(listOf(DockPin(dockPinId, dock)), pins)
         } finally {
             db.close()
         }
@@ -373,7 +377,7 @@ class WorkspaceRepositoryPagesTest {
 
             // Removal is scoped to the page passed to the controller.
             controller.removeFromWorkspace(apps[5], cell = 0, pageId = secondPageId)
-            repository.items.first { items -> items.none { it.pageId == secondPageId } }
+            repository.savedLayout.first { saved -> saved.items.none { it.pageId == secondPageId } }
             assertEquals(CellContent.App(apps[5]), controller.state.value.workspaceCells.getValue(1))
             assertEquals(CellContent.App(apps[4]), controller.state.value.workspaceCells.getValue(0))
 
@@ -455,6 +459,68 @@ class WorkspaceRepositoryPagesTest {
             val first = controller.state.first { it.activePageId == DEFAULT_WORKSPACE_PAGE_ID }
             assertEquals(CellContent.App(personal), first.workspaceCells[0])
             assertEquals(savedItems, db.workspaceItemDao().getAll().sortedBy { it.id })
+        } finally {
+            scope.cancel()
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
+    @Test(timeout = 15_000)
+    fun homeNeverShowsAnEmptyFolderOrLosesBothShortcutsDuringFolderChanges() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_folder_layout_observation"
+        context.deleteSharedPreferences(prefsName)
+        val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
+        try {
+            val folders = db.folderDao()
+            val repository = WorkspaceRepository(
+                db.workspaceItemDao(), db, folders, context.getSharedPreferences(prefsName, Context.MODE_PRIVATE),
+            )
+            val first = LauncherApp(AppKey("qa.first", "Main"), "First")
+            val second = LauncherApp(AppKey("qa.second", "Main"), "Second")
+            assertTrue(repository.insertWorkspaceAt(first, cell = 0))
+            assertTrue(repository.insertWorkspaceAt(second, cell = 1))
+            assertFalse(repository.seedOrAdopt(emptyList()))
+            val controller = LauncherController(
+                scope, CountingDiscovery(listOf(first, second)), AppLauncher(context),
+                repository, MutableSharedFlow<PackageEvent>(),
+            )
+            val separate = mapOf(0 to CellContent.App(first), 1 to CellContent.App(second))
+            controller.state.first { it.workspaceCells == separate }
+            val frames = Channel<LauncherUiState>(Channel.UNLIMITED)
+            scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                controller.state.collect { frames.send(it) }
+            }
+
+            suspend fun observeUntil(grouped: Boolean) {
+                do {
+                    val frame = frames.receive()
+                    val folder = frame.folders.values.singleOrNull()
+                    if (folder == null) {
+                        assertEquals("Without a folder, Home must show both shortcuts", separate, frame.workspaceCells)
+                        assertTrue("Folder contents must not outlive the folder", frame.folderContents.isEmpty())
+                    } else {
+                        assertEquals(
+                            "Home must show the folder with both shortcuts in a single cell",
+                            mapOf(0 to CellContent.FolderCell(folder, memberCount = 2)),
+                            frame.workspaceCells,
+                        )
+                        assertEquals(
+                            listOf(first, second), frame.folderContents.getValue(folder.id).map { it.app },
+                        )
+                    }
+                } while ((folder != null) != grouped)
+            }
+
+            repeat(12) {
+                assertTrue(repository.createFolderFromDrop(second, 0, "Both", WorkspaceRepository.FolderDropSource.Workspace(1)))
+                observeUntil(grouped = true)
+                assertEquals(FolderRemovalResult.REMOVED, repository.removeFolder(folders.getAll().single().id))
+                observeUntil(grouped = false)
+            }
         } finally {
             scope.cancel()
             db.close()

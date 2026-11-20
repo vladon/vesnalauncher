@@ -25,6 +25,8 @@ internal enum class FolderRemovalResult { REMOVED, NO_ROOM, UNAVAILABLE }
 internal data class PageMoveTarget(val id: Long, val number: Int)
 internal data class PageMoveOptions(val sourceId: Long, val pages: List<PageMoveTarget>)
 
+internal class SavedLayout(val items: List<WorkspaceItem>, val folders: List<Folder>)
+
 /** Hard cap on workspace pages; removing an empty extra page frees a slot. */
 internal const val MAX_WORKSPACE_PAGES = 8
 
@@ -43,11 +45,18 @@ class WorkspaceRepository(
     // "add to dock" taps) cannot both compute placements from the same snapshot.
     private val mutationMutex = Mutex()
 
-    val items: Flow<List<WorkspaceItem>> = dao.observeAll().map { list -> list.map { it.toDomain() } }
-
-    val folders: Flow<List<Folder>> =
-        folderDao.observeAll().map { list ->
-            list.mapNotNull { row -> row.pageId?.let { Folder(row.id, row.title, row.cellIndex, it) } }
+    /** A folder and its membership must describe the same committed layout. */
+    internal val savedLayout: Flow<SavedLayout> = db.invalidationTracker
+        .createFlow("workspace_items", "folders")
+        .map {
+            db.withTransaction {
+                SavedLayout(
+                    items = dao.getAll().map { it.toDomain() },
+                    folders = folderDao.getAll().mapNotNull { row ->
+                        row.pageId?.let { Folder(row.id, row.title, row.cellIndex, it) }
+                    },
+                )
+            }
         }
 
     /** All pages in display order (rank, then id). */
