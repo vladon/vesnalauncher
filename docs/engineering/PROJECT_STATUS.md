@@ -650,6 +650,22 @@ profile.
   on both emulators; Android 15 also retained dock and folder order across page
   switches. The regression used simulated profile entries, not a live Work profile.
 
+### Dock reordering in RTL
+
+Dock drag targets now use the same padded columns and layout direction as
+the visible icons. Mirroring the dock does not change the stored order.
+
+- Android 15 Light, 1.3× text and gesture navigation: dragging Calendar from
+  the rightmost to the highlighted leftmost slot left it on the right in the
+  previous build. The fixed build moved it to the left and saved it as the
+  final dock item. An LTR drag restored the original order.
+- Android 8 Dark, 320 dp, 2× text and three-button navigation: LTR drag and
+  restoration both worked. Dock tiles stayed named, keyboard-focusable,
+  and at least 48 dp on both emulators. The two dock geometry tests failed
+  on the baseline and passed after the fix on both, covering RTL and LTR,
+  padded tile edges, and an empty highlight slot. Debug lint passed;
+  TalkBack speech and physical devices were not checked.
+
 ## Where to go next
 
 - Completed since the baseline: [VESNA-QA-002](verification/VESNA-QA-002.md) —

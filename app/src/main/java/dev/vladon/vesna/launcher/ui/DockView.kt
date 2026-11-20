@@ -120,25 +120,43 @@ class DockView @JvmOverloads constructor(
         }
     }
 
-    /** The dock slot whose column contains dock-local [x], clamped into the dock. */
+    /** Logical slot from the start edge, matching the weighted children in either direction. */
     fun slotAtLocalX(x: Float): Int {
-        val slotWidth = width / GridCanvas.DOCK_CAPACITY.toFloat()
-        if (slotWidth <= 0f || width <= 0) return 0
-        return (x / slotWidth).toInt().coerceIn(0, GridCanvas.DOCK_CAPACITY - 1)
+        val contentWidth = width - paddingLeft - paddingRight
+        if (contentWidth <= 0) return 0
+        val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+        val fromStart = if (rtl) width - paddingRight - x else x - paddingLeft
+        for (slot in 0 until GridCanvas.DOCK_CAPACITY - 1) {
+            val edge = slotOffset(slot + 1, contentWidth)
+            // Keep the physical left edge inclusive, like View hit testing.
+            val inSlot = if (rtl) fromStart <= edge else fromStart < edge
+            if (inSlot) return slot
+        }
+        return GridCanvas.DOCK_CAPACITY - 1
+    }
+
+    private fun slotOffset(slot: Int, contentWidth: Int): Int {
+        val capacity = GridCanvas.DOCK_CAPACITY
+        // LinearLayout distributes leftover pixels to the last weighted children.
+        val narrowSlots = capacity - contentWidth % capacity
+        return slot * (contentWidth / capacity) + (slot - narrowSlots).coerceAtLeast(0)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val slot = dragTargetSlot ?: return
-        if (width <= 0) return
-        val slotWidth = width / GridCanvas.DOCK_CAPACITY.toFloat()
+        val contentWidth = width - paddingLeft - paddingRight
+        if (contentWidth <= 0) return
+        val start = slotOffset(slot, contentWidth)
+        val end = slotOffset(slot + 1, contentWidth)
+        val left = if (layoutDirection == LAYOUT_DIRECTION_RTL) width - paddingRight - end else paddingLeft + start
         val inset = (6 * density).toInt()
         val radius = 20f * density
-        val x = paddingLeft + slot * slotWidth + inset
+        val x = (left + inset).toFloat()
         canvas.drawRoundRect(
             x,
             paddingTop + inset.toFloat(),
-            x + slotWidth - 2 * inset,
+            (left + end - start - inset).toFloat(),
             height - paddingBottom - inset.toFloat(),
             radius,
             radius,
