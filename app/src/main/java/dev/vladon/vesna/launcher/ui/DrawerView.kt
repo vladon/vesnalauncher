@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.animation.PathInterpolator
+import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -60,6 +61,9 @@ class DrawerView @JvmOverloads constructor(
         3 * ViewConfiguration.get(context).scaledTouchSlop
 
     private var appSearch = AppSearch(emptyList())
+    private var quickLaunchResult: LauncherApp? = null
+    private var enterTarget: LauncherApp? = null
+    private var searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
 
     private var isOpen = false
 
@@ -69,10 +73,7 @@ class DrawerView @JvmOverloads constructor(
         elevation = 8 * density
 
         adapter = DrawerAppsAdapter(
-            onItemClick = {
-                hideKeyboard()
-                onAppClick?.invoke(it)
-            },
+            onItemClick = ::launchApp,
             onItemOptions = { app, anchor ->
                 hideKeyboard()
                 onItemOptions?.invoke(app, anchor)
@@ -109,7 +110,42 @@ class DrawerView @JvmOverloads constructor(
         noResultsView = findViewById(R.id.drawer_no_results)
         searchField = findViewById(R.id.drawer_search)
         val searchBar = findViewById<View>(R.id.drawer_search_bar)
-        searchField.setOnFocusChangeListener { _, focused -> searchBar.isActivated = focused }
+        searchField.setOnFocusChangeListener { _, focused ->
+            searchBar.isActivated = focused
+            if (!focused) {
+                searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
+                enterTarget = null
+            }
+        }
+        searchField.setOnKeyListener { _, keyCode, event ->
+            if ((keyCode != KeyEvent.KEYCODE_ENTER && keyCode != KeyEvent.KEYCODE_NUMPAD_ENTER) ||
+                event.flags and (KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_EDITOR_ACTION) != 0
+            ) return@setOnKeyListener false
+
+            val canHandle = event.hasNoModifiers() &&
+                BaseInputConnection.getComposingSpanStart(searchField.text) < 0
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> {
+                    if (event.repeatCount == 0) {
+                        // Keep Enter in search even without a unique match: TextView can
+                        // otherwise move focus to a result that the adapter is replacing.
+                        searchEnterKey = if (canHandle) keyCode else KeyEvent.KEYCODE_UNKNOWN
+                        enterTarget = if (canHandle) quickLaunchResult else null
+                    }
+                    searchEnterKey == keyCode
+                }
+                KeyEvent.ACTION_UP -> {
+                    if (searchEnterKey != keyCode) return@setOnKeyListener false
+                    val target = enterTarget
+                    val result = quickLaunchResult
+                    searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
+                    enterTarget = null
+                    if (!event.isCanceled && canHandle && result != null && result.key == target?.key) launchApp(result)
+                    true
+                }
+                else -> false
+            }
+        }
         clearSearchButton = findViewById(R.id.drawer_clear_search)
         clearSearchButton.setOnClickListener {
             // Restore focus before the cleared query hides the button.
@@ -156,10 +192,17 @@ class DrawerView @JvmOverloads constructor(
     private fun applyFilter() {
         val query = searchField.text?.toString().orEmpty()
         val filtered = appSearch.filter(query)
+        // ListAdapter may still be applying its diff when Enter is pressed.
+        quickLaunchResult = if (query.isNotBlank()) filtered.singleOrNull() else null
         adapter.submitList(filtered)
         clearSearchButton.isVisible = query.isNotEmpty()
         noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
         list.scrollToPosition(0)
+    }
+
+    private fun launchApp(app: LauncherApp) {
+        hideKeyboard()
+        onAppClick?.invoke(app)
     }
 
     private fun hideKeyboard() {

@@ -4,6 +4,7 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -169,6 +170,61 @@ class DrawerSearchTest {
             assertEquals("Qu", search.text.toString())
         }
         assertVisibleLabels(listOf("Quokka"))
+    }
+
+    @Test
+    fun enterLaunchesOnlyTheLatestUniqueNonblankMatch() {
+        val launched = mutableListOf<AppKey>()
+        setQuery("quokka")
+        assertVisibleLabels(listOf("Quokka"))
+
+        onDrawer { host ->
+            host.onAppClick = { launched.add(it.key) }
+            val search = host.findViewById<EditText>(R.id.drawer_search)
+            search.requestFocus()
+            typeKey(host, KeyEvent.KEYCODE_ENTER)
+            assertEquals(listOf(fixture[1].key), launched)
+
+            // A pending adapter diff must not let the old Quokka result launch.
+            search.setText("cafe reader")
+            typeKey(host, KeyEvent.KEYCODE_ENTER)
+            assertTrue(search.hasFocus())
+            search.setText("no matches")
+            typeKey(host, KeyEvent.KEYCODE_ENTER)
+            assertTrue(search.hasFocus())
+            assertEquals(listOf(fixture[1].key), launched)
+
+            val onlyApp = fixture[2]
+            host.submitApps(listOf(onlyApp))
+            search.setText(" ")
+            typeKey(host, KeyEvent.KEYCODE_ENTER)
+            assertEquals(listOf(fixture[1].key), launched)
+
+            search.setText("elderberry")
+            search.onEditorAction(EditorInfo.IME_ACTION_DONE)
+            assertEquals(listOf(fixture[1].key), launched)
+            search.requestFocus()
+            typeKey(host, KeyEvent.KEYCODE_NUMPAD_ENTER)
+            assertEquals(listOf(fixture[1].key, onlyApp.key), launched)
+        }
+    }
+
+    @Test
+    fun releasingEnterDoesNotLaunchAnotherAppIfTheMatchChangesWhileHeld() {
+        val launched = mutableListOf<AppKey>()
+        onDrawer { host ->
+            host.onAppClick = { launched.add(it.key) }
+            val search = host.findViewById<EditText>(R.id.drawer_search)
+            search.requestFocus()
+            search.setText("quokka")
+            val time = SystemClock.uptimeMillis()
+            host.dispatchKeyEvent(KeyEvent(time, time, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0))
+            search.setText("elderberry")
+            host.dispatchKeyEvent(KeyEvent(time, time, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER, 0))
+            assertTrue(launched.isEmpty())
+            typeKey(host, KeyEvent.KEYCODE_ENTER)
+            assertEquals(listOf(fixture[2].key), launched)
+        }
     }
 
     private fun typeKey(host: View, keyCode: Int, metaState: Int = 0) {
