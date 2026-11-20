@@ -306,6 +306,9 @@ surrounding whitespace; a blank name shows an inline error without closing.
   least 48 dp in each dimension; field and error text were exposed together
   in the Android accessibility tree. TalkBack speech, RTL, and physical
   devices were not checked. Debug build and lint passed.
+- One Android 8 run crashed in Android's accessibility-state callback
+  during an automated UI dump. Later open, cancel, and save checks on the
+  same emulator did not reproduce the crash.
 
 ### Home labels at large text sizes
 
