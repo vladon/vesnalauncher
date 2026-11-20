@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
@@ -38,6 +39,7 @@ internal class FolderDialog(
     private val onRemoveFromFolder: (LauncherApp) -> Unit,
     private val onRename: () -> Unit,
     private val onRemoveFolder: () -> Unit,
+    private val onShowPopup: (PopupMenu) -> Unit,
     private val onDismissed: () -> Unit,
 ) {
 
@@ -105,7 +107,7 @@ internal class FolderDialog(
             }
             true
         }
-        popup.show()
+        onShowPopup(popup)
     }
 
     private companion object {

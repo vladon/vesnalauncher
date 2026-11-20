@@ -366,6 +366,22 @@ default-launcher chooser, and page actions when available.
   did all eight `WorkspaceRepositoryPagesTest` cases on both emulators.
   TalkBack speech and physical devices were not checked.
 
+### Return to the current Home page
+
+Android **Home** closes launcher menus, the drawer, and folder dialogs while
+keeping the selected workspace page. An unsaved folder name is discarded.
+**Back** still dismisses the frontmost layer first.
+
+- On Android 15, the Home key closed Home options, the page picker, move and
+  reorder menus, a folder member menu, and a rename draft. Returning from
+  Clock launched in the drawer kept page 4 in the same Home activity.
+- On Android 8, a Home intent closed the rename editor, keyboard, and folder
+  without saving the draft. Using Back instead returned to the open folder.
+- Checked Light with gesture navigation and Dark with three-button navigation
+  at enlarged text sizes. The new shortcut regression failed on the prior
+  build and both `ShortcutActionsTest` cases passed after the fix on both
+  emulators. Debug lint passed; physical devices were not checked.
+
 ### App drawer access
 
 The Home and drawer buttons are 48 dp targets. The Home button is available on

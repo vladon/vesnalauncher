@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -37,6 +38,8 @@ import dev.vladon.vesna.launcher.workspace.LauncherUiState
 import dev.vladon.vesna.launcher.workspace.MAX_WORKSPACE_PAGES
 import dev.vladon.vesna.launcher.workspace.PageMoveOptions
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -72,6 +75,8 @@ class HomeActivity : ComponentActivity() {
     private var drawerClosedForDrag = false
     private var rootDragMoved = false
     private var drawerReturnFocus: View? = null
+    private var activePopup: PopupMenu? = null
+    private var pendingPageMenu: Job? = null
     private var folderDialog: FolderDialog? = null
     private data class FolderRename(val folderId: Long, val host: ComposeView)
     private var folderRename: FolderRename? = null
@@ -225,8 +230,27 @@ class HomeActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // Pressing HOME while the drawer is open closes it.
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) {
+            pendingPageMenu?.cancel()
+            pendingPageMenu = null
+            activePopup?.dismiss()
+            dismissFolderRename()
+            folderDialog?.dismiss()
+        }
         drawer.close()
+    }
+
+    private fun showPopup(popup: PopupMenu) {
+        activePopup?.dismiss()
+        activePopup = popup
+        popup.setOnDismissListener { if (activePopup === it) activePopup = null }
+        popup.show()
+    }
+
+    private fun schedulePageMenu(show: suspend () -> Unit) {
+        pendingPageMenu?.cancel()
+        // Let the invoking popup finish handling its click before opening the next one.
+        pendingPageMenu = lifecycleScope.launch(Dispatchers.Main) { show() }
     }
 
     private fun applyAppNameVisibility(visible: Boolean) {
@@ -330,7 +354,7 @@ class HomeActivity : ComponentActivity() {
         }
         popup.menu.setGroupCheckable(0, true, true)
         popup.menu.findItem(activeIndex + 1).isChecked = true
-        popup.show()
+        showPopup(popup)
     }
 
     /**
@@ -453,6 +477,7 @@ class HomeActivity : ComponentActivity() {
             onRemoveFromFolder = { controller.removeFromFolder(it, folder.id) },
             onRename = { promptFolderRename(folder.id) },
             onRemoveFolder = { controller.removeFolder(folder.id) },
+            onShowPopup = ::showPopup,
             onDismissed = { folderDialog = null },
         )
         dialog.showAppNames = showAppNames
@@ -478,7 +503,7 @@ class HomeActivity : ComponentActivity() {
             }
             true
         }
-        popup.show()
+        showPopup(popup)
     }
 
     private fun promptFolderRename(folderId: Long) {
@@ -607,7 +632,7 @@ class HomeActivity : ComponentActivity() {
             }
             true
         }
-        popup.show()
+        showPopup(popup)
     }
 
     private fun showMovePageMenu(
@@ -615,30 +640,28 @@ class HomeActivity : ComponentActivity() {
         pageId: Long,
         loadOptions: suspend () -> PageMoveOptions?,
         move: (sourceId: Long, destinationId: Long) -> Unit,
-    ) = anchor.post {
-        lifecycleScope.launch {
-            val options = loadOptions()
-            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
-                renderedState.activePageId != pageId || !anchor.isAttachedToWindow || !anchor.isShown
-            ) return@launch
-            if (options == null) {
-                showMessage(LauncherMessage.MOVE_UNAVAILABLE)
-                return@launch
-            }
-            if (options.pages.isEmpty()) {
-                showMessage(LauncherMessage.NO_MOVE_DESTINATION)
-                return@launch
-            }
-            val popup = vesnaPopupMenu(anchor)
-            for (target in options.pages) {
-                popup.menu.add(0, target.number, target.number, getString(R.string.workspace_page_number, target.number))
-                    .setOnMenuItemClickListener {
-                        move(options.sourceId, target.id)
-                        true
-                    }
-            }
-            popup.show()
+    ) = schedulePageMenu {
+        val options = loadOptions()
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+            renderedState.activePageId != pageId || !anchor.isAttachedToWindow || !anchor.isShown
+        ) return@schedulePageMenu
+        if (options == null) {
+            showMessage(LauncherMessage.MOVE_UNAVAILABLE)
+            return@schedulePageMenu
         }
+        if (options.pages.isEmpty()) {
+            showMessage(LauncherMessage.NO_MOVE_DESTINATION)
+            return@schedulePageMenu
+        }
+        val popup = vesnaPopupMenu(anchor)
+        for (target in options.pages) {
+            popup.menu.add(0, target.number, target.number, getString(R.string.workspace_page_number, target.number))
+                .setOnMenuItemClickListener {
+                    move(options.sourceId, target.id)
+                    true
+                }
+        }
+        showPopup(popup)
     }
 
     private fun showDockItemMenu(anchor: View, app: LauncherApp, pinId: Long) {
@@ -653,7 +676,7 @@ class HomeActivity : ComponentActivity() {
             }
             true
         }
-        popup.show()
+        showPopup(popup)
     }
 
     private fun showDrawerItemMenu(anchor: View, app: LauncherApp, pageId: Long) {
@@ -670,7 +693,7 @@ class HomeActivity : ComponentActivity() {
             }
             true
         }
-        popup.show()
+        showPopup(popup)
     }
 
     private fun showLauncherMenu() {
@@ -703,14 +726,14 @@ class HomeActivity : ComponentActivity() {
                 MENU_WALLPAPER -> startWallpaperPicker()
                 MENU_SET_DEFAULT -> graph.homeRoleChecker.defaultHomeRequestIntent()
                     ?.let { defaultHomeRequest.launch(it) }
-                MENU_CHOOSE_WORKSPACE_PAGE -> homeOptionsButton.post { showPagePicker(homeOptionsButton) }
+                MENU_CHOOSE_WORKSPACE_PAGE -> schedulePageMenu { showPagePicker(homeOptionsButton) }
                 MENU_ADD_WORKSPACE_PAGE -> controller.createWorkspacePage()
                 MENU_REMOVE_WORKSPACE_PAGE -> controller.removeEmptyWorkspacePage(page.activePageId)
-                MENU_REORDER_WORKSPACE_PAGE -> homeOptionsButton.post { showReorderPageMenu(page, position) }
+                MENU_REORDER_WORKSPACE_PAGE -> schedulePageMenu { showReorderPageMenu(page, position) }
             }
             true
         }
-        popup.show()
+        showPopup(popup)
     }
 
     private fun showReorderPageMenu(page: LauncherUiState, position: Int) {
@@ -726,7 +749,7 @@ class HomeActivity : ComponentActivity() {
                     true
                 }
         }
-        popup.show()
+        showPopup(popup)
     }
 
     private fun startWallpaperPicker() {
