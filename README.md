@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.8
+
+- Fixed a cancelled long press in the app drawer taking over your next swipe.
+  The drawer scrolls normally after the cancellation.
+
 ### 0.4.7
 
 - Fixed a quick scroll back to the top closing the app drawer. Swipe down

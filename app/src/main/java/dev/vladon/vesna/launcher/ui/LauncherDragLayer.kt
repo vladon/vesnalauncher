@@ -19,14 +19,23 @@ class LauncherDragLayer @JvmOverloads constructor(
     /** Called on every event while a session may want to intercept MOVE events. */
     var dragInterceptor: ((MotionEvent) -> Boolean)? = null
 
-    /** Receives MOVE/UP/CANCEL events once the layer owns the drag stream. */
+    /** Receives root-owned touch events and cancellation of the original stream. */
     var dragTouchHandler: ((MotionEvent) -> Unit)? = null
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        // Intercepting a move sends a synthetic CANCEL to the child only. A
+        // CANCEL delivered to the root ends the drag, even before interception.
+        val cancelled = ev.actionMasked == MotionEvent.ACTION_CANCEL
+        val handled = super.dispatchTouchEvent(ev)
+        if (cancelled) dragTouchHandler?.invoke(ev)
+        return handled
+    }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean =
         dragInterceptor?.invoke(ev) ?: false
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        dragTouchHandler?.invoke(ev)
+        if (ev.actionMasked != MotionEvent.ACTION_CANCEL) dragTouchHandler?.invoke(ev)
         return true
     }
 }
