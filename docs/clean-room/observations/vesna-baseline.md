@@ -126,3 +126,12 @@ Nova remains the system HOME (comparison-only install).
   These are observed brackets, not exact thresholds.
 - Evidence: `EVI-VESNA-003/equal-*-before.xml` and
   `equal-*-after.xml`; the drawer was verified closed before each swipe.
+- Repeated 800 px mid-screen trials: Nova opened at 265 ms in 3/3
+  attempts and stayed closed at 270 ms in 3/3, alternating durations.
+  Vesna opened at 660 ms and stayed closed at 670, 680, and 690 ms
+  (one attempt per duration).
+- With a 1100 px swipe from mid-screen (x=520, y=1500→400),
+  both launchers opened at 120, 250, 330, 500, and 800 ms, matching
+  the 1100 px lower path at those durations.
+- Evidence: `EVI-VESNA-003/refine-*.xml`, including the closed-drawer
+  starting state and outcome for every trial.
