@@ -128,8 +128,10 @@ roadmap only records what unblocks them.
    repeat drawer scrolling with 120 fixture entries. The
    [signed 0.4.8 drag baseline](verification/VESNA-QA-DRAG-LATENCY.md) measures
    event delivery to compositor presentation after the drag reaches Home.
-   Drawer first-open timing, time to interactivity, and physical-device
-   touch-to-display latency still need measurement.
+   The [signed 0.4.8 first-open baseline](verification/VESNA-QA-DRAWER-FIRST-OPEN.md)
+   compares the first populated drawer row after cold launch with a repeat open
+   on Android 15. Time to interactivity and physical-device touch-to-display
+   latency still need measurement.
 2. **API 36.1 verification** — **done**.
    [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at
