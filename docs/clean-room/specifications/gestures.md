@@ -75,3 +75,26 @@ Derived from `observations/gestures.md` and the gesture catalog inventory
   affordance (Nova: the search pill's grid icon opens the drawer when the
   swipe route is ambiguous) — no behavior is reachable ONLY through a
   gesture whose routing can conflict.
+- R-GESTURE-112.5: Recognize workspace swipe-up using both travel distance
+  and speed. A sufficiently long, vertical swipe must be able to open the
+  drawer even when it is too slow for the short-swipe path. Use
+  density-independent distance and velocity criteria, not a fixed
+  duration cutoff or raw screen pixels. Verify using matched trajectories
+  from different workspace start zones and varying duration and distance
+  independently; the drawer starts closed for each trial.
+  Once movement exceeds the platform touch slop, cancel pending
+  workspace long-press handling so a slow swipe does not open the
+  workspace menu.
+
+### Distance and speed evidence
+
+- On the research Pixel, an 800 px swipe at 800 ms did not open the
+  drawer in either launcher. A 1100 px swipe at the same duration opened
+  it in both. Each result held for the mid-screen and lower start paths
+  tested. These device-specific samples are regression evidence, not
+  production thresholds (OBS-VESNA-003).
+- Repeated 800 px trials on Vesna 0.4.8 opened at 660 ms (3/3) but
+  not at 670 ms (0/3). At 1100 px from the same start, Vesna opened at
+  900 ms and showed the workspace menu instead at 925 ms. Nova still
+  opened at 5000 ms on that path. The menu outcome is a regression case
+  to test, not a rule to copy (OBS-VESNA-003).

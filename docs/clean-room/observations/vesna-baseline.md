@@ -135,3 +135,11 @@ Nova remains the system HOME (comparison-only install).
   the 1100 px lower path at those durations.
 - Evidence: `EVI-VESNA-003/refine-*.xml`, including the closed-drawer
   starting state and outcome for every trial.
+- Vesna 800 px repeat: alternating durations from the same mid-screen
+  start, 660 ms opened in 3/3 trials and 670 ms stayed closed in 3/3.
+- At 1100 px from mid-screen, Nova still opened the drawer at 900, 1000,
+  1200, 1500, 2000, 3000, and 5000 ms; no cutoff was observed. Vesna
+  opened at 900 ms, opened the workspace menu instead at 925 ms, and
+  did not open the drawer at 1000, 1200, 1500, or 2000 ms. These are
+  sampled outcomes, not exact thresholds.
+- Evidence: `EVI-VESNA-003/slow-*.xml` and `long-*.xml`.
