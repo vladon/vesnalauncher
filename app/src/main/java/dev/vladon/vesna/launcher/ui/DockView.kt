@@ -7,11 +7,13 @@ import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.LinearLayout
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.DockPin
 import dev.vladon.vesna.launcher.workspace.GridCanvas
+import kotlin.math.abs
 
 /**
  * Bottom bar with up to [GridCanvas.DOCK_CAPACITY] favorite apps. Weighted slots
@@ -54,6 +56,9 @@ class DockView @JvmOverloads constructor(
         null
 
     private val density = resources.displayMetrics.density
+    private val dragSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private var downX = 0f
+    private var downY = 0f
     private var dragSourceApp: LauncherApp? = null
     private var dragAnchor: android.view.View? = null
     private var dragTargetSlot: Int? = null
@@ -73,6 +78,14 @@ class DockView @JvmOverloads constructor(
         setPadding(pad, pad, pad, pad)
     }
 
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            downX = event.x
+            downY = event.y
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
     // The dragged dock icon keeps the touch stream; observed via an OnTouchListener
     // installed on the anchor. Intercepting on UP would swallow the event.
     private val dragTouchListener =
@@ -82,8 +95,10 @@ class DockView @JvmOverloads constructor(
             val dockY = view.top + event.y
             when (event.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
-                    dragMoved = true
-                    onDragProgress?.invoke(dockX, dockY)
+                    // Match Home's drag threshold; finger drift during a hold
+                    // must not replace the shortcut menu with a drop.
+                    dragMoved = dragMoved || abs(dockX - downX) > dragSlop || abs(dockY - downY) > dragSlop
+                    if (dragMoved) onDragProgress?.invoke(dockX, dockY)
                 }
                 MotionEvent.ACTION_UP -> endDrag(dockX, dockY, cancelled = false, anchor = view)
                 MotionEvent.ACTION_CANCEL -> endDrag(dockX, dockY, cancelled = true, anchor = view)

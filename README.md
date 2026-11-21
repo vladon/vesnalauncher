@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.9
+
+- A long press still opens a dock shortcut’s menu if your finger moves
+  slightly. A deliberate drag still moves the shortcut.
+
 ### 0.4.8
 
 - Fixed a cancelled long press in the app drawer taking over your next swipe.

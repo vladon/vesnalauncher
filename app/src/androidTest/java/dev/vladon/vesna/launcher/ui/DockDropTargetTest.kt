@@ -2,7 +2,10 @@ package dev.vladon.vesna.launcher.ui
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.os.SystemClock
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.apps.AppKey
@@ -11,6 +14,8 @@ import dev.vladon.vesna.launcher.workspace.DockPin
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -41,6 +46,49 @@ class DockDropTargetTest {
         val after = dock.pixels(targetX, occupiedX, y)
         assertNotEquals("The empty target should be highlighted", before.first, after.first)
         assertEquals("The occupied slot is not the drop target", before.second, after.second)
+    }
+
+    @Test
+    fun smallMovementDuringAHoldStillReleasesToTheShortcutMenu() = withDock { dock, _ ->
+        var release: Pair<Boolean, Boolean>? = null
+        var preview: Float? = null
+        dock.onDragProgress = { x, _ -> preview = x }
+        dock.onDragReleased = { _, _, moved, cancelled, _, _ -> release = moved to cancelled }
+
+        val tile = dock.getChildAt(0)
+        val x = (tile.left + tile.right) / 2f
+        val y = (tile.top + tile.bottom) / 2f
+        val slop = ViewConfiguration.get(dock.context).scaledTouchSlop
+        fun dispatch(action: Int, toX: Float, down: Long) {
+            val event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, toX, y, 0)
+            try {
+                assertTrue(dock.dispatchTouchEvent(event))
+            } finally {
+                event.recycle()
+            }
+        }
+        fun hold(): Long {
+            val down = SystemClock.uptimeMillis()
+            dispatch(MotionEvent.ACTION_DOWN, x, down)
+            assertTrue(tile.performLongClick(tile.width / 2f, tile.height / 2f))
+            return down
+        }
+
+        val stationary = hold()
+        val near = x + slop / 2f
+        dispatch(MotionEvent.ACTION_MOVE, near, stationary)
+        dispatch(MotionEvent.ACTION_UP, near, stationary)
+        assertEquals("A small movement must leave the shortcut menu available", false to false, release)
+        assertNull("A small movement must not preview a drop", preview)
+
+        val moving = hold()
+        val target = dock.getChildAt(1)
+        val targetX = (target.left + target.right) / 2f
+        dispatch(MotionEvent.ACTION_MOVE, targetX, moving)
+        assertEquals("A real drag must still preview the neighboring slot", targetX, preview)
+        dispatch(MotionEvent.ACTION_MOVE, x, moving)
+        dispatch(MotionEvent.ACTION_UP, x, moving)
+        assertEquals("Returning to the origin must not turn a drag into a menu", true to false, release)
     }
 
     private fun withDock(check: (DockView, List<DockPin>) -> Unit) {
