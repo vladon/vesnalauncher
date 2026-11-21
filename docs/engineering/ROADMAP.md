@@ -137,6 +137,9 @@ roadmap only records what unblocks them.
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at
    `332fb03`, 7/7 with the integrated BUG-005 candidate at `d8d6a748`, plus
    HOME/launch-return smoke; scope limited to that configuration.
+   The [signed follow-up](verification/VESNA-QA-API36-1-SIGNED.md) verified
+   an in-place 0.4.9 → 0.4.10 update and current Home and drawer behavior
+   on the same AVD configuration without changing the default HOME role.
 3. **Badge compatibility** — re-run the inconclusive research probe as a
    deterministic checklist once a work-profile AVD is part of the QA inventory.
 4. **Accessibility, foldables, work-profile UX** — larger-surface candidates
