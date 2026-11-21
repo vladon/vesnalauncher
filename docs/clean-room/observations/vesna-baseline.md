@@ -72,3 +72,28 @@ Nova remains the system HOME (comparison-only install).
 | Builder save gating | Disabled Save; silent persistence | No builder | No implementation found | Explain disabled Save and define save behavior (NT-CARDS-10/11) |
 | Hidden defaults | Activate on with a pre-attached ineffective condition | Not applicable | Not applicable | No hidden defaults (NT-CARDS-12) |
 | Settings state hygiene | Focused search survives force-stop | Single page; no search | Clean directory after force-stop; two-step Back and all four direct links verified | R-SETT-112 partially verified |
+
+## OBS-VESNA-003 — Workspace gesture comparison on the Pixel
+
+| Gesture | Nova 8.9.9, current bindings | Vesna 0.4.8 |
+|---|---|---|
+| Swipe up from mid-screen (y=1500→700) | Drawer viewport stayed collapsed on retry | Opened the app drawer |
+| Swipe up from lower screen (Nova y=2000→900; Vesna y=1950→850) | Opened the app drawer | Opened the app drawer |
+| Swipe down from mid-screen on Home (y=700→1500) | Opened Android's notification shade | Stayed on Home |
+| Double-tap between icons | No visible action | No visible action |
+| Swipe left from the workspace interior | No visible change | No visible change |
+| Swipe right from the workspace interior | Opened the Nova Now panel (Search apps, Nova AI) | No visible change |
+
+- Existing [Nova gesture observations](gestures.md) document that a
+  configured Quick Settings action can preempt drawer opening. No Nova
+  bindings were changed in this pass. Vesna 0.4.8 wires workspace swipe-up
+  directly to drawer opening; the settings directory has no gesture
+  assignment page. These checks do not cover the full GESTURE-112 contract.
+- The horizontal swipes started at x=850 and x=230 respectively, at
+  y=1150. Vesna's release code routes horizontal swipes to page navigation;
+  no page transition was observed on this layout. Multi-page traversal
+  was not tested.
+- Evidence: adb UI dumps for the initial vertical checks and focused
+  Android window for the notification shade; retained screenshots and
+  UI dumps in `EVI-VESNA-003` for the lower Vesna swipe, double-tap, and
+  horizontal checks. Confidence: observed for the listed test conditions.
