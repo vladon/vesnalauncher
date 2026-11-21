@@ -44,22 +44,29 @@ class AppIconView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        if (MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY) return
-
-        // In a fixed Home cell, LinearLayout measures the artwork first and can
-        // leave a scaled label shorter than its text. Keep the full line and
-        // let FIT_CENTER shrink the artwork instead of shrinking the type.
-        val line = labelView.layout ?: return
-        val lineHeight = line.getLineBottom(0) + labelView.compoundPaddingTop + labelView.compoundPaddingBottom
-        val artworkHeight = iconView.measuredHeight - (lineHeight - labelView.measuredHeight)
-        if (artworkHeight <= 0 || artworkHeight >= iconView.measuredHeight) return
-
         val artwork = iconView.layoutParams
-        val preferredHeight = artwork.height
-        artwork.height = artworkHeight
+        val preferredWidth = artwork.width
+        if (MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED) {
+            // A fixed-width child would overflow the tile's padded content.
+            val contentWidth = MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
+            artwork.width = minOf(preferredWidth, contentWidth.coerceAtLeast(0))
+        }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        artwork.height = preferredHeight
+
+        // Reserve the full scaled label line in short, fixed-height Home cells.
+        // FIT_CENTER scales the art to either limit without cropping it.
+        val line = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) labelView.layout else null
+        if (line != null) {
+            val lineHeight = line.getLineBottom(0) + labelView.compoundPaddingTop + labelView.compoundPaddingBottom
+            val artworkHeight = iconView.measuredHeight - (lineHeight - labelView.measuredHeight)
+            if (artworkHeight in 1 until iconView.measuredHeight) {
+                val preferredHeight = artwork.height
+                artwork.height = artworkHeight
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+                artwork.height = preferredHeight
+            }
+        }
+        artwork.width = preferredWidth
     }
 
     /** Tiles on an opaque drawer or folder surface don't need wallpaper label treatment. */
