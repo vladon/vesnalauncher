@@ -125,8 +125,11 @@ roadmap only records what unblocks them.
    The [signed 0.4.6 baseline](verification/VESNA-QA-SIGNED-STARTUP.md) covers
    cold, warm, and hot starts on a separate Android 15 emulator. The
    [signed 0.4.7 frame baseline](verification/VESNA-QA-DRAWER-FRAMES.md) covers
-   repeat drawer scrolling with 120 fixture entries. First-open timing, drag
-   latency, time to interactivity, and physical devices still need measurement.
+   repeat drawer scrolling with 120 fixture entries. The
+   [signed 0.4.8 drag baseline](verification/VESNA-QA-DRAG-LATENCY.md) measures
+   event delivery to compositor presentation after the drag reaches Home.
+   Drawer first-open timing, time to interactivity, and physical-device
+   touch-to-display latency still need measurement.
 2. **API 36.1 verification** — **done**.
    [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at
