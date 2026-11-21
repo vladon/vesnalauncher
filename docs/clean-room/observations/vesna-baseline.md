@@ -1,4 +1,4 @@
-# Observations — Vesna Launcher 0.4.3 baseline (the comparison target)
+# Observations — Vesna Launcher release comparison
 
 Installed on the research Pixel (55021JEBF03248) from the GitHub release
 `v0.4.3` (2026-11-20). Purpose: the feature-state baseline against the Nova
@@ -17,29 +17,45 @@ Nova remains the system HOME (comparison-only install).
   - Card system (conditions, schedules, provider cards, builder): NOT YET
     PRESENT.
   - Drawer groups / smart folders: NOT YET PRESENT.
-  - Settings search field: ABSENT (R-SETT-112.1 satisfied trivially — the
-    state trap cannot occur).
+  - Settings search field: absent; search-state reset was not applicable.
   - Widget placement: not yet observed in this pass.
-- Settings hygiene: cold open = the single root page, no search field, no
-  focus, no keyboard — the SETT-112.1 target is met by design at this
-  scope.
+- Settings opened on the single root page, without a search field or
+  keyboard. This did not verify the full R-SETT-112 contract.
 - The spec requirements (CARDS-100..105, DRAWER-106) are the design target
   for future releases; 0.4.3 predates them.
 - Evidence: EVI-CARDS-001 (vesna-first-launch, vesna-explore-1,
   vesna-settings, vesna-settings-btm)
 - Confidence: Observed
 
-## Comparison table (Nova 8.9.9 findings vs Vesna 0.4.3 vs the spec)
+## OBS-VESNA-002 — v0.4.8 follow-up
 
-| Researched area | Nova 8.9.9 | Vesna 0.4.3 | Spec requirement |
-|---|---|---|---|
-| Card conditions render gate | decorative (all states render; expiry silent) | n/a — no cards | enforced engine + loud expiry (NT-CARDS-01/02) |
-| Met-later surface promise | never surfaced | n/a | one-refresh enqueue (NT-CARDS-03) |
-| Manual-location fallback | promised, nonexistent | n/a — no cards | copy-gated surfaces (NT-CARDS-04) |
-| Scheduled location go-live | never rendered at go-live | n/a | go-live surfacing (NT-CARDS-03/105) |
-| Calendar connect gate | runtime grant ignored | n/a — no calendar card | one-step enable (NT-CARDS-06) |
-| Smart folders | dark-by-default (per-item Enable) | n/a — no groups | master-toggle sufficiency + first-run choice (NT-DRAWER-01/02) |
-| Empty generated folders | bare unlabeled icons | n/a | not rendered (NT-DRAWER-03) |
-| Builder save gating | grey Save, silent persistence | n/a — no builder | live reasons + total semantics (NT-CARDS-10/11) |
-| Hidden defaults | Activate ON + pre-attached dead condition | n/a | no hidden defaults (NT-CARDS-12) |
-| Settings state hygiene | stale focused search survives force-stop | clean single page ✓ | R-SETT-112.1..4 (already met at this scope) |
+- Upgraded the research Pixel in place from 0.4.3 to the
+  [GitHub release v0.4.8](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.8).
+  The APK matched the published SHA-256; Vesna launched and Nova remained
+  the system HOME.
+- Observed on the Pixel: opening settings from Vesna's menu showed the
+  Default launcher, Appearance, and About directory, with an empty,
+  unfocused search field. Searching for `theme` returned the Theme control
+  under Appearance. The first Back preserved the query and results; the
+  second cleared the query and restored the directory.
+- Not retested: reopening settings after force-stop (the exact Nova
+  reproduction), direct settings links, or drawer scrolling after Android
+  cancels a long press (listed as fixed in the release notes).
+- The [release diff](https://github.com/vladon/vesnalauncher/compare/v0.4.3...v0.4.8)
+  showed no implementation of cards, smart folders, or the card builder.
+  Those acceptance scenarios remain untested.
+
+## Comparison: Nova 8.9.9 vs Vesna releases
+
+| Researched area | Nova 8.9.9 | Vesna 0.4.3 | Vesna 0.4.8 | Spec requirement |
+|---|---|---|---|---|
+| Card conditions render gate | Decorative; expiry is silent | No cards | No implementation found | Enforce conditions and surface expiry (NT-CARDS-01/02) |
+| Met-later surface promise | Never surfaced | Not applicable | Not applicable | Enqueue within one refresh (NT-CARDS-03) |
+| Manual-location fallback | Promised but absent | Not applicable | Not applicable | Only promise reachable surfaces (NT-CARDS-04) |
+| Scheduled location go-live | Did not render at activation | Not applicable | Not applicable | Surface at go-live (NT-CARDS-03; CARDS-105) |
+| Calendar connect gate | Runtime grant ignored | No Calendar card | No implementation found | One-step enable (NT-CARDS-06) |
+| Smart folders | Off until enabled per folder | No smart folders | No implementation found | Master toggle and first-run choice (NT-DRAWER-01/02) |
+| Empty generated folders | Unlabeled icons | Not applicable | Not applicable | Do not render empty groups (NT-DRAWER-03) |
+| Builder save gating | Disabled Save; silent persistence | No builder | No implementation found | Explain disabled Save and define save behavior (NT-CARDS-10/11) |
+| Hidden defaults | Activate on with a pre-attached ineffective condition | Not applicable | Not applicable | No hidden defaults (NT-CARDS-12) |
+| Settings state hygiene | Focused search survives force-stop | Single page; no search | Empty, unfocused search on menu entry; two-step Back verified. Force-stop recovery untested. | R-SETT-112 partially verified |
