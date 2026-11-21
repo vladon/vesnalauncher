@@ -48,3 +48,8 @@ with the same host key. After `deleteAppWidgetId`, the ID set matched the
 baseline again. This establishes the enumeration and cleanup mechanism on
 the tested images; it does not verify process interruption, binding consent,
 configuration cancellation, or restore.
+
+A [separate host and provider check](../engineering/verification/VESNA-QA-WIDGET-PLATFORM.md)
+verified that explicitly deleting the pending ID after Android binding denial
+and reconciling orphan IDs after force-stop both worked on API 26 and 35.
+Provider configuration cancellation and restore are still unverified.
