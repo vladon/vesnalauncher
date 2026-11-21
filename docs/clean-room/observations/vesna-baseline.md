@@ -38,9 +38,22 @@ Nova remains the system HOME (comparison-only install).
   unfocused search field. Searching for `theme` returned the Theme control
   under Appearance. The first Back preserved the query and results; the
   second cleared the query and restored the directory.
-- Not retested: reopening settings after force-stop (the exact Nova
-  reproduction), direct settings links, or drawer scrolling after Android
-  cancels a long press (listed as fixed in the release notes).
+- Force-stop check on the Pixel: with `theme` entered, the search field
+  focused, and the keyboard visible, force-stopped Vesna. The process
+  exited. After a cold launch and reopening settings from the menu, the
+  full directory returned with an empty, unfocused field and no keyboard.
+- Evidence: adb UI dumps before and after, input-method state, and
+  `am start -W` reporting `LaunchState: COLD`. Confidence: observed.
+- Direct links on the Pixel: Android resolved unscoped browsable `VIEW`
+  intents for `vesna://settings/`, `/default-launcher`, `/appearance`,
+  and `/about` to Vesna. UI dumps confirmed the expected page for each
+  link, with no keyboard. Appearance was tested from a cold start; the
+  other three links were opened while Settings was already running.
+- Drawer cancellation on the Pixel: at stock display density the app grid
+  fit on screen. At a temporary density of 560 dpi, held the AICore tile
+  for one second, injected `ACTION_CANCEL`, then swiped upward. UI dumps
+  showed the drawer stayed open and the top visible row moved from
+  AICore/Calculator to Files/Find Hub. Restored the stock 420 dpi.
 - The [release diff](https://github.com/vladon/vesnalauncher/compare/v0.4.3...v0.4.8)
   showed no implementation of cards, smart folders, or the card builder.
   Those acceptance scenarios remain untested.
@@ -58,4 +71,4 @@ Nova remains the system HOME (comparison-only install).
 | Empty generated folders | Unlabeled icons | Not applicable | Not applicable | Do not render empty groups (NT-DRAWER-03) |
 | Builder save gating | Disabled Save; silent persistence | No builder | No implementation found | Explain disabled Save and define save behavior (NT-CARDS-10/11) |
 | Hidden defaults | Activate on with a pre-attached ineffective condition | Not applicable | Not applicable | No hidden defaults (NT-CARDS-12) |
-| Settings state hygiene | Focused search survives force-stop | Single page; no search | Empty, unfocused search on menu entry; two-step Back verified. Force-stop recovery untested. | R-SETT-112 partially verified |
+| Settings state hygiene | Focused search survives force-stop | Single page; no search | Clean directory after force-stop; two-step Back and all four direct links verified | R-SETT-112 partially verified |
