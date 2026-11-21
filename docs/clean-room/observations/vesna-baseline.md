@@ -178,3 +178,18 @@ Nova remains the system HOME (comparison-only install).
   21, and 21.5 seconds (2/2 each); Vesna opened the workspace menu
   at 725, 750, and 775 ms (2/2 each). The drawer never opened in
   these repeats. Evidence: `EVI-VESNA-003/narrow-*.xml`.
+- Alternating Nova replay: 20 s opened the drawer in 3/3 trials;
+  20.5 s opened it in 1/3 and showed Widgets in 2/3. Combined with
+  the prior replay, 20.5 s opened the drawer in 1/5 and Widgets in
+  4/5; it is not a deterministic cutoff.
+- Vesna 0.4.10 opened the workspace menu at 665, 685, and 705 ms
+  (2/2 each), never the drawer. Both launchers used the same 1100 px
+  trajectory. Evidence: `EVI-VESNA-003/repeat-*.xml`.
+- Two-page replay: horizontal two-pointer streams in both directions,
+  with the second pointer added before motion or during the swipe,
+  left the selected page unchanged in all four timed trials. Single-
+  finger controls switched pages in both directions. An earlier
+  synchronous two-pointer replay opened the workspace menu; its
+  timing was not controlled. Removed the temporary page and verified
+  the single-page layout. Evidence: `EVI-VESNA-003/two-fast-*`,
+  `two-right-022210.*`, and `two-restored-*`.

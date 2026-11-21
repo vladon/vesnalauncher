@@ -215,3 +215,18 @@ Traceability: every ticket's acceptance scenario lives in
 `acceptance-tests/scenarios.md`. The Nova counter-evidence lives in
 `observations/cards.md` (OBS-CARDS-117..119), `observations/app-drawer.md`
 (OBS-DRAWER-112), and `observations/gestures.md` (OBS-GESTURE-112).
+
+## NT-GESTURE-03 (P1) — Slow upward swipe opens the workspace menu
+
+- Gap: Vesna 0.4.10 can open the long-press workspace menu during a
+  continuous 1100 px upward swipe. On the research Pixel, the menu
+  opened at 725, 750, and 775 ms in both trials at each duration
+  (OBS-VESNA-004; EVI-VESNA-003). These timings describe the repro,
+  not production thresholds.
+- Spec: R-GESTURE-112.1 and R-GESTURE-112.5.
+- Expected: cancel the pending workspace long press when movement
+  exceeds touch slop. A qualifying slow, long swipe opens only the
+  drawer; an unqualified moving swipe opens neither surface.
+  A stationary hold still opens the workspace menu.
+- Accept: AT-GESTURE-112.5, including matched start zones, a shorter
+  slow swipe, a faster short swipe, and the stationary-hold control.
