@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.13
+
+- Home and dock icons fit narrow windows without being cropped or moving
+  shortcuts to different slots.
+
 ### 0.4.12
 
 - Page numbers stay readable with large text in very narrow windows. The
