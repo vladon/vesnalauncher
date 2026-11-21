@@ -108,7 +108,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| GESTURE-001 | Swipe up / down on home screen | discovered (catalog rows; Prime-gated assignment) |
+| GESTURE-001 | Swipe up / down on home screen | Observed on Pixel: at 800 ms both launchers opened the drawer with a 1100 px swipe but not with an 800 px swipe; slow 1100 px swipes could open the workspace menu instead in Vesna 0.4.8 (OBS-VESNA-003; EVI-VESNA-003; AT-GESTURE-112.5) |
 | GESTURE-002 | Double tap | discovered (Prime-gated) |
 | GESTURE-003 | Long press on empty space | observed (opens customize mode) |
 | GESTURE-004 | Pinch in/out | discovered (Prime-gated rows) |

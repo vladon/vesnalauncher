@@ -154,3 +154,23 @@ Nova remains the system HOME (comparison-only install).
   rightward swipe moved from page 2 to 1, and a leftward swipe moved
   from page 1 back to 2. Removed the empty page and verified that
   the single-page controls returned. See `EVI-VESNA-003/pages-*`.
+
+## OBS-VESNA-004 — Vesna 0.4.10 slow swipes and page boundaries
+
+- Upgraded the Pixel to GitHub release v0.4.10 in place after checking
+  the published APK SHA-256. `adb dumpsys package` confirmed
+  `versionName=0.4.10` before testing. Nova remained the system HOME.
+- Replayed the 1100 px swipe from (520,1500) to (520,400). Vesna opened
+  the workspace menu instead of the drawer at every tested duration:
+  800 ms (1/1), 825/850/875 ms (3/3 each), 900 ms (2/2), and
+  925 ms (1/1). The slow-swipe acceptance scenario still fails.
+- Nova 8.9.9 opened Widgets, not the app drawer, at 22, 24, 25, and
+  40 seconds on the same path (one trial each). It previously opened
+  the drawer at 20 seconds. These samples do not establish an exact cutoff.
+- With two Vesna Home pages, swipes from x=100 to x=980 and vice versa
+  at y=1150 switched pages toward the interior. Outward swipes kept
+  page 1 or page 2 selected as appropriate; there was no wraparound.
+  Removed the temporary empty page and verified the single-page layout.
+- Evidence: `EVI-VESNA-003/latest-nova-*`, `latest2-*`, and
+  `latest-pages-*` / `latest-first-*` / `latest-last-*`. Confidence:
+  observed for these paths and durations.
