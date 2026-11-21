@@ -37,18 +37,19 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom" />
 
-        <LinearLayout
+        <dev.vladon.vesna.launcher.ui.HomeControls
             android:id="@+id/home_controls"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/home_control_target"
             android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginHorizontal="16dp"
             android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/home_options"
-                android:layout_width="48dp"
+                android:layout_width="@dimen/home_control_target"
                 android:layout_height="match_parent"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="@dimen/home_control_gap"
                 android:background="@drawable/home_control_icon_button"
                 android:contentDescription="@string/home_options"
                 android:focusable="true"
@@ -61,7 +62,7 @@
                 android:id="@+id/workspace_page_controls"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="@dimen/home_control_gap"
                 android:background="@drawable/home_control_surface"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
@@ -70,7 +71,7 @@
 
                 <ImageButton
                     android:id="@+id/workspace_previous_page"
-                    android:layout_width="48dp"
+                    android:layout_width="@dimen/home_control_target"
                     android:layout_height="match_parent"
                     android:background="@drawable/home_control_states"
                     android:contentDescription="@string/workspace_previous_page"
@@ -86,11 +87,12 @@
                     android:background="@drawable/home_control_states"
                     android:focusable="true"
                     android:importantForAccessibility="yes"
+                    android:minWidth="@dimen/home_control_target"
                     android:tooltipText="@string/workspace_choose_page" />
 
                 <ImageButton
                     android:id="@+id/workspace_next_page"
-                    android:layout_width="48dp"
+                    android:layout_width="@dimen/home_control_target"
                     android:layout_height="match_parent"
                     android:background="@drawable/home_control_states"
                     android:contentDescription="@string/workspace_next_page"
@@ -101,7 +103,7 @@
 
             <ImageButton
                 android:id="@+id/home_open_drawer"
-                android:layout_width="48dp"
+                android:layout_width="@dimen/home_control_target"
                 android:layout_height="match_parent"
                 android:background="@drawable/home_control_icon_button"
                 android:contentDescription="@string/drawer_open"
@@ -110,7 +112,7 @@
                 android:scaleType="center"
                 android:src="@drawable/ic_open_drawer"
                 android:tooltipText="@string/drawer_open" />
-        </LinearLayout>
+        </dev.vladon.vesna.launcher.ui.HomeControls>
     </FrameLayout>
 
     <dev.vladon.vesna.launcher.ui.DrawerView

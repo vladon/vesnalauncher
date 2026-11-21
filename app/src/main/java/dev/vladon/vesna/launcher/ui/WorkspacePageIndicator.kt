@@ -18,6 +18,10 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
     private var selected = -1
     private var count = 0
 
+    internal val preferredWidth: Int
+        get() = ceil(((count + 1) * STEP_DP).coerceAtMost(MAX_WIDTH_DP) * density)
+            .toInt().coerceAtLeast(suggestedMinimumWidth)
+
     override fun getAccessibilityClassName(): CharSequence = Button::class.java.name
 
     fun bind(position: Int, pageCount: Int) {
@@ -33,10 +37,7 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(
-            resolveSize(
-                ceil(((count + 1) * STEP_DP).coerceIn(MIN_WIDTH_DP, MAX_WIDTH_DP) * density).toInt(),
-                widthMeasureSpec,
-            ),
+            resolveSize(preferredWidth, widthMeasureSpec),
             MeasureSpec.getSize(heightMeasureSpec),
         )
     }
@@ -61,7 +62,6 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
 
     private companion object {
         const val STEP_DP = 12f
-        const val MIN_WIDTH_DP = 48f
         // Leave 16 dp at each side of the full Home control row on a 320 dp display.
         const val MAX_WIDTH_DP = 80f
     }

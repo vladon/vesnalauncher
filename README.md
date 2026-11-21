@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.11
+
+- Home options, the page picker, and the app drawer stay fully tappable in
+  narrow windows. If the page arrows don’t fit, use the picker or swipe
+  between pages.
+
 ### 0.4.10
 
 - Touching the Home workspace with a second finger no longer switches
