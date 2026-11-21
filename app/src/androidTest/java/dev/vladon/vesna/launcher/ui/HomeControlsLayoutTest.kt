@@ -61,11 +61,13 @@ class HomeControlsLayoutTest {
 
             for (direction in listOf(View.LAYOUT_DIRECTION_LTR, View.LAYOUT_DIRECTION_RTL)) {
                 root.layoutDirection = direction
-                layout(220)
-                assertEquals(direction, controls.layoutDirection)
-                assertEquals(View.GONE, previous.visibility)
-                assertEquals(View.GONE, next.visibility)
-                listOf(options, picker, drawer).forEach(::assertContained)
+                for (width in listOf(184, 220)) {
+                    layout(width)
+                    assertEquals(direction, controls.layoutDirection)
+                    assertEquals(View.GONE, previous.visibility)
+                    assertEquals(View.GONE, next.visibility)
+                    listOf(options, picker, drawer).forEach(::assertContained)
+                }
 
                 layout(320)
                 assertEquals(View.VISIBLE, previous.visibility)

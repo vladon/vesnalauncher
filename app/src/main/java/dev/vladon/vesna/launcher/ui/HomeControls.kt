@@ -12,6 +12,7 @@ import dev.vladon.vesna.launcher.R
 internal class HomeControls(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
     private val target = resources.getDimensionPixelSize(R.dimen.home_control_target)
     private val gap = resources.getDimensionPixelSize(R.dimen.home_control_gap)
+    private val preferredGutter = resources.getDimensionPixelSize(R.dimen.home_control_gutter)
     private lateinit var pageControls: View
     private lateinit var pagePicker: WorkspacePageIndicator
     private lateinit var previous: View
@@ -26,18 +27,26 @@ internal class HomeControls(context: Context, attrs: AttributeSet) : LinearLayou
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val availableWidth = MeasureSpec.getSize(widthMeasureSpec)
-        val essentialWidth = 2 * (target + gap)
+        val width = MeasureSpec.getSize(widthMeasureSpec)
+        val bounded = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED
+        val hasPicker = pageControls.isVisible
+        val otherControlsWidth = 2 * (target + gap)
+        val essentials = otherControlsWidth + if (hasPicker) target else -gap
+        // Give up outer space before shrinking any of the essential touch targets.
+        val gutter = if (bounded) {
+            minOf(preferredGutter, ((width - essentials) / 2).coerceAtLeast(0))
+        } else preferredGutter
+        if (paddingLeft != gutter) setPadding(gutter, 0, gutter, 0)
+        val contentWidth = width - 2 * gutter
         val pickerWidth = pagePicker.preferredWidth
-        val compact = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED &&
-            availableWidth < essentialWidth + 2 * target + pickerWidth
+        val compact = hasPicker && bounded && contentWidth < otherControlsWidth + pickerWidth + 2 * target
 
         if (compact && (previous.hasFocus() || next.hasFocus())) pagePicker.requestFocus()
         previous.isVisible = !compact
         next.isVisible = !compact
         // Reserve space for the drawer button, which LinearLayout measures after this group.
         pageControls.layoutParams.width = if (compact) {
-            minOf(pickerWidth, (availableWidth - essentialWidth).coerceAtLeast(target))
+            minOf(pickerWidth, (contentWidth - otherControlsWidth).coerceAtLeast(target))
         } else ViewGroup.LayoutParams.WRAP_CONTENT
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
