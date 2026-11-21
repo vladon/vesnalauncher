@@ -94,7 +94,8 @@ Derived from `observations/gestures.md` and the gesture catalog inventory
   tested. These device-specific samples are regression evidence, not
   production thresholds (OBS-VESNA-003).
 - Repeated 800 px trials on Vesna 0.4.8 opened at 660 ms (3/3) but
-  not at 670 ms (0/3). At 1100 px from the same start, Vesna opened at
-  900 ms and showed the workspace menu instead at 925 ms. Nova still
-  opened at 5000 ms on that path. The menu outcome is a regression case
-  to test, not a rule to copy (OBS-VESNA-003).
+  not at 670 ms (0/3). At 1100 px from the same start, Vesna initially
+  opened at 900 ms, but the repeat showed the workspace menu in 3/3
+  trials at both 900 and 925 ms. Nova still opened at 20000 ms on
+  that path. The menu outcome is a regression case, not a rule to copy
+  (OBS-VESNA-003; AT-GESTURE-112.5).

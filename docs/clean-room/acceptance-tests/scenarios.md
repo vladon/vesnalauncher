@@ -273,6 +273,22 @@ its feature ID. These describe externally observable behavior only.
 - And every gesture target remains reachable through a deterministic
   non-gesture affordance
 
+### AT-GESTURE-112.5 — Slow swipe does not open the workspace menu
+- Given the drawer is closed and the workspace has two unobstructed
+  starting zones for an upward swipe
+- When a slow, continuous upward swipe exceeds touch slop before the
+  long-press timeout and travels far enough for the long-swipe path
+- Then the drawer opens once and the workspace menu never appears
+- When the same slow motion ends short of the distance criterion and
+  remains below the short-swipe velocity criterion
+- Then neither the drawer nor the workspace menu opens
+- And a faster swipe of that shorter distance opens the drawer when it
+  meets the short-swipe criteria
+- And replaying each trajectory with the same distance and duration from
+  the other starting zone gives the same result
+- And a stationary hold on an empty area still opens the workspace menu
+  as a control
+
 ## Settings
 
 ### AT-SETTING-112 — Settings opens clean and deep-links land true

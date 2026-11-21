@@ -91,8 +91,8 @@ Nova remains the system HOME (comparison-only install).
   assignment page. These checks do not cover the full GESTURE-112 contract.
 - The horizontal swipes started at x=850 and x=230 respectively, at
   y=1150. Vesna's release code routes horizontal swipes to page navigation;
-  no page transition was observed on this layout. Multi-page traversal
-  was not tested.
+  no page transition was observed on the original single-page layout.
+  See the multi-page follow-up below.
 - Evidence: adb UI dumps for the initial vertical checks and focused
   Android window for the notification shade; retained screenshots and
   UI dumps in `EVI-VESNA-003` for the lower Vesna swipe, double-tap, and
@@ -143,3 +143,14 @@ Nova remains the system HOME (comparison-only install).
   did not open the drawer at 1000, 1200, 1500, or 2000 ms. These are
   sampled outcomes, not exact thresholds.
 - Evidence: `EVI-VESNA-003/slow-*.xml` and `long-*.xml`.
+- Alternating 1100 px trials: Vesna showed the workspace menu instead
+  of the drawer in 3/3 trials at 900 ms and 3/3 at 925 ms. The
+  earlier drawer opening at 900 ms was not reproduced. See
+  `EVI-VESNA-003/endurance-vesna-*`.
+- Nova opened the drawer at 6000, 10000, 15000, and 20000 ms on that
+  same path; no cutoff was observed through 20 seconds.
+  See `EVI-VESNA-003/endurance-nova-*`.
+- Vesna multi-page check: after adding a temporary empty page, a
+  rightward swipe moved from page 2 to 1, and a leftward swipe moved
+  from page 1 back to 2. Removed the empty page and verified that
+  the single-page controls returned. See `EVI-VESNA-003/pages-*`.
