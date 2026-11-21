@@ -193,3 +193,20 @@ Nova remains the system HOME (comparison-only install).
   timing was not controlled. Removed the temporary page and verified
   the single-page layout. Evidence: `EVI-VESNA-003/two-fast-*`,
   `two-right-022210.*`, and `two-restored-*`.
+
+## OBS-VESNA-005 — Vesna 0.4.12 gesture follow-up
+
+- On the same 1100 px mid-screen path, Vesna 0.4.10 opened the
+  workspace menu at 525, 575, 625, and 650 ms (2/2 each).
+- Upgraded from GitHub after checking the APK digest. The installed
+  package reported `versionName=0.4.12`. The menu still opened
+  instead of the drawer at 525, 575, 625, 650, 665, 750, 900, and
+  925 ms (one trial each); NT-GESTURE-03 remains open.
+- Nova opened Widgets at 20.1 s and the drawer at 20.25 and 20.4 s
+  (one trial each). These outcomes do not establish a stable cutoff.
+- On the 0.4.12 two-page workspace, eight timed two-finger swipes
+  (both directions, second pointer before or during motion) neither
+  changed the selected page nor opened the menu. Single-finger
+  controls changed pages in both directions. Removed the temporary
+  page, verified the single-page layout, and returned to Nova.
+- Evidence: `EVI-VESNA-003/v412-*.xml` and `v412-two-*.png`.
