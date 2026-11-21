@@ -174,3 +174,7 @@ Nova remains the system HOME (comparison-only install).
 - Evidence: `EVI-VESNA-003/latest-nova-*`, `latest2-*`, and
   `latest-pages-*` / `latest-first-*` / `latest-last-*`. Confidence:
   observed for these paths and durations.
+- Narrow-range replay on the same path: Nova opened Widgets at 20.5,
+  21, and 21.5 seconds (2/2 each); Vesna opened the workspace menu
+  at 725, 750, and 775 ms (2/2 each). The drawer never opened in
+  these repeats. Evidence: `EVI-VESNA-003/narrow-*.xml`.

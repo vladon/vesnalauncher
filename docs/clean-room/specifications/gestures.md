@@ -99,3 +99,12 @@ Derived from `observations/gestures.md` and the gesture catalog inventory
   trials at both 900 and 925 ms. Nova still opened at 20000 ms on
   that path. The menu outcome is a regression case, not a rule to copy
   (OBS-VESNA-003; AT-GESTURE-112.5).
+- Vesna 0.4.10 still fails the slow-swipe acceptance case: on the
+  1100 px mid-screen replay the workspace menu opened at 725, 750,
+  and 775 ms (2/2 each), and at every sampled duration from 800 to
+  925 ms. Nova opened the drawer in a 20 s trial but showed Widgets
+  at 20.5, 21 and 21.5 s (2/2 each) on the same path. These are
+  observations, not duration cutoffs to implement (OBS-VESNA-004).
+- Vesna 0.4.10 switched to the adjacent page on inward horizontal
+  swipes and stayed on the first or last page on outward swipes.
+  No wraparound was observed on the two-page layout (OBS-VESNA-004).
