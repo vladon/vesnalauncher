@@ -77,8 +77,8 @@ Nova remains the system HOME (comparison-only install).
 
 | Gesture | Nova 8.9.9, current bindings | Vesna 0.4.8 |
 |---|---|---|
-| Swipe up from mid-screen (y=1500→700) | Opened at 120 and 250 ms; stayed collapsed at 330, 500 and 800 ms in the recorded trials | Opened the app drawer at 330 ms |
-| Swipe up from lower screen (Nova y=2000→900; Vesna y=1950→850) | Opened the app drawer | Opened the app drawer |
+| Swipe up from mid-screen (y=1500→700) | Opened at 120 and 250 ms; stayed collapsed at 270, 290, 310, 330, 500 and 800 ms | Opened at 120, 250, 270, 290, 310, 330 and 500 ms; stayed closed at 800 ms |
+| Swipe up from lower screen (y=1950→850) | Opened at 120, 250, 330, 500 and 800 ms | Opened at all five durations |
 | Swipe down from mid-screen on Home (y=700→1500) | Opened Android's notification shade | Stayed on Home |
 | Double-tap between icons | No visible action | No visible action |
 | Swipe left from the workspace interior | No visible change | No visible change |
@@ -109,3 +109,8 @@ Nova remains the system HOME (comparison-only install).
   established. Evidence:
   `EVI-VESNA-003/nova-live-gesture-binding-*`, `nova-controlled-*`, and
   `nova-final-*` in the same evidence directory.
+- Speed matrix follow-up: both trajectories used x=520 and started with
+  the drawer verified closed; `EVI-VESNA-003/matrix-*-before.xml` and
+  `matrix-*-after.xml` retain the UI observations. These are sampled
+  durations, not measured thresholds. The lower path was also longer
+  (1100 px vs 800 px), so this test does not isolate the starting zone.
