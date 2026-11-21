@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,7 +74,10 @@ internal class FolderDialog(
                     title = { Text(currentTitle, maxLines = 2, overflow = TextOverflow.Ellipsis) },
                     text = {
                         Column {
-                            AndroidView(factory = { list }, modifier = Modifier.fillMaxWidth().weight(1f, fill = false))
+                            AndroidView(
+                                factory = { list },
+                                modifier = Modifier.fillMaxWidth().weight(1f, fill = false).clipToBounds(),
+                            )
                             SnackbarHost(snackbar)
                         }
                     },

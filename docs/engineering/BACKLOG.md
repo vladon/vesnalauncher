@@ -159,16 +159,14 @@ is the removal-side counterpart.
 
 ### ENG-103: Folder pagination and drag-into verification
 
-Pagination is the implementation work: folder contents beyond one screen are
-not implemented. Drag-into-folder already exists in source — drops onto a folder
-cell route through `LauncherController.addToFolder` in two `HomeActivity` paths —
-so the drag-into half of this item is **verification of the existing UI flow**,
-not implementation, and folds naturally into the on-device QA pass. Research is
-the gate for both: the `FOLDER-100`/`FOLDER-101` scenarios are missing
-([RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md#known-weaknesses-in-the-research-matrix)).
-No hard dependency on page identities is assumed; if
-[ENG-101](#eng-101-workspace-page-identities-and-schema-migration) work
-establishes one, record it in this item with evidence.
+Verified drag-in from Home and the drawer, restart persistence, and scrolling
+through 11–12 members on Android 8 and 15. Fixed gallery items drawing over
+the folder header and actions at enlarged text sizes.
+See [ENG-103 device evidence](verification/VESNA-QA-ENG-103.md).
+
+Keep the scrollable grid. The published creation, rename, and dismissal
+scenarios do not establish a need for pagination; revisit only with evidence
+that the current interaction is insufficient.
 
 ### ENG-104: Settings search and structured preferences
 
