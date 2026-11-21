@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.6
+
+- Fixed icons drawing over the header and buttons when scrolling long folders
+  on narrow screens with large text.
+
 ### 0.4.5
 
 - Search by setting name or description. Results show the parent section and
