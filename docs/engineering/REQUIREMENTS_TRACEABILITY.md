@@ -98,7 +98,7 @@ Pinned specs: [`specifications/settings.md`](https://github.com/vladon/vesnalaun
 
 | Research ID | Meaning | Vesna anchors | Status |
 |---|---|---|---|
-| `SETT-110` | **Settings search/deep-linking** (not reset) | Settings directory filters named destinations | **Partial** — breadcrumbs and individual control highlights are not implemented; no dedicated research scenario ([ENG-107](BACKLOG.md#eng-107-research-matrix-fix-ups-research-branch-not-trunk)). |
+| `SETT-110` | **Settings search/deep-linking** (not reset) | Pinned search, title and subtitle matches, and breadcrumb cards that land on highlighted controls | **Verified** on API 26 and 35; see [acceptance scenario](verification/VESNA-QA-SETTINGS-SEARCH.md). |
 | `SETT-112` / `NT-SETTING-01` | Clean root, exact named links, and keyboard-first Back | Settings directory and `SettingsActivity` routes | **Verified** on API 26 and 35 for `R-SETT-112.1`–`.3`; see [QA](verification/VESNA-QA-SETTINGS-NAVIGATION.md). Unsaved-change dialogs (`.4`) are out of scope. |
 | `BACKUP-101` | Reset (coverage partial in research) | none — trunk has no reset feature | **Gap on both sides**; reset work pairs with [ENG-106 in BACKLOG.md](BACKLOG.md#eng-106-backuprestore-policy) |
 | `BACKUP-102` | Backup | `android:allowBackup="true"` in the manifest (platform-managed); no explicit backup/restore feature | **Not implemented (feature)**; platform backup enabled by manifest default. No dedicated research scenario. Scope decision pending — [ADR-BACKUP-1 in BACKLOG.md](BACKLOG.md#adr-backup-1-backup-and-privacy-policy) |
@@ -143,7 +143,7 @@ Pinned specs: [`specifications/settings.md`](https://github.com/vladon/vesnalaun
 | Source-verified at the audit baseline | Initial HOME, profiles, seeding, package-event and settings wiring. See the platform rows above for the subsequent device runs. |
 | Measured (debug, emulator scope) | QA-007 process-cold timing (API 35 shared-host emulator), QA-009 paired cold/warm timings (dedicated Android 15 AVD; no HOT measured) |
 | Outside the baseline audit | HOME gesture, migrations, reboot persistence, managed profiles, package removal/unavailability, app-to-HOME return, folder/dock UI flows |
-| Not implemented | Widgets, cards, settings search breadcrumbs and control highlights, settings reset, explicit backup/restore, icon packs, fuzzy search |
+| Not implemented | Widgets, cards, settings reset, explicit backup/restore, icon packs, fuzzy search |
 | Blocked / decision needed | `DRAWER-105` ID reuse, `CARDS-100` (condition-triggered content; location/manual-fallback privacy), `DRAWER-102` ambiguity, `BACKUP-102` scenario |
 
 New engineering work must add or update a row here in the same change that adds

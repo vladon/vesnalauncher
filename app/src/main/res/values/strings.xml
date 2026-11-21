@@ -14,6 +14,9 @@
     <string name="settings_about_detail">Version, license, and source code</string>
     <string name="settings_search">Search settings</string>
     <string name="settings_search_empty">No settings found</string>
+    <string name="settings_search_breadcrumb">Vesna settings › %1$s</string>
+    <string name="settings_search_match">Search match</string>
+    <string name="settings_theme_detail">Follow Android or choose a light or dark theme</string>
     <string name="settings_back_to_root">Back to Vesna settings</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_system">System</string>
