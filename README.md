@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.10
+
+- Touching the Home workspace with a second finger no longer switches
+  pages by mistake. Single-finger swipes and the page controls still work.
+
 ### 0.4.9
 
 - A long press still opens a dock shortcut’s menu if your finger moves
