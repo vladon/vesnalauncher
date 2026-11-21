@@ -46,6 +46,7 @@
     <string name="workspace_page_position">Страница рабочего стола %1$d из %2$d</string>
     <string name="workspace_choose_page">К странице…</string>
     <string name="workspace_page_number">Страница %1$d</string>
+    <string name="workspace_page_picker_label">Стр. %1$d</string>
     <string name="reorder_page_position">На позицию %1$d</string>
 
     <string name="workspace_empty_hint">Откройте меню рабочего стола, чтобы настроить страницу</string>

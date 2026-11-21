@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.12
+
+- Page numbers stay readable with large text in very narrow windows. The
+  Home controls give up outer spacing before shrinking their touch targets.
+
 ### 0.4.11
 
 - Home options, the page picker, and the app drawer stay fully tappable in

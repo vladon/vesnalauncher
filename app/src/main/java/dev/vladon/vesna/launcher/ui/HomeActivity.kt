@@ -367,7 +367,8 @@ class HomeActivity : ComponentActivity() {
         val popup = vesnaPopupMenu(anchor)
         state.pageIds.forEachIndexed { index, pageId ->
             val number = index + 1
-            popup.menu.add(0, number, number, getString(R.string.workspace_page_number, number))
+            popup.menu.add(0, number, number, getString(R.string.workspace_page_picker_label, number))
+                .setContentDescription(getString(R.string.workspace_page_number, number))
                 .setOnMenuItemClickListener {
                     if (pageId != renderedState.activePageId) controller.selectWorkspacePage(pageId)
                     true
