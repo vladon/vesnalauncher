@@ -213,7 +213,7 @@ class HomeActivity : ComponentActivity() {
                     updateDragTarget(ev.x, ev.y)
                 }
                 MotionEvent.ACTION_UP -> onRootDragReleased(ev.x, ev.y)
-                MotionEvent.ACTION_CANCEL -> onRootDragCancelled()
+                MotionEvent.ACTION_CANCEL -> if (source?.fromDrawer == true) onRootDragCancelled()
             }
         }
 

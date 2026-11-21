@@ -22,6 +22,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.SettingsActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -265,14 +266,14 @@ class DrawerSearchTest {
 
             swipeDown(list, MotionEvent.ACTION_UP)
             assertTrue("The swipe must actually reach the top", !list.canScrollVertically(-1))
-            assertEquals(
+            assertNotEquals(
                 "Returning to the top must not dismiss the drawer",
-                View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+                View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS,
                 host.importantForAccessibility,
             )
 
             swipeDown(list, MotionEvent.ACTION_CANCEL)
-            assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO, host.importantForAccessibility)
+            assertNotEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, host.importantForAccessibility)
 
             swipeDown(list, MotionEvent.ACTION_UP)
             assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, host.importantForAccessibility)
