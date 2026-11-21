@@ -100,6 +100,7 @@ class WorkspaceView @JvmOverloads constructor(
     private var downX = 0f
     private var downY = 0f
     private var pageSwipe = false
+    private var pageSwipeInterrupted = false
     private var longPressed = false
 
     private val gestureDetector = GestureDetector(
@@ -138,8 +139,12 @@ class WorkspaceView @JvmOverloads constructor(
             downX = ev.x
             downY = ev.y
             pageSwipe = false
+            pageSwipeInterrupted = false
             longPressed = false
-        } else if (action == MotionEvent.ACTION_MOVE && !longPressed && !pageSwipe) {
+        } else if (action == MotionEvent.ACTION_POINTER_DOWN) {
+            // A different finger may occupy index zero later in this stream.
+            pageSwipeInterrupted = true
+        } else if (action == MotionEvent.ACTION_MOVE && !longPressed && !pageSwipe && !pageSwipeInterrupted) {
             val dx = abs(ev.x - downX)
             pageSwipe = dx >= PAGE_SWIPE_DP * density && dx > abs(ev.y - downY) * 1.5f
             if (pageSwipe) {
@@ -152,7 +157,8 @@ class WorkspaceView @JvmOverloads constructor(
             }
         }
         if (pageSwipe) {
-            if (action == MotionEvent.ACTION_UP) {
+            // Once intercepted, consume the rest of the stream even if it cannot page.
+            if (action == MotionEvent.ACTION_UP && !pageSwipeInterrupted) {
                 val dx = ev.x - downX
                 val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
                 if (abs(dx) >= PAGE_SWIPE_DP * density) onSwipePage?.invoke((dx < 0f) != rtl)
