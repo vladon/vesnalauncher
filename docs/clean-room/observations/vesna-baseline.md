@@ -77,7 +77,7 @@ Nova remains the system HOME (comparison-only install).
 
 | Gesture | Nova 8.9.9, current bindings | Vesna 0.4.8 |
 |---|---|---|
-| Swipe up from mid-screen (y=1500→700) | Drawer viewport stayed collapsed on retry | Opened the app drawer |
+| Swipe up from mid-screen (y=1500→700) | Opened at 120 and 250 ms; stayed collapsed at 330, 500 and 800 ms in the recorded trials | Opened the app drawer at 330 ms |
 | Swipe up from lower screen (Nova y=2000→900; Vesna y=1950→850) | Opened the app drawer | Opened the app drawer |
 | Swipe down from mid-screen on Home (y=700→1500) | Opened Android's notification shade | Stayed on Home |
 | Double-tap between icons | No visible action | No visible action |
@@ -97,3 +97,15 @@ Nova remains the system HOME (comparison-only install).
   Android window for the notification shade; retained screenshots and
   UI dumps in `EVI-VESNA-003` for the lower Vesna swipe, double-tap, and
   horizontal checks. Confidence: observed for the listed test conditions.
+- Mid-screen Nova retest: three swipes from (520,1500) to (520,700) at
+  330 ms, without changing bindings. All three left `apps_view` at
+  `[0,1992][1080,2424]`, the same bounds as before the swipes. See
+  `EVI-VESNA-003/nova-mid-recheck-*`.
+- Speed follow-up: Nova's live Gestures & inputs page showed **Swipe up →
+  App drawer**; the binding was not changed. For the same 800 px path,
+  starting with the drawer verifiably collapsed, 120 and 250 ms opened it;
+  500 and 800 ms did not. Speed affected these trials, but the earlier
+  positive result had no recorded duration, and no exact threshold was
+  established. Evidence:
+  `EVI-VESNA-003/nova-live-gesture-binding-*`, `nova-controlled-*`, and
+  `nova-final-*` in the same evidence directory.
