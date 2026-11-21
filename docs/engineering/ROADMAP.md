@@ -122,8 +122,10 @@ roadmap only records what unblocks them.
 1. **Performance verification** — Android 15 debug-emulator launch checks
    cover process-cold timing in [VESNA-QA-007](verification/VESNA-QA-007-COLD-START.md)
    and paired cold and warm timing in [VESNA-QA-009](verification/VESNA-QA-009-LAUNCH-STATES.md).
-   Hot starts, drawer scrolling, drag latency, interactivity, real devices,
-   and release builds still need measurement.
+   The [signed 0.4.6 baseline](verification/VESNA-QA-SIGNED-STARTUP.md) covers
+   cold, warm, and hot starts on a separate Android 15 emulator. Drawer
+   scrolling, drag latency, time to interactivity, and physical devices
+   still need measurement.
 2. **API 36.1 verification** — **done**.
    [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at
