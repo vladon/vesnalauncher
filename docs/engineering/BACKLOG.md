@@ -152,10 +152,11 @@ product decision; `HOME-104` is still a research candidate.
 ### ENG-102: Widget host — lifecycle only
 
 Add/update/remove widgets; host cleanup on package removal and after restore.
-Blocked by **ADR-WIDGET-1** and by ENG-101 (widgets occupy grid cells, so the
-page identity model comes first). Out of scope until the research `WIDGET-100`
-placement/provider config-cancel gap is resolved; `WIDGET-102` (removal/undo)
-is the removal-side counterpart.
+Stable page IDs from ENG-101 are available. The
+[widget lifecycle ADR](../adr/0003-widget-host-lifecycle.md) proposes the
+ownership and cleanup contract. Before enabling placement, verify provider
+configuration cancellation, restart recovery, and restore behavior against
+that contract. Removal with undo (`WIDGET-102`) is a separate interaction.
 
 ### ENG-103: Folder pagination and drag-into verification
 
@@ -243,8 +244,8 @@ defines stable page IDs, page-local cells, and Room schema version 4.
 
 ### ADR-WIDGET-1: Widget host cleanup
 
-AppWidgetHost lifecycle: allocation, `deleteHost`/binding cleanup on package
-removal, behavior across restore and reboot. Gates ENG-102.
+[ADR 0003](../adr/0003-widget-host-lifecycle.md) proposes widget ID allocation,
+cleanup on removal, and restart recovery. It gates ENG-102.
 
 ### ADR-BACKUP-1: Backup and privacy policy
 
