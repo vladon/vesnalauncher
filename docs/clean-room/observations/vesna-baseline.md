@@ -114,3 +114,15 @@ Nova remains the system HOME (comparison-only install).
   `matrix-*-after.xml` retain the UI observations. These are sampled
   durations, not measured thresholds. The lower path was also longer
   (1100 px vs 800 px), so this test does not isolate the starting zone.
+- Equal-length follow-up: the lower path (x=520, y=1950→1150) was
+  800 px, matching the mid-screen path. At the shared durations
+  (120, 250, 330, 500, 800 ms), each launcher gave the same result
+  from both starting positions: Nova opened at 120 and 250 ms;
+  Vesna opened at 120, 250, 330, and 500 ms. Both stayed closed
+  at 800 ms. This does not establish zone independence for other paths.
+- Finer mid-screen sampling: Nova opened at 255, 260, and 265 ms
+  (270 ms stayed closed in the previous pass). Vesna opened at
+  550, 600, and 650 ms; it stayed closed at 700 and 750 ms.
+  These are observed brackets, not exact thresholds.
+- Evidence: `EVI-VESNA-003/equal-*-before.xml` and
+  `equal-*-after.xml`; the drawer was verified closed before each swipe.
