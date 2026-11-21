@@ -322,40 +322,31 @@ class DrawerView @JvmOverloads constructor(
      * velocities collapse to zero.
      */
     private fun installDrawerFlingToClose() {
-        var downY = 0f
-        var downElapsedMs = 0L
+        list.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
+            private var startedAtTop = false
+            private var downY = 0f
+            private var downElapsedMs = 0L
 
-        fun handle(e: MotionEvent) {
-            when (e.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    downY = e.y
-                    downElapsedMs = SystemClock.uptimeMillis()
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val dy = e.y - downY
-                    val elapsedMs = SystemClock.uptimeMillis() - downElapsedMs
-                    // Only from the top of the list; otherwise the drag is an
-                    // upward scroll gesture and must keep scrolling.
-                    if (elapsedMs in 1..MAX_FLING_DURATION_MS &&
-                        dy > minFlingDistancePx &&
-                        !list.canScrollVertically(-1)
-                    ) {
-                        close()
+            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                when (e.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        startedAtTop = !rv.canScrollVertically(-1)
+                        downY = e.y
+                        downElapsedMs = SystemClock.uptimeMillis()
+                    }
+                    MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_POINTER_DOWN -> startedAtTop = false
+                    MotionEvent.ACTION_UP -> {
+                        // A swipe that scrolls back to the top is still a scroll.
+                        val dismiss = startedAtTop &&
+                            SystemClock.uptimeMillis() - downElapsedMs in 1..MAX_FLING_DURATION_MS &&
+                            e.y - downY > minFlingDistancePx &&
+                            !rv.canScrollVertically(-1)
+                        startedAtTop = false
+                        if (dismiss) close()
                     }
                 }
-            }
-        }
-
-        list.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
-            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-                // Returning false keeps RecyclerView scrolling fully intact.
-                handle(e)
+                // Observe without taking the scroll away from RecyclerView.
                 return false
-            }
-
-            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-                // Events after RecyclerView's own scroll interception arrive here.
-                handle(e)
             }
         })
     }

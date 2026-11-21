@@ -2,8 +2,10 @@ package dev.vladon.vesna.launcher.ui
 
 import android.os.SystemClock
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewConfiguration
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -250,6 +252,34 @@ class DrawerSearchTest {
     }
 
     @Test
+    fun quickDownwardSwipeScrollsBackBeforeItCanCloseTheDrawer() {
+        val apps = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
+        onDrawer { it.submitApps(apps) }
+        assertVisibleLabels(apps.map { it.label })
+        assertFirstVisibleApp(apps.first().label, offset = 0)
+
+        onDrawer { host ->
+            val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+            list.scrollBy(0, 4 * ViewConfiguration.get(list.context).scaledTouchSlop)
+            assertTrue("The swipe must begin below the top", list.canScrollVertically(-1))
+
+            swipeDown(list, MotionEvent.ACTION_UP)
+            assertTrue("The swipe must actually reach the top", !list.canScrollVertically(-1))
+            assertEquals(
+                "Returning to the top must not dismiss the drawer",
+                View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+                host.importantForAccessibility,
+            )
+
+            swipeDown(list, MotionEvent.ACTION_CANCEL)
+            assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO, host.importantForAccessibility)
+
+            swipeDown(list, MotionEvent.ACTION_UP)
+            assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, host.importantForAccessibility)
+        }
+    }
+
+    @Test
     fun appRefreshKeepsTheVisibleRowButClearingSearchResetsToTheNewestTop() {
         val tools = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
         val before = List(4) { app("dev.vladon.fixture.before$it", ".Main", "Before $it") }
@@ -396,6 +426,24 @@ class DrawerSearchTest {
             SystemClock.sleep(50)
         }
         throw AssertionError("Expected $label at offset $offset after refresh, found it at $actual")
+    }
+
+    private fun swipeDown(list: RecyclerView, endAction: Int) {
+        val start = SystemClock.uptimeMillis()
+        val x = list.width * 0.5f
+        fun dispatch(action: Int, y: Float) {
+            val event = MotionEvent.obtain(start, SystemClock.uptimeMillis(), action, x, y, 0)
+            try {
+                list.dispatchTouchEvent(event)
+            } finally {
+                event.recycle()
+            }
+        }
+        dispatch(MotionEvent.ACTION_DOWN, list.height * 0.2f)
+        dispatch(MotionEvent.ACTION_MOVE, list.height * 0.4f)
+        dispatch(MotionEvent.ACTION_MOVE, list.height * 0.6f)
+        SystemClock.sleep(2)
+        dispatch(endAction, list.height * 0.7f)
     }
 
     private fun typeKey(host: View, keyCode: Int, metaState: Int = 0) {
