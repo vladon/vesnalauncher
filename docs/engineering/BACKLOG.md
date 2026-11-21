@@ -172,17 +172,14 @@ establishes one, record it in this item with evidence.
 
 ### ENG-104: Settings search and structured preferences
 
-Implement settings search/deep-linking (research `SETT-110`), pairing the
-missing research scenario ([ENG-107](#eng-107-research-matrix-fix-ups-research-branch-not-trunk))
-with a trunk settings structure to hang it on. Note: settings **reset** is not
-part of this item — it belongs to the backup/reset policy
+Settings reset is not part of this item. It belongs to the backup/reset policy
 ([ENG-106](#eng-106-backuprestore-policy), research `BACKUP-101`).
 
 `NT-SETTING-01` implements clean Settings entry, named page links, and
 keyboard-first Back for the current destinations. See the
 [Android verification](verification/VESNA-QA-SETTINGS-NAVIGATION.md).
-The broader `SETT-110` work for breadcrumb results and highlighting individual
-controls remains separate from the destination search verified there.
+`SETT-110` adds pinned search and highlighted control targets. See the
+[acceptance scenario and Android results](verification/VESNA-QA-SETTINGS-SEARCH.md).
 
 ### ENG-105: Cards surface
 

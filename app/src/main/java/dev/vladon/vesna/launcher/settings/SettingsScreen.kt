@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -42,7 +44,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +61,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -93,6 +98,7 @@ internal fun SettingsScreen(
     showAppNames: Boolean,
     onShowAppNamesChanged: (Boolean) -> Unit,
 ) {
+    var target by remember { mutableStateOf<Int?>(null) }
     val inSubpage = page != SettingsPage.ROOT
     val up = { onNavigate(SettingsPage.ROOT) }
     BackHandler(enabled = inSubpage, onBack = up)
@@ -132,16 +138,23 @@ internal fun SettingsScreen(
                     Modifier
                         .widthIn(max = 560.dp)
                         .fillMaxWidth()
-                        .verticalScroll(remember { ScrollState(0) })
+                        .then(if (inSubpage) Modifier.verticalScroll(remember { ScrollState(0) }) else Modifier)
                         .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
                 ) {
                     when (page) {
-                        SettingsPage.ROOT -> SettingsDirectory(defaultHome, onNavigate, onResetInputFocus)
-                        SettingsPage.DEFAULT_LAUNCHER -> DefaultLauncherSetup(defaultHome, onSetDefaultHome)
+                        SettingsPage.ROOT -> SettingsDirectory(defaultHome, onResetInputFocus) { destination, match ->
+                            target = match
+                            onNavigate(destination)
+                        }
+                        SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(target == R.string.settings_default_launcher) {
+                            DefaultLauncherSetup(defaultHome, onSetDefaultHome)
+                        }
                         SettingsPage.APPEARANCE -> {
-                            ThemeSettings(themeMode, onThemeSelected)
+                            SearchTarget(target == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
                             Spacer(Modifier.height(8.dp))
-                            AppNamesSetting(showAppNames, onShowAppNamesChanged)
+                            SearchTarget(target == R.string.settings_show_app_names) {
+                                AppNamesSetting(showAppNames, onShowAppNamesChanged)
+                            }
                         }
                         SettingsPage.ABOUT -> AboutContent(versionName)
                     }
@@ -155,8 +168,8 @@ internal fun SettingsScreen(
 @Composable
 private fun SettingsDirectory(
     defaultHome: DefaultHomeState,
-    onNavigate: (SettingsPage) -> Unit,
     onResetInputFocus: () -> Unit,
+    onNavigate: (SettingsPage, Int?) -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
     var focused by remember { mutableStateOf(false) }
@@ -201,41 +214,97 @@ private fun SettingsDirectory(
     )
     Spacer(Modifier.height(16.dp))
     val term = query.trim()
-    var found = false
-    for (destination in SettingsPage.entries) {
-        val summary = when (destination) {
-            SettingsPage.ROOT -> continue
-            SettingsPage.DEFAULT_LAUNCHER -> stringResource(defaultHome.summary)
-            SettingsPage.APPEARANCE -> stringResource(R.string.settings_appearance_detail)
-            SettingsPage.ABOUT -> stringResource(R.string.settings_about_detail)
-        }
-        val title = stringResource(destination.title)
-        if (!title.contains(term, ignoreCase = true) &&
-            !summary.contains(term, ignoreCase = true) &&
-            !(destination == SettingsPage.APPEARANCE &&
-                stringResource(R.string.settings_show_app_names).contains(term, ignoreCase = true))
-        ) continue
-        found = true
-        key(destination) {
-            ListItem(
-                headlineContent = { Text(title) },
-                supportingContent = { Text(summary) },
-                trailingContent = { Icon(painterResource(R.drawable.ic_settings_forward), contentDescription = null) },
-                modifier = Modifier.settingsFocusRing(radius = 12.dp).clickable(role = Role.Button) {
-                    keyboard?.hide()
-                    focusManager.clearFocus()
-                    onNavigate(destination)
-                },
-            )
+    val open: (SettingsPage, Int?) -> Unit = { page, target ->
+        keyboard?.hide()
+        focusManager.clearFocus()
+        onNavigate(page, target)
+    }
+    key(term) {
+        Column(Modifier.verticalScroll(remember { ScrollState(0) }), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            var found = false
+            if (term.isNotEmpty()) {
+                val entries = listOf(
+                    SearchEntry(
+                        SettingsPage.DEFAULT_LAUNCHER,
+                        if (defaultHome == DefaultHomeState.AVAILABLE) R.string.menu_set_default_home
+                        else R.string.settings_default_launcher,
+                        defaultHome.summary,
+                    ),
+                    SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
+                    SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
+                )
+                for (entry in entries) {
+                    val title = stringResource(entry.title)
+                    val summary = stringResource(entry.summary)
+                    if (!title.contains(term, ignoreCase = true) && !summary.contains(term, ignoreCase = true)) continue
+                    found = true
+                    OutlinedCard(
+                        onClick = {
+                            open(entry.page, if (entry.page == SettingsPage.DEFAULT_LAUNCHER)
+                                R.string.settings_default_launcher else entry.title)
+                        },
+                        modifier = Modifier.fillMaxWidth().settingsFocusRing(radius = 12.dp),
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text(stringResource(R.string.settings_search_breadcrumb, stringResource(entry.page.title)),
+                                style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+                            Text(title, style = MaterialTheme.typography.bodyLarge)
+                            Text(summary, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+            for (page in SettingsPage.entries) {
+                val summary = stringResource(when (page) {
+                    SettingsPage.ROOT -> continue
+                    SettingsPage.DEFAULT_LAUNCHER -> defaultHome.summary
+                    SettingsPage.APPEARANCE -> R.string.settings_appearance_detail
+                    SettingsPage.ABOUT -> R.string.settings_about_detail
+                })
+                val title = stringResource(page.title)
+                if (term.isNotEmpty() && (page == SettingsPage.DEFAULT_LAUNCHER ||
+                        !title.contains(term, ignoreCase = true) && !summary.contains(term, ignoreCase = true))) continue
+                found = true
+                ListItem(
+                    headlineContent = { Text(title) },
+                    supportingContent = { Text(summary) },
+                    trailingContent = { Icon(painterResource(R.drawable.ic_settings_forward), contentDescription = null) },
+                    modifier = Modifier.settingsFocusRing(radius = 12.dp).clickable(role = Role.Button) { open(page, null) },
+                )
+            }
+            if (!found) {
+                Text(stringResource(R.string.settings_search_empty),
+                    Modifier.padding(16.dp).semantics { liveRegion = LiveRegionMode.Polite },
+                    style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            }
         }
     }
-    if (!found) {
-        Text(
-            stringResource(R.string.settings_search_empty),
-            modifier = Modifier.padding(16.dp).semantics { liveRegion = LiveRegionMode.Polite },
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.onSurfaceVariant,
-        )
+}
+
+private data class SearchEntry(val page: SettingsPage, val title: Int, val summary: Int)
+
+@Composable
+private fun SearchTarget(highlighted: Boolean, content: @Composable () -> Unit) {
+    if (!highlighted) {
+        content()
+        return
+    }
+    val requester = remember { BringIntoViewRequester() }
+    var placed by remember { mutableStateOf(false) }
+    LaunchedEffect(placed) {
+        if (placed) requester.bringIntoView()
+    }
+    Surface(
+        modifier = Modifier.fillMaxWidth().bringIntoViewRequester(requester).onPlaced { placed = true },
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+    ) {
+        Column {
+            Text(stringResource(R.string.settings_search_match), Modifier.padding(start = 16.dp, top = 8.dp),
+                style = MaterialTheme.typography.labelMedium)
+            content()
+        }
     }
 }
 

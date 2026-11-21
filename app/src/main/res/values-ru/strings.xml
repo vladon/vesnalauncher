@@ -14,6 +14,9 @@
     <string name="settings_about_detail">Версия, лицензия и исходный код</string>
     <string name="settings_search">Поиск по настройкам</string>
     <string name="settings_search_empty">Настройки не найдены</string>
+    <string name="settings_search_breadcrumb">Настройки Vesna › %1$s</string>
+    <string name="settings_search_match">Результат поиска</string>
+    <string name="settings_theme_detail">Как в Android, светлая или тёмная тема</string>
     <string name="settings_back_to_root">Назад к настройкам Vesna</string>
     <string name="settings_theme">Тема</string>
     <string name="settings_theme_system">Как в системе</string>
