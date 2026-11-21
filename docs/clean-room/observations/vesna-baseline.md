@@ -210,3 +210,18 @@ Nova remains the system HOME (comparison-only install).
   controls changed pages in both directions. Removed the temporary
   page, verified the single-page layout, and returned to Nova.
 - Evidence: `EVI-VESNA-003/v412-*.xml` and `v412-two-*.png`.
+
+## OBS-VESNA-006 — Nova 9.0.1 gesture retest
+
+- Updated Nova in place through Google Play on the research Pixel.
+  Android reported `versionName=90100 (9.0.1)`; the live binding
+  remained Swipe up → App drawer.
+- On the 800 px mid-screen path, the drawer opened at 120, 250, 265,
+  270, 330, and 500 ms, but not at 800 ms. On the 800 px lower
+  path it opened at 250, 330, and 800 ms.
+- On the 1100 px mid-screen path, the drawer stayed closed at
+  800 ms; at 20 and 20.5 s the Android notification shade appeared,
+  not the drawer. One trial per duration; no threshold inferred.
+- Double-tap and leftward swipe left Home unchanged; rightward
+  swipe opened Nova Now.
+- Evidence: `EVI-VESNA-003/nova901-*.xml`. Confidence: observed.
