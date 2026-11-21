@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.5
+
+- Search by setting name or description. Results show the parent section and
+  scroll to the highlighted setting without changing its value.
+- The search field stays visible while the results scroll.
+
 ### 0.4.4
 
 - Search Vesna settings and open separate pages for default launcher setup,
