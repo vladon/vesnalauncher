@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.7
+
+- Fixed a quick scroll back to the top closing the app drawer. Swipe down
+  again from the top to close it.
+
 ### 0.4.6
 
 - Fixed icons drawing over the header and buttons when scrolling long folders
