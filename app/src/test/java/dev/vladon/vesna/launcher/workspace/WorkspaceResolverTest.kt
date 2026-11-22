@@ -24,18 +24,28 @@ class WorkspaceResolverTest {
         val apps = listOf(app(keyA), app(keyB)).associateBy { it.key }
         assertEquals(
             mapOf(0 to CellContent.App(apps.getValue(keyA)), 5 to CellContent.App(apps.getValue(keyB))),
-            WorkspaceResolver.workspaceCells(items, apps, emptyList()),
+            WorkspaceResolver.workspaceLayout(items, apps, emptyList()).cells,
         )
     }
 
     @Test
-    fun `items without a live app are not rendered`() {
+    fun `unavailable pins reserve only valid top level cells on their page`() {
         val items = listOf(
             WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = 0),
             WorkspaceItem(2, keyC, Container.WORKSPACE, cellIndex = 3),
+            WorkspaceItem(3, keyC, Container.WORKSPACE, cellIndex = 4, pageId = 2),
+            WorkspaceItem(4, keyC, Container.WORKSPACE, cellIndex = 5, folderId = 7),
+            WorkspaceItem(5, keyC, Container.DOCK, cellIndex = 1),
+            WorkspaceItem(6, keyC, Container.WORKSPACE, cellIndex = -1),
+            WorkspaceItem(7, keyC, Container.WORKSPACE, cellIndex = GridCanvas.CAPACITY),
         )
-        val resolved = WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA)), emptyList())
-        assertEquals(mapOf(0 to CellContent.App(app(keyA))), resolved)
+        val available = mapOf(keyA to app(keyA))
+        val first = WorkspaceResolver.workspaceLayout(items, available, emptyList())
+        assertEquals(mapOf(0 to CellContent.App(app(keyA))), first.cells)
+        assertEquals(1 shl 3, first.reservedCellsMask)
+        val second = WorkspaceResolver.workspaceLayout(items, available, emptyList(), pageId = 2)
+        assertTrue(second.cells.isEmpty())
+        assertEquals(1 shl 4, second.reservedCellsMask)
     }
 
     @Test
@@ -77,13 +87,13 @@ class WorkspaceResolverTest {
             WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = 2),
             WorkspaceItem(2, keyB, Container.WORKSPACE, cellIndex = 2),
         )
-        val resolved = WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA), keyB to app(keyB)), emptyList())
+        val resolved = WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA), keyB to app(keyB)), emptyList()).cells
         assertEquals(CellContent.App(app(keyA)), resolved.getValue(2))
     }
 
     @Test
     fun `invalid cells are never rendered`() {
         val items = listOf(WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = GridCanvas.CAPACITY))
-        assertTrue(WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA)), emptyList()).isEmpty())
+        assertTrue(WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA)), emptyList()).cells.isEmpty())
     }
 }

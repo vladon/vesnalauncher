@@ -344,6 +344,7 @@ class HomeActivity : ComponentActivity() {
             folderDialog?.dismiss()
         }
         renderedState = state
+        workspace.reservedCellsMask = state.reservedWorkspaceCellsMask
         if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
         if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
         if (state.apps != previous.apps) drawer.submitApps(state.apps)
@@ -545,7 +546,7 @@ class HomeActivity : ComponentActivity() {
 
     private fun workspaceDropCell(source: DragSource, x: Float, y: Float): Int? {
         val cell = workspace.cellAtLocal(x - workspace.left, y - workspace.top) ?: return null
-        if (cell == source.fromCell) return null
+        if (cell == source.fromCell || workspace.isCellReserved(cell)) return null
         if (!source.fromDrawer) return cell
 
         // A drawer drag copies an app; moving an existing pin is a separate operation.

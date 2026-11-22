@@ -34,6 +34,7 @@ enum class LauncherMessage {
 data class LauncherUiState(
     val apps: List<LauncherApp> = emptyList(),
     val workspaceCells: Map<Int, CellContent> = emptyMap(),
+    val reservedWorkspaceCellsMask: Int = 0,
     val dock: DockLayout = DockLayout(emptyList(), emptyList()),
     val folders: Map<Long, Folder> = emptyMap(),
     val folderContents: Map<Long, List<FolderPin>> = emptyMap(),
@@ -105,11 +106,13 @@ class LauncherController(
             } else {
                 orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
             }
+            val workspace = WorkspaceResolver.workspaceLayout(
+                layout.items, layout.catalogue.byKey, layout.folders, selection,
+            )
             LauncherUiState(
                 apps = layout.catalogue.apps,
-                workspaceCells = WorkspaceResolver.workspaceCells(
-                    layout.items, layout.catalogue.byKey, layout.folders, selection,
-                ),
+                workspaceCells = workspace.cells,
+                reservedWorkspaceCellsMask = workspace.reservedCellsMask,
                 dock = layout.dock,
                 folders = layout.foldersById,
                 folderContents = layout.folderContents,
