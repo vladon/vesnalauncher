@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupMenu
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -66,7 +65,7 @@ internal class FolderDialog(
     private val onRemoveFromFolder: (Long) -> Unit,
     private val onRename: () -> Unit,
     private val onRemoveFolder: () -> Unit,
-    private val onShowPopup: (PopupMenu) -> Unit,
+    private val onShowPopup: (VesnaPopupMenu) -> Unit,
     private val onDismissed: () -> Unit,
 ) {
 
@@ -129,22 +128,10 @@ internal class FolderDialog(
     }
 
     private fun showItemMenu(pin: FolderPin, anchor: View) {
-        val popup = vesnaPopupMenu(anchor)
-        popup.menu.add(0, MENU_REMOVE_FROM_FOLDER, 0, R.string.folder_remove_from_folder)
-        popup.menu.add(0, MENU_APP_INFO, 1, R.string.menu_app_info)
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_REMOVE_FROM_FOLDER -> onRemoveFromFolder(pin.id)
-                MENU_APP_INFO -> onAppInfo(pin.app)
-            }
-            true
-        }
+        val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.folder_remove_from_folder) { onRemoveFromFolder(pin.id) }
+        popup.add(R.string.menu_app_info) { onAppInfo(pin.app) }
         onShowPopup(popup)
-    }
-
-    private companion object {
-        const val MENU_REMOVE_FROM_FOLDER = 1
-        const val MENU_APP_INFO = 2
     }
 }
 

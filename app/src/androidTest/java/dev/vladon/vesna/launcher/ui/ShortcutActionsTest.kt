@@ -55,6 +55,34 @@ class ShortcutActionsTest {
     }
 
     @Test
+    fun longMenuActionGrowsAndRemainsAccessible() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val label = List(3) { "Rename the folder containing shared work files" }.joinToString(" ")
+        val shortLabel = "Cancel"
+        var performed = false
+        ActivityScenario.launch(HomeActivity::class.java).use { home ->
+            home.onActivity { activity ->
+                val anchor = activity.findViewById<View>(R.id.home_options)
+                VesnaPopupMenu(anchor).apply {
+                    add(label) { performed = true }
+                    add(shortLabel) {}
+                    show {}
+                }
+            }
+            fun row(text: String) = automation.rootInActiveWindow?.findMenuAction(text)
+            assertTrue("The long and short actions were not both visible", until {
+                row(label) != null && row(shortLabel) != null
+            })
+            val longBounds = Rect().apply { row(label)!!.getBoundsInScreen(this) }
+            val shortBounds = Rect().apply { row(shortLabel)!!.getBoundsInScreen(this) }
+            assertTrue("The long label was constrained to one line", longBounds.height() > shortBounds.height())
+            assertTrue(row(label)!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            home.onActivity { assertTrue("Accessibility did not activate the wrapped action", performed) }
+        }
+    }
+
+    @Test
     fun returningHomeDismissesHomeOptionsWithoutRestartingTheActivity() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
@@ -221,6 +249,14 @@ class ShortcutActionsTest {
     private fun AccessibilityNodeInfo.hasVisibleText(expected: String): Boolean =
         (isVisibleToUser && text?.toString() == expected) ||
             (0 until childCount).any { getChild(it)?.hasVisibleText(expected) == true }
+
+    private fun AccessibilityNodeInfo.findMenuAction(expected: String): AccessibilityNodeInfo? {
+        if (isVisibleToUser && isClickable && text?.toString() == expected) return this
+        for (index in 0 until childCount) {
+            getChild(index)?.findMenuAction(expected)?.let { return it }
+        }
+        return null
+    }
 
     private fun until(predicate: () -> Boolean): Boolean {
         val deadline = SystemClock.uptimeMillis() + 5_000

@@ -8,7 +8,6 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -88,7 +87,7 @@ class HomeActivity : ComponentActivity() {
     private var drawerClosedForDrag = false
     private var rootDragMoved = false
     private var drawerReturnFocus: View? = null
-    private var activePopup: PopupMenu? = null
+    private var activePopup: VesnaPopupMenu? = null
     private var pendingPageMenu: Job? = null
     private var folderDialog: FolderDialog? = null
     private data class FolderRename(val folderId: Long, val host: ComposeView)
@@ -261,11 +260,10 @@ class HomeActivity : ComponentActivity() {
         drawer.close()
     }
 
-    private fun showPopup(popup: PopupMenu) {
+    private fun showPopup(popup: VesnaPopupMenu) {
         activePopup?.dismiss()
         activePopup = popup
-        popup.setOnDismissListener { if (activePopup === it) activePopup = null }
-        popup.show()
+        popup.show { if (activePopup === popup) activePopup = null }
     }
 
     private fun schedulePageMenu(show: suspend () -> Unit) {
@@ -364,18 +362,17 @@ class HomeActivity : ComponentActivity() {
         val activeIndex = state.pageIds.indexOf(state.activePageId)
         if (state.pageIds.size < 2 || activeIndex < 0) return
 
-        val popup = vesnaPopupMenu(anchor)
+        val popup = VesnaPopupMenu(anchor)
         state.pageIds.forEachIndexed { index, pageId ->
             val number = index + 1
-            popup.menu.add(0, number, number, getString(R.string.workspace_page_picker_label, number))
-                .setContentDescription(getString(R.string.workspace_page_number, number))
-                .setOnMenuItemClickListener {
-                    if (pageId != renderedState.activePageId) controller.selectWorkspacePage(pageId)
-                    true
-                }
+            popup.add(
+                label = getString(R.string.workspace_page_picker_label, number),
+                description = getString(R.string.workspace_page_number, number),
+                checked = index == activeIndex,
+            ) {
+                if (pageId != renderedState.activePageId) controller.selectWorkspacePage(pageId)
+            }
         }
-        popup.menu.setGroupCheckable(0, true, true)
-        popup.menu.findItem(activeIndex + 1).isChecked = true
         showPopup(popup)
     }
 
@@ -497,21 +494,17 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showFolderMenu(folder: Folder, anchor: View) {
-        val popup = vesnaPopupMenu(anchor)
-        popup.menu.add(0, MENU_FOLDER_RENAME, 0, R.string.folder_rename)
+        val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.folder_rename) { promptFolderRename(folder.id) }
         if (renderedState.pageIds.size > 1) {
-            popup.menu.add(0, MENU_MOVE_TO_PAGE, 1, R.string.menu_move_to_page)
-        }
-        popup.menu.add(0, MENU_FOLDER_REMOVE, 2, R.string.folder_remove)
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_FOLDER_RENAME -> promptFolderRename(folder.id)
-                MENU_MOVE_TO_PAGE -> showMovePageMenu(anchor, folder.pageId, { controller.folderPageMoveOptions(folder) }) {
+            popup.add(R.string.menu_move_to_page) {
+                showMovePageMenu(anchor, folder.pageId, { controller.folderPageMoveOptions(folder) }) {
                     _, destinationId -> controller.moveFolderToPage(folder, destinationId)
                 }
-                MENU_FOLDER_REMOVE -> removeFolderItems(folder.pageId) { controller.removeFolder(folder.id) }
             }
-            true
+        }
+        popup.add(R.string.folder_remove) {
+            removeFolderItems(folder.pageId) { controller.removeFolder(folder.id) }
         }
         showPopup(popup)
     }
@@ -675,25 +668,17 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp, cell: Int, pageId: Long) {
-        val popup = vesnaPopupMenu(anchor)
-        val controller = VesnaApplication.graph(this).controller
-        popup.menu.add(0, MENU_ADD_TO_DOCK, 0, R.string.menu_add_to_dock)
+        val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
         if (renderedState.pageIds.size > 1) {
-            popup.menu.add(0, MENU_MOVE_TO_PAGE, 1, R.string.menu_move_to_page)
-        }
-        popup.menu.add(0, MENU_REMOVE, 2, R.string.menu_remove_from_workspace)
-        popup.menu.add(0, MENU_APP_INFO, 3, R.string.menu_app_info)
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_ADD_TO_DOCK -> controller.addToDock(app)
-                MENU_MOVE_TO_PAGE -> showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
+            popup.add(R.string.menu_move_to_page) {
+                showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
                     pinId, destinationId -> controller.movePinToPage(pinId, cell, pageId, destinationId)
                 }
-                MENU_REMOVE -> controller.removeFromWorkspace(app, cell, pageId)
-                MENU_APP_INFO -> controller.openAppInfo(app)
             }
-            true
         }
+        popup.add(R.string.menu_remove_from_workspace) { controller.removeFromWorkspace(app, cell, pageId) }
+        popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
         showPopup(popup)
     }
 
@@ -715,85 +700,59 @@ class HomeActivity : ComponentActivity() {
             showMessage(LauncherMessage.NO_MOVE_DESTINATION)
             return@schedulePageMenu
         }
-        val popup = vesnaPopupMenu(anchor)
+        val popup = VesnaPopupMenu(anchor)
         for (target in options.pages) {
-            popup.menu.add(0, target.number, target.number, getString(R.string.workspace_page_number, target.number))
-                .setOnMenuItemClickListener {
-                    move(options.sourceId, target.id)
-                    true
-                }
+            popup.add(getString(R.string.workspace_page_number, target.number)) {
+                move(options.sourceId, target.id)
+            }
         }
         showPopup(popup)
     }
 
     private fun showDockItemMenu(anchor: View, app: LauncherApp, pinId: Long) {
-        val popup = vesnaPopupMenu(anchor)
-        val controller = VesnaApplication.graph(this).controller
-        popup.menu.add(0, MENU_REMOVE, 0, R.string.menu_remove_from_dock)
-        popup.menu.add(0, MENU_APP_INFO, 1, R.string.menu_app_info)
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_REMOVE -> controller.removeFromDock(pinId)
-                MENU_APP_INFO -> controller.openAppInfo(app)
-            }
-            true
-        }
+        val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.menu_remove_from_dock) { controller.removeFromDock(pinId) }
+        popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
         showPopup(popup)
     }
 
     private fun showDrawerItemMenu(anchor: View, app: LauncherApp, pageId: Long) {
-        val popup = vesnaPopupMenu(anchor)
-        val controller = VesnaApplication.graph(this).controller
-        popup.menu.add(0, MENU_ADD_TO_WORKSPACE, 0, R.string.menu_add_to_workspace)
-        popup.menu.add(0, MENU_ADD_TO_DOCK, 1, R.string.menu_add_to_dock)
-        popup.menu.add(0, MENU_APP_INFO, 2, R.string.menu_app_info)
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_ADD_TO_WORKSPACE -> controller.addToWorkspace(app, pageId)
-                MENU_ADD_TO_DOCK -> controller.addToDock(app)
-                MENU_APP_INFO -> controller.openAppInfo(app)
-            }
-            true
-        }
+        val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.menu_add_to_workspace) { controller.addToWorkspace(app, pageId) }
+        popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
+        popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
         showPopup(popup)
     }
 
     private fun showLauncherMenu() {
-        val popup = vesnaPopupMenu(homeOptionsButton)
-        popup.menu.add(0, MENU_SETTINGS, 0, R.string.menu_launcher_settings)
-        popup.menu.add(0, MENU_WALLPAPER, 1, R.string.menu_wallpaper)
+        val popup = VesnaPopupMenu(homeOptionsButton)
+        popup.add(R.string.menu_launcher_settings) {
+            startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
+        }
+        popup.add(R.string.menu_wallpaper, ::startWallpaperPicker)
         val graph = VesnaApplication.graph(this)
         if (!graph.homeRoleChecker.isDefaultHome() &&
             graph.homeRoleChecker.defaultHomeRequestIntent() != null
         ) {
-            popup.menu.add(0, MENU_SET_DEFAULT, 2, R.string.menu_default_launcher)
+            popup.add(R.string.menu_default_launcher) {
+                graph.homeRoleChecker.defaultHomeRequestIntent()?.let { defaultHomeRequest.launch(it) }
+            }
         }
         val page = renderedState
         if (page.pageIds.size > 1) {
-            popup.menu.add(0, MENU_CHOOSE_WORKSPACE_PAGE, 3, R.string.workspace_choose_page)
+            popup.add(R.string.workspace_choose_page) { schedulePageMenu { showPagePicker(homeOptionsButton) } }
         }
         if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
-            popup.menu.add(0, MENU_ADD_WORKSPACE_PAGE, 4, R.string.menu_add_workspace_page)
+            popup.add(R.string.menu_add_workspace_page) { controller.createWorkspacePage() }
         }
         if (page.canRemoveActivePage) {
-            popup.menu.add(0, MENU_REMOVE_WORKSPACE_PAGE, 5, R.string.menu_remove_empty_workspace_page)
+            popup.add(R.string.menu_remove_empty_workspace_page) { controller.removeEmptyWorkspacePage(page.activePageId) }
         }
         val position = page.pageIds.indexOf(page.activePageId)
         if (page.pageIds.size > 2 && position > 0) {
-            popup.menu.add(0, MENU_REORDER_WORKSPACE_PAGE, 6, R.string.menu_reorder_workspace_page)
-        }
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_SETTINGS -> startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
-                MENU_WALLPAPER -> startWallpaperPicker()
-                MENU_SET_DEFAULT -> graph.homeRoleChecker.defaultHomeRequestIntent()
-                    ?.let { defaultHomeRequest.launch(it) }
-                MENU_CHOOSE_WORKSPACE_PAGE -> schedulePageMenu { showPagePicker(homeOptionsButton) }
-                MENU_ADD_WORKSPACE_PAGE -> controller.createWorkspacePage()
-                MENU_REMOVE_WORKSPACE_PAGE -> controller.removeEmptyWorkspacePage(page.activePageId)
-                MENU_REORDER_WORKSPACE_PAGE -> schedulePageMenu { showReorderPageMenu(page, position) }
+            popup.add(R.string.menu_reorder_workspace_page) {
+                schedulePageMenu { showReorderPageMenu(page, position) }
             }
-            true
         }
         showPopup(popup)
     }
@@ -801,15 +760,13 @@ class HomeActivity : ComponentActivity() {
     private fun showReorderPageMenu(page: LauncherUiState, position: Int) {
         if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !homeOptionsButton.isShown) return
 
-        val popup = vesnaPopupMenu(homeOptionsButton)
+        val popup = VesnaPopupMenu(homeOptionsButton)
         for (index in 1..page.pageIds.lastIndex) {
             if (index == position) continue
             val number = index + 1
-            popup.menu.add(0, number, number, getString(R.string.reorder_page_position, number))
-                .setOnMenuItemClickListener {
-                    controller.reorderWorkspacePage(page.activePageId, index, page.pageIds)
-                    true
-                }
+            popup.add(getString(R.string.reorder_page_position, number)) {
+                controller.reorderWorkspacePage(page.activePageId, index, page.pageIds)
+            }
         }
         showPopup(popup)
     }
@@ -820,22 +777,5 @@ class HomeActivity : ComponentActivity() {
             getString(R.string.menu_wallpaper),
         )
         startActivity(intent)
-    }
-
-    private companion object {
-        const val MENU_ADD_TO_WORKSPACE = 1
-        const val MENU_REMOVE = 2
-        const val MENU_ADD_TO_DOCK = 3
-        const val MENU_APP_INFO = 4
-        const val MENU_SETTINGS = 5
-        const val MENU_WALLPAPER = 6
-        const val MENU_SET_DEFAULT = 7
-        const val MENU_FOLDER_RENAME = 8
-        const val MENU_FOLDER_REMOVE = 9
-        const val MENU_ADD_WORKSPACE_PAGE = 10
-        const val MENU_REMOVE_WORKSPACE_PAGE = 11
-        const val MENU_MOVE_TO_PAGE = 12
-        const val MENU_REORDER_WORKSPACE_PAGE = 13
-        const val MENU_CHOOSE_WORKSPACE_PAGE = 14
     }
 }
