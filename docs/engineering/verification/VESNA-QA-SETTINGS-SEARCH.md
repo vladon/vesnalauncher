@@ -17,3 +17,20 @@ matching paths, breadcrumb, visible target, empty state, and Back order.
 On the compact fixture, dismiss the keyboard to see the complete result card.
 Screenshots confirmed the target treatment in both themes. Debug assembly and
 Lint passed. TalkBack and RTL were not exercised.
+
+## Short-window follow-up (0.4.19)
+
+- The official 0.4.18 APK hid the search field behind a docked keyboard at
+  198 × 339 dp and 200% text. A Material search app bar now fits the field
+  in the safe viewport above the results, even when the heading cannot fit.
+- A fixed-height device test failed against 0.4.18 and passed with the
+  change on Android 15. The test also passed on Android 8. It sets a query
+  through Android accessibility and checks that expanding the viewport
+  retains the query and exposes the matching setting.
+- At 198 dp and 200% text, Android 8 and 15 showed the editor and the
+  48 dp Clear target above the real keyboard. Checked Light, Russian Dark,
+  mirrored RTL, Clear, IME-first Back, Done, and the localized empty state.
+  In the smallest window, hide the keyboard and scroll the results to
+  reach a full card. The Theme card still opened at its highlighted control;
+  the conventional height retained the heading and live results.
+- Spoken TalkBack, physical devices, and floating keyboards were not tested.
