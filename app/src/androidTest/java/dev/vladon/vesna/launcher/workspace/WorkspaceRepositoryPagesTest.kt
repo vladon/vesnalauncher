@@ -74,9 +74,9 @@ class WorkspaceRepositoryPagesTest {
             val apps = listOf(app, other).associateBy { it.key }
             assertEquals(
                 mapOf(0 to CellContent.App(app), 1 to CellContent.App(other)),
-                WorkspaceResolver.workspaceCells(before, apps, emptyList(), first),
+                WorkspaceResolver.workspaceLayout(before, apps, emptyList(), first).cells,
             )
-            assertEquals(mapOf(1 to CellContent.App(app)), WorkspaceResolver.workspaceCells(before, apps, emptyList(), second))
+            assertEquals(mapOf(1 to CellContent.App(app)), WorkspaceResolver.workspaceLayout(before, apps, emptyList(), second).cells)
             repository.removeFromWorkspace(app, cell = 1, pageId = second)
             assertEquals(before.filterNot { it.pageId == second }, repository.savedLayout.first().items.sortedBy { it.id })
             assertTrue(repository.reorderPage(second, destinationIndex = 1, displayedOrder = reordered))
@@ -154,7 +154,7 @@ class WorkspaceRepositoryPagesTest {
             val apps = listOf(target, dock, other).associateBy { it.key }
             assertEquals(
                 mapOf(0 to CellContent.App(dock), 3 to CellContent.App(target)),
-                WorkspaceResolver.workspaceCells(items, apps, emptyList(), second),
+                WorkspaceResolver.workspaceLayout(items, apps, emptyList(), second).cells,
             )
             assertEquals(DockMoveResult.MOVED, repository.moveWorkspaceToDock(dock, fromCell = 0, slot = 0, pageId = second))
             assertNull(dao.getAll().single { it.packageName == dock.packageName }.pageId)
@@ -385,10 +385,15 @@ class WorkspaceRepositoryPagesTest {
             val unavailable = LauncherApp(AppKey("qa.unavailable", "Main"), "Unavailable", null)
             assertTrue(repository.insertWorkspaceAt(unavailable, cell = 0, pageId = secondPageId))
             controller.selectWorkspacePage(secondPageId)
-            controller.state.first { it.activePageId == secondPageId && it.isWorkspaceEmpty && !it.canRemoveActivePage }
+            val hidden = controller.state.first {
+                it.activePageId == secondPageId && it.isWorkspaceEmpty && !it.canRemoveActivePage
+            }
+            assertEquals(1, hidden.reservedWorkspaceCellsMask)
+            assertFalse(repository.insertWorkspaceAt(apps[5], cell = 0, pageId = secondPageId))
 
             repository.removeFromWorkspace(unavailable, cell = 0, pageId = secondPageId)
-            controller.state.first { it.activePageId == secondPageId && it.canRemoveActivePage }
+            val freed = controller.state.first { it.activePageId == secondPageId && it.canRemoveActivePage }
+            assertEquals(0, freed.reservedWorkspaceCellsMask)
             controller.removeEmptyWorkspacePage(secondPageId)
             val afterRemoval = controller.state.first { it.pageIds == listOf(DEFAULT_WORKSPACE_PAGE_ID) }
             assertEquals(DEFAULT_WORKSPACE_PAGE_ID, afterRemoval.activePageId)

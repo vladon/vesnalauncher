@@ -12,6 +12,7 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.CellContent
+import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -108,6 +109,59 @@ class WorkspaceDropTargetTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun folderDragSkipsTheHiddenPinAndStillDropsInAnEmptyCell() = withWorkspace { grid, rtl ->
+        val folder = Folder(1L, "Fixture folder", 0)
+        grid.bind(mapOf(0 to CellContent.FolderCell(folder, memberCount = 2)))
+        grid.reservedCellsMask = 1 shl 1
+        layOut(grid)
+
+        val tile = requireNotNull(grid.findChildForCell(0))
+        val x = (tile.left + tile.right) / 2
+        val y = (tile.top + tile.bottom) / 2
+        val cellWidth = (grid.width - grid.paddingLeft - grid.paddingRight -
+            2 * (8 * grid.resources.displayMetrics.density).toInt()) / GridCanvas.COLUMNS
+        val step = if (rtl) -cellWidth else cellWidth
+        val reservedX = x + step
+        val emptyX = x + 2 * step
+        assertEquals(1, grid.cellAtLocal(reservedX.toFloat(), y.toFloat()))
+        assertEquals(2, grid.cellAtLocal(emptyX.toFloat(), y.toFloat()))
+        assertNull(grid.findChildForCell(1))
+        val before = grid.pixels(reservedX, emptyX, y)
+        val drops = mutableListOf<Int>()
+        grid.onFolderDrop = { _, cell -> drops += cell }
+
+        fun drag(to: Int, preview: () -> Unit) {
+            val down = SystemClock.uptimeMillis()
+            fun send(action: Int, at: Int) {
+                val event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, at.toFloat(), y.toFloat(), 0)
+                try {
+                    grid.dispatchTouchEvent(event)
+                } finally {
+                    event.recycle()
+                }
+            }
+            send(MotionEvent.ACTION_DOWN, x)
+            try {
+                assertTrue(tile.performLongClick())
+                send(MotionEvent.ACTION_MOVE, to)
+                preview()
+                send(MotionEvent.ACTION_UP, to)
+            } finally {
+                if (grid.isDragging) send(MotionEvent.ACTION_CANCEL, to)
+            }
+        }
+
+        drag(reservedX) { assertEquals(before, grid.pixels(reservedX, emptyX, y)) }
+        assertTrue(drops.isEmpty())
+        drag(emptyX) {
+            val after = grid.pixels(reservedX, emptyX, y)
+            assertEquals(before.first, after.first)
+            assertNotEquals(before.second, after.second)
+        }
+        assertEquals(listOf(2), drops)
     }
 
     private fun withWorkspace(check: (WorkspaceView, Boolean) -> Unit) {

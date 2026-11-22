@@ -24,6 +24,9 @@ data class DockLayout(val savedOrder: List<Long>, val pins: List<DockPin>) {
         pins.getOrNull(column)?.let { savedOrder.indexOf(it.id) } ?: savedOrder.size
 }
 
+/** Visible cells and a bit per cell held by an unavailable shortcut on the same page. */
+internal data class WorkspaceLayout(val cells: Map<Int, CellContent>, val reservedCellsMask: Int)
+
 /**
  * Pure projection of persisted layout items onto live apps. Unavailable apps
  * are hidden without changing their stored positions. Items inside folders
@@ -32,22 +35,30 @@ data class DockLayout(val savedOrder: List<Long>, val pins: List<DockPin>) {
 internal object WorkspaceResolver {
 
     /**
-     * Workspace cell contents for rendering: top-level apps plus folders occupying
-     * their cells (with member counts). Folder members are not shown at top level.
+     * Project one page's visible shortcuts and folders while keeping unavailable
+     * top-level shortcuts reserved. Folder members do not occupy grid cells.
      */
-    fun workspaceCells(
+    fun workspaceLayout(
         items: List<WorkspaceItem>,
         appsByKey: Map<AppKey, LauncherApp>,
         folders: List<Folder>,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
-    ): Map<Int, CellContent> {
+    ): WorkspaceLayout {
         val cells = LinkedHashMap<Int, CellContent>()
+        var reservedCellsMask = 0
         for (item in items) {
             if (item.container != Container.WORKSPACE) continue
             if (item.folderId != null || item.pageId != pageId) continue
-            if (!GridCanvas.isValidCell(item.cellIndex)) continue
-            if (cells.containsKey(item.cellIndex)) continue
-            appsByKey[item.key]?.let { cells[item.cellIndex] = CellContent.App(it) }
+            val cell = item.cellIndex
+            if (!GridCanvas.isValidCell(cell) || cells.containsKey(cell)) continue
+            val app = appsByKey[item.key]
+            val bit = 1 shl cell
+            if (app == null) {
+                reservedCellsMask = reservedCellsMask or bit
+            } else {
+                cells[cell] = CellContent.App(app)
+                reservedCellsMask = reservedCellsMask and bit.inv()
+            }
         }
         for (folder in folders) {
             if (folder.pageId != pageId) continue
@@ -55,8 +66,9 @@ internal object WorkspaceResolver {
             if (cells.containsKey(folder.cellIndex)) continue
             val members = items.count { it.folderId == folder.id }
             cells[folder.cellIndex] = CellContent.FolderCell(folder, members)
+            reservedCellsMask = reservedCellsMask and (1 shl folder.cellIndex).inv()
         }
-        return cells
+        return WorkspaceLayout(cells, reservedCellsMask)
     }
 
     /** Visible pins inside each folder, ordered by their saved positions. */

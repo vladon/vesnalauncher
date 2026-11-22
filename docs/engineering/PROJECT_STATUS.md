@@ -1021,6 +1021,22 @@ or the next open position when adding. Hidden but saved pins still use capacity.
   18 focused tests on each of Android 8 and 15; debug lint also passed.
   Physical devices and TalkBack were not checked.
 
+### Keep unavailable shortcuts' Home cells reserved
+
+- In 0.4.41 on Android 15, disabling YouTube hid its shortcut but kept its
+  saved Home cell. Dragging an app or folder over that cell painted a preview
+  despite the release being rejected.
+- In the fixed build, real workspace, dock, and folder drags did not paint a
+  preview over the reserved cell or change any placements. An empty cell still
+  highlighted and accepted a shortcut in Light English. The reserved and
+  empty-cell previews were also checked in Dark Arabic. Both themes used
+  200% text. Re-enabling YouTube restored its original cell in both.
+- All 26 focused instrumentation tests passed on each of Android 8 and 15,
+  including mirrored folder drops and page-local saved occupancy. The 13
+  resolver tests and debug lint passed. No new focus target or accessible
+  tile is drawn for a reserved cell; TalkBack and physical devices were not
+  checked.
+
 ### Atomic dock insertion
 
 A drawer drop now writes the new dock pin and the shifted slots in one Room

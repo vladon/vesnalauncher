@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.42
+
+- Home no longer highlights cells reserved for temporarily unavailable
+  apps when you drag a shortcut or folder. The saved shortcuts still return
+  to their original cells when the apps become available again.
+
 ### 0.4.41
 
 - Dragging over Android's navigation bar no longer highlights a dock

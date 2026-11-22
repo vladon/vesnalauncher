@@ -29,7 +29,7 @@ class WorkspaceResolverFolderTest {
             item(keyA, cell = 0),
             item(keyB, cell = 1, folderId = 7L),
         )
-        val resolved = WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA), keyB to app(keyB)), emptyList())
+        val resolved = WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA), keyB to app(keyB)), emptyList()).cells
         assertEquals(mapOf(0 to CellContent.App(app(keyA))), resolved)
     }
 
@@ -40,7 +40,7 @@ class WorkspaceResolverFolderTest {
             item(keyA, cell = 3, folderId = 7L),
             item(keyB, cell = 5, folderId = 7L),
         )
-        val cells = WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA), keyB to app(keyB)), listOf(folder))
+        val cells = WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA), keyB to app(keyB)), listOf(folder)).cells
         val content = cells[3]
         assertTrue(content is CellContent.FolderCell)
         assertEquals(2, (content as CellContent.FolderCell).memberCount)
@@ -50,7 +50,7 @@ class WorkspaceResolverFolderTest {
     @Test
     fun `folder at invalid cell is skipped`() {
         val folder = Folder(id = 7L, title = "Work", cellIndex = GridCanvas.CAPACITY)
-        val cells = WorkspaceResolver.workspaceCells(emptyList(), emptyMap(), listOf(folder))
+        val cells = WorkspaceResolver.workspaceLayout(emptyList(), emptyMap(), listOf(folder)).cells
         assertTrue(cells.isEmpty())
     }
 
@@ -58,7 +58,7 @@ class WorkspaceResolverFolderTest {
     fun `folder does not override an app already at its cell`() {
         val folder = Folder(id = 7L, title = "Work", cellIndex = 0)
         val items = listOf(item(keyA, cell = 0))
-        val cells = WorkspaceResolver.workspaceCells(items, mapOf(keyA to app(keyA)), listOf(folder))
+        val cells = WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA)), listOf(folder)).cells
         assertEquals(CellContent.App::class, cells.getValue(0)::class)
     }
 

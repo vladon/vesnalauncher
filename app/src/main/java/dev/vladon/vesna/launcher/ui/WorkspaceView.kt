@@ -90,6 +90,13 @@ class WorkspaceView @JvmOverloads constructor(
     private var dragTargetCell: Int? = null
     private var dragMoved = false
     internal val isDragging: Boolean get() = dragAnchor != null
+    internal var reservedCellsMask = 0
+        set(value) {
+            if (field == value) return
+            field = value
+            val target = dragTargetCell
+            if (target != null && isCellReserved(target)) showDropHighlight(null)
+        }
 
     private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ColorUtils.setAlphaComponent(context.getColor(R.color.workspace_page_primary), HIGHLIGHT_ALPHA)
@@ -237,7 +244,7 @@ class WorkspaceView @JvmOverloads constructor(
     }
 
     private fun folderDropTarget(x: Float, y: Float): Int? =
-        cellAtLocal(x, y)?.takeUnless { isCellOccupied(it) }
+        cellAtLocal(x, y)?.takeUnless { it in boundContent || isCellReserved(it) }
 
     internal fun cancelDrag() {
         val anchor = dragAnchor ?: return
@@ -265,8 +272,8 @@ class WorkspaceView @JvmOverloads constructor(
         return GridCanvas.rowOf(visualCell) * GridCanvas.COLUMNS + orientedColumn(visualCell)
     }
 
-    /** Whether a bound icon occupies [cell]. */
-    fun isCellOccupied(cell: Int): Boolean = boundContent.containsKey(cell)
+    /** Whether a valid grid cell is held by a saved shortcut that is not drawn. */
+    internal fun isCellReserved(cell: Int): Boolean = reservedCellsMask and (1 shl cell) != 0
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -336,7 +343,7 @@ class WorkspaceView @JvmOverloads constructor(
         }
     }
 
-    /** The content bound to [cell], or null when the cell is empty. */
+    /** The visible content bound to [cell], if any. */
     fun contentAt(cell: Int): CellContent? = boundContent[cell]
 
     internal fun findChildForCell(cell: Int): AppIconView? {

@@ -14,8 +14,8 @@ android {
         applicationId = "dev.vladon.vesna.launcher"
         minSdk = 26
         targetSdk = 37
-        versionCode = 46
-        versionName = "0.4.41"
+        versionCode = 47
+        versionName = "0.4.42"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
