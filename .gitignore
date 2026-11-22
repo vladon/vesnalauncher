@@ -38,6 +38,5 @@ keystore/
 keystore/
 .[a-z0-9]*_*.png
 
-# graphify knowledge-graph outputs (the report is re-included for tracking)
-graphify-out/*
-!graphify-out/GRAPH_REPORT.md
+# Generated Graphify output
+/graphify-out/
