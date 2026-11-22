@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.26
+
+- In landscape, drawer search stays in the app instead of opening a
+  full-screen keyboard editor that hides the results.
+
 ### 0.4.25
 
 - A folder rename in progress survives a system theme change. Save or
