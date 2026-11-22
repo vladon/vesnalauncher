@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.35
+
+- Settings search finds equivalent spellings and ignores extra spaces
+  without rewriting what you type.
+
 ### 0.4.34
 
 - Settings keeps your place when Android recreates the screen, including

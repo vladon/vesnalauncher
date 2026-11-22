@@ -68,7 +68,9 @@ class SettingsSearchLayoutTest {
                 bounds.height() >= minimumHeight
             })
             val query = context.getString(R.string.settings_theme)
-            assertTrue(editor()!!.setQuery(query))
+            assertTrue("The short editor should accept an accessibility text action", until {
+                editor()?.setQuery(query) == true
+            })
             assertTrue("The short editor did not accept the query", until { editor()?.text?.toString() == query })
             scenario.onActivity { expanded.value = true }
             assertTrue("The query or matching entry disappeared after expansion", until {
@@ -127,6 +129,42 @@ class SettingsSearchLayoutTest {
             assertTrue(until { showsMatch() })
             scenario.recreate()
             assertTrue("Recreation should retain the query and its result", until { showsMatch() })
+        }
+    }
+
+    @Test
+    fun equivalentSearchQueriesKeepTheTypedTextAndOpenTheCorrectSetting() {
+        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            lateinit var query: String
+            lateinit var theme: String
+            lateinit var appearance: String
+            lateinit var highlight: String
+            scenario.onActivity { activity ->
+                query = if (activity.resources.configuration.locales[0].language == "ru") {
+                    "темная\u00a0  тема"
+                } else {
+                    "dark\u00a0  theme"
+                }
+                theme = activity.getString(R.string.settings_theme)
+                appearance = activity.getString(R.string.settings_appearance)
+                highlight = activity.getString(R.string.settings_search_match)
+            }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun editor() = find { it.isEditable }
+            fun result() = find { !it.isEditable && it.text?.toString() == theme }
+
+            assertTrue(until { editor() != null })
+            assertTrue(editor()!!.setQuery(query))
+            assertTrue("The editor should preserve the typed query", until { editor()?.text?.toString() == query })
+            assertTrue("Settings should find $theme for the equivalent query \"$query\"", until { result() != null })
+            val card = generateSequence(result()) { it.parent }.first { it.isClickable }
+            assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("The result should open Appearance and highlight Theme", until {
+                find { it.text?.toString() == appearance } != null &&
+                    find { it.text?.toString() == highlight } != null
+            })
         }
     }
 

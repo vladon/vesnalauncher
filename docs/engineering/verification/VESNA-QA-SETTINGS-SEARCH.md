@@ -66,3 +66,20 @@ Lint passed. TalkBack and RTL were not exercised.
   portrait–landscape round trip after dismissing the keyboard with Back.
 - The session state is kept in memory, not saved as a preference. Spoken
   TalkBack, physical devices, and fold/unfold hardware were not tested.
+
+## Equivalent-query follow-up (0.4.35)
+
+- On signed 0.4.34, `dark   theme` returned no settings, while
+  `dark theme` returned Theme. The same regression with nonbreaking and
+  repeated spaces failed on Android 8 in English and on Android 15 in
+  Russian (`темная` in place of `тёмная`).
+- Settings now uses the same matching rules as app search. The editor
+  kept the exact input without changing result labels, and activating
+  Theme opened Appearance with its Theme group highlighted.
+- On Android 15 at 200% text, checked both themes, the editor focus ring,
+  result and breadcrumb, and unchanged selected theme and switch.
+  The measured highlight text contrast was 7.24:1 in both themes.
+  TalkBack speech and physical devices were not tested.
+- Android 8 and 15 each passed 20 focused Settings and drawer tests.
+  The Russian case also passed separately on Android 15. Debug build,
+  lint, and JVM unit tests passed.
