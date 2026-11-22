@@ -760,6 +760,20 @@ surface text color.
   emulators. Physical devices, TalkBack speech, work-profile badges, and a
   bright/busy wallpaper matrix were not rerun for this change.
 
+### Keep the reading position in Settings
+
+- On signed 0.4.33, changing the system theme sent both the Settings
+  directory and Appearance back to the top. It also lost the reading
+  position after entering Appearance from a highlighted Theme result.
+- On Android 15 at 200% text in short windows, the directory kept About
+  at its exact scrolled bounds, and Appearance kept Show app names in
+  place across Light and Dark, both from a direct link and after opening
+  a search match. Opening a fresh link to the same page started at the
+  top without the old highlight. No setting was changed.
+- Both compact scroll regressions failed on 0.4.33. With the fix, 10
+  focused tests passed on each of Android 8 and 15; debug build and lint
+  passed. TalkBack speech and physical devices were not tested.
+
 ### App names
 
 Turn **Show app names** off in Vesna Settings to hide app labels. The choice

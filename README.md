@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.34
+
+- Settings keeps your place when Android recreates the screen, including
+  after a system theme change.
+
 ### 0.4.33
 
 - Back returns keyboard focus to the Home folder shortcut after closing

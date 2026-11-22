@@ -219,7 +219,7 @@ Keep the draft, selection, and any visible validation message when Android recre
   Keep Settings search above the scrolling results. Match setting titles and descriptions. Show the parent path on each outlined result card, and scroll the destination to the matching control. Mark that control with a labeled `tertiaryContainer` treatment without changing its value.
   In a short Settings directory viewport, keep the outlined search field and its focus ring in the Material app bar. Show the visual heading when space allows; otherwise keep the Settings pane name available to accessibility. Named subpages retain their Up button. Narrow fields use a brief placeholder without changing the accessible field name.
   Keyboard traversal follows the app bar before the directory. If keyboard activation removes the Clear button, return focus to the search field.
-  Keep the current query or highlighted search match while Android recreates Settings, such as after a rotation. A new Settings entry starts clean, including when a link opens the same page again.
+  Keep the scroll position and current query or highlighted search match when Android recreates Settings. Scroll to a highlighted match only on entry, without replacing a restored reading position. A new Settings entry starts clean, including when a link opens the same page again.
 
 ## Android handoff and acceptance
 
