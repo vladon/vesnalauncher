@@ -82,6 +82,8 @@ internal class FolderDialog(
     )
     private var currentTitle by mutableStateOf(folder.title)
 
+    var layoutLocked by mutableStateOf(false)
+
     internal var showAppNames: Boolean
         get() = appNames.visible
         set(value) { appNames.visible = value }
@@ -105,7 +107,7 @@ internal class FolderDialog(
                             SnackbarHost(snackbar)
                         }
                     },
-                    confirmButton = { FolderActions(onRename, onRemoveFolder) },
+                    confirmButton = { if (!layoutLocked) FolderActions(onRename, onRemoveFolder) },
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 )
             }
@@ -162,7 +164,7 @@ internal class FolderDialog(
 
     private fun showItemMenu(pin: FolderPin, anchor: View) {
         val popup = VesnaPopupMenu(anchor)
-        popup.add(R.string.folder_remove_from_folder) { onRemoveFromFolder(pin.id) }
+        if (!layoutLocked) popup.add(R.string.folder_remove_from_folder) { onRemoveFromFolder(pin.id) }
         popup.add(R.string.menu_app_info) { onAppInfo(pin.app) }
         onShowPopup(popup)
     }

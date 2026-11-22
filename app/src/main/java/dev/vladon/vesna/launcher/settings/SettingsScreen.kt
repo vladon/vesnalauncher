@@ -4,6 +4,7 @@ import android.content.Intent
 import android.view.View
 import android.widget.ImageView
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -109,6 +110,8 @@ internal fun SettingsScreen(
     onThemeSelected: (ThemeMode) -> Unit,
     showAppNames: Boolean,
     onShowAppNamesChanged: (Boolean) -> Unit,
+    layoutLocked: Boolean,
+    onLayoutLockedChanged: (Boolean) -> Unit,
 ) {
     val inSubpage = page != SettingsPage.ROOT
     val up = { onNavigate(SettingsPage.ROOT, null) }
@@ -203,11 +206,20 @@ internal fun SettingsScreen(
                             SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(searchTarget == R.string.settings_default_launcher) {
                                 DefaultLauncherSetup(defaultHome, onSetDefaultHome)
                             }
+                            SettingsPage.HOME_SCREEN -> SearchTarget(searchTarget == R.string.settings_lock_layout) {
+                                SettingsSwitch(
+                                    R.string.settings_lock_layout, R.string.settings_lock_layout_detail,
+                                    layoutLocked, onLayoutLockedChanged,
+                                )
+                            }
                             SettingsPage.APPEARANCE -> {
                                 SearchTarget(searchTarget == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_show_app_names) {
-                                    AppNamesSetting(showAppNames, onShowAppNamesChanged)
+                                    SettingsSwitch(
+                                        R.string.settings_show_app_names, R.string.settings_show_app_names_detail,
+                                        showAppNames, onShowAppNamesChanged,
+                                    )
                                 }
                             }
                             SettingsPage.ABOUT -> AboutContent(versionName)
@@ -313,6 +325,7 @@ private fun SettingsDirectory(
                         else R.string.settings_default_launcher,
                         defaultHome.summary,
                     ),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
                 )
@@ -341,6 +354,7 @@ private fun SettingsDirectory(
                 val summary = stringResource(when (page) {
                     SettingsPage.ROOT -> continue
                     SettingsPage.DEFAULT_LAUNCHER -> defaultHome.summary
+                    SettingsPage.HOME_SCREEN -> R.string.settings_home_screen_detail
                     SettingsPage.APPEARANCE -> R.string.settings_appearance_detail
                     SettingsPage.ABOUT -> R.string.settings_about_detail
                 })
@@ -431,14 +445,19 @@ private fun ThemeSettings(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
 }
 
 @Composable
-private fun AppNamesSetting(visible: Boolean, onVisibilityChanged: (Boolean) -> Unit) {
+private fun SettingsSwitch(
+    @StringRes title: Int,
+    @StringRes summary: Int,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
     ListItem(
-        headlineContent = { Text(stringResource(R.string.settings_show_app_names)) },
-        supportingContent = { Text(stringResource(R.string.settings_show_app_names_detail)) },
-        trailingContent = { Switch(checked = visible, onCheckedChange = null) },
+        headlineContent = { Text(stringResource(title)) },
+        supportingContent = { Text(stringResource(summary)) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
         modifier = Modifier
             .settingsFocusRing(radius = 12.dp)
-            .toggleable(value = visible, role = Role.Switch, onValueChange = onVisibilityChanged),
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
 }
 

@@ -8,6 +8,11 @@
     <string name="settings_default_home_active">Vesna is your default launcher.</string>
     <string name="settings_default_home_unavailable">Android does not offer a Home app picker on this device.</string>
 
+    <string name="settings_home_screen">Home screen</string>
+    <string name="settings_home_screen_detail">Workspace layout</string>
+    <string name="settings_lock_layout">Lock workspace layout</string>
+    <string name="settings_lock_layout_detail">Prevent changes to shortcuts, folders, dock, and pages.</string>
+    <string name="workspace_layout_locked">Workspace layout is locked</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_appearance_detail">Theme and app names</string>
     <string name="settings_about">About</string>

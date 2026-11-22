@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
@@ -44,6 +45,7 @@ import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.AppearancePreferences
+import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.settings.VesnaTheme
 import dev.vladon.vesna.launcher.workspace.CellContent
@@ -125,6 +127,11 @@ class HomeActivity : ComponentActivity() {
     private var snackbarJob: Job? = null
     private val homeSnackbar by lazy { createHomeSnackbar() }
     private var renderedState = LauncherUiState()
+    private val workspacePreferences by lazy { WorkspacePreferences(this) }
+    private var layoutLocked = false
+    private val workspacePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == WorkspacePreferences.LAYOUT_LOCKED) applyWorkspaceLock()
+    }
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
     private var showAppNames = true
@@ -186,6 +193,10 @@ class HomeActivity : ComponentActivity() {
         val graph = VesnaApplication.graph(this)
         val controller = graph.controller
 
+        workspace.isLayoutLocked = { layoutLocked }
+        dock.isLayoutLocked = { layoutLocked }
+        drawer.isLayoutLocked = { layoutLocked }
+
         workspace.onAppClick = { launchApp(it) }
         workspace.onAppOptions = { cell, app, anchor ->
             showWorkspaceItemMenu(anchor, app, cell, renderedState.activePageId)
@@ -195,7 +206,10 @@ class HomeActivity : ComponentActivity() {
         }
         workspace.onFolderLongClick = { folder, anchor -> showFolderMenu(folder, anchor) }
         workspace.onFolderDrop = controller::moveFolderWithinPage
-        workspace.onEmptyAreaLongClick = ::showLauncherMenu
+        workspace.onEmptyAreaLongClick = {
+            if (layoutLocked) showSnackbar(R.string.workspace_layout_locked, null)
+            else showLauncherMenu()
+        }
         workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
         workspace.onDragStarted = { cell, app, _ ->
@@ -251,6 +265,9 @@ class HomeActivity : ComponentActivity() {
 
         applySystemBarInsets()
 
+        workspacePreferences.registerListener(workspacePreferenceListener)
+        applyWorkspaceLock()
+
         // Open before hierarchy restoration so Android can restore the search text and focus.
         if (savedInstanceState?.getBoolean(DRAWER_OPEN_STATE) == true) drawer.open()
 
@@ -291,6 +308,27 @@ class HomeActivity : ComponentActivity() {
             return
         }
         applyAppNameVisibility(appearance.showAppNames)
+    }
+
+    override fun onDestroy() {
+        workspacePreferences.unregisterListener(workspacePreferenceListener)
+        super.onDestroy()
+    }
+
+    private fun applyWorkspaceLock() {
+        val locked = workspacePreferences.layoutLocked
+        if (layoutLocked == locked) return
+        layoutLocked = locked
+        activePopup?.dismiss()
+        pendingPageMenu?.cancel()
+        if (locked) {
+            workspace.cancelDrag()
+            dock.cancelDrag()
+            cancelDrawerGesture()
+            dismissFolderRename()
+        }
+        folderDialog?.layoutLocked = locked
+        emptyHint.setText(if (locked) R.string.workspace_layout_locked else R.string.workspace_empty_hint)
     }
 
     override fun onStop() {
@@ -570,6 +608,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun commitDrop(source: DragSource, x: Float, y: Float) {
+        if (layoutLocked) return
         if (y >= dock.top) {
             if (!withinDockDropBounds(x, y)) return
             val column = dockDropColumn(source, x)
@@ -616,6 +655,7 @@ class HomeActivity : ComponentActivity() {
             },
         )
         dialog.showAppNames = showAppNames
+        dialog.layoutLocked = layoutLocked
         folderDialog = dialog
         homeUiState.openFolderId = folder.id
         homeUiState.focusedMemberId = null
@@ -630,6 +670,10 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showFolderMenu(folder: Folder, anchor: View) {
+        if (layoutLocked) {
+            showSnackbar(R.string.workspace_layout_locked, null)
+            return
+        }
         val popup = VesnaPopupMenu(anchor)
         popup.add(R.string.folder_rename) { promptFolderRename(folder.id) }
         if (renderedState.pageIds.size > 1) {
@@ -646,6 +690,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun promptFolderRename(folderId: Long) {
+        if (layoutLocked) return
         val folder = renderedState.folders[folderId] ?: return
         dismissFolderRename()
         val rename = FolderRename(
@@ -669,7 +714,7 @@ class HomeActivity : ComponentActivity() {
         }
         val rename = homeUiState.rename ?: return
         val folder = state.folders[rename.folderId]
-        if (folder == null || folder.pageId != state.activePageId) {
+        if (layoutLocked || folder == null || folder.pageId != state.activePageId) {
             dismissFolderRename()
         } else if (folderRenameHost == null) {
             showFolderRename(folder, rename)
@@ -740,6 +785,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun removeFolderItems(pageId: Long, remove: suspend () -> FolderRemovalResult) {
+        if (layoutLocked) return
         val dialog = folderDialog
         lifecycleScope.launch {
             if (remove() == FolderRemovalResult.NO_ROOM &&
@@ -840,15 +886,17 @@ class HomeActivity : ComponentActivity() {
 
     private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp, cell: Int, pageId: Long) {
         val popup = VesnaPopupMenu(anchor)
-        popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
-        if (renderedState.pageIds.size > 1) {
-            popup.add(R.string.menu_move_to_page) {
-                showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
-                    pinId, destinationId -> controller.movePinToPage(pinId, cell, pageId, destinationId)
+        if (!layoutLocked) {
+            popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
+            if (renderedState.pageIds.size > 1) {
+                popup.add(R.string.menu_move_to_page) {
+                    showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
+                        pinId, destinationId -> controller.movePinToPage(pinId, cell, pageId, destinationId)
+                    }
                 }
             }
+            popup.add(R.string.menu_remove_from_workspace) { controller.removeFromWorkspace(app, cell, pageId) }
         }
-        popup.add(R.string.menu_remove_from_workspace) { controller.removeFromWorkspace(app, cell, pageId) }
         popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
         showPopup(popup)
     }
@@ -860,7 +908,7 @@ class HomeActivity : ComponentActivity() {
         move: (sourceId: Long, destinationId: Long) -> Unit,
     ) = schedulePageMenu {
         val options = loadOptions()
-        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+        if (layoutLocked || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
             renderedState.activePageId != pageId || !anchor.isAttachedToWindow || !anchor.isShown
         ) return@schedulePageMenu
         if (options == null) {
@@ -882,15 +930,17 @@ class HomeActivity : ComponentActivity() {
 
     private fun showDockItemMenu(anchor: View, app: LauncherApp, pinId: Long) {
         val popup = VesnaPopupMenu(anchor)
-        popup.add(R.string.menu_remove_from_dock) { controller.removeFromDock(pinId) }
+        if (!layoutLocked) popup.add(R.string.menu_remove_from_dock) { controller.removeFromDock(pinId) }
         popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
         showPopup(popup)
     }
 
     private fun showDrawerItemMenu(anchor: View, app: LauncherApp, pageId: Long) {
         val popup = VesnaPopupMenu(anchor)
-        popup.add(R.string.menu_add_to_workspace) { controller.addToWorkspace(app, pageId) }
-        popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
+        if (!layoutLocked) {
+            popup.add(R.string.menu_add_to_workspace) { controller.addToWorkspace(app, pageId) }
+            popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
+        }
         popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
         showPopup(popup)
     }
@@ -900,7 +950,7 @@ class HomeActivity : ComponentActivity() {
         popup.add(R.string.menu_launcher_settings) {
             startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
         }
-        popup.add(R.string.menu_wallpaper, ::startWallpaperPicker)
+        if (!layoutLocked) popup.add(R.string.menu_wallpaper, ::startWallpaperPicker)
         val graph = VesnaApplication.graph(this)
         if (!graph.homeRoleChecker.isDefaultHome() &&
             graph.homeRoleChecker.defaultHomeRequestIntent() != null
@@ -913,23 +963,25 @@ class HomeActivity : ComponentActivity() {
         if (page.pageIds.size > 1) {
             popup.add(R.string.workspace_choose_page) { schedulePageMenu { showPagePicker(homeOptionsButton) } }
         }
-        if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
-            popup.add(R.string.menu_add_workspace_page) { controller.createWorkspacePage() }
-        }
-        if (page.canRemoveActivePage) {
-            popup.add(R.string.menu_remove_empty_workspace_page) { controller.removeEmptyWorkspacePage(page.activePageId) }
-        }
-        val position = page.pageIds.indexOf(page.activePageId)
-        if (page.pageIds.size > 2 && position > 0) {
-            popup.add(R.string.menu_reorder_workspace_page) {
-                schedulePageMenu { showReorderPageMenu(page, position) }
+        if (!layoutLocked) {
+            if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
+                popup.add(R.string.menu_add_workspace_page) { controller.createWorkspacePage() }
+            }
+            if (page.canRemoveActivePage) {
+                popup.add(R.string.menu_remove_empty_workspace_page) { controller.removeEmptyWorkspacePage(page.activePageId) }
+            }
+            val position = page.pageIds.indexOf(page.activePageId)
+            if (page.pageIds.size > 2 && position > 0) {
+                popup.add(R.string.menu_reorder_workspace_page) {
+                    schedulePageMenu { showReorderPageMenu(page, position) }
+                }
             }
         }
         showPopup(popup)
     }
 
     private fun showReorderPageMenu(page: LauncherUiState, position: Int) {
-        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !homeOptionsButton.isShown) return
+        if (layoutLocked || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !homeOptionsButton.isShown) return
 
         val popup = VesnaPopupMenu(homeOptionsButton)
         for (index in 1..page.pageIds.lastIndex) {

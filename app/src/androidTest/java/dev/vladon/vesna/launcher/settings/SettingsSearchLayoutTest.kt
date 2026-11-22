@@ -56,6 +56,8 @@ class SettingsSearchLayoutTest {
                                 onThemeSelected = {},
                                 showAppNames = true,
                                 onShowAppNamesChanged = {},
+                                layoutLocked = false,
+                                onLayoutLockedChanged = {},
                             )
                         }
                     }
@@ -229,6 +231,8 @@ class SettingsSearchLayoutTest {
                                         onThemeSelected = {},
                                         showAppNames = true,
                                         onShowAppNamesChanged = {},
+                                        layoutLocked = false,
+                                        onLayoutLockedChanged = {},
                                     )
                                 }
                             }
