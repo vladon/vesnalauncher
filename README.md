@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.40
+
+- Dragging from the app drawer no longer highlights a matching Home
+  shortcut or a folder that already contains that app in the same profile.
+
 ### 0.4.39
 
 - When the app list changes while Android recreates Home, the drawer

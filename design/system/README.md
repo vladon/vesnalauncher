@@ -201,6 +201,9 @@ Keep the draft, selection, and any visible validation message when Android recre
   Workspace columns and dock slots run from the reading start edge, including in RTL.
   Drag hit testing and highlights follow the rendered columns. Changing layout direction
   mirrors the display without changing the saved cells or slot order.
+  When copying from the drawer, do not highlight a shortcut or folder that
+  already contains the same app in the same profile. Keep other profiles
+  distinct, and use the same rule for the preview and the drop.
   The dock packs visible icons toward the start. Dragging across trailing space
   highlights the last possible position for that drag. Temporarily unavailable
   favorites remain saved and count toward capacity; a full dock does not show
