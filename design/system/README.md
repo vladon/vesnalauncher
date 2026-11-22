@@ -44,7 +44,7 @@ The icon pairs a full-bleed Off-White background with the color mark. Keep the s
 
 All layers use a 108 × 108 dp viewport. Keep essential silhouette geometry inside the centered 66 × 66 dp safe zone at x/y 21–87. The centered 72 × 72 dp crop in the preview represents the visible mask viewport before OEM shaping. The outer 18 dp on each edge is available to the platform for masking and motion. The square, rounded-square, squircle and circular examples are design checks. The monochrome examples illustrate system tinting. The launcher may choose other colors and masks.
 
-The XML handoff maps to the existing Android manifest resource names. Adaptive icons are available from API 26 and the dedicated monochrome layer supports compatible themed launchers from API 33. The project minimum is API 26. During implementation, review the existing About screen's separate use of the current foreground drawable before choosing its replacement asset. [Android adaptive icon guidance](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive) · [Current manifest](../../app/src/main/AndroidManifest.xml)
+The app packages the Android handoff directory directly under the existing manifest resource names. Adaptive icons are available on the project's minimum SDK (API 26), and the dedicated monochrome layer supports compatible themed launchers from API 33. About renders the same adaptive mark without following the host launcher's themed-icon preference. [Android adaptive icon guidance](https://developer.android.com/develop/ui/compose/system/icon_design_adaptive) · [Current manifest](../../app/src/main/AndroidManifest.xml)
 
 ## Material 3 color
 

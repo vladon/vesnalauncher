@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.14
+
+- Replaced the placeholder app icon with the approved Vesna mark. The
+  Android themed icon uses its own monochrome artwork, and About shows the
+  same Vesna branding.
+
 ### 0.4.13
 
 - Home and dock icons fit narrow windows without being cropped or moving

@@ -1,8 +1,9 @@
 package dev.vladon.vesna.launcher.settings
 
 import android.content.Intent
+import android.view.View
+import android.widget.ImageView
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,7 +61,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -79,6 +79,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import dev.vladon.vesna.launcher.R
 
@@ -376,18 +377,16 @@ private fun DefaultLauncherSetup(state: DefaultHomeState, onSetDefaultHome: () -
 private fun AboutContent(versionName: String) {
     val context = LocalContext.current
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
+        // Android renders the same adaptive artwork and mask as the installed app icon.
+        AndroidView(
+            factory = { viewContext ->
+                ImageView(viewContext).apply {
+                    setImageResource(R.mipmap.ic_launcher)
+                    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                }
+            },
             modifier = Modifier.size(96.dp),
-        ) {
-            Image(
-                painter = painterResource(R.drawable.ic_launcher_foreground),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.padding(16.dp),
-            )
-        }
+        )
         Spacer(Modifier.height(16.dp))
         Text(
             text = stringResource(R.string.app_name),
