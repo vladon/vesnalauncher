@@ -377,6 +377,22 @@ changing the member order. Members scroll independently of the dialog actions.
   The 20 focused tests passed on Android 8 and 15; build and lint passed.
   Physical devices and TalkBack speech were not tested.
 
+### Keep keyboard focus inside an open folder through Home recreation
+
+- Signed 0.4.29 kept the folder open but moved focus from Files to Drive
+  when switching from Light to Dark on Android 15. The fix restores focus
+  to the same saved shortcut, not the first tile or another copy of the app.
+- On Android 15 at 200% text, the focus outline stayed on Files across the
+  Light-to-Dark switch. D-pad Left moved focus to Drive, which stayed
+  focused on the switch back. Both themes showed the full accessible app
+  names and 48 dp dialog actions. Home closed the folder, and reopening
+  did not reclaim the previous focus.
+- The 42-member regression failed on the previous debug APK at the focus
+  assertion. It verifies the focused member, existing scroll restoration,
+  and that an intentional dismissal does not reopen the folder. The 20
+  focused tests passed on Android 8 and 15; debug build and lint passed.
+  TalkBack speech and physical devices were not tested.
+
 ### Home labels at large text sizes
 
 On compact Home grids, app and folder artwork shrinks when needed to fit a

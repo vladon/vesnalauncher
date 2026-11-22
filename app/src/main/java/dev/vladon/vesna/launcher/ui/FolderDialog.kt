@@ -44,6 +44,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.doOnNextLayout
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.ThemeMode
@@ -125,6 +126,31 @@ internal class FolderDialog(
         val folder = state.folders[folder.id] ?: return dismiss()
         currentTitle = folder.title
         adapter.submitList(state.folderContents[folder.id].orEmpty())
+    }
+
+    fun focusedMemberId(): Long? {
+        val focused = list.focusedChild ?: return null
+        return adapter.currentList.getOrNull(list.getChildAdapterPosition(focused))?.id
+    }
+
+    fun restoreMemberFocus(memberId: Long) {
+        // Wait for the restored RecyclerView layout before taking focus from the default tile.
+        list.doOnNextLayout {
+            val position = adapter.currentList.indexOfFirst { it.id == memberId }
+            if (position < 0) return@doOnNextLayout
+            val tile = list.findViewHolderForAdapterPosition(position)?.itemView
+            if (tile != null) {
+                tile.requestFocus()
+            } else {
+                list.scrollToPosition(position)
+                list.doOnNextLayout {
+                    val currentPosition = adapter.currentList.indexOfFirst { it.id == memberId }
+                    if (currentPosition >= 0) {
+                        list.findViewHolderForAdapterPosition(currentPosition)?.itemView?.requestFocus()
+                    }
+                }
+            }
+        }
     }
 
     private fun showItemMenu(pin: FolderPin, anchor: View) {
