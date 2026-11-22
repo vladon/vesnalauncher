@@ -12,7 +12,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| CARDS-100 | Condition-gated cards | Nova 8.9.9: conditions did not gate search and did not surface cards in the plain drawer (OBS-CARDS-117). Nova 9.0.1: a saved inactive Day/time condition did not gate name search (OBS-VESNA-009). |
+| CARDS-100 | Condition-gated cards | Nova 8.9.9: conditions did not gate search or surface cards in the plain drawer (OBS-CARDS-117). Nova 9.0.1: inactive Day/time and unmatched Wi-Fi did not gate name search; an active time window did not surface the test card in the plain drawer (OBS-VESNA-009/011). |
 | CARDS-101 | Custom card builder (Add card: name, featured content, up to 6 pinned actions, condition set) | discovered (overlay ⋮ ▸ Add card and Cards-page "+" FAB; OBS-CARDS-116) |
 | CARDS-102 | Overlay card affordances (card long-press = provider deep link; card gear = Card details w/ Save; search-bar ⋮ = Add card/API Integrations/Settings; Fahrenheit rendering; no manual location) | discovered (OBS-CARDS-116) |
 | CARDS-103 | Calendar card variant (permission empty-state + New event chip; in-app "Connect to Calendar" gate — adb grant insufficient; real events post-connect) | discovered (OBS-CARDS-118) |
@@ -23,7 +23,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DRAWER-106 | Drawer groups (tabs + smart folders) | Nova 8.9.9: tabs render and switch, generated folders require per-item Enable (OBS-DRAWER-112). Nova 9.0.1: fresh master ON but seven folders individually OFF; upgraded enabled folders render, including labeled empty ones (OBS-VESNA-008/010). |
+| DRAWER-106 | Drawer groups (tabs + smart folders) | Nova 8.9.9: tabs render and switch, generated folders require per-item Enable (OBS-DRAWER-112). Nova 9.0.1: fresh master ON with seven folders individually OFF; master OFF hides enabled folders and master ON does not restore them (OBS-VESNA-008/010/012). |
 
 ## HOME — Home screen / workspace
 

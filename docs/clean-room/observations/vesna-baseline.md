@@ -288,3 +288,36 @@ Nova remains the system HOME (comparison-only install).
 - Evidence: `EVI-VESNA-003/nova901-isolated-fresh-1-*`,
   `nova901-isolated-groups-*`, and `nova901-isolated-default-*`.
   Confidence: observed.
+
+## OBS-VESNA-011 — Nova 9.0.1 condition and plain-drawer follow-up
+
+- A disposable custom card with a Calculator action and a Wi-Fi rule
+  for a network other than the connected network still appeared on a
+  matching Nova Now search. Reopening confirmed the Wi-Fi rule persisted.
+- With Wi-Fi removed and only a 15-minute weather-change rule attached,
+  the card still appeared on matching search and the rule persisted.
+  No weather transition was independently observed or induced, so this
+  does not establish whether that rule gates rendering.
+- Bluetooth was permission-gated (`BLUETOOTH_CONNECT` not granted).
+  No permission was changed and connected/disconnected rendering was
+  not tested.
+- With only an active Sunday time window attached, the card was not
+  visible in query-free drawer browsing (four captures while scrolling),
+  but its exact-name search still showed the card and action. Removed
+  the disposable card; existing cards were not edited.
+- Evidence: `EVI-VESNA-003/nova901-wifi-inactive-render-*`,
+  `nova901-wifi-persisted-*`, `nova901-weather-*`, `nova901-active-*`,
+  and `nova901-otherconditions-deleted-*`. Confidence: observed.
+
+## OBS-VESNA-012 — Nova 9.0.1 master switch resets per-folder state
+
+- On the upgraded Pixel, all seven smart folders were visible before
+  turning off the master switch. None appeared in the query-free drawer
+  with the switch OFF. Turning it ON again did not restore them:
+  each folder menu offered Enable, not Disable.
+- Re-enabled all seven individually and verified all seven were again
+  visible in the drawer. Left the master switch ON, as before.
+- Evidence: `EVI-VESNA-003/nova901-active-plain-drawer-*`,
+  `nova901-master-off-*`, `nova901-master-restored-*`,
+  `nova901-master-reset-*`, and `nova901-master-final-drawer-*`.
+  Confidence: observed on the upgraded profile.
