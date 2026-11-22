@@ -586,3 +586,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   force-stop directly from the checkbox screen did not retain the change.
 - System Home remained Nova. Evidence: `EVI-VESNA-003/parity23-*`.
   Confidence: observed on one Android 15 AVD; no physical-device run.
+
+## OBS-VESNA-024 — Pin an app action directly from the drawer
+
+- On the same Android 15 research AVD, both launchers had an ordinary
+  Gmail pin on the workspace and no separate compose shortcut. Nova
+  9.0.1 Prime (90100): long-press the Gmail row in the alphabetical
+  drawer, then drag its compose action from the menu to the workspace.
+  The drawer closed and a distinct action shortcut appeared alongside
+  the existing Gmail pin.
+- The action shortcut survived a Nova process restart. Tapping it
+  launched Gmail's initial setup; the actual compose screen was not
+  verified. Removed the action shortcut and confirmed the ordinary
+  Gmail pin remained after another restart.
+- In signed Vesna 0.4.48 (53), the equivalent unlocked drawer menu
+  offered ordinary app pinning and app information, but no app action
+  to drag. Follow-up for #114; placement of ordinary app icons is a
+  separate behavior.
+- Evidence: `EVI-VESNA-003/parity24-*`. Confidence: observed for Gmail
+  on this AVD; no other app or dock drop tested.

@@ -59,7 +59,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
 | DRAWER-008 | Hide apps from alphabetical browsing | Nova 9.0.1: hide survives restart; pins and search launch still work; unhide restores browsing. Vesna 0.4.48 drawer has no hide action (OBS-VESNA-023; #119). |
 | DRAWER-009 | App categories/tabs/folders in drawer | discovered (Tab bar placement: None; Drawer groups: Prime) |
-| DRAWER-010 | App context menus in drawer | Nova 9.0.1: app action and hiding in the alphabetical list; per-app dismissal in predictions (OBS-VESNA-022; #112, #114, #119). |
+| DRAWER-010 | App context menus in drawer | Nova 9.0.1: per-app dismissal in predictions, hiding in the alphabetical list, and a persistent action shortcut dragged from the drawer to Home. Vesna 0.4.48 offers ordinary pins, not the app action (OBS-VESNA-022/024; #112, #114, #119). |
 | DRAWER-011 | App launching from drawer | pending |
 | DRAWER-012 | Newly installed app handling | discovered (Add icons to home screen setting) |
 | DRAWER-013 | Uninstalled app handling | pending |
