@@ -98,7 +98,7 @@ Pinned specs: [`specifications/settings.md`](https://github.com/vladon/vesnalaun
 
 | Research ID | Meaning | Vesna anchors | Status |
 |---|---|---|---|
-| `SETT-110` | **Settings search/deep-linking** (not reset) | Pinned search, title and subtitle matches, and breadcrumb cards that land on highlighted controls | **Verified** on API 26 and 35; see [acceptance scenario](verification/VESNA-QA-SETTINGS-SEARCH.md). |
+| `SETT-110` | **Settings search/deep-linking** (not reset) | Pinned search, title and subtitle matches, breadcrumbs, and keyboard focus returning to Search after Clear | **Verified** on API 26 and 35; see [acceptance and keyboard regression](verification/VESNA-QA-SETTINGS-SEARCH.md). |
 | `SETT-112` / `NT-SETTING-01` | Clean root, exact named links, and keyboard-first Back | Settings directory and `SettingsActivity` routes | **Verified** on API 26 and 35 for `R-SETT-112.1`–`.3`; see [QA](verification/VESNA-QA-SETTINGS-NAVIGATION.md). Unsaved-change dialogs (`.4`) are out of scope. |
 | `BACKUP-101` | Reset (coverage partial in research) | none — trunk has no reset feature | **Gap on both sides**; reset work pairs with [ENG-106 in BACKLOG.md](BACKLOG.md#eng-106-backuprestore-policy) |
 | `BACKUP-102` | Backup | `android:allowBackup="true"` in the manifest (platform-managed); no explicit backup/restore feature | **Not implemented (feature)**; platform backup enabled by manifest default. No dedicated research scenario. Scope decision pending — [ADR-BACKUP-1 in BACKLOG.md](BACKLOG.md#adr-backup-1-backup-and-privacy-policy) |

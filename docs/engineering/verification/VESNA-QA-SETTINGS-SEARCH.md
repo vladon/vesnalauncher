@@ -34,3 +34,19 @@ Lint passed. TalkBack and RTL were not exercised.
   reach a full card. The Theme card still opened at its highlighted control;
   the conventional height retained the heading and live results.
 - Spoken TalkBack, physical devices, and floating keyboards were not tested.
+
+## Keyboard focus follow-up (0.4.20)
+
+- On signed 0.4.19 the first Tab stopped on Default launcher, before the
+  search field above it. Pressing Enter on the focused Clear button removed
+  it and left focus on the window instead of the field.
+- The Settings device regression starts from an unfocused editor, sends Tab,
+  types a query, tabs to Clear, presses Enter, then types again without
+  navigating back to the field. It failed on the 0.4.19 debug baseline and
+  passed on the fix. Settings and shortcut tests passed 7/7 on Android 8 and
+  15; debug build and Lint passed.
+- Android 15 checks covered Light at normal text size and Dark at 198 dp
+  wide and 200% text, including D-pad center and the visible focus rings.
+  Touch Clear still worked with the docked keyboard open and did not reopen
+  a dismissed keyboard. The Theme result and Android 8 IME-first Back
+  behavior were unchanged. Physical keyboards and TalkBack were not tested.
