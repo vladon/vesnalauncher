@@ -13,25 +13,30 @@ behavior, not Vesna requirements (Vesna is ad-free by product definition).
 - Trigger: swipe up from the lower portion of the screen.
 - Expected behavior:
   1. Drawer covers the workspace.
-  2. Search bar at top receives focus; the soft keyboard is presented when
-     the show-keyboard option is enabled.
-  3. A frequently-used predictions section appears above the app list.
+  2. The upward swipe focuses search and opens the IME only with the
+     keyboard-on-open option enabled. A direct search entry can focus
+     search even when the swipe option is off.
+  3. Frequently used app and shortcut rows are independently
+     configurable and do not depend on whether the IME opens.
   4. The app grid lists launchable apps alphabetically.
-- State transitions: workspace → drawer (with search focused).
+- State transitions: workspace → drawer, with focus determined by the
+  entry route and keyboard setting.
 - Configuration: drawer style (Vertical default), grid size, search bar
   placement (Top default), show keyboard (on default), frequently used apps
   (on default).
 - Boundary conditions: swipe must not conflict with gesture navigation
   (upward swipe from the very bottom edge belongs to the system).
-- Evidence: OBS-DRAWER-001 (EVI-DRAWER-001)
+- Evidence: OBS-DRAWER-001 (EVI-DRAWER-001), OBS-VESNA-025 (EVI-VESNA-003).
 - Confidence: Observed
 
 ### Vesna requirements
 
 - R-DRAWER-100.1: Swipe up opens the drawer.
-- R-DRAWER-100.2: On open, drawer search is focusable; keyboard shown iff
-  the show-keyboard setting is enabled.
-- R-DRAWER-100.3: Frequently-used predictions shown when enabled.
+- R-DRAWER-100.2: Search is focusable on open. Swipe entry focuses it
+  and opens the IME only when keyboard-on-open is enabled.
+- R-DRAWER-100.3: App and shortcut predictions can be suppressed
+  independently of each other and the keyboard setting; suppression
+  does not disable explicit search.
 - R-DRAWER-100.4: Apps listed alphabetically (default sort).
 
 ## DRAWER-101 — Drawer search filtering and suggestions

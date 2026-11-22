@@ -605,3 +605,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   separate behavior.
 - Evidence: `EVI-VESNA-003/parity24-*`. Confidence: observed for Gmail
   on this AVD; no other app or dock drop tested.
+
+## OBS-VESNA-025 — Keyboard and predictions are independent on drawer entry
+
+- Same Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.48 (53). Used the same upward workspace swipe
+  on both launchers, starting with no query or keyboard visible.
+- Nova's keyboard setting off left the search field unfocused and
+  the IME hidden on swipe, with app and shortcut predictions still
+  visible. Tapping the workspace search affordance instead opened
+  focused search with the IME, even with that setting off.
+- Turning off app predictions removed the app row without removing
+  the shortcut row. With both prediction options off, enabling the
+  keyboard setting still focused search and opened the IME on swipe.
+  A typed Gmail query still produced an app result. Restored all
+  three original on settings.
+- The same swipe in Vesna opened an unfocused app grid with no IME
+  or prediction rows. Tapping search and typing Gmail still found
+  the app. This refines #112; ranking was not measured.
+- Evidence: `EVI-VESNA-003/parity25-*`. Confidence: observed for the
+  tested entry routes and switch combinations.

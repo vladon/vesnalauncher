@@ -59,13 +59,14 @@ its feature ID. These describe externally observable behavior only.
 
 ## App drawer
 
-### AT-DRAWER-100 — Drawer opens with focused search
-- Given the launcher is showing the workspace and "show keyboard on open" is
-  enabled
+### AT-DRAWER-100 — Drawer swipe respects focus and prediction settings
+- Given the launcher is showing the workspace and keyboard-on-open is enabled
 - When the user swipes up from the lower part of the screen
 - Then the drawer opens with the search field focused and the keyboard shown
-- And a frequently-used predictions section is visible above the app grid
-- And apps are listed alphabetically
+- When keyboard-on-open is disabled and the swipe is repeated
+- Then search is not focused and the keyboard stays hidden
+- And independently disabling app or shortcut predictions hides only the
+  corresponding row without disabling alphabetical browsing or typed search
 
 ### AT-DRAWER-101 — Search filtering with emphasized matches
 - Given the drawer is open with search focused
