@@ -862,3 +862,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `parity34-vesna050-layout-*`, `parity35-release051-*`, and
   `parity36-main-*`. Confidence: observed for the tested gestures
   and queries. RTL, scaling and accessibility were not replayed.
+
+## OBS-VESNA-036 — Disabling the dock retains both pages of pins
+
+- On an Android 15 research AVD, Nova 9.0.1 Prime (90100)
+  started with five ordinary pins on dock page one. Placed
+  a disposable app pin on the normally empty page two.
+- Turned off the dock in settings. The dock and its attached
+  search affordance disappeared; workspace rows used more
+  vertical space. This presentation survived a process
+  restart. An upward swipe from the lower workspace still
+  opened the app drawer.
+- Re-enabled the dock. Both pages and their exact pin bounds
+  returned without repinning, along with the search affordance
+  and original workspace positions. Removed the disposable
+  app and verified the original five pins and empty second page.
+- Signed Vesna v0.4.51 (56) displayed four dock pins on this
+  AVD. Searching its settings for dock surfaced descriptions,
+  not an independent enable switch. Follow-up for #115.
+- Evidence: `EVI-VESNA-003/parity37-*`. Confidence: observed
+  for a dock-linked search bar and the tested two-page layout.
+  Gesture-toggle and position-memory settings were not exercised.
