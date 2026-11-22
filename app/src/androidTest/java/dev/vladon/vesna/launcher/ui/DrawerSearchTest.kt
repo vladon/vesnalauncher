@@ -317,10 +317,12 @@ class DrawerSearchTest {
     }
 
     @Test
-    fun recreatedDrawerRestoresTheFilteredRowAfterAppsArriveAndClearingStartsAtTop() {
+    fun recreatedDrawerAnchorsToTheSameAppAndProfileAfterResultsChange() {
         val tools = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
         val other = app("dev.vladon.fixture.other", ".Main", "Other")
-        val catalogue = listOf(other) + tools
+        val personal = tools[40]
+        val work = personal.copy(key = personal.key.copy(userSerial = 10), badgedLabel = "Work Tool 40")
+        val catalogue = listOf(other) + tools.map { if (it == personal) work else it }
         onDrawer { it.submitApps(catalogue) }
         setQuery("tool")
         assertVisibleLabels(tools.map { it.label })
@@ -328,27 +330,36 @@ class DrawerSearchTest {
             val grid = host.findViewById<RecyclerView>(R.id.drawer_list).layoutManager as GridLayoutManager
             grid.scrollToPositionWithOffset(40, -12)
         }
-        assertFirstVisibleApp(tools[40].label, offset = -12)
+        assertFirstVisibleApp(work.accessibilityLabel, offset = -12)
 
-        onDrawer { host ->
-            val viewState = SparseArray<Parcelable>().also(host::saveHierarchyState)
-            val resultState = Bundle().also(host::saveResultViewport)
-            val content = host.parent as ViewGroup
-            val params = host.layoutParams
-            content.removeView(host)
-            val replacement = DrawerView(host.context)
-            content.addView(replacement, params)
-            replacement.open()
-            replacement.restoreHierarchyState(viewState)
-            replacement.restoreResults(resultState, focusedApp = null)
-            replacement.submitApps(emptyList())
-            drawer = replacement
+        fun recreateWith(apps: List<LauncherApp>) {
+            onDrawer { host ->
+                val viewState = SparseArray<Parcelable>().also(host::saveHierarchyState)
+                val resultState = Bundle().also(host::saveResultViewport)
+                val content = host.parent as ViewGroup
+                val params = host.layoutParams
+                content.removeView(host)
+                val replacement = DrawerView(host.context)
+                content.addView(replacement, params)
+                replacement.open()
+                replacement.restoreHierarchyState(viewState)
+                replacement.restoreResults(resultState, focusedApp = null)
+                replacement.submitApps(emptyList())
+                drawer = replacement
+            }
+            assertVisibleLabels(emptyList())
+            onDrawer { assertEquals("tool", it.findViewById<EditText>(R.id.drawer_search).text.toString()) }
+            onDrawer { it.submitApps(apps) }
         }
-        assertVisibleLabels(emptyList())
-        onDrawer { assertEquals("tool", it.findViewById<EditText>(R.id.drawer_search).text.toString()) }
 
-        onDrawer { it.submitApps(catalogue) }
-        assertFirstVisibleApp(tools[40].label, offset = -12)
+        // The personal copy now occupies the old slot; the work copy is a row down.
+        val added = List(3) { app("dev.vladon.fixture.new$it", ".Main", "New Tool $it") }
+        val changed = listOf(other) + tools.take(41) + added + work + tools.drop(41)
+        recreateWith(changed)
+        assertFirstVisibleApp(work.accessibilityLabel, offset = -12)
+
+        recreateWith(changed.filterNot { it.key == work.key })
+        assertFirstVisibleApp(tools[41].accessibilityLabel, offset = -12)
 
         onDrawer { it.findViewById<View>(R.id.drawer_clear_search).performClick() }
         assertFirstVisibleApp(other.label, offset = 0)
