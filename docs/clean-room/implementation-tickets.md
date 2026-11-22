@@ -260,3 +260,13 @@ Traceability: every ticket's acceptance scenario lives in
 | NT-HOME-04 | Opt-in placement of newly installed apps; first verify Nova's positive installer path | [#107](https://github.com/vladon/vesnalauncher/issues/107) |
 | NT-DRAWER-05 | Selectable drawer layouts | [#108](https://github.com/vladon/vesnalauncher/issues/108) |
 | NT-DRAWER-06 | Alphabetical fast scroller | [#109](https://github.com/vladon/vesnalauncher/issues/109) |
+
+## OBS-VESNA-020 GitHub issues
+
+| Ticket | Scope | Tracker |
+|---|---|---|
+| NT-DRAWER-07 | Optional keyboard-on-open and frequent-app suggestions | [#112](https://github.com/vladon/vesnalauncher/issues/112) |
+| NT-DRAWER-08 | External drawer search providers and suggestions | [#113](https://github.com/vladon/vesnalauncher/issues/113) |
+| NT-HOME-05 | App shortcuts, widgets and editing in the workspace icon menu | [#114](https://github.com/vladon/vesnalauncher/issues/114) |
+| NT-DOCK-06 | Independent dock configuration and paging | [#115](https://github.com/vladon/vesnalauncher/issues/115) |
+| NT-BACKUP-01 | Manual layout file export and restore policy; linked to ENG-106 | [#116](https://github.com/vladon/vesnalauncher/issues/116) |
