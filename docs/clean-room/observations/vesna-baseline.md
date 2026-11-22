@@ -555,3 +555,34 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   the regular drawer menu complements #114 and #119.
 - Evidence: `EVI-VESNA-003/parity22-vesna-*`, `parity22-nova-wrap-*`,
   and `parity22-nova-drawer-*`. Confidence: observed for these paths.
+
+## OBS-VESNA-023 — Signed v0.4.48 lock and hidden-app persistence
+
+- [Vesna v0.4.48](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.48)
+  (code 53, tag `33f6cbc69a8ddc6b88338d5839e909aea14c0c88`)
+  includes #103 via PR #105 (`c13d2fb0`). Verified GitHub's asset digest,
+  verified the APK signer against v0.4.46, and updated the isolated
+  Android 15 `Nova_Reboot_API35` research AVD from signed v0.4.46.
+  No debug APK was used for this replay.
+- In the release APK, a staged drag left Contacts in place when locked;
+  the resulting menu offered app information but no placement actions.
+  After a process restart the switch remained on and tapping Gmail
+  reached the app. Turning off the lock allowed the same drag to move
+  Contacts. Restored the shortcut position and the original off setting.
+  This confirms the tested release path, not every main-build assertion.
+- Nova stayed at 9.0.1 Prime (90100). The publisher's direct stable and
+  beta links returned older versions; the Play listing did not expose an
+  exact version and the independently indexed 9.0.0 was older. No newer
+  trusted APK was verified for this fixture.
+- On the same AVD, both unlocked launchers started with Chrome in the
+  drawer and pinned in the dock. Nova's alphabetical item menu could
+  hide Chrome. After force-stop and reopening Nova, Chrome was still
+  absent between Camera and Clock, its dock pin remained, and tapping
+  its exact-name search result opened Chrome's initial setup. Unhiding
+  via settings, backing out, and reopening restored the alphabetical
+  entry, including after another restart. On Vesna v0.4.48 the same
+  drawer item offered pinning and app information, but no hiding action
+  (#119). A settings exit is part of the confirmed restore path; a
+  force-stop directly from the checkbox screen did not retain the change.
+- System Home remained Nova. Evidence: `EVI-VESNA-003/parity23-*`.
+  Confidence: observed on one Android 15 AVD; no physical-device run.

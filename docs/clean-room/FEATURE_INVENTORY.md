@@ -41,7 +41,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-010 | Workspace search bar / persistent search | discovered (Search bar placement: Dock Below icons) |
 | HOME-011 | Empty cell behavior and drop targeting | pending |
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
-| HOME-013 | Lock workspace editing without blocking app launch | Verified in Nova 9.0.1 and Vesna main on dedicated Android 15 AVDs (OBS-VESNA-018/022; #103). |
+| HOME-013 | Lock workspace editing without blocking app launch | Verified in Nova 9.0.1, Vesna main and signed v0.4.48 on Android 15 (OBS-VESNA-018/022/023; #103). |
 | HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
 | HOME-015 | Overview / preview of all pages | pending |
 | HOME-106 | Try launcher from app icon without changing system Home | Vesna 0.4.46 verified with Nova as Home on Android 15; settings links not replayed (OBS-VESNA-020; AT-HOME-106). |
@@ -57,7 +57,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-005 | Drawer search | Nova external providers and web suggestions observed; Vesna 0.4.46 searches installed apps (OBS-VESNA-020). |
 | DRAWER-006 | Scrolling and fast-scroll behavior | Nova 9.0.1: thumb jumps between letters and is absent during tested search (OBS-VESNA-019; #109) |
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
-| DRAWER-008 | Hide apps from alphabetical browsing | Nova 9.0.1: kept the app installed, pinned and searchable (OBS-VESNA-021; #119). |
+| DRAWER-008 | Hide apps from alphabetical browsing | Nova 9.0.1: hide survives restart; pins and search launch still work; unhide restores browsing. Vesna 0.4.48 drawer has no hide action (OBS-VESNA-023; #119). |
 | DRAWER-009 | App categories/tabs/folders in drawer | discovered (Tab bar placement: None; Drawer groups: Prime) |
 | DRAWER-010 | App context menus in drawer | Nova 9.0.1: app action and hiding in the alphabetical list; per-app dismissal in predictions (OBS-VESNA-022; #112, #114, #119). |
 | DRAWER-011 | App launching from drawer | pending |
