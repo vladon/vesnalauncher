@@ -58,6 +58,9 @@ class SettingsSearchLayoutTest {
                                 onShowAppNamesChanged = {},
                                 layoutLocked = false,
                                 onLayoutLockedChanged = {},
+                                drawerApps = emptyList(),
+                                hiddenDrawerApps = emptySet(),
+                                onDrawerAppHiddenChanged = { _, _ -> },
                             )
                         }
                     }
@@ -233,6 +236,9 @@ class SettingsSearchLayoutTest {
                                         onShowAppNamesChanged = {},
                                         layoutLocked = false,
                                         onLayoutLockedChanged = {},
+                                        drawerApps = emptyList(),
+                                        hiddenDrawerApps = emptySet(),
+                                        onDrawerAppHiddenChanged = { _, _ -> },
                                     )
                                 }
                             }

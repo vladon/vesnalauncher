@@ -13,6 +13,12 @@
     <string name="settings_lock_layout">Lock workspace layout</string>
     <string name="settings_lock_layout_detail">Prevent changes to shortcuts, folders, dock, and pages.</string>
     <string name="workspace_layout_locked">Workspace layout is locked</string>
+    <string name="settings_app_drawer">App drawer</string>
+    <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
+    <string name="settings_hide_drawer_apps">Hide apps</string>
+    <string name="settings_hide_drawer_apps_detail">Home and dock shortcuts stay. Search by full name to find a hidden app.</string>
+    <string name="settings_drawer_app_hidden">Hidden from browsing</string>
+    <string name="settings_drawer_app_shown">Visible in browsing</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_appearance_detail">Theme and app names</string>
     <string name="settings_about">About</string>

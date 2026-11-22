@@ -72,4 +72,16 @@ class AppSearchTest {
         assertEquals(listOf(apps[2]), search.filter("ガク"))
         assertTrue(search.filter("カク").isEmpty())
     }
+
+    @Test
+    fun `hidden entry is omitted from browsing and partial search only in its own profile`() {
+        val personal = app("Café Reader")
+        val work = personal.copy(key = personal.key.copy(userSerial = 10))
+        val other = app("Cafe Notes")
+        val search = AppSearch(listOf(other, personal, work), hiddenApps = setOf(personal.key))
+
+        assertEquals(listOf(other, work), search.filter("  "))
+        assertEquals(listOf(other, work), search.filter("cafe"))
+        assertEquals(listOf(personal, work), search.filter("  CAFE\u00a0Reader "))
+    }
 }

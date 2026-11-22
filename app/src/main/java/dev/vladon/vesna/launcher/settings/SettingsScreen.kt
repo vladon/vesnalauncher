@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
@@ -82,6 +84,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -90,6 +93,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.apps.AppKey
+import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.search.searchKey
 
 internal enum class DefaultHomeState { ACTIVE, AVAILABLE, UNAVAILABLE }
@@ -112,6 +117,9 @@ internal fun SettingsScreen(
     onShowAppNamesChanged: (Boolean) -> Unit,
     layoutLocked: Boolean,
     onLayoutLockedChanged: (Boolean) -> Unit,
+    drawerApps: List<LauncherApp>,
+    hiddenDrawerApps: Set<AppKey>,
+    onDrawerAppHiddenChanged: (AppKey, Boolean) -> Unit,
 ) {
     val inSubpage = page != SettingsPage.ROOT
     val up = { onNavigate(SettingsPage.ROOT, null) }
@@ -189,7 +197,8 @@ internal fun SettingsScreen(
                         Modifier
                             .widthIn(max = 560.dp)
                             .fillMaxWidth()
-                            .then(if (inSubpage) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                            .then(if (inSubpage && page != SettingsPage.APP_DRAWER)
+                                Modifier.verticalScroll(rememberScrollState()) else Modifier)
                             .padding(
                                 start = 16.dp,
                                 end = 16.dp,
@@ -212,6 +221,10 @@ internal fun SettingsScreen(
                                     layoutLocked, onLayoutLockedChanged,
                                 )
                             }
+                            SettingsPage.APP_DRAWER -> DrawerAppSettings(
+                                drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
+                                searchTarget == R.string.settings_hide_drawer_apps,
+                            )
                             SettingsPage.APPEARANCE -> {
                                 SearchTarget(searchTarget == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
                                 Spacer(Modifier.height(8.dp))
@@ -326,6 +339,7 @@ private fun SettingsDirectory(
                         defaultHome.summary,
                     ),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
                 )
@@ -355,6 +369,7 @@ private fun SettingsDirectory(
                     SettingsPage.ROOT -> continue
                     SettingsPage.DEFAULT_LAUNCHER -> defaultHome.summary
                     SettingsPage.HOME_SCREEN -> R.string.settings_home_screen_detail
+                    SettingsPage.APP_DRAWER -> R.string.settings_app_drawer_detail
                     SettingsPage.APPEARANCE -> R.string.settings_appearance_detail
                     SettingsPage.ABOUT -> R.string.settings_about_detail
                 })
@@ -459,6 +474,63 @@ private fun SettingsSwitch(
             .settingsFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
+}
+
+@Composable
+private fun DrawerAppSettings(
+    apps: List<LauncherApp>,
+    hiddenApps: Set<AppKey>,
+    onHiddenChanged: (AppKey, Boolean) -> Unit,
+    highlighted: Boolean,
+) {
+    LazyColumn(Modifier.fillMaxWidth()) {
+        item {
+            SearchTarget(highlighted) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        stringResource(R.string.settings_hide_drawer_apps),
+                        Modifier.semantics { heading() },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.settings_hide_drawer_apps_detail),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+        items(apps, key = { it.key.drawerPreferenceKey() }) { app ->
+            val hidden = app.key in hiddenApps
+            val visibility = stringResource(
+                if (hidden) R.string.settings_drawer_app_hidden else R.string.settings_drawer_app_shown,
+            )
+            val resources = LocalContext.current.resources
+            val icon = remember(app.icon, resources) { app.icon?.constantState?.newDrawable(resources)?.mutate() }
+            ListItem(
+                headlineContent = { Text(app.accessibilityLabel) },
+                leadingContent = if (icon == null) null else {
+                    {
+                        AndroidView(
+                            factory = { context ->
+                                ImageView(context).apply {
+                                    importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                                }
+                            },
+                            modifier = Modifier.size(24.dp),
+                            update = { it.setImageDrawable(icon) },
+                        )
+                    }
+                },
+                trailingContent = { Switch(checked = hidden, onCheckedChange = null) },
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .settingsFocusRing(radius = 12.dp)
+                    .toggleable(value = hidden, role = Role.Switch) { onHiddenChanged(app.key, it) }
+                    .semantics { stateDescription = visibility },
+            )
+        }
+    }
 }
 
 @Composable

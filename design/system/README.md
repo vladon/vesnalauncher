@@ -228,6 +228,10 @@ Keep the draft, selection, and any visible validation message when Android recre
   labels; use `#` for runs of nonletter labels. Mirror the gutter in RTL,
   hide it from search results, and expose letter adjustment as an accessible
   slider and through D-pad Up/Down.
+  A hidden app is omitted from browsing, fast-scroll sections, and partial
+  search results. A full normalized name match can still find and launch
+  it. Hiding acts on an activity and profile and does not affect shortcuts
+  on Home, in folders, or in the dock, or disable the Android app.
   A held shortcut opens its options on release if the finger stays within
   Android's touch slop. The first move beyond that threshold starts a drag.
   If the app being dragged becomes unavailable, clear the drop preview and
@@ -248,6 +252,11 @@ Keep the draft, selection, and any visible validation message when Android recre
   **Home screen** offers a searchable **Lock workspace layout** switch. It
   uses the standard switch row with a supporting description, defaults to
   off, and retains its value across launches.
+  **App drawer** offers a searchable **Hide apps** section. List all
+  launchable apps, including hidden ones, in drawer order with their
+  original artwork and profile labels. Each row is one Material switch
+  target; on means hidden from browsing. Tell users how to find a hidden
+  app by its full name and let them restore it from the same row.
   Keep Settings search above the scrolling results. Match setting titles and descriptions. Show the parent path on each outlined result card, and scroll the destination to the matching control. Mark that control with a labeled `tertiaryContainer` treatment without changing its value.
   Use the same case, spacing, and spelling normalization as app search for matching; keep the typed query and translated labels unchanged.
   In a short Settings directory viewport, keep the outlined search field and its focus ring in the Material app bar. Show the visual heading when space allows; otherwise keep the Settings pane name available to accessibility. Named subpages retain their Up button. Narrow fields use a brief placeholder without changing the accessible field name.

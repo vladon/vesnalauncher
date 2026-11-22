@@ -413,8 +413,8 @@ class DrawerView @JvmOverloads constructor(
         imm?.hideSoftInputFromWindow(searchField.windowToken, 0)
     }
 
-    fun submitApps(apps: List<LauncherApp>) {
-        appSearch = AppSearch(apps)
+    internal fun submitApps(apps: List<LauncherApp>, hiddenApps: Set<AppKey> = emptySet()) {
+        appSearch = AppSearch(apps, hiddenApps)
         applyFilter(resetScroll = false)
     }
 

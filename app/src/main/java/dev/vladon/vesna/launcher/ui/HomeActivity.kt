@@ -45,6 +45,7 @@ import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.AppearancePreferences
+import dev.vladon.vesna.launcher.settings.DrawerPreferences
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.settings.VesnaTheme
@@ -128,6 +129,8 @@ class HomeActivity : ComponentActivity() {
     private val homeSnackbar by lazy { createHomeSnackbar() }
     private var renderedState = LauncherUiState()
     private val workspacePreferences by lazy { WorkspacePreferences(this) }
+    private val drawerPreferences by lazy { DrawerPreferences(this) }
+    private var hiddenDrawerApps = emptySet<AppKey>()
     private var layoutLocked = false
     private val workspacePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == WorkspacePreferences.LAYOUT_LOCKED) applyWorkspaceLock()
@@ -267,6 +270,7 @@ class HomeActivity : ComponentActivity() {
 
         workspacePreferences.registerListener(workspacePreferenceListener)
         applyWorkspaceLock()
+        hiddenDrawerApps = drawerPreferences.hiddenApps
 
         // Open before hierarchy restoration so Android can restore the search text and focus.
         if (savedInstanceState?.getBoolean(DRAWER_OPEN_STATE) == true) drawer.open()
@@ -308,6 +312,11 @@ class HomeActivity : ComponentActivity() {
             return
         }
         applyAppNameVisibility(appearance.showAppNames)
+        val hiddenApps = drawerPreferences.hiddenApps
+        if (hiddenApps != hiddenDrawerApps) {
+            hiddenDrawerApps = hiddenApps
+            drawer.submitApps(renderedState.apps, hiddenDrawerApps)
+        }
     }
 
     override fun onDestroy() {
@@ -414,7 +423,7 @@ class HomeActivity : ComponentActivity() {
             // cannot cancel that stream on its own.
             onRootDragCancelled()
         }
-        drawer.submitApps(apps)
+        drawer.submitApps(apps, hiddenDrawerApps)
     }
 
     private fun focusedHomeShortcut(): ShortcutFocus? {
