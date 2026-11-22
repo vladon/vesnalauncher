@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.36
+
+- Home icons, folders, and drop targets follow right-to-left layouts
+  without changing saved positions.
+
 ### 0.4.35
 
 - Settings search finds equivalent spellings and ignores extra spaces
