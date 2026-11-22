@@ -15,6 +15,11 @@
     <string name="workspace_layout_locked">Workspace layout is locked</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
+    <string name="settings_drawer_layout">Drawer layout</string>
+    <string name="settings_drawer_layout_detail">How apps are arranged while browsing</string>
+    <string name="settings_drawer_layout_grid">Vertical grid</string>
+    <string name="settings_drawer_layout_list">Vertical list</string>
+    <string name="settings_drawer_layout_paged">Horizontal pages</string>
     <string name="settings_hide_drawer_apps">Hide apps</string>
     <string name="settings_hide_drawer_apps_detail">Home and dock shortcuts stay. Search by full name to find a hidden app.</string>
     <string name="settings_drawer_app_hidden">Hidden from browsing</string>

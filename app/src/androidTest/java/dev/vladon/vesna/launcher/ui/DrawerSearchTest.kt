@@ -25,6 +25,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.DrawerLayoutMode
 import dev.vladon.vesna.launcher.settings.SettingsActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -189,6 +190,66 @@ class DrawerSearchTest {
             assertTrue(rail(host).isShown)
             assertEquals(0, (list.layoutManager as GridLayoutManager).findFirstVisibleItemPosition())
         }
+    }
+
+    @Test
+    fun horizontalBrowsingPageSurvivesAnActiveSearchButNotClosingTheDrawer() {
+        val apps = List(150) { app("fixture.pages", ".A$it", "Aster ${it.toString().padStart(3, '0')}") }
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        fun pager(host: DrawerView) = host.findViewById<DrawerPager>(R.id.drawer_pager)
+        fun shows(pager: DrawerPager, name: String): Boolean {
+            for (pageIndex in 0 until pager.childCount) {
+                val page = pager.getChildAt(pageIndex) as ViewGroup
+                for (tileIndex in 0 until page.childCount) {
+                    val tile = page.getChildAt(tileIndex)
+                    if (tile.isShown && tile.contentDescription == name &&
+                        page.left + tile.left >= 0 && page.left + tile.right <= pager.width
+                    ) return true
+                }
+            }
+            return false
+        }
+        onDrawer { host ->
+            host.layoutMode = DrawerLayoutMode.PAGED
+            host.submitApps(apps)
+        }
+        instrumentation.waitForIdleSync()
+        onDrawer { host -> pager(host).scrollToApp(120) }
+        instrumentation.waitForIdleSync()
+        var originalHeight = 0
+        onDrawer { host ->
+            assertTrue("The app must be visible on a later page", shows(pager(host), apps[120].label))
+            originalHeight = host.layoutParams.height
+        }
+
+        setQuery("Aster 000")
+        assertVisibleLabels(listOf(apps.first().label))
+        val saved = Bundle()
+        onDrawer { host ->
+            assertTrue(!pager(host).isShown)
+            host.saveResultViewport(saved)
+            host.close()
+        }
+        onDrawer { host ->
+            host.open()
+            host.findViewById<EditText>(R.id.drawer_search).setText("Aster 000")
+            host.restoreResults(saved, focusedApp = null)
+            // Clearing while the IME is up can briefly show a shorter, repaginated grid.
+            host.layoutParams = host.layoutParams.apply { height = (host.height * 0.68).toInt() }
+        }
+        assertVisibleLabels(listOf(apps.first().label))
+        onDrawer { host -> host.findViewById<View>(R.id.drawer_clear_search).performClick() }
+        instrumentation.waitForIdleSync()
+        onDrawer { host -> host.layoutParams = host.layoutParams.apply { height = originalHeight } }
+        instrumentation.waitForIdleSync()
+        onDrawer { host ->
+            assertTrue(pager(host).isShown)
+            assertTrue("Restoring the full viewport must return the original page", shows(pager(host), apps[120].label))
+            host.close()
+        }
+        onDrawer { it.open() }
+        instrumentation.waitForIdleSync()
+        onDrawer { assertTrue("A new drawer starts with the first page", shows(pager(it), apps.first().label)) }
     }
 
     @Test

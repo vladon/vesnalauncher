@@ -29,6 +29,8 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.AppSearch
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.DrawerLayoutMode
+import kotlin.math.abs
 
 /**
  * Full-height app drawer above Home. Opens by button or swipe-up, and closes
@@ -54,11 +56,28 @@ class DrawerView @JvmOverloads constructor(
 
     internal var showAppNames: Boolean
         get() = appNames.visible
-        set(value) { appNames.visible = value }
+        set(value) {
+            appNames.visible = value
+            pager.showAppNames = value
+        }
+
+    internal var layoutMode = DrawerLayoutMode.GRID
+        set(value) {
+            if (field == value) return
+            field = value
+            adapter.singleColumn = value == DrawerLayoutMode.LIST
+            pendingPageViewport = null
+            if (value != DrawerLayoutMode.PAGED) pager.submitApps(emptyList())
+            pager.scrollToApp(0)
+            applyFilter(resetScroll = true)
+            requestLayout()
+        }
 
     private val list: RecyclerView
+    private val pager: DrawerPager
     private val fastScroller: DrawerFastScroller
     private var hasFastScrollGutter = false
+    private var compactHeader = false
     private val grid = GridLayoutManager(context, MAX_APP_GRID_COLUMNS)
     private val appNames: GridAppNames
     private val header: LinearLayout
@@ -91,6 +110,7 @@ class DrawerView @JvmOverloads constructor(
     private data class Viewport(val app: AppKey?, val position: Int, val offset: Int)
 
     private var pendingViewport: Viewport? = null
+    private var pendingPageViewport: Viewport? = null
 
     internal var isOpen = false
         private set
@@ -139,6 +159,8 @@ class DrawerView @JvmOverloads constructor(
             },
         )
         list = findViewById(R.id.drawer_list)
+        pager = findViewById(R.id.drawer_pager)
+        pager.bindTile = adapter::bindTile
         list.layoutManager = grid
         appNames = GridAppNames(list)
         list.adapter = adapter
@@ -152,7 +174,8 @@ class DrawerView @JvmOverloads constructor(
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) = syncFastScrollViewport(dy != 0)
         })
         list.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> syncFastScrollViewport() }
-        installDrawerFlingToClose()
+        installDrawerFlingToClose(list)
+        installDrawerFlingToClose(pager)
 
         noResultsView = findViewById(R.id.drawer_no_results)
         searchField = findViewById(R.id.drawer_search)
@@ -250,9 +273,18 @@ class DrawerView @JvmOverloads constructor(
         val query = searchField.text?.toString().orEmpty()
         val search = appSearch
         val filtered = search?.filter(query).orEmpty()
+        val showPages = layoutMode == DrawerLayoutMode.PAGED && query.isEmpty()
+        pager.isVisible = showPages
+        list.isVisible = !showPages
         // ListAdapter may still be applying its diff when Enter is pressed.
         quickLaunchResult = if (query.isNotBlank()) filtered.singleOrNull() else null
-        if (search != null && (pendingAppFocus != null || (pendingViewport != null && filtered.isNotEmpty()))) {
+        if (showPages) {
+            // Preserve the browsing page across temporary search results.
+            ++focusSubmission
+            resetScrollOnCommit = false
+            refreshAnchor = null
+            syncPagedApps(filtered)
+        } else if (search != null && (pendingAppFocus != null || (pendingViewport != null && filtered.isNotEmpty()))) {
             val submission = ++focusSubmission
             adapter.submitList(filtered) {
                 if (resetScrollOnCommit) resetScrollAfterFilter()
@@ -275,12 +307,19 @@ class DrawerView @JvmOverloads constructor(
 
     internal fun focusedAppKey(): AppKey? {
         if (!isOpen) return null
+        if (pager.isVisible) return pager.focusedAppKey()
         val tile = list.focusedChild ?: return null
         return adapter.currentList.getOrNull(list.getChildAdapterPosition(tile))?.key
     }
 
     internal fun saveResultViewport(state: Bundle) {
-        if (!isOpen || resetScrollOnCommit) return
+        if (!isOpen) return
+        if (layoutMode == DrawerLayoutMode.PAGED) {
+            val position = pager.viewportAppPosition()
+            val viewport = pendingPageViewport ?: Viewport(pager.appKeyAt(position), position, 0)
+            state.putBundle(PAGE_VIEWPORT, Bundle().apply { saveViewport(viewport) })
+        }
+        if (pager.isVisible || resetScrollOnCommit) return
         val position = grid.findFirstVisibleItemPosition()
         val tile = grid.findViewByPosition(position)
         val viewport = if (tile != null) {
@@ -289,27 +328,53 @@ class DrawerView @JvmOverloads constructor(
         } else {
             pendingViewport
         } ?: return
-        state.putInt(SCROLL_POSITION, viewport.position)
-        state.putInt(SCROLL_OFFSET, viewport.offset)
+        state.saveViewport(viewport)
+    }
+
+    private fun Bundle.saveViewport(viewport: Viewport) {
+        putInt(SCROLL_POSITION, viewport.position)
+        putInt(SCROLL_OFFSET, viewport.offset)
         viewport.app?.let { app ->
-            state.putString(SCROLL_PACKAGE, app.packageName)
-            state.putString(SCROLL_CLASS, app.className)
-            state.putLong(SCROLL_USER, app.userSerial)
+            putString(SCROLL_PACKAGE, app.packageName)
+            putString(SCROLL_CLASS, app.className)
+            putLong(SCROLL_USER, app.userSerial)
         }
     }
 
     internal fun restoreResults(state: Bundle, focusedApp: AppKey?) {
         if (!isOpen) return
-        if (state.containsKey(SCROLL_POSITION)) {
-            val pkg = state.getString(SCROLL_PACKAGE)
-            val cls = state.getString(SCROLL_CLASS)
-            val app = if (pkg != null && cls != null) AppKey(pkg, cls, state.getLong(SCROLL_USER)) else null
-            pendingViewport = Viewport(app, state.getInt(SCROLL_POSITION), state.getInt(SCROLL_OFFSET))
-            // The saved query arrives through the text watcher, but it isn't a user edit.
-            resetScrollOnCommit = false
-        }
+        pendingPageViewport = if (layoutMode == DrawerLayoutMode.PAGED) {
+            state.getBundle(PAGE_VIEWPORT)?.readViewport()
+        } else null
+        pendingViewport = state.readViewport()
+        // The saved query arrives through the text watcher, but it isn't a user edit.
+        if (pendingViewport != null) resetScrollOnCommit = false
         pendingAppFocus = focusedApp
-        if (appSearch != null && (pendingViewport != null || focusedApp != null)) applyFilter(resetScroll = false)
+        val search = appSearch ?: return
+        if (pendingPageViewport != null && !pager.isVisible) syncPagedApps(search.filter(null))
+        if (pendingViewport != null || pendingPageViewport != null || focusedApp != null) applyFilter(resetScroll = false)
+    }
+
+    private fun Bundle.readViewport(): Viewport? {
+        if (!containsKey(SCROLL_POSITION)) return null
+        val pkg = getString(SCROLL_PACKAGE)
+        val cls = getString(SCROLL_CLASS)
+        val app = if (pkg != null && cls != null) AppKey(pkg, cls, getLong(SCROLL_USER)) else null
+        return Viewport(app, getInt(SCROLL_POSITION), getInt(SCROLL_OFFSET))
+    }
+
+    private fun syncPagedApps(apps: List<LauncherApp>) {
+        pager.submitApps(apps)
+        if (apps.isEmpty()) return
+        pendingPageViewport?.let { viewport ->
+            val anchor = viewport.app?.let(pager::positionOf) ?: RecyclerView.NO_POSITION
+            pager.scrollToApp(if (anchor >= 0) anchor else viewport.position.coerceIn(apps.indices))
+            pendingPageViewport = null
+        }
+        if (pager.isVisible) {
+            pendingAppFocus?.let { if (!isInTouchMode) pager.restoreAppFocus(it) }
+            pendingAppFocus = null
+        }
     }
 
     private fun restoreCommittedViewport() {
@@ -351,7 +416,7 @@ class DrawerView @JvmOverloads constructor(
     }
 
     private fun keepVisibleRowAfterRefresh() {
-        if (!isOpen || resetScrollOnCommit || !list.canScrollVertically(-1)) {
+        if (!isOpen || pager.isVisible || resetScrollOnCommit || !list.canScrollVertically(-1)) {
             refreshAnchor = null
             return
         }
@@ -387,14 +452,14 @@ class DrawerView @JvmOverloads constructor(
     }
 
     private fun syncFastScroller() {
-        if (!resetScrollOnCommit && searchField.text.isNullOrEmpty()) {
+        if (!pager.isVisible && !resetScrollOnCommit && searchField.text.isNullOrEmpty()) {
             fastScroller.index(adapter.currentList)
         }
         syncFastScrollViewport()
     }
 
     private fun syncFastScrollViewport(scrolled: Boolean = false) {
-        val browsing = isOpen && hasFastScrollGutter && fastScroller.hasSections &&
+        val browsing = isOpen && !pager.isVisible && hasFastScrollGutter && fastScroller.hasSections &&
             !resetScrollOnCommit && searchField.text.isNullOrEmpty()
         val canScrollDown = browsing && list.canScrollVertically(1)
         val canScrollUp = browsing && list.canScrollVertically(-1)
@@ -414,7 +479,11 @@ class DrawerView @JvmOverloads constructor(
     }
 
     internal fun submitApps(apps: List<LauncherApp>, hiddenApps: Set<AppKey> = emptySet()) {
-        appSearch = AppSearch(apps, hiddenApps)
+        val search = AppSearch(apps, hiddenApps)
+        appSearch = search
+        if (layoutMode == DrawerLayoutMode.PAGED && !searchField.text.isNullOrEmpty()) {
+            syncPagedApps(search.filter(null))
+        }
         applyFilter(resetScroll = false)
     }
 
@@ -441,6 +510,11 @@ class DrawerView @JvmOverloads constructor(
         animate().cancel()
         isOpen = false
         pendingAppFocus = null
+        pendingPageViewport = null
+        if (layoutMode == DrawerLayoutMode.PAGED) {
+            pager.stopScroll()
+            pager.scrollToApp(0)
+        }
         updateDrawerFocusability()
         syncFastScrollViewport()
         searchField.setText("")
@@ -476,9 +550,10 @@ class DrawerView @JvmOverloads constructor(
      * RV-dispatched streams) carry identical event times, which makes tracker-based
      * velocities collapse to zero.
      */
-    private fun installDrawerFlingToClose() {
-        list.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
+    private fun installDrawerFlingToClose(results: RecyclerView) {
+        results.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
             private var startedAtTop = false
+            private var downX = 0f
             private var downY = 0f
             private var downElapsedMs = 0L
 
@@ -486,6 +561,7 @@ class DrawerView @JvmOverloads constructor(
                 when (e.actionMasked) {
                     MotionEvent.ACTION_DOWN -> {
                         startedAtTop = !rv.canScrollVertically(-1)
+                        downX = e.x
                         downY = e.y
                         downElapsedMs = SystemClock.uptimeMillis()
                     }
@@ -495,6 +571,7 @@ class DrawerView @JvmOverloads constructor(
                         val dismiss = startedAtTop &&
                             SystemClock.uptimeMillis() - downElapsedMs in 1..MAX_FLING_DURATION_MS &&
                             e.y - downY > minFlingDistancePx &&
+                            (rv != pager || e.y - downY > abs(e.x - downX)) &&
                             !rv.canScrollVertically(-1)
                         startedAtTop = false
                         if (dismiss) close()
@@ -516,15 +593,17 @@ class DrawerView @JvmOverloads constructor(
         val columns = appGridColumnCount(resultsWidth, density)
         val gutter = fastScroller.layoutParams.width
         // Keep the same grid and search header when the rail appears or disappears.
-        hasFastScrollGutter = searchField.text.isNullOrEmpty() && resultsWidth > gutter &&
-            appGridColumnCount(resultsWidth - gutter, density) == columns &&
-            (columns > 1 || resultsWidth - gutter >= (64 * density).toInt())
+        val gridColumns = if (layoutMode == DrawerLayoutMode.LIST) 1 else columns
+        hasFastScrollGutter = layoutMode != DrawerLayoutMode.PAGED && searchField.text.isNullOrEmpty() &&
+            resultsWidth - gutter >= (64 * density).toInt() &&
+            (gridColumns == 1 || appGridColumnCount(resultsWidth - gutter, density) == gridColumns)
         val endMargin = if (hasFastScrollGutter) gutter else 0
         if ((list.layoutParams as MarginLayoutParams).marginEnd != endMargin) {
             list.updateLayoutParams<MarginLayoutParams> { marginEnd = endMargin }
         }
         val compact = columns < MAX_APP_GRID_COLUMNS
-        if (compact != (grid.spanCount < MAX_APP_GRID_COLUMNS)) {
+        if (compact != compactHeader) {
+            compactHeader = compact
             searchField.setHint(if (compact) R.string.drawer_search_hint_compact else R.string.drawer_search_hint)
             val sideMargin = ((if (compact) 8 else 16) * density + 0.5f).toInt()
             searchBar.updateLayoutParams<MarginLayoutParams> {
@@ -532,7 +611,8 @@ class DrawerView @JvmOverloads constructor(
                 rightMargin = sideMargin
             }
         }
-        grid.spanCount = columns
+        grid.spanCount = gridColumns
+        pager.setColumns(columns)
         updateHeader(height - content.paddingTop - content.paddingBottom, compact)
         content.measure(
             MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
@@ -585,6 +665,7 @@ class DrawerView @JvmOverloads constructor(
         const val SCROLL_PACKAGE = "drawer_scroll_package"
         const val SCROLL_CLASS = "drawer_scroll_class"
         const val SCROLL_USER = "drawer_scroll_user"
+        const val PAGE_VIEWPORT = "drawer_page_viewport"
         const val ANIMATION_MS = 250L
         const val MAX_FLING_DURATION_MS = 400L
     }

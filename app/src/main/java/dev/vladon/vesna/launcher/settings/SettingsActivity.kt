@@ -39,6 +39,7 @@ class SettingsActivity : ComponentActivity() {
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var layoutLocked by mutableStateOf(false)
+    private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
     private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
@@ -90,6 +91,8 @@ class SettingsActivity : ComponentActivity() {
                             workspace.layoutLocked = locked
                             layoutLocked = locked
                         },
+                        drawerLayoutMode = drawerLayoutMode,
+                        onDrawerLayoutModeSelected = ::changeDrawerLayoutMode,
                         drawerApps = drawerApps,
                         hiddenDrawerApps = hiddenDrawerApps,
                         onDrawerAppHiddenChanged = ::changeDrawerVisibility,
@@ -127,6 +130,7 @@ class SettingsActivity : ComponentActivity() {
         themeMode = appearance.themeMode
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
+        drawerLayoutMode = drawerPreferences.layoutMode
         hiddenDrawerApps = drawerPreferences.hiddenApps
     }
 
@@ -139,6 +143,12 @@ class SettingsActivity : ComponentActivity() {
     private fun changeAppNameVisibility(visible: Boolean) {
         appearance.showAppNames = visible
         showAppNames = visible
+    }
+
+    private fun changeDrawerLayoutMode(mode: DrawerLayoutMode) {
+        if (mode == drawerLayoutMode) return
+        drawerPreferences.layoutMode = mode
+        drawerLayoutMode = mode
     }
 
     private fun changeDrawerVisibility(app: AppKey, hidden: Boolean) {
