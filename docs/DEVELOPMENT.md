@@ -121,6 +121,10 @@ A pull request is mergeable only when all four gates pass.
   (`RELEASE_KEYSTORE_B64`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`,
   `RELEASE_KEY_PASSWORD`); the keystore never enters the repository or CI logs.
   Never push APK files to the repository.
+- To recheck an existing release, open **Actions → Android CI → Run workflow**
+  on `main` and enter the published tag, or run
+  `gh workflow run android.yml --ref main -f tag=v0.4.48`. The manual run
+  compares against the existing release APK; it does not sign or publish.
 - Pre-1.0 versions may break layout compatibility between releases; starting
   with 1.0, breaking changes require a major version bump.
 
