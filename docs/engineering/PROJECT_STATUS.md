@@ -364,6 +364,23 @@ full accessible names, tap targets, and saved positions stay unchanged.
   passed on both emulators with English app and Cyrillic folder names.
   Debug build and lint passed.
 
+### Cancel a drag when a second finger touches
+
+On the signed 0.4.20 APK, letting a second finger take over a drawer drag
+added a Drive shortcut to an empty Home cell. The drag layer now cancels an
+active drag before the new pointer can be routed to the drop handler. It clears
+the preview and waits for a fresh touch before another drag can start.
+
+- On Android 15, the same two-pointer drawer-to-Home gesture kept the cell
+  empty. A one-finger retry added the shortcut. In Dark at 200% text, an
+  interrupted dock drag preserved all four slots; one-finger reorder worked.
+- The folder drag regression failed on the 0.4.20 debug build and passed on
+  the fix: the second finger no longer moved the folder, and the next
+  one-finger drag worked. The shortcut, page swipe and dock tests passed 12/12
+  on each of Android 8 and 15. Debug assembly and lint passed.
+- No visual styles, touch target sizes or accessibility actions changed.
+  Physical multitouch and TalkBack were not tested.
+
 ### Home options
 
 Tap the **Home options** button above the dock or long-press empty Home space

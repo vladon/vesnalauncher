@@ -22,7 +22,29 @@ class LauncherDragLayer @JvmOverloads constructor(
     /** Receives root-owned touch events and cancellation of the original stream. */
     var dragTouchHandler: ((MotionEvent) -> Unit)? = null
 
+    internal var isDragActive: (() -> Boolean)? = null
+    private var discardTouchStream = false
+
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val action = ev.actionMasked
+        if (action == MotionEvent.ACTION_DOWN) discardTouchStream = false
+        if (discardTouchStream) return true
+        if (action != MotionEvent.ACTION_CANCEL && ev.pointerCount > 1 && isDragActive?.invoke() == true) {
+            // Cancel before ViewGroup can split the pointers or hand the drag to another finger.
+            discardTouchStream = true
+            val cancel = MotionEvent.obtain(ev)
+            cancel.action = MotionEvent.ACTION_CANCEL
+            try {
+                dispatchStream(cancel)
+            } finally {
+                cancel.recycle()
+            }
+            return true
+        }
+        return dispatchStream(ev)
+    }
+
+    private fun dispatchStream(ev: MotionEvent): Boolean {
         // Intercepting a move sends a synthetic CANCEL to the child only. A
         // CANCEL delivered to the root ends the drag, even before interception.
         val cancelled = ev.actionMasked == MotionEvent.ACTION_CANCEL

@@ -16,6 +16,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.workspace.CellContent
+import dev.vladon.vesna.launcher.workspace.Folder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertSame
@@ -242,6 +244,85 @@ class ShortcutActionsTest {
                     // Never commit a drop on a build where the regression still exists.
                     send(MotionEvent.ACTION_CANCEL, x, top, swipe)
                 }
+            }
+        }
+    }
+
+    @Test
+    fun secondFingerCancelsAFolderDragWithoutBlockingTheNextDrag() {
+        ActivityScenario.launch(HomeActivity::class.java).use { home ->
+            assertTrue(until {
+                var ready = false
+                home.onActivity {
+                    val workspace = it.findViewById<WorkspaceView>(R.id.workspace)
+                    ready = workspace.width > 0 && workspace.height > 0
+                }
+                ready
+            })
+            home.onActivity { activity ->
+                val root = activity.findViewById<LauncherDragLayer>(R.id.launcher_root)
+                val workspace = activity.findViewById<WorkspaceView>(R.id.workspace)
+                val folder = Folder(1L, "Fixture folder", 0)
+                workspace.bind(mapOf(0 to CellContent.FolderCell(folder, memberCount = 2)))
+                workspace.measure(
+                    View.MeasureSpec.makeMeasureSpec(workspace.width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(workspace.height, View.MeasureSpec.EXACTLY),
+                )
+                workspace.layout(workspace.left, workspace.top, workspace.right, workspace.bottom)
+                val tile = workspace.getChildAt(0)
+                val origin = Rect(0, 0, tile.width, tile.height).also {
+                    root.offsetDescendantRectToMyCoords(tile, it)
+                }
+                val x = origin.exactCenterX()
+                val y = origin.exactCenterY()
+                val target = x + origin.width()
+                val movedTo = mutableListOf<Int>()
+                workspace.onFolderDrop = { _, cell -> movedTo += cell }
+
+                fun drag(interrupt: Boolean) {
+                    val down = SystemClock.uptimeMillis()
+                    fun send(action: Int, firstX: Float, second: Boolean = false) {
+                        val count = if (second) 2 else 1
+                        val pointers = Array(count) { index ->
+                            MotionEvent.PointerProperties().apply {
+                                id = index
+                                toolType = MotionEvent.TOOL_TYPE_FINGER
+                            }
+                        }
+                        val coordinates = Array(count) { index ->
+                            MotionEvent.PointerCoords().apply {
+                                this.x = if (index == 0) firstX else x
+                                this.y = y
+                                pressure = 1f
+                            }
+                        }
+                        val event = MotionEvent.obtain(
+                            down, SystemClock.uptimeMillis(), action, count, pointers, coordinates,
+                            0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0,
+                        )
+                        try {
+                            root.dispatchTouchEvent(event)
+                        } finally {
+                            event.recycle()
+                        }
+                    }
+                    send(MotionEvent.ACTION_DOWN, x)
+                    assertTrue(tile.performLongClick())
+                    assertTrue(workspace.isDragging)
+                    send(MotionEvent.ACTION_MOVE, target)
+                    if (interrupt) {
+                        val index = 1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT
+                        send(MotionEvent.ACTION_POINTER_DOWN or index, target, second = true)
+                        send(MotionEvent.ACTION_POINTER_UP or index, target, second = true)
+                    }
+                    send(MotionEvent.ACTION_UP, target)
+                    assertEquals(1f, tile.alpha, 0f)
+                }
+
+                drag(interrupt = true)
+                assertTrue("A folder drag interrupted by a second finger must not move it", movedTo.isEmpty())
+                drag(interrupt = false)
+                assertEquals(listOf(1), movedTo)
             }
         }
     }
