@@ -177,3 +177,15 @@ confidence; Vesna requirements are numbered and testable.
   launcher. Changing that selection remains a separate user action.
 - R-HOME-106.3: Vesna Settings remains reachable from the workspace;
   existing settings deep links continue to open the intended pages.
+
+## HOME-107 — Lock workspace editing
+
+- Reference: on Nova 9.0.1, the layout lock prevented moving a placed
+  shortcut and entering customization without preventing app launch
+  (OBS-VESNA-018).
+- R-HOME-107.1: An explicit layout-lock control disables workspace editing
+  while enabled. Existing shortcuts cannot be moved, editing actions
+  are unavailable, and holding empty space explains the locked state
+  instead of entering customization.
+- R-HOME-107.2: Launching a shortcut and viewing its app information
+  remain available. Turning the lock off restores editing.

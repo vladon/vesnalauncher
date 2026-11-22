@@ -41,7 +41,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-010 | Workspace search bar / persistent search | discovered (Search bar placement: Dock Below icons) |
 | HOME-011 | Empty cell behavior and drop targeting | pending |
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
-| HOME-013 | Lock workspace (prevent changes) | Nova control inventoried; no corresponding Vesna 0.4.44 control found; lock behavior not verified (OBS-VESNA-017) |
+| HOME-013 | Lock workspace editing without blocking app launch | Observed in Nova 9.0.1 on Android 15; no Vesna 0.4.44 control found (OBS-VESNA-017/018; NT-HOME-02) |
 | HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
 | HOME-015 | Overview / preview of all pages | pending |
 | HOME-106 | Try launcher from app icon without changing system Home | Nova behavior reported by user; Vesna 0.4.44 opens Settings instead (OBS-VESNA-016; AT-HOME-106). |

@@ -47,6 +47,16 @@ its feature ID. These describe externally observable behavior only.
 - And Vesna settings are reachable from that workspace, while direct
   settings links still open their intended pages
 
+### AT-HOME-107 — Lock layout without blocking app launch
+- Given a workspace shortcut and an empty cell, verify that a drag can
+  move the shortcut while unlocked, then restore it to its original cell
+- When the user enables the layout lock and repeats the drag
+- Then the shortcut stays in its original cell
+- And its long-press menu offers app information but no layout edits
+- And holding empty space explains the lock instead of entering customization
+- And a normal tap still launches the app
+- When the user disables the lock, then the shortcut can be moved again
+
 ## App drawer
 
 ### AT-DRAWER-100 — Drawer opens with focused search

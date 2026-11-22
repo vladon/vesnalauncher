@@ -241,3 +241,13 @@ Traceability: every ticket's acceptance scenario lives in
 - Spec: R-HOME-106.1–3. Accept: AT-HOME-106, starting from a fresh
   installation on an emulator with a different system Home.
 - Handoff: [Vesna issue #101](https://github.com/vladon/vesnalauncher/issues/101).
+
+## NT-HOME-02 (P1) — Lock workspace layout without blocking app launch
+
+- Gap: Nova exposes an editing lock in Home settings; Vesna 0.4.44
+  has no corresponding control (OBS-VESNA-017/018).
+- Accept: a shortcut moves while unlocked; after locking, the same drag
+  does not move it, its menu retains App info but not workspace-edit
+  actions, and a hold on empty space does not enter customization.
+  A normal tap still launches the shortcut, and unlocking restores editing.
+- Handoff: [Vesna issue #103](https://github.com/vladon/vesnalauncher/issues/103).
