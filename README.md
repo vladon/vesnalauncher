@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.37
+
+- App names on Home, in the dock, in folders, and in drawer search update
+  when you change language. No launcher restart is needed.
+
 ### 0.4.36
 
 - Home icons, folders, and drop targets follow right-to-left layouts

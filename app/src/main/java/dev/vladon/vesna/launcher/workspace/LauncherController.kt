@@ -304,6 +304,16 @@ class LauncherController(
         scope.launch { workspaceRepository.removeFromDock(pinId) }
     }
 
+    /** A locale change updates app metadata, not the saved layout. */
+    internal fun refreshLocalizedApps() {
+        scope.launch {
+            refreshMutex.withLock { appCatalogue.value = discoverApps() }
+        }
+    }
+
+    private suspend fun discoverApps(): AppCatalogue =
+        withContext(Dispatchers.IO) { AppCatalogue(discovery.discover()) }
+
     /**
      * Refreshes launchable apps, seeds the layout on first run, and removes pins
      * for packages uninstalled while the launcher was not running.
@@ -312,7 +322,7 @@ class LauncherController(
      * decision atomic against pins placed before the first seed completes.
      */
     private suspend fun refresh() = refreshMutex.withLock {
-        val catalogue = withContext(Dispatchers.IO) { AppCatalogue(discovery.discover()) }
+        val catalogue = discoverApps()
         appCatalogue.value = catalogue
         if (!workspaceRepository.isSeeded() && catalogue.apps.isNotEmpty()) {
             workspaceRepository.seedOrAdopt(SeedPlanner.plan(catalogue.apps))
