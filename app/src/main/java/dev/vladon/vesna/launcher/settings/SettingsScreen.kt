@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -126,6 +127,8 @@ internal fun SettingsScreen(
         val shortDirectory = !inSubpage && maxHeight < standardChrome + 48.dp
         val narrow = maxWidth < 320.dp
         val availableSearchBarHeight = minOf(searchBarHeight, maxHeight)
+        // Match the directory's centered content width and 16 dp side margins.
+        val searchWidth = (minOf(maxWidth, 560.dp) - 32.dp).coerceAtLeast(0.dp)
         Scaffold(
             topBar = {
                 Column {
@@ -165,9 +168,8 @@ internal fun SettingsScreen(
                                     short = shortDirectory,
                                     narrow = narrow,
                                     modifier = Modifier
-                                        .widthIn(max = 544.dp)
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp, vertical = SettingsFocusRingOutset),
+                                        .width(searchWidth)
+                                        .padding(vertical = SettingsFocusRingOutset),
                                 )
                             },
                         )
