@@ -10,11 +10,13 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewConfiguration
+import android.view.accessibility.AccessibilityNodeInfo
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -135,6 +137,58 @@ class DrawerSearchTest {
         }
         assertVisibleLabels(fixture.map { it.label })
         assertNoResults(false)
+    }
+
+    @Test
+    fun fastScrollerCanAdvancePastSectionsThatShareTheBottomViewport() {
+        val apps = List(100) { app("fixture.fast", ".A$it", "Aster $it") } +
+            listOf(
+                app("fixture.fast", ".B", "Birch"),
+                app("fixture.fast", ".C", "Clover"),
+                app("fixture.fast", ".Yu", "Юла"),
+            )
+        onDrawer { it.submitApps(apps) }
+        assertVisibleLabels(apps.map { it.label })
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.waitForIdleSync()
+        instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_TAB)
+        fun rail(host: DrawerView) = host.findViewById<View>(R.id.drawer_fast_scroller)
+
+        onDrawer { host ->
+            assertTrue(rail(host).isShown)
+            assertTrue(rail(host).requestFocus())
+            val args = Bundle().apply { putFloat(AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE, 1f) }
+            assertTrue(rail(host).performAccessibilityAction(
+                AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.id, args,
+            ))
+        }
+        instrumentation.waitForIdleSync()
+        onDrawer { host ->
+            val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+            assertTrue("The jump must bring Birch into the viewport",
+                (0 until list.childCount).any { list.getChildAt(it).contentDescription == "Birch" })
+            assertEquals("B", ViewCompat.getStateDescription(rail(host)))
+        }
+        instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_DPAD_DOWN)
+        instrumentation.waitForIdleSync()
+        onDrawer { host ->
+            assertEquals("C", ViewCompat.getStateDescription(rail(host)))
+            assertTrue(rail(host).performAccessibilityAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD, null))
+            assertEquals("Ю", ViewCompat.getStateDescription(rail(host)))
+        }
+        setQuery("birch")
+        assertVisibleLabels(listOf("Birch"))
+        onDrawer { host ->
+            assertTrue("A filter must remove the rail from navigation", !rail(host).isShown)
+            host.findViewById<View>(R.id.drawer_clear_search).performClick()
+        }
+        assertVisibleLabels(apps.map { it.label })
+        instrumentation.waitForIdleSync()
+        onDrawer { host ->
+            val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+            assertTrue(rail(host).isShown)
+            assertEquals(0, (list.layoutManager as GridLayoutManager).findFirstVisibleItemPosition())
+        }
     }
 
     @Test
@@ -367,7 +421,8 @@ class DrawerSearchTest {
 
     @Test
     fun refreshingByOneAppKeepsTheFirstVisibleShortcutAtTheSameHeight() {
-        val tools = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
+        // Leave enough rows below Tool 60 that even a tall viewport won't clamp its offset.
+        val tools = List(160) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
         val anchored = tools[40]
         onDrawer { it.submitApps(tools) }
         setQuery("tool")

@@ -57,6 +57,8 @@ class DrawerView @JvmOverloads constructor(
         set(value) { appNames.visible = value }
 
     private val list: RecyclerView
+    private val fastScroller: DrawerFastScroller
+    private var hasFastScrollGutter = false
     private val grid = GridLayoutManager(context, MAX_APP_GRID_COLUMNS)
     private val appNames: GridAppNames
     private val header: LinearLayout
@@ -131,12 +133,25 @@ class DrawerView @JvmOverloads constructor(
                     }
                 }
             },
-            onAppsCommitted = ::keepVisibleRowAfterRefresh,
+            onAppsCommitted = {
+                keepVisibleRowAfterRefresh()
+                syncFastScroller()
+            },
         )
         list = findViewById(R.id.drawer_list)
         list.layoutManager = grid
         appNames = GridAppNames(list)
         list.adapter = adapter
+        fastScroller = findViewById(R.id.drawer_fast_scroller)
+        fastScroller.bindIndicator(findViewById(R.id.drawer_section_indicator))
+        fastScroller.onSectionSelected = { position ->
+            if (list.scrollState != RecyclerView.SCROLL_STATE_IDLE) list.stopScroll()
+            grid.scrollToPositionWithOffset(position, 0)
+        }
+        list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) = syncFastScrollViewport(dy != 0)
+        })
+        list.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> syncFastScrollViewport() }
         installDrawerFlingToClose()
 
         noResultsView = findViewById(R.id.drawer_no_results)
@@ -254,6 +269,8 @@ class DrawerView @JvmOverloads constructor(
         }
         clearSearchButton.isVisible = query.isNotEmpty()
         noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
+        syncFastScrollViewport()
+        if (hasFastScrollGutter != query.isEmpty()) requestLayout()
     }
 
     internal fun focusedAppKey(): AppKey? {
@@ -330,6 +347,7 @@ class DrawerView @JvmOverloads constructor(
         resetScrollOnCommit = false
         refreshAnchor = null
         list.scrollToPosition(0)
+        syncFastScroller()
     }
 
     private fun keepVisibleRowAfterRefresh() {
@@ -368,6 +386,24 @@ class DrawerView @JvmOverloads constructor(
         }
     }
 
+    private fun syncFastScroller() {
+        if (!resetScrollOnCommit && searchField.text.isNullOrEmpty()) {
+            fastScroller.index(adapter.currentList)
+        }
+        syncFastScrollViewport()
+    }
+
+    private fun syncFastScrollViewport(scrolled: Boolean = false) {
+        val browsing = isOpen && hasFastScrollGutter && fastScroller.hasSections &&
+            !resetScrollOnCommit && searchField.text.isNullOrEmpty()
+        val canScrollDown = browsing && list.canScrollVertically(1)
+        val canScrollUp = browsing && list.canScrollVertically(-1)
+        val available = (canScrollDown || canScrollUp) && list.height >= 2 * fastScroller.width
+        if (isOpen && !available && fastScroller.hasFocus()) searchField.requestFocus()
+        fastScroller.syncViewport(available, if (available) grid.findFirstVisibleItemPosition() else 0, !canScrollDown, scrolled)
+        list.isVerticalScrollBarEnabled = !fastScroller.isVisible
+    }
+
     private fun launchApp(app: LauncherApp) {
         if (onAppClick?.invoke(app) == true) hideKeyboard()
     }
@@ -394,6 +430,7 @@ class DrawerView @JvmOverloads constructor(
         if (visibility != VISIBLE) translationY = height.toFloat()
         visibility = VISIBLE
         updateDrawerFocusability()
+        syncFastScrollViewport()
         if (height > 0) animate().translationY(0f).start()
         onOpenedChanged?.invoke(true)
         closeButton.requestFocus()
@@ -405,6 +442,7 @@ class DrawerView @JvmOverloads constructor(
         isOpen = false
         pendingAppFocus = null
         updateDrawerFocusability()
+        syncFastScrollViewport()
         searchField.setText("")
         searchField.clearFocus()
         hideKeyboard()
@@ -474,9 +512,17 @@ class DrawerView @JvmOverloads constructor(
         val height = getDefaultSize(suggestedMinimumHeight, heightMeasureSpec)
         setMeasuredDimension(width, height)
         val content = getChildAt(0)
-        val availableWidth = width - content.paddingLeft - content.paddingRight - list.paddingLeft - list.paddingRight
-        val density = resources.displayMetrics.density
-        val columns = appGridColumnCount(availableWidth, density)
+        val resultsWidth = width - content.paddingLeft - content.paddingRight - list.paddingLeft - list.paddingRight
+        val columns = appGridColumnCount(resultsWidth, density)
+        val gutter = fastScroller.layoutParams.width
+        // Keep the same grid and search header when the rail appears or disappears.
+        hasFastScrollGutter = searchField.text.isNullOrEmpty() && resultsWidth > gutter &&
+            appGridColumnCount(resultsWidth - gutter, density) == columns &&
+            (columns > 1 || resultsWidth - gutter >= (64 * density).toInt())
+        val endMargin = if (hasFastScrollGutter) gutter else 0
+        if ((list.layoutParams as MarginLayoutParams).marginEnd != endMargin) {
+            list.updateLayoutParams<MarginLayoutParams> { marginEnd = endMargin }
+        }
         val compact = columns < MAX_APP_GRID_COLUMNS
         if (compact != (grid.spanCount < MAX_APP_GRID_COLUMNS)) {
             searchField.setHint(if (compact) R.string.drawer_search_hint_compact else R.string.drawer_search_hint)

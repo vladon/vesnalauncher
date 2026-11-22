@@ -218,6 +218,16 @@ Keep the draft, selection, and any visible validation message when Android recre
   Keep the dock background behind the system navigation bar, but do not
   highlight or accept dock drops inside Android's reserved area.
 - **App drawer.** Use an opaque Material surface with inset search and a scrollable app grid. Use up to four columns, choosing the largest count that gives each cell 64 dp after horizontal insets. In layouts with fewer than four columns, use 8 dp search margins and the short **Search** hint. Keep the viewport in place when installed apps refresh. Start at the top of the new results when the query changes or clears. Restore focus by app identity when that app remains visible. If an active drag cannot continue through a layout change, restore the original position.
+  When the unfiltered grid scrolls and has multiple letter sections, show a
+  fast-scroll rail on the trailing edge if it fits without reducing the
+  column count. Give it a 48 dp touch gutter so it
+  cannot take taps from app tiles. Use `outline` for the rail, `primary` for
+  the thumb and the standard `secondary` keyboard focus ring. During a drag,
+  show the selected letter in an outlined Full chip with `surfaceContainer`,
+  `onSurface` and `titleLarge`. Follow drawer order, including non-Latin app
+  labels; use `#` for runs of nonletter labels. Mirror the gutter in RTL,
+  hide it from search results, and expose letter adjustment as an accessible
+  slider and through D-pad Up/Down.
   A held shortcut opens its options on release if the finger stays within
   Android's touch slop. The first move beyond that threshold starts a drag.
   If the app being dragged becomes unavailable, clear the drop preview and

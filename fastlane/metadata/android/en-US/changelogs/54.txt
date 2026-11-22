@@ -1,0 +1,1 @@
+Jump through the alphabetical app drawer by dragging the scrollbar. The current letter appears as you drag, and search still shows just your matching apps.
