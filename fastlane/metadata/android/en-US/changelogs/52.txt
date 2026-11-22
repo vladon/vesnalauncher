@@ -1,0 +1,1 @@
+Remove Play Console dependency metadata from the release APK for F-Droid compatibility. No launcher features changed.
