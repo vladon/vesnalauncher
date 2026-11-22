@@ -675,3 +675,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   style and confirmed it was retained. Follow-up for #108.
 - Evidence: `EVI-VESNA-003/parity27-*`. Confidence: observed
   for this style, fixture and the tested close/reopen routes.
+
+## OBS-VESNA-028 — Drawer provider hands the query to Maps
+
+- On the same Android 15 research AVD, opened drawer search in
+  Nova 9.0.1 Prime (90100) and typed the public place name
+  Golden Gate Bridge. The results offered a Maps provider.
+- Tapping that provider opened Google Maps. After skipping its
+  sign-in prompt, Maps showed the same query in its search bar and
+  the matching place result. No account or permission was added.
+- Signed Vesna v0.4.49 (54) showed no matching local apps for the
+  same query and offered no Maps provider. A plain Maps app-name
+  search launched the installed app in OBS-VESNA-027.
+- This confirms a provider handoff for #113, not offline behavior,
+  network opt-out, or other provider destinations. No launcher
+  setting was changed for this case.
+- Evidence: `EVI-VESNA-003/parity27-{nova,vesna}-provider-*`.
+  Confidence: observed for one provider and one synthetic query.
