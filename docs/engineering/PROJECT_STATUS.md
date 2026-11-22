@@ -330,6 +330,14 @@ surrounding whitespace; a blank name shows an inline error without closing.
   each; Light and Russian Dark, Save, Done, blank validation, IME-first Back,
   and Cancel were checked. The signed upgrade preserved the folder's member
   order and Home and dock placement. No spoken TalkBack or physical tests ran.
+- Signed 0.4.24 lost an unsaved draft when Android switched themes. The
+  fix kept the draft, editing focus, and keyboard on Android 15 at 200%
+  text from Light to Dark. Cancel returned to the same open folder with
+  no name change. From the Home folder menu, Dark to Light preserved the
+  draft through Save and updated the original tile in place. A Home
+  intent still closed the editor and folder. Build and lint passed, as
+  did 18 focused tests each on Android 8 and 15. The live theme-switch
+  check was on Android 15; physical devices and TalkBack were not tested.
 
 ### Compact folder layouts
 

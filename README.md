@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.25
+
+- A folder rename in progress survives a system theme change. Save or
+  Cancel still returns to the folder if you started there.
+
 ### 0.4.24
 
 - An open app drawer keeps its search when Android recreates the launcher,
