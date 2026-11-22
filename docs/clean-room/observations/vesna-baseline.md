@@ -376,3 +376,17 @@ Nova remains the system HOME (comparison-only install).
 - Evidence: `EVI-VESNA-003/reboot-api35-before-130526.*` and
   `reboot-api35-after-grid-130635.*`. Confidence: observed on the
   Android 15 emulator; physical-device reboot persistence unverified.
+
+## OBS-VESNA-016 — App icon versus system Home
+
+- User-reported: opening Nova from its app icon opens a usable Nova
+  workspace even when another launcher is the system Home. Opening
+  Vesna from its icon instead leads to settings.
+- The [Vesna v0.4.44 release manifest](https://github.com/vladon/vesnalauncher/blob/v0.4.44/app/src/main/AndroidManifest.xml)
+  confirms that Android's ordinary app entry resolves to Settings,
+  whereas the system Home entry resolves to the workspace. Directly
+  opening the Vesna workspace alongside Nova as system Home already
+  worked in OBS-VESNA-001; that direct launch did not exercise the
+  app-icon path.
+- Confidence: Nova app-icon behavior is user-reported; Vesna routing
+  is verified from the release manifest. No new device test was run.

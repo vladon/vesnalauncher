@@ -36,6 +36,17 @@ its feature ID. These describe externally observable behavior only.
   then moves
 - Then the icon follows the drag
 
+### AT-HOME-106 — Try Vesna without changing the default launcher
+- Given Vesna is freshly installed and another launcher is system Home
+- When the user opens Vesna by tapping its ordinary app icon
+- Then Vesna shows its workspace without a blocking default-launcher prompt
+- And the user can open Vesna's drawer and launch an installed test app
+- When the user uses the Android Home gesture or button
+- Then Android opens the original launcher, still selected as system Home
+- And tapping the Vesna icon again opens the Vesna workspace
+- And Vesna settings are reachable from that workspace, while direct
+  settings links still open their intended pages
+
 ## App drawer
 
 ### AT-DRAWER-100 — Drawer opens with focused search

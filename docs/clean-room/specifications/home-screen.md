@@ -159,3 +159,21 @@ confidence; Vesna requirements are numbered and testable.
 - R-HOME-103.1: Workspace drag starts only after a stationary hold exceeding
   the long-press timeout on an item.
 - R-HOME-103.2: Movement before the hold threshold must not initiate a drag.
+
+## HOME-106 — Open the workspace without replacing system Home
+
+- Reference: Nova opens a usable workspace from its app icon even when
+  another launcher is the system Home. Vesna 0.4.44 routes its icon to
+  Settings instead (OBS-VESNA-016).
+
+### Vesna requirements
+
+- R-HOME-106.1: Opening Vesna from its normal app icon opens the workspace
+  on first and subsequent launches, whether or not Vesna is the system
+  Home. The user can open the drawer and launch an app without dismissing
+  a default-launcher prompt or selecting Vesna as the system Home.
+- R-HOME-106.2: Opening Vesna from its app icon never changes system
+  Home. The system Home gesture or button still goes to the selected
+  launcher. Changing that selection remains a separate user action.
+- R-HOME-106.3: Vesna Settings remains reachable from the workspace;
+  existing settings deep links continue to open the intended pages.

@@ -230,3 +230,13 @@ Traceability: every ticket's acceptance scenario lives in
   A stationary hold still opens the workspace menu.
 - Accept: AT-GESTURE-112.5, including matched start zones, a shorter
   slow swipe, a faster short swipe, and the stationary-hold control.
+
+## NT-HOME-01 (P1) — Open the workspace from Vesna's app icon
+
+- Gap: with another system Home selected, Nova's app icon opens its
+  workspace; Vesna 0.4.44 opens Settings (OBS-VESNA-016).
+- Expected: the normal Vesna icon opens an interactive workspace and
+  drawer without requesting a Home-role change. Keep system Home and
+  Settings entry points independent.
+- Spec: R-HOME-106.1–3. Accept: AT-HOME-106, starting from a fresh
+  installation on an emulator with a different system Home.

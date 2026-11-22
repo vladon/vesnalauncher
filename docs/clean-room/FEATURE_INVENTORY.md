@@ -44,6 +44,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-013 | Lock workspace (prevent changes) | discovered (Lock layout toggle in Advanced) |
 | HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
 | HOME-015 | Overview / preview of all pages | pending |
+| HOME-106 | Try launcher from app icon without changing system Home | Nova behavior reported by user; Vesna 0.4.44 opens Settings instead (OBS-VESNA-016; AT-HOME-106). |
 
 ## DRAWER — App drawer
 

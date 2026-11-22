@@ -17,6 +17,7 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
 | HOME-100..103 | Customize mode, widget picker, icon popup, drag engagement | Completed | Completed (EVI-HOME-001/002) | Completed | Completed | Observed |
 | HOME-104 | Page creation via edge drag | Completed | Completed (EVI-HOME-005) | Completed | Completed | Observed |
 | HOME-105 | Nova Now edge surface | Completed | Partial (entry observed once; internals untested, EVI-BACKUP-002) | Completed | Completed (pointer-only) | Partially Observed |
+| HOME-106 | Open workspace from app icon without replacing Home | Discovered | Nova user report; Vesna 0.4.44 release entry points verified (OBS-VESNA-016) | R-HOME-106.1–3 | AT-HOME-106 defined; Vesna parity not met in 0.4.44 | Partially Observed |
 | CARDS-100 | Condition-gated drawer cards | Completed | Nova 8.9.9: search and drawer (OBS-CARDS-117). Nova 9.0.1: inactive Day/time and unmatched Wi-Fi did not gate name search; an active time window did not surface the test card in the plain drawer. Weather transition and Bluetooth runtime not verified (OBS-VESNA-009/011). | Completed | AT-CARDS-100 | Observed |
 | CARDS-101 | Custom card builder (Add card) | Discovered (builder UI inventoried — OBS-CARDS-116; build/save flow untested) | Not Started | Not Started | Not Started | Partially Observed |
 | CARDS-102 | Overlay card affordances (deep link, gears, overflow, Fahrenheit render) | Completed (inventoried + units/stamp verified — OBS-CARDS-116/117) | Not Started | Not Started | Not Started | Observed |
