@@ -362,3 +362,17 @@ Nova remains the system HOME (comparison-only install).
   a usable second ADB target. Bluetooth support is present; pairing,
   connection changes, and the Nova trigger remain unverified. See
   `EVI-VESNA-003/emulator-bt-discovery-*`.
+
+## OBS-VESNA-015 — Smart folders survive an Android reboot on API 35
+
+- On an isolated writable Android 15 AVD (`emulator-5588`), installed
+  Nova 9.0.1 (90100) and Prime, then enabled all seven generated
+  folders. All seven rendered before the reboot.
+- Rebooted the Android guest; the kernel boot ID changed and
+  `sys.boot_completed` returned `1`. Opened Nova and used the drawer's
+  grid button to verify the full drawer. All seven folders were visible
+  without re-enabling any of them; folder names and member counts
+  matched the pre-reboot UI dump exactly.
+- Evidence: `EVI-VESNA-003/reboot-api35-before-130526.*` and
+  `reboot-api35-after-grid-130635.*`. Confidence: observed on the
+  Android 15 emulator; physical-device reboot persistence unverified.
