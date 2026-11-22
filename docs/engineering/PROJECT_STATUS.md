@@ -958,6 +958,19 @@ cell for a drop; changing direction does not rewrite the layout.
   each version, and debug lint passed. Physical devices and TalkBack speech
   were not checked.
 
+### Preview only valid drawer drops on Home
+
+- Signed 0.4.39 highlighted the Contacts shortcut when dragging Contacts
+  from the drawer, and the folder when dragging Drive into a folder
+  that already contained it. Neither drop changed the saved layout.
+- The fixed build leaves both targets unhighlighted and still highlights
+  the folder for Gmail, which is not one of its members. Checked real
+  drags in Light LTR and Dark Arabic RTL at 200% text on Android 15.
+- The new painted-preview test failed on 0.4.39 and now distinguishes
+  same-profile duplicates from valid targets in a different profile.
+  All 16 focused tests passed on Android 8 and 15, and debug lint passed.
+  Physical devices and TalkBack were not checked.
+
 ### App names after a language change
 
 The process-wide app catalogue updates when Android changes the locale list.

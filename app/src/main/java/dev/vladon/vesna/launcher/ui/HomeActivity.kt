@@ -484,11 +484,7 @@ class HomeActivity : ComponentActivity() {
             return
         }
         dock.showSlotHighlight(null)
-        val cell = workspace.cellAtLocal(x - workspace.left, y - workspace.top)
-        // Occupied cells accept the drop as folder creation / folder addition, so
-        // any cell except the drag's own source cell is a valid target.
-        val acceptable = cell != null && cell != source.fromCell
-        workspace.showDropHighlight(if (acceptable) cell else null)
+        workspace.showDropHighlight(workspaceDropCell(source, x, y))
     }
 
     /** Commits the drag result, or falls back to the context menu without movement. */
@@ -544,6 +540,21 @@ class HomeActivity : ComponentActivity() {
     private fun dockDropColumn(source: DragSource, x: Float): Int? =
         renderedState.dock.dropColumn(dock.slotAtLocalX(x - dock.left), reordering = source.container == Container.DOCK)
 
+    private fun workspaceDropCell(source: DragSource, x: Float, y: Float): Int? {
+        val cell = workspace.cellAtLocal(x - workspace.left, y - workspace.top) ?: return null
+        if (cell == source.fromCell) return null
+        if (!source.fromDrawer) return cell
+
+        // A drawer drag copies an app; moving an existing pin is a separate operation.
+        val key = source.app.key
+        val duplicate = when (val content = workspace.contentAt(cell)) {
+            null -> false
+            is CellContent.App -> content.app.key == key
+            is CellContent.FolderCell -> renderedState.folderContents[content.folder.id].orEmpty().any { it.app.key == key }
+        }
+        return if (duplicate) null else cell
+    }
+
     private fun commitDrop(source: DragSource, x: Float, y: Float) {
         if (y >= dock.top) {
             if (!withinDockWidth(x)) return
@@ -560,8 +571,8 @@ class HomeActivity : ComponentActivity() {
             }
             return
         }
-        val cell = workspace.cellAtLocal(x - workspace.left, y - workspace.top) ?: return
-        if (cell != source.fromCell) commitOnCell(source, source.app, cell)
+        val cell = workspaceDropCell(source, x, y) ?: return
+        commitOnCell(source, source.app, cell)
     }
 
     private fun showFolderDialog(folder: Folder, focusedMemberId: Long? = null) {
