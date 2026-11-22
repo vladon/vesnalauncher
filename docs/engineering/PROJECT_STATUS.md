@@ -915,6 +915,23 @@ the visible icons. Mirroring the dock does not change the stored order.
   padded tile edges, and an empty highlight slot. Debug lint passed;
   TalkBack speech and physical devices were not checked.
 
+### Workspace placement in RTL
+
+Home icons, folders, and drop highlights now follow the workspace's reading
+direction. The workspace maps the displayed column back to the same saved
+cell for a drop; changing direction does not rewrite the layout.
+
+- On Android 15 with the Arabic app locale, 0.4.35 kept the workspace in
+  left-to-right order while the dock mirrored. With the fix, both start at
+  the right. At 200% text in Light and Dark, the Home tiles retained their
+  accessible names and D-pad Left moved focus visibly from Contacts to the
+  adjacent folder. A Dark-theme drag moved Gmail into the highlighted empty
+  cell; the reverse drag restored the previous layout.
+- Both new workspace geometry tests failed on 0.4.35 and passed after the
+  fix on Android 8 and 15. All 13 focused Home and dock tests passed on
+  each version, and debug lint passed. Physical devices and TalkBack speech
+  were not checked.
+
 ### Dock drop previews
 
 The dock previews the position a dropped icon will actually occupy. In a

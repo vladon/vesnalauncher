@@ -252,15 +252,18 @@ class WorkspaceView @JvmOverloads constructor(
         }
     }
 
-    /** The grid cell containing the point, or null when outside the grid. */
-    fun cellAtLocal(x: Float, y: Float): Int? = GridCanvas.cellAtPoint(
-        x,
-        y,
-        paddingLeft + gutterPx.toFloat(),
-        paddingTop + gutterPx.toFloat(),
-        lastCellW.toFloat(),
-        lastCellH.toFloat(),
-    )
+    /** The saved cell containing the point, or null when outside the grid. */
+    fun cellAtLocal(x: Float, y: Float): Int? {
+        val visualCell = GridCanvas.cellAtPoint(
+            x,
+            y,
+            paddingLeft + gutterPx.toFloat(),
+            paddingTop + gutterPx.toFloat(),
+            lastCellW.toFloat(),
+            lastCellH.toFloat(),
+        ) ?: return null
+        return GridCanvas.rowOf(visualCell) * GridCanvas.COLUMNS + orientedColumn(visualCell)
+    }
 
     /** Whether a bound icon occupies [cell]. */
     fun isCellOccupied(cell: Int): Boolean = boundContent.containsKey(cell)
@@ -271,7 +274,7 @@ class WorkspaceView @JvmOverloads constructor(
         if (lastCellW <= 0 || lastCellH <= 0) return
         val inset = (HIGHLIGHT_INSET_DP * density).toInt()
         val radius = HIGHLIGHT_RADIUS_DP * density
-        val x = paddingLeft + gutterPx + GridCanvas.columnOf(cell) * lastCellW + inset
+        val x = cellLeft(cell, lastCellW) + inset
         val y = paddingTop + gutterPx + GridCanvas.rowOf(cell) * lastCellH + inset
         canvas.drawRoundRect(
             x.toFloat(),
@@ -375,11 +378,20 @@ class WorkspaceView @JvmOverloads constructor(
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             val cell = child.tag as? Int ?: continue
-            val x = paddingLeft + gutterPx + GridCanvas.columnOf(cell) * cellW + cellHPadPx
+            val x = cellLeft(cell, cellW) + cellHPadPx
             val y = paddingTop + gutterPx + GridCanvas.rowOf(cell) * cellH + cellVPadPx
             child.layout(x, y, x + child.measuredWidth, y + child.measuredHeight)
         }
     }
+
+    // Column reflection is its own inverse: both rendering and hit testing use it.
+    private fun orientedColumn(cell: Int): Int {
+        val column = GridCanvas.columnOf(cell)
+        return if (layoutDirection == LAYOUT_DIRECTION_RTL) GridCanvas.COLUMNS - 1 - column else column
+    }
+
+    private fun cellLeft(cell: Int, cellWidth: Int): Int =
+        paddingLeft + gutterPx + orientedColumn(cell) * cellWidth
 
     private fun cellWidth(totalWidth: Int): Int =
         (totalWidth - paddingLeft - paddingRight - 2 * gutterPx) / GridCanvas.COLUMNS

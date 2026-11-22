@@ -197,9 +197,9 @@ Keep the draft, selection, and any visible validation message when Android recre
   Android Home returns to the same workspace page and closes launcher menus, the drawer, and open folder dialogs without saving a rename draft. Back still dismisses the frontmost layer first.
   When Android recreates Home, retain keyboard focus on the same workspace shortcut on the active page or the same dock favorite if it is still visible. Leave focus within an open drawer or dialog.
   If a second finger joins an active drag, clear the highlight and restore the starting layout. The remaining touches cannot finish the drop; a new touch can start another drag.
-  Dock drag hit testing and highlights follow the rendered columns from the
-  start edge, including in RTL. Changing layout direction mirrors the visual
-  order without changing the stored order.
+  Workspace columns and dock slots run from the reading start edge, including in RTL.
+  Drag hit testing and highlights follow the rendered columns. Changing layout direction
+  mirrors the display without changing the saved cells or slot order.
   The dock packs visible icons toward the start. Dragging across trailing space
   highlights the last possible position for that drag. Temporarily unavailable
   favorites remain saved and count toward capacity; a full dock does not show
