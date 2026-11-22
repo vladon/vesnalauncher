@@ -1056,6 +1056,21 @@ or the next open position when adding. Hidden but saved pins still use capacity.
   production compat-inset handler so the test does not depend on the
   emulator's navigation bar configuration.
 
+### Keep drawer long presses below the drag threshold
+
+- On Android 15 with 0.4.43, three pixels of finger drift during a long
+  press on Drive closed the drawer and created a Drive/Safety folder.
+  A stationary hold opened the shortcut options as intended.
+- Vesna now uses Android's touch slop to distinguish a hold from a drag.
+  The threshold-crossing move updates the preview after the drawer tile
+  receives cancellation, so one deliberate move followed by release works.
+- On Android 15 in Light English and Dark Arabic RTL at 200% text, the
+  same drift opened the options without changing any placement or folder
+  rows. One deliberate move highlighted and filled an empty Home cell.
+- The targeted gesture suites passed on Android 8 and 15 (15 tests each),
+  including movement within and at the threshold. Debug lint passed.
+  Physical devices and TalkBack were not checked.
+
 ### Atomic dock insertion
 
 A drawer drop now writes the new dock pin and the shifted slots in one Room

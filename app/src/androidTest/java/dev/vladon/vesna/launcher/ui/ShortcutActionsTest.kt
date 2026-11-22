@@ -7,6 +7,7 @@ import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
@@ -245,6 +246,71 @@ class ShortcutActionsTest {
                     send(MotionEvent.ACTION_CANCEL, x, top, swipe)
                 }
             }
+        }
+    }
+
+    @Test
+    fun drawerHoldOpensOptionsWithinTouchSlopAndStartsDraggingOnTheFirstMovePastIt() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val menu = instrumentation.targetContext.getString(R.string.menu_add_to_workspace)
+        ActivityScenario.launch(HomeActivity::class.java).use { home ->
+            home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+            assertTrue("The drawer is ready for touch", until {
+                var ready = false
+                home.onActivity {
+                    val drawer = it.findViewById<DrawerView>(R.id.drawer)
+                    val list = drawer.findViewById<RecyclerView>(R.id.drawer_list)
+                    ready = drawer.translationY == 0f && list.childCount > 1 && list.hasWindowFocus()
+                }
+                ready
+            })
+
+            fun holdAndMove(drag: Boolean) = home.onActivity { activity ->
+                val root = activity.findViewById<LauncherDragLayer>(R.id.launcher_root)
+                val drawer = activity.findViewById<DrawerView>(R.id.drawer)
+                val tile = drawer.findViewById<RecyclerView>(R.id.drawer_list).getChildAt(1)
+                val rect = Rect(0, 0, tile.width, tile.height).also { root.offsetDescendantRectToMyCoords(tile, it) }
+                val down = SystemClock.uptimeMillis()
+                val slop = ViewConfiguration.get(root.context).scaledTouchSlop
+                val x = rect.exactCenterX()
+                val y = rect.exactCenterY()
+                fun send(action: Int, atX: Float) {
+                    val event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, atX, y, 0)
+                    try {
+                        event.source = InputDevice.SOURCE_TOUCHSCREEN
+                        root.dispatchTouchEvent(event)
+                    } finally {
+                        event.recycle()
+                    }
+                }
+                send(MotionEvent.ACTION_DOWN, x)
+                try {
+                    assertTrue(tile.performLongClick())
+                    send(MotionEvent.ACTION_MOVE, x + slop / 2f)
+                    send(MotionEvent.ACTION_MOVE, x - slop)
+                    assertTrue("Touch drift must not dismiss the drawer", drawer.isOpen)
+                    if (drag) {
+                        send(MotionEvent.ACTION_MOVE, x + slop + 1f)
+                        assertTrue("The first move past touch slop must start the drag", !drawer.isOpen)
+                    } else {
+                        send(MotionEvent.ACTION_UP, x)
+                    }
+                } finally {
+                    if (drag || root.isDragActive?.invoke() == true) send(MotionEvent.ACTION_CANCEL, x)
+                }
+            }
+
+            holdAndMove(drag = false)
+            assertTrue("A small movement must leave the shortcut menu available", until {
+                instrumentation.uiAutomation.rootInActiveWindow?.hasVisibleText(menu) == true
+            })
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+            assertTrue(until {
+                var focused = false
+                home.onActivity { focused = it.findViewById<DrawerView>(R.id.drawer).hasWindowFocus() }
+                focused
+            })
+            holdAndMove(drag = true)
         }
     }
 

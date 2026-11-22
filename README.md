@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.44
+
+- A slight finger movement during a long press in the app drawer no longer
+  starts a drag. Release to open the app's options, or move farther to drag it.
+
 ### 0.4.43
 
 - Dragging an app from the drawer now cancels if the app becomes unavailable
