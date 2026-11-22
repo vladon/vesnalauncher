@@ -65,9 +65,10 @@ Derived from `observations/backup-restore.md`.
      backup are removed, and previously backed-up items return to their
      backed-up positions (verified: widget removed, page 2 removed, icon
      repositioned, folder preserved).
-- Boundary conditions: malformed/foreign files picked (error handling) —
-  Not Tested yet.
-- Evidence: OBS-BACKUP-004 (EVI-BACKUP-002)
+- Boundary conditions: cancellation and one plain-text file with the
+  backup suffix left the current layout unchanged (OBS-VESNA-033).
+  Other invalid inputs and transient error wording were not verified.
+- Evidence: OBS-BACKUP-004 (EVI-BACKUP-002), OBS-VESNA-033 (EVI-VESNA-003).
 - Confidence: Observed
 
 ### Vesna requirements
@@ -76,6 +77,8 @@ Derived from `observations/backup-restore.md`.
 - R-BACKUP-102.2: An explicit overwrite confirmation precedes any change.
 - R-BACKUP-102.3: Restore reproduces the backed-up state completely,
   including deleting items and pages created after the backup.
+- R-BACKUP-102.4: Cancelling restore or rejecting an invalid file leaves
+  the current layout unchanged.
 
 ## Note on earlier inventory entries
 

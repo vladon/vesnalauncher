@@ -784,3 +784,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   prompted for access and was cancelled without granting it.
 - Evidence: `EVI-VESNA-003/parity32-*`. Confidence: observed
   for five shortcuts shrinking from 4×4 to 2×2 and back.
+
+## OBS-VESNA-033 — Backup restore cancel and invalid-file controls
+
+- On the Android 15 research AVD, Nova 9.0.1 Prime (90100)
+  exported a backup through the system picker to Downloads.
+  Moved an existing Gmail shortcut to another cell as a
+  positive marker, leaving the dock unchanged.
+- Selecting the valid backup opened the replacement confirmation.
+  Cancelling kept the moved Gmail shortcut and all dock pins.
+  Selecting a disposable plain-text file with the backup suffix
+  returned to settings without replacement; the moved shortcut
+  and dock pins still matched. No transient error wording was
+  captured. The valid backup was not opened or parsed by the test.
+- As a positive control, selected the same valid backup and
+  confirmed replacement. The original shortcut and dock positions
+  returned and survived a Nova process restart. Removed both
+  local test files; nothing was shared.
+- In signed Vesna v0.4.50 (55), Settings search for backup,
+  restore, and export exposed no equivalent manual route.
+  Android-managed backup or transfer is outside this test.
+  Follow-up for #116, not a backup-policy decision.
+- Evidence: `EVI-VESNA-003/parity33-*`. Confidence: observed for
+  one valid file and one malformed file on the research AVD.

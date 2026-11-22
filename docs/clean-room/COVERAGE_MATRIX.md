@@ -40,7 +40,7 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
 | SETT-110 (covers SETT-003) | Settings search + deep-linking | Completed | Completed (OBS-SETT-110) | Completed | Completed | Observed |
 | SETT-111 | Prime-gate interaction | Completed | Completed (OBS-SYS-110) | Completed | Completed | Observed |
 | SYS-111..114 | Prime activation, badge pipeline, gating, third-party attempts | Completed | Completed (OBS-SYS-110..114) | Not Started (SYS-111 reference recorded in settings.md) | Not Started | Partially Observed (self-badge root cause found; third-party badge matrix inconclusive) |
-| BACKUP-100..102 | Backup, share/quick-start/reset, restore | Completed | Nova file backup/restore observed; Vesna 0.4.46 lacks an in-app flow (OBS-VESNA-020; ENG-106) | Completed | Completed (scenario definitions; Vesna implementation not verified) | Observed/Partially Observed |
+| BACKUP-100..102 | Backup, share/quick-start/reset, restore | Completed | Nova cancel and one malformed file preserved the live layout; confirming the valid file restored it. Vesna v0.4.50 exposed no manual route (OBS-VESNA-033; #116, ENG-106). | Completed | Manual flow; Android-managed transfer not tested | Observed/Partially Observed |
 | APPPEAR-100 | Theme mode switch | Completed | Completed (EVI-APPPEAR-001) | Completed | Completed | Observed |
 | HOME-001..015 | Home screen behavior | Most discovered (grid/labels/pages/lock/rotation settings) | Partial (OBS-HOME-001..007; page drag verified) | HOME-100..105 only | HOME-100..105 | Partially Observed |
 | DRAWER-001..016 | App drawer behavior | Most discovered | Partial (open/close/search/ads/tabs verified; OBS-DRAWER-001..004, 110, 111) | DRAWER-100..105 only | DRAWER-100..103, 102b | Partially Observed |
