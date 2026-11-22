@@ -737,3 +737,29 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   or entry with a duplicate label was tested.
 - Evidence: `EVI-VESNA-003/parity29-{nova-hidden,vesna-hidden-baseline,vesna050}-*`.
   Confidence: observed in the installed, signed release.
+
+## OBS-VESNA-031 — Offline drawer search and web-suggestion opt-out
+
+- On one Android 15 research AVD: Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.50 (55), no launcher update during the
+  run. With Nova's original Google suggestion source and a
+  connected default network, the public query Lake Baikal
+  displayed web suggestions and external provider buttons.
+- Enabled airplane mode and disabled Wi-Fi and mobile data
+  on the AVD; Android reported no active default network
+  before and after the test. Nova showed no web suggestions
+  for the same query or for a fresh non-app query, but still
+  exposed its external provider buttons. Vesna's same
+  non-app query showed only the local no-match result.
+  Both launchers still found and opened the installed Clock.
+- Restored connectivity. With Nova's suggestion source set
+  to None, the same online query showed no web suggestions,
+  while provider buttons and local Clock search still worked.
+  Restored Google and the web suggestions returned. Original
+  radio settings and system Home were preserved.
+- Follow-up for #113: this verifies UI behavior, not whether
+  Nova sends network requests with suggestions set to None.
+  External provider launches while offline were not tested.
+- Evidence: `EVI-VESNA-003/parity31-*`. Confidence: observed
+  on this fixture with test queries and no active default
+  network during the offline pass.
