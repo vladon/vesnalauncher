@@ -6,22 +6,44 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
@@ -81,12 +103,7 @@ internal class FolderDialog(
                             SnackbarHost(snackbar)
                         }
                     },
-                    confirmButton = {
-                        TextButton(onClick = onRename) { Text(stringResource(R.string.folder_rename)) }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = onRemoveFolder) { Text(stringResource(R.string.folder_remove)) }
-                    },
+                    confirmButton = { FolderActions(onRename, onRemoveFolder) },
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 )
             }
@@ -128,5 +145,54 @@ internal class FolderDialog(
     private companion object {
         const val MENU_REMOVE_FROM_FOLDER = 1
         const val MENU_APP_INFO = 2
+    }
+}
+
+@Composable
+private fun FolderActions(onRename: () -> Unit, onRemove: () -> Unit) {
+    val rename = stringResource(R.string.folder_rename)
+    val remove = stringResource(R.string.folder_remove)
+    val label = MaterialTheme.typography.labelLarge
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    val padding = ButtonDefaults.TextButtonContentPadding
+    val horizontalPadding = padding.calculateLeftPadding(direction) + padding.calculateRightPadding(direction)
+    val gap = 8.dp
+
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val labelsFit = with(density) {
+            val renameWidth = measurer.measure(rename, label, maxLines = 1).size.width.toDp() + horizontalPadding
+            val removeWidth = measurer.measure(remove, label, maxLines = 1).size.width.toDp() + horizontalPadding
+            maxOf(renameWidth, ButtonDefaults.MinWidth) + maxOf(removeWidth, ButtonDefaults.MinWidth) + gap <= maxWidth
+        }
+        // Keep the footer on one line so it cannot consume the member viewport.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap, Alignment.End)) {
+            if (labelsFit) {
+                TextButton(onClick = onRemove) { Text(remove, maxLines = 1) }
+                TextButton(onClick = onRename) { Text(rename, maxLines = 1) }
+            } else {
+                CompactFolderAction(R.drawable.ic_folder_delete, remove, onRemove)
+                CompactFolderAction(R.drawable.ic_folder_edit, rename, onRename)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CompactFolderAction(icon: Int, label: String, onClick: () -> Unit) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+        tooltip = { PlainTooltip { Text(label) } },
+        state = rememberTooltipState(),
+    ) {
+        TextButton(
+            onClick = onClick,
+            modifier = Modifier.size(48.dp).semantics { contentDescription = label },
+            contentPadding = PaddingValues(0.dp),
+        ) {
+            Icon(painterResource(icon), contentDescription = null)
+        }
     }
 }
