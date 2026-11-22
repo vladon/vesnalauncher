@@ -57,6 +57,7 @@
                 <data android:scheme="vesna" android:host="settings" android:path="/" />
                 <data android:scheme="vesna" android:host="settings" android:path="/default-launcher" />
                 <data android:scheme="vesna" android:host="settings" android:path="/home-screen" />
+                <data android:scheme="vesna" android:host="settings" android:path="/app-drawer" />
                 <data android:scheme="vesna" android:host="settings" android:path="/appearance" />
                 <data android:scheme="vesna" android:host="settings" android:path="/about" />
             </intent-filter>

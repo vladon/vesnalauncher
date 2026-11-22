@@ -1,0 +1,1 @@
+Hide individual apps from browsing in Settings > App drawer. Their Home and dock shortcuts stay in place, and you can still find a hidden app by searching for its full name.

@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -18,15 +19,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.vladon.vesna.launcher.VesnaApplication
+import dev.vladon.vesna.launcher.apps.AppKey
+import dev.vladon.vesna.launcher.apps.LauncherApp
 
-/** The app entry point for default launcher setup, workspace, appearance, and About. */
+/** Entry point for Vesna's settings directory and named pages. */
 class SettingsActivity : ComponentActivity() {
     private lateinit var workspace: WorkspacePreferences
     private lateinit var appearance: AppearancePreferences
+    private lateinit var drawerPreferences: DrawerPreferences
     private val navigation: SettingsNavigation by viewModels {
         viewModelFactory { initializer { SettingsNavigation(SettingsPage.fromIntent(intent)) } }
     }
@@ -34,6 +40,8 @@ class SettingsActivity : ComponentActivity() {
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var layoutLocked by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
+    private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
+    private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
     private var setupIntent: Intent? = null
     private val homeRequest =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { refreshDefaultHome() }
@@ -42,10 +50,18 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         appearance = AppearancePreferences(this)
         workspace = WorkspacePreferences(this)
+        drawerPreferences = DrawerPreferences(this)
         readPreferences()
         enableEdgeToEdge()
         val version = readVersionName()
         setContent {
+            if (navigation.page == SettingsPage.APP_DRAWER) {
+                LaunchedEffect(Unit) {
+                    repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        VesnaApplication.graph(this@SettingsActivity).controller.state.collect { drawerApps = it.apps }
+                    }
+                }
+            }
             val dark = themeMode.isDark(isSystemInDarkTheme())
             SideEffect {
                 WindowCompat.getInsetsController(window, window.decorView).apply {
@@ -74,6 +90,9 @@ class SettingsActivity : ComponentActivity() {
                             workspace.layoutLocked = locked
                             layoutLocked = locked
                         },
+                        drawerApps = drawerApps,
+                        hiddenDrawerApps = hiddenDrawerApps,
+                        onDrawerAppHiddenChanged = ::changeDrawerVisibility,
                     )
                 }
             }
@@ -108,6 +127,7 @@ class SettingsActivity : ComponentActivity() {
         themeMode = appearance.themeMode
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
+        hiddenDrawerApps = drawerPreferences.hiddenApps
     }
 
     private fun selectTheme(mode: ThemeMode) {
@@ -119,6 +139,12 @@ class SettingsActivity : ComponentActivity() {
     private fun changeAppNameVisibility(visible: Boolean) {
         appearance.showAppNames = visible
         showAppNames = visible
+    }
+
+    private fun changeDrawerVisibility(app: AppKey, hidden: Boolean) {
+        val updated = if (hidden) hiddenDrawerApps + app else hiddenDrawerApps - app
+        drawerPreferences.hiddenApps = updated
+        hiddenDrawerApps = updated
     }
 
     private fun refreshDefaultHome() {
