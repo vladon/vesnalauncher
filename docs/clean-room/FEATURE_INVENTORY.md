@@ -52,7 +52,7 @@ behavior, an ID is never reassigned to a different behavior.
 |---|---|---|
 | DRAWER-001 | Drawer open gesture(s) | observed (swipe up; free edition) |
 | DRAWER-002 | Drawer close gesture(s) | partially observed (BACK verified; swipe-down untested) |
-| DRAWER-003 | Drawer layout modes | Nova 9.0.1: horizontal drawer search restores the current page on clear; reopening starts at page one without resetting the style. Vesna v0.4.49 remains vertical (OBS-VESNA-019/027; #108). |
+| DRAWER-003 | Drawer layout modes | Nova 9.0.1 and signed Vesna 0.4.51 have vertical list and horizontal pages. Both retain the horizontal page on search clear; Vesna resets vertical list scroll on clear (OBS-VESNA-027/035; #108). |
 | DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
 | DRAWER-005 | Drawer search | Both launchers found and launched a local app offline. Nova separates provider buttons from web suggestions and handed a query to Maps (OBS-VESNA-028/031; #113). |
 | DRAWER-006 | Scrolling and fast-scroll behavior | Nova 9.0.1 and signed Vesna 0.4.49 jump by letter and suppress the rail during search; Vesna restores it after clear (OBS-VESNA-019/026; #109). |

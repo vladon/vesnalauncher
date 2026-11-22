@@ -830,3 +830,35 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Evidence: `EVI-VESNA-003/parity34-*` and
   `parity33-cycle34-restore-missing-*`. Confidence: observed
   for a single absent, later sideloaded app. Follow-up for #116.
+
+## OBS-VESNA-035 — Signed v0.4.51 drawer modes and list-position difference
+
+- Compared on Android 15 with 52 disposable A–Z entries. Nova
+  9.0.1 Prime (90100) in single-column list mode found an item
+  outside the visible rows; clearing the search and dismissing
+  the IME returned to the same visible rows. Signed Vesna
+  v0.4.50 (55) had no layout selector and the matching lateral
+  swipe did not change its vertical grid viewport.
+- [PR #126](https://github.com/vladon/vesnalauncher/pull/126)
+  merged at `1b1f93c6b8813929739436b6f11032a36f5e4c2f`. The
+  [CI debug artifact](https://github.com/vladon/vesnalauncher/actions/runs/45083411982)
+  passed vertical list scrolling, cross-page search, page return
+  on clear, and first-page entry after process restart on a
+  separate owned AVD. This was not the release APK.
+- [Signed v0.4.51](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.51)
+  (56) points to the same commit. Verified the asset digest and
+  signer, then upgraded the matched AVD between runs. The list
+  scrolled in one column, and a search result opened Clock.
+  Horizontal mode found a page-one item from page two; clearing
+  returned page two. Closing/reopening or restarting from page
+  two returned page one without changing the mode.
+- List-only comparison gap: clearing the query in Vesna's
+  vertical list returned the viewport to the first row, unlike
+  Nova. Confirmed with two queries for initially off-screen
+  items; in the second run it happened before dismissing the IME.
+  The horizontal clear behavior still met #108. Restored the
+  original Vesna grid and removed the fixture from the release AVD.
+- Evidence: `EVI-VESNA-003/parity34-nova-list-*`,
+  `parity34-vesna050-layout-*`, `parity35-release051-*`, and
+  `parity36-main-*`. Confidence: observed for the tested gestures
+  and queries. RTL, scaling and accessibility were not replayed.
