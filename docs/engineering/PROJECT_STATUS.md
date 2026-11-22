@@ -1009,6 +1009,18 @@ or the next open position when adding. Hidden but saved pins still use capacity.
   focused JVM tests and debug lint passed. Physical devices and TalkBack were
   not checked.
 
+### Keep dock drops above system navigation
+
+- In 0.4.40, dragging Calendar over Android's bottom system bar showed
+  the last dock slot as a target. Releasing there reordered the dock
+  on Android 15 with three-button navigation.
+- The fixed build clears the preview and leaves the saved order intact
+  over that area. Dropping within the dock still reorders normally.
+  Verified real drags in Light LTR and Dark Arabic RTL at 200% text.
+- The painted-preview regression failed on 0.4.40. It passed with the
+  18 focused tests on each of Android 8 and 15; debug lint also passed.
+  Physical devices and TalkBack were not checked.
+
 ### Atomic dock insertion
 
 A drawer drop now writes the new dock pin and the shifted slots in one Room
