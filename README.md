@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.39
+
+- When the app list changes while Android recreates Home, the drawer
+  returns to the same visible app and profile rather than an old row number.
+
 ### 0.4.38
 
 - The app drawer keeps its scroll position and search when Android

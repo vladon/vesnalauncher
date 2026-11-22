@@ -575,6 +575,19 @@ and keeps Home out of keyboard and accessibility traversal while open.
   All 16 focused Android 15 cases and debug lint passed. Physical devices
   and TalkBack speech were not checked.
 
+### Drawer position after results reorder during recreation
+
+- On 0.4.38, restoring a scrolled drawer before the updated app list arrived
+  went back to the old slot. A personal copy occupied that slot after a work
+  copy moved one row down.
+- The same regression preserves the work copy at the original vertical
+  offset on the fixed build. When it is no longer in the results, the drawer
+  uses the nearest available position; Clear still returns to the top.
+- All 16 focused tests passed on Android 8 and 15. On Android 15 at 200%
+  text, switching Light/Dark retained the full and filtered drawer in a
+  compact-height viewport. Debug lint passed. The profile case uses a
+  deterministic catalogue; physical devices and TalkBack were not checked.
+
 ### Keyboard focus in drawer results through Home recreation
 
 - On signed 0.4.31, changing the system theme kept the `ca` search but

@@ -84,7 +84,7 @@ class DrawerView @JvmOverloads constructor(
     private val commitScrollReset = Runnable(::resetScrollAfterFilter)
     private var refreshAnchor: AppKey? = null
 
-    private data class Viewport(val position: Int, val offset: Int)
+    private data class Viewport(val app: AppKey?, val position: Int, val offset: Int)
 
     private var pendingViewport: Viewport? = null
 
@@ -234,14 +234,7 @@ class DrawerView @JvmOverloads constructor(
             val submission = ++focusSubmission
             adapter.submitList(filtered) {
                 if (resetScrollOnCommit) resetScrollAfterFilter()
-                if (adapter.itemCount > 0) {
-                    pendingViewport?.let { viewport ->
-                        pendingViewport = null
-                        grid.scrollToPositionWithOffset(
-                            viewport.position.coerceAtMost(adapter.itemCount - 1), viewport.offset,
-                        )
-                    }
-                }
+                restoreCommittedViewport()
                 if (pendingAppFocus != null) {
                     // A newer filter can supersede this commit before its holders are laid out.
                     list.doOnPreDraw {
@@ -267,23 +260,44 @@ class DrawerView @JvmOverloads constructor(
         val position = grid.findFirstVisibleItemPosition()
         val tile = grid.findViewByPosition(position)
         val viewport = if (tile != null) {
-            Viewport(position, grid.getDecoratedTop(tile) - list.paddingTop)
+            val app = adapter.currentList.getOrNull(list.getChildAdapterPosition(tile))?.key
+            Viewport(app, position, grid.getDecoratedTop(tile) - list.paddingTop)
         } else {
             pendingViewport
         } ?: return
         state.putInt(SCROLL_POSITION, viewport.position)
         state.putInt(SCROLL_OFFSET, viewport.offset)
+        viewport.app?.let { app ->
+            state.putString(SCROLL_PACKAGE, app.packageName)
+            state.putString(SCROLL_CLASS, app.className)
+            state.putLong(SCROLL_USER, app.userSerial)
+        }
     }
 
     internal fun restoreResults(state: Bundle, focusedApp: AppKey?) {
         if (!isOpen) return
         if (state.containsKey(SCROLL_POSITION)) {
-            pendingViewport = Viewport(state.getInt(SCROLL_POSITION), state.getInt(SCROLL_OFFSET))
+            val pkg = state.getString(SCROLL_PACKAGE)
+            val cls = state.getString(SCROLL_CLASS)
+            val app = if (pkg != null && cls != null) AppKey(pkg, cls, state.getLong(SCROLL_USER)) else null
+            pendingViewport = Viewport(app, state.getInt(SCROLL_POSITION), state.getInt(SCROLL_OFFSET))
             // The saved query arrives through the text watcher, but it isn't a user edit.
             resetScrollOnCommit = false
         }
         pendingAppFocus = focusedApp
         if (appSearch != null && (pendingViewport != null || focusedApp != null)) applyFilter(resetScroll = false)
+    }
+
+    private fun restoreCommittedViewport() {
+        val viewport = pendingViewport ?: return
+        val apps = adapter.currentList
+        if (apps.isEmpty()) return
+        pendingViewport = null
+        val anchor = viewport.app?.let { key -> apps.indexOfFirst { it.key == key } } ?: RecyclerView.NO_POSITION
+        // An uninstalled or no-longer-matching app leaves the nearest saved position.
+        val position = if (anchor >= 0) anchor else viewport.position.coerceAtMost(apps.lastIndex)
+        refreshAnchor = apps[position].key
+        grid.scrollToPositionWithOffset(position, viewport.offset)
     }
 
     private fun restoreCommittedAppFocus(submission: Int) {
@@ -515,6 +529,9 @@ class DrawerView @JvmOverloads constructor(
     private companion object {
         const val SCROLL_POSITION = "drawer_scroll_position"
         const val SCROLL_OFFSET = "drawer_scroll_offset"
+        const val SCROLL_PACKAGE = "drawer_scroll_package"
+        const val SCROLL_CLASS = "drawer_scroll_class"
+        const val SCROLL_USER = "drawer_scroll_user"
         const val ANIMATION_MS = 250L
         const val MAX_FLING_DURATION_MS = 400L
     }
