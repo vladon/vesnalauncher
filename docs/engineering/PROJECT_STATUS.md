@@ -514,6 +514,18 @@ The compact search bar uses a short localized hint and smaller side margins.
   emulators, including reflow around side insets. Debug lint passed.
   Physical devices and TalkBack speech were not checked.
 
+### Inline keyboard for landscape drawer search
+
+- On Android 8, Gboard replaced the 0.4.25 drawer with a full-screen
+  editor in landscape. The matching apps were hidden until the keyboard closed.
+- With the fix, the in-app search and Clock result stayed visible, and
+  tapping the result with the keyboard still open launched Clock.
+- Android 15 in Dark at 200% showed Calendar in the scrollable area
+  above the keyboard. Back hid the keyboard without clearing the search.
+- The editor-contract assertion failed on the old app and passed with the
+  fix. Debug build, lint and 13 focused tests passed on Android 8 and 15.
+  Only the emulators' Gboard versions were tested; no physical or TalkBack checks ran.
+
 ### Drawer refresh
 
 Installing, updating, or removing an app no longer sends the open drawer

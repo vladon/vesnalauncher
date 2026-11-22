@@ -49,7 +49,7 @@
                     android:drawablePadding="12dp"
                     android:fontFamily="@font/inter_regular"
                     android:hint="@string/drawer_search_hint"
-                    android:imeOptions="actionDone|flagNoPersonalizedLearning"
+                    android:imeOptions="actionDone|flagNoFullscreen|flagNoPersonalizedLearning"
                     android:importantForAutofill="no"
                     android:inputType="textNoSuggestions"
                     android:letterSpacing="0.03125"

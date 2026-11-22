@@ -384,6 +384,10 @@ class DrawerSearchTest {
             val close = host.findViewById<View>(R.id.drawer_close)
             val clear = host.findViewById<View>(R.id.drawer_clear_search)
             assertTrue(search.requestFocus())
+            val editor = EditorInfo()
+            search.onCreateInputConnection(editor)
+            assertTrue("The keyboard must leave the in-app editor and results visible",
+                editor.imeOptions and EditorInfo.IME_FLAG_NO_FULLSCREEN != 0)
             val visibleHeight = ceil(86 * host.resources.displayMetrics.density).toInt()
             host.applyContentInsets(Insets.of(0, 0, 0, host.height - visibleHeight))
             host.measure(

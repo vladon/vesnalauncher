@@ -39,6 +39,7 @@ Pinned spec: [`specifications/app-drawer.md`](https://github.com/vladon/vesnalau
 | `R-DRAWER-103.1` | **Contact opt-in** | — | — | **Independent item** — kept separate from the `DRAWER-105`/`CARDS-100` conflict; no trunk work |
 | — (Vesna drawer behavior) | Keep the visible row during app catalogue refresh | `DrawerView` uses the committed diff's app positions to retain the visible shortcut and offset; editing or clearing search still resets to the top | [Drawer refresh](PROJECT_STATUS.md#drawer-refresh): one-app removal/reinsertion with an exact offset check and native install/uninstall | **Verified on API 26 and 35.** |
 | — (Vesna drawer behavior) | Keep active search when Android recreates Home | `HomeActivity` restores drawer visibility before Android restores the search field and focus | [Drawer search through Home recreation](PROJECT_STATUS.md#drawer-search-through-home-recreation) | **Recreation verified on API 26 and 35; live theme switch at 200% on API 35.** |
+| — (Vesna drawer behavior) | Keep drawer results available while typing in landscape | The drawer search field requests inline input instead of the IME's full-screen editor | [Inline keyboard for landscape drawer search](PROJECT_STATUS.md#inline-keyboard-for-landscape-drawer-search) | **Regression and native Gboard behavior verified on API 26 and 35.** |
 
 ## Home screen and workspace pages
 
