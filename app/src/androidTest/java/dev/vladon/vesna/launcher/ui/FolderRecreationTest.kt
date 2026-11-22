@@ -41,10 +41,20 @@ class FolderRecreationTest {
         val pages = db.workspacePageDao()
         val folders = db.folderDao()
         val items = db.workspaceItemDao()
-        val (pageId, folderId, memberIds) = db.withTransaction {
+        val (pageId, folderId, pinIds) = db.withTransaction {
             // A private page keeps this independent of the contents and capacity of the selected page.
             val pageId = pages.insert(WorkspacePageEntity(rank = pages.getAll().last().rank + 1))
-            val folderId = folders.insert(FolderEntity(title = title, cellIndex = 0, pageId = pageId))
+            // Give default Home focus a different target from the invoking folder.
+            val app = apps[1]
+            val leadingPinId = items.insert(WorkspaceItemEntity(
+                packageName = app.key.packageName,
+                className = app.key.className,
+                userSerial = app.key.userSerial,
+                container = Container.WORKSPACE.name,
+                cellIndex = 0,
+                pageId = pageId,
+            ))
+            val folderId = folders.insert(FolderEntity(title = title, cellIndex = 1, pageId = pageId))
             val memberIds = members.mapIndexed { index, app ->
                 items.insert(WorkspaceItemEntity(
                     packageName = app.key.packageName,
@@ -55,7 +65,7 @@ class FolderRecreationTest {
                     folderId = folderId,
                 ))
             }
-            Triple(pageId, folderId, memberIds)
+            Triple(pageId, folderId, memberIds + leadingPinId)
         }
 
         fun focusedRoot() = automation.windows.firstOrNull { it.isFocused }?.root
@@ -72,9 +82,9 @@ class FolderRecreationTest {
             ).use { it.readBytes() }
         }
 
-        fun homeIsVisible(): Boolean = focusedRoot()?.findVisible {
-            it.contentDescription?.toString() == title
-        } != null
+        fun homeFolder() = focusedRoot()?.findVisible { it.contentDescription?.toString() == title }
+
+        fun homeIsVisible(): Boolean = homeFolder() != null
 
         val serviceInfo = automation.serviceInfo
         val previousFlags = serviceInfo.flags
@@ -86,11 +96,15 @@ class FolderRecreationTest {
             withTimeout(10_000) { controller.state.first { it.activePageId == pageId } }
             ActivityScenario.launch(HomeActivity::class.java).use { scenario ->
                 await("Fixture Home should render", ::homeIsVisible)
-                fun openFolder() = scenario.onActivity { activity ->
-                    val workspace = activity.findViewById<WorkspaceView>(R.id.workspace)
-                    val folder = (0 until workspace.childCount).map(workspace::getChildAt)
-                        .single { it.contentDescription?.toString() == title }
-                    assertTrue(folder.performClick())
+                fun openFolder() {
+                    sendKey(KeyEvent.KEYCODE_TAB)
+                    scenario.onActivity { activity ->
+                        val workspace = activity.findViewById<WorkspaceView>(R.id.workspace)
+                        val folder = (0 until workspace.childCount).map(workspace::getChildAt)
+                            .single { it.contentDescription?.toString() == title }
+                        assertTrue("The invoking folder must accept keyboard focus", folder.requestFocus())
+                    }
+                    sendKey(KeyEvent.KEYCODE_ENTER)
                 }
                 openFolder()
                 val first = apps.first().accessibilityLabel
@@ -120,6 +134,9 @@ class FolderRecreationTest {
 
                 sendKey(KeyEvent.KEYCODE_BACK)
                 await("Back should dismiss the folder", ::homeIsVisible)
+                await("Keyboard focus should return to the invoking Home folder after dismissal") {
+                    homeFolder()?.isFocused == true
+                }
                 scenario.recreate()
                 await("An intentionally dismissed folder should stay closed", ::homeIsVisible)
                 openFolder()
@@ -132,7 +149,7 @@ class FolderRecreationTest {
             automation.serviceInfo = serviceInfo
             controller.selectWorkspacePage(initial.activePageId)
             db.withTransaction {
-                memberIds.forEach { items.deleteById(it) }
+                pinIds.forEach { items.deleteById(it) }
                 folders.deleteById(folderId)
                 pages.deleteIfEmpty(pageId)
             }

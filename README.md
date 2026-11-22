@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.33
+
+- Back returns keyboard focus to the Home folder shortcut after closing
+  the folder, even if the system theme changed while it was open.
+
 ### 0.4.32
 
 - Keyboard focus stays on the selected app in the open app drawer when

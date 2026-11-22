@@ -387,7 +387,11 @@ class HomeActivity : ComponentActivity() {
         val focus = pendingShortcutFocus ?: return
         if (state.pageIds.isEmpty()) return
         pendingShortcutFocus = null
-        // Configuration changes restore the window's default focus during its first layout.
+        requestHomeShortcutFocus(focus)
+    }
+
+    private fun requestHomeShortcutFocus(focus: ShortcutFocus) {
+        // On recreation or dialog dismissal, wait for the underlying Home layout.
         homeContent.doOnPreDraw {
             if (drawer.isOpen || folderDialog != null || folderRenameHost != null) return@doOnPreDraw
             val current = renderedState
@@ -580,6 +584,9 @@ class HomeActivity : ComponentActivity() {
                 folderDialog = null
                 homeUiState.openFolderId = null
                 homeUiState.focusedMemberId = null
+                renderedState.folders[folder.id]?.let { anchor ->
+                    requestHomeShortcutFocus(ShortcutFocus.WorkspaceFolder(anchor.pageId, anchor.cellIndex, anchor.id))
+                }
             },
         )
         dialog.showAppNames = showAppNames
