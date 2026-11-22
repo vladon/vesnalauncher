@@ -393,6 +393,21 @@ changing the member order. Members scroll independently of the dialog actions.
   focused tests passed on Android 8 and 15; debug build and lint passed.
   TalkBack speech and physical devices were not tested.
 
+### Return keyboard focus to the workspace folder after Back
+
+- On signed 0.4.32, Back returned focus to the folder's Home shortcut in
+  the original activity, but jumped to Contacts if the system theme
+  changed while the folder was open.
+- On Android 15 at 200% text, after switching themes in either direction
+  and pressing Back, the folder tile regained focus. D-pad Right moved
+  to the next shortcut. Dismissing by touch did not force keyboard focus.
+  The tested folder tile was 91 × 90 dp, with its full accessible name.
+  Focus outline-to-fill contrast was 4.96:1 in Light and 7.29:1 in Dark.
+- The updated recreation regression failed on 0.4.32 at the Back focus
+  assertion. With the fix, 23 focused tests passed on each of Android 8
+  and 15. Debug build and lint passed; TalkBack speech and physical
+  devices were not tested.
+
 ### Keep keyboard focus on Home and in the dock through recreation
 
 - With signed 0.4.30 on Android 15, a system theme switch moved focus
