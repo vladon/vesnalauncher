@@ -217,8 +217,22 @@ Keep the draft, selection, and any visible validation message when Android recre
   an insertion highlight.
   Keep the dock background behind the system navigation bar, but do not
   highlight or accept dock drops inside Android's reserved area.
-- **App drawer.** Use an opaque Material surface with inset search and a scrollable app grid. Use up to four columns, choosing the largest count that gives each cell 64 dp after horizontal insets. In layouts with fewer than four columns, use 8 dp search margins and the short **Search** hint. Keep the viewport in place when installed apps refresh. Start at the top of the new results when the query changes or clears. Restore focus by app identity when that app remains visible. If an active drag cannot continue through a layout change, restore the original position.
-  When the unfiltered grid scrolls and has multiple letter sections, show a
+- **App drawer.** Use an opaque Material surface with inset search. Default
+  to the responsive vertical grid. The vertical list uses one full-width
+  row per app, with 48 dp artwork at the reading start and an Inter
+  `bodyLarge` label. Horizontal pages snap one viewport at a time. Fill
+  each page in row-major reading order and mirror the direction in RTL.
+  For both grids, choose up to four columns with at least 64 dp per cell
+  when space allows. In widths that cannot fit four columns, use 8 dp
+  search margins and the short **Search** hint.
+  Search spans the full catalogue in every mode. A search from horizontal
+  pages uses a vertical result grid; clearing the query in the open drawer
+  restores the browsing page. In vertical modes start at the top when the
+  query changes or clears. Keep a visible app anchored when installed apps
+  refresh and restore focus by app identity while that app remains visible.
+  If an active drag cannot continue through a layout change, restore the
+  original position.
+  When an unfiltered vertical layout scrolls and has multiple letter sections, show a
   fast-scroll rail on the trailing edge if it fits without reducing the
   column count. Give it a 48 dp touch gutter so it
   cannot take taps from app tiles. Use `outline` for the rail, `primary` for
@@ -242,6 +256,8 @@ Keep the draft, selection, and any visible validation message when Android recre
   Request an inline keyboard for drawer search in landscape so a full-screen editor does not replace the drawer.
   Keep the no-results message visible above the keyboard. Let its vertical whitespace yield before clipping scaled text, and keep Clear available in the search field.
   Keep the drawer open with its current search and scroll position when Android recreates Home, including when the system theme changes. Once the results are ready, restore the first visible row using the saved app and its profile. If that app is gone, use the nearest available position. Closing the drawer or returning to Home clears the search and scroll position.
+  The selected layout survives restart; the browsing page does not survive a
+  deliberate drawer close or a cold launch.
   If an app tile had keyboard focus, restore focus to that same app in the restored results. Scroll it into view if needed. Closing the drawer discards that focus.
 - **Folders.** Keep apps in their saved order in a scrollable grid inside the Material dialog. Use the same column rule as the drawer: up to four columns, 64 dp per cell after the dialog's content insets when space permits. Reflow the grid when the open dialog changes size. Keep rename and remove actions visible while the apps scroll.
   Keep the actions in one trailing row of Material `TextButton`s. If the localized labels do not fit at the current text size, use 24 dp rounded symbols in 48 dp targets, with the full action names as tooltips and accessible labels. The member grid remains the scrollable region.
@@ -252,7 +268,9 @@ Keep the draft, selection, and any visible validation message when Android recre
   **Home screen** offers a searchable **Lock workspace layout** switch. It
   uses the standard switch row with a supporting description, defaults to
   off, and retains its value across launches.
-  **App drawer** offers a searchable **Hide apps** section. List all
+  **App drawer** offers a searchable **Drawer layout** radio group for
+  Vertical grid, Vertical list, and Horizontal pages. It also offers a
+  searchable **Hide apps** section. List all
   launchable apps, including hidden ones, in drawer order with their
   original artwork and profile labels. Each row is one Material switch
   target; on means hidden from browsing. Tell users how to find a hidden

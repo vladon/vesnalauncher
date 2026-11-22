@@ -105,6 +105,13 @@
                 android:saveEnabled="false"
                 android:scrollbars="vertical" />
 
+            <dev.vladon.vesna.launcher.ui.DrawerPager
+                android:id="@+id/drawer_pager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:saveEnabled="false"
+                android:visibility="gone" />
+
             <dev.vladon.vesna.launcher.ui.DrawerFastScroller
                 android:id="@+id/drawer_fast_scroller"
                 android:layout_width="48dp"

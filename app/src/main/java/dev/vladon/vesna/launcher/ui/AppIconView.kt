@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -110,6 +111,21 @@ class AppIconView @JvmOverloads constructor(
     internal fun useSurfaceLabel() {
         labelView.setTextColor(context.getColor(R.color.home_control_on_surface))
         labelView.background = null
+    }
+
+    internal fun useDrawerListRow() {
+        val density = resources.displayMetrics.density
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL or Gravity.START
+        minimumHeight = (64 * density + 0.5f).toInt()
+        val inset = (16 * density + 0.5f).toInt()
+        setPaddingRelative(inset, paddingTop, inset, paddingBottom)
+        labelView.typeface = resources.getFont(R.font.inter_regular)
+        labelView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+        labelView.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+        labelView.layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
+            marginStart = inset
+        }
     }
 
     internal fun setAppNameVisible(visible: Boolean) {

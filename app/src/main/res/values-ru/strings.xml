@@ -15,6 +15,11 @@
     <string name="workspace_layout_locked">Расположение заблокировано</string>
     <string name="settings_app_drawer">Список приложений</string>
     <string name="settings_app_drawer_detail">Какие приложения видны при просмотре</string>
+    <string name="settings_drawer_layout">Вид списка приложений</string>
+    <string name="settings_drawer_layout_detail">Как отображаются приложения при просмотре</string>
+    <string name="settings_drawer_layout_grid">Вертикальная сетка</string>
+    <string name="settings_drawer_layout_list">Вертикальный список</string>
+    <string name="settings_drawer_layout_paged">Горизонтальные страницы</string>
     <string name="settings_hide_drawer_apps">Скрыть приложения</string>
     <string name="settings_hide_drawer_apps_detail">Ярлыки останутся на главном экране и в доке. Для поиска введите полное название.</string>
     <string name="settings_drawer_app_hidden">Скрыто при просмотре</string>

@@ -260,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| NT-DRAWER-05: Selectable drawer layouts ([#108](https://github.com/vladon/vesnalauncher/issues/108)) | 0.4.51 — verified vertical grid, list, horizontal paging, global search, and persisted layout selection in [Android 15 QA](verification/VESNA-QA-DRAWER-LAYOUTS.md). |
 | NT-DRAWER-09: Hide individual apps from drawer browsing ([#119](https://github.com/vladon/vesnalauncher/issues/119)) | 0.4.50 — verified browsing, exact search, unchanged pins, restart and unhide in [Android 15 QA](verification/VESNA-QA-DRAWER-HIDDEN-APPS.md). |
 | NT-DRAWER-06: Alphabetical drawer fast scroller ([#109](https://github.com/vladon/vesnalauncher/issues/109)) | 0.4.49 — verified real thumb drags, visible letters, search and launch in [Android 15 QA](verification/VESNA-QA-DRAWER-FAST-SCROLL.md). |
 | NT-HOME-01: Open the workspace from the Vesna app icon ([#101](https://github.com/vladon/vesnalauncher/issues/101)) | Shipped in [0.4.46](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.46) via [PR #104](https://github.com/vladon/vesnalauncher/pull/104). On an Android 15 emulator running the signed APK, real icon taps from Pixel Launcher opened Vesna's workspace on cold launch and relaunch. Vesna's drawer launched Clock, Android Home returned to Pixel Launcher without changing the Home role, and Settings opened from Home options and all four deep links. |

@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
@@ -117,6 +118,8 @@ internal fun SettingsScreen(
     onShowAppNamesChanged: (Boolean) -> Unit,
     layoutLocked: Boolean,
     onLayoutLockedChanged: (Boolean) -> Unit,
+    drawerLayoutMode: DrawerLayoutMode,
+    onDrawerLayoutModeSelected: (DrawerLayoutMode) -> Unit,
     drawerApps: List<LauncherApp>,
     hiddenDrawerApps: Set<AppKey>,
     onDrawerAppHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -222,8 +225,10 @@ internal fun SettingsScreen(
                                 )
                             }
                             SettingsPage.APP_DRAWER -> DrawerAppSettings(
+                                drawerLayoutMode, onDrawerLayoutModeSelected,
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
                                 searchTarget == R.string.settings_hide_drawer_apps,
+                                searchTarget == R.string.settings_drawer_layout,
                             )
                             SettingsPage.APPEARANCE -> {
                                 SearchTarget(searchTarget == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
@@ -339,6 +344,7 @@ private fun SettingsDirectory(
                         defaultHome.summary,
                     ),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
@@ -478,14 +484,24 @@ private fun SettingsSwitch(
 
 @Composable
 private fun DrawerAppSettings(
+    layoutMode: DrawerLayoutMode,
+    onLayoutModeSelected: (DrawerLayoutMode) -> Unit,
     apps: List<LauncherApp>,
     hiddenApps: Set<AppKey>,
     onHiddenChanged: (AppKey, Boolean) -> Unit,
-    highlighted: Boolean,
+    hideHighlighted: Boolean,
+    layoutHighlighted: Boolean,
 ) {
-    LazyColumn(Modifier.fillMaxWidth()) {
-        item {
-            SearchTarget(highlighted) {
+    // The lazy hide-apps heading might not be composed in a short, scaled viewport.
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = if (hideHighlighted) 1 else 0)
+    LazyColumn(Modifier.fillMaxWidth(), state = listState) {
+        item(key = "drawer-layout") {
+            SearchTarget(layoutHighlighted) {
+                DrawerLayoutSettings(layoutMode, onLayoutModeSelected)
+            }
+        }
+        item(key = "hide-apps") {
+            SearchTarget(hideHighlighted) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text(
                         stringResource(R.string.settings_hide_drawer_apps),
@@ -529,6 +545,35 @@ private fun DrawerAppSettings(
                     .toggleable(value = hidden, role = Role.Switch) { onHiddenChanged(app.key, it) }
                     .semantics { stateDescription = visibility },
             )
+        }
+    }
+}
+
+@Composable
+private fun DrawerLayoutSettings(mode: DrawerLayoutMode, onSelect: (DrawerLayoutMode) -> Unit) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            stringResource(R.string.settings_drawer_layout),
+            Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.settings_drawer_layout_detail),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (choice in DrawerLayoutMode.entries) {
+                val selected = choice == mode
+                ListItem(
+                    headlineContent = { Text(stringResource(choice.title)) },
+                    leadingContent = { RadioButton(selected = selected, onClick = null) },
+                    modifier = Modifier
+                        .settingsFocusRing(radius = 12.dp)
+                        .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
+                )
+            }
         }
     }
 }

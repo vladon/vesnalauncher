@@ -1,0 +1,1 @@
+Choose a vertical grid, a vertical list, or horizontal pages in Settings > App drawer. Search still finds apps across the drawer, and Vesna remembers your chosen layout.
