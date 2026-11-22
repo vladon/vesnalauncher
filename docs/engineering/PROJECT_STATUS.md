@@ -364,6 +364,24 @@ full accessible names, tap targets, and saved positions stay unchanged.
   passed on both emulators with English app and Cyrillic folder names.
   Debug build and lint passed.
 
+### Home shortcuts in landscape
+
+- On signed 0.4.22 in Android 15 landscape (1920 × 1080 px, 420 dpi),
+  the right navigation bar began at x=1794, but the last workspace and
+  dock tiles extended to x=1887 and x=1910. Workspace label lines were
+  cut off even at normal text size.
+- Home now uses safe side insets for its grid, dock, and controls without
+  moving the wallpaper or changing saved cells. Short tiles reserve the
+  actual label line; the artwork and its gap give way if necessary.
+- On Android 15, checked the right bar at normal text and the left bar
+  in Dark at 200%. Drawer-to-Home and workspace drags next to a left
+  inset landed in the intended cells. Android 8 showed full label lines
+  on a populated Home page in landscape beside its navigation bar.
+- The side-inset and short-label checks reproduced the failures on the
+  previous debug build. The focused Home, paging, dock and shortcut
+  suites passed 14/14 on each Android version; build and lint passed.
+  Notched hardware and TalkBack speech were not tested.
+
 ### Cancel a drag when a second finger touches
 
 On the signed 0.4.20 APK, letting a second finger take over a drawer drag

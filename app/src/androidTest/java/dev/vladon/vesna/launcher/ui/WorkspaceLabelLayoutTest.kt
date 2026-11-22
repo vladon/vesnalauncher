@@ -44,8 +44,8 @@ class WorkspaceLabelLayoutTest {
                 1 to CellContent.FolderCell(Folder(1L, folderName, cellIndex = 1), memberCount = 2),
             ),
         )
-        fun layout(height: Int) {
-            val widthPx = dp(320)
+        fun layout(height: Int, width: Int = 320) {
+            val widthPx = dp(width)
             val heightPx = dp(height)
             workspace.measure(
                 MeasureSpec.makeMeasureSpec(widthPx, MeasureSpec.EXACTLY),
@@ -70,6 +70,29 @@ class WorkspaceLabelLayoutTest {
             assertTrue(tiles[i].width >= dp(48) && tiles[i].height >= dp(48))
         }
         assertEquals(listOf(appName, folderName), tiles.map { it.contentDescription })
+
+        // Landscape tiles can be shorter than the preferred artwork alone.
+        layout(height = 560, width = 640)
+        val landscapeLineHeights = labels.map { it.height }
+        layout(height = 270, width = 640)
+        labels.forEachIndexed { i, label ->
+            assertEquals("Landscape must fit a complete label line", landscapeLineHeights[i], label.height)
+            assertTrue(label.bottom <= tiles[i].height)
+            assertTrue(artwork[i].height in 1 until fullArtworkHeights[i])
+        }
+
+        // At the minimum size for the label, even the artwork gap would clip it.
+        labels.forEachIndexed { i, label ->
+            val tile = tiles[i]
+            val height = landscapeLineHeights[i] + tile.paddingTop + tile.paddingBottom
+            val width = tile.width
+            tile.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY))
+            tile.layout(0, 0, width, height)
+            assertEquals("Label must use the gap when artwork cannot fit", landscapeLineHeights[i], label.height)
+            assertEquals(0, artwork[i].height)
+            assertTrue(label.bottom <= tiles[i].height)
+        }
 
         layout(height = 560)
         assertEquals(fullArtworkHeights, artwork.map { it.height })

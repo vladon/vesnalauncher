@@ -168,9 +168,9 @@ class HomeActivity : ComponentActivity() {
         workspace.onDragStarted = { cell, app, _ ->
             dragSource = DragSource(app, Container.WORKSPACE, cell, renderedState.activePageId, fromDrawer = false)
         }
-        workspace.onDragProgress = ::updateDragTarget
+        workspace.onDragProgress = { x, y -> updateDragTarget(x + workspace.left, y + workspace.top) }
         workspace.onDragReleased = { x, y, moved, cancelled, app, anchor ->
-            onDragReleased(Container.WORKSPACE, x, y, moved, cancelled, app, anchor)
+            onDragReleased(Container.WORKSPACE, x + workspace.left, y + workspace.top, moved, cancelled, app, anchor)
         }
 
         dock.onAppClick = { launchApp(it) }
@@ -378,20 +378,19 @@ class HomeActivity : ComponentActivity() {
     }
 
     /**
-     * Computes and previews the drop target for the active drag. Coordinates are
-     * workspace-local for both containers (dock coordinates are converted by the
-     * caller). The dock zone wins when the finger is over it; elsewhere the grid
-     * cell decides. Unacceptable targets show no highlight (drop returns home).
+     * Computes and previews the drop target in launcher-root coordinates. The
+     * dock zone wins when the finger is over it; otherwise the workspace
+     * converts the point into its local cell coordinates.
      */
-    private fun updateDragTarget(wx: Float, wy: Float) {
+    private fun updateDragTarget(x: Float, y: Float) {
         val source = dragSource ?: return
-        if (wy >= dock.top) {
+        if (y >= dock.top) {
             workspace.showDropHighlight(null)
-            dock.showSlotHighlight(dockDropColumn(source, wx))
+            dock.showSlotHighlight(if (withinDockWidth(x)) dockDropColumn(source, x) else null)
             return
         }
         dock.showSlotHighlight(null)
-        val cell = workspace.cellAtLocal(wx, wy)
+        val cell = workspace.cellAtLocal(x - workspace.left, y - workspace.top)
         // Occupied cells accept the drop as folder creation / folder addition, so
         // any cell except the drag's own source cell is a valid target.
         val acceptable = cell != null && cell != source.fromCell
@@ -401,8 +400,8 @@ class HomeActivity : ComponentActivity() {
     /** Commits the drag result, or falls back to the context menu without movement. */
     private fun onDragReleased(
         container: Container,
-        wx: Float,
-        wy: Float,
+        x: Float,
+        y: Float,
         moved: Boolean,
         cancelled: Boolean,
         app: LauncherApp,
@@ -423,7 +422,7 @@ class HomeActivity : ComponentActivity() {
             return
         }
 
-        commitDrop(source, wx, wy)
+        commitDrop(source, x, y)
     }
 
     /** Root-driven drag release (drawer sources; the drawer closes mid-gesture). */
@@ -446,11 +445,14 @@ class HomeActivity : ComponentActivity() {
         drawerClosedForDrag = false
     }
 
+    private fun withinDockWidth(x: Float): Boolean = x >= dock.left && x < dock.right
+
     private fun dockDropColumn(source: DragSource, x: Float): Int? =
         renderedState.dock.dropColumn(dock.slotAtLocalX(x - dock.left), reordering = source.container == Container.DOCK)
 
     private fun commitDrop(source: DragSource, x: Float, y: Float) {
         if (y >= dock.top) {
+            if (!withinDockWidth(x)) return
             val column = dockDropColumn(source, x)
             if (column == null) {
                 if (source.container != Container.DOCK) showMessage(LauncherMessage.DOCK_FULL)
@@ -464,7 +466,7 @@ class HomeActivity : ComponentActivity() {
             }
             return
         }
-        val cell = workspace.cellAtLocal(x, y) ?: return
+        val cell = workspace.cellAtLocal(x - workspace.left, y - workspace.top) ?: return
         if (cell != source.fromCell) commitOnCell(source, source.app, cell)
     }
 
@@ -639,15 +641,15 @@ class HomeActivity : ComponentActivity() {
 
     private fun applySystemBarInsets() {
         val root = findViewById<View>(R.id.launcher_root)
+        val dockBottomPadding = dock.paddingBottom
+        val homeInsets = WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Preserve the space reserved for the dock and Home controls.
-            workspace.setPadding(0, bars.top, 0, workspace.paddingBottom)
-            dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, bars.bottom + dock.paddingTop)
-            drawer.applyContentInsets(insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or
-                    WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime(),
-            ))
+            val safe = insets.getInsets(homeInsets)
+            // Keep the wallpaper edge to edge and center Home content between side insets.
+            homeContent.setPadding(safe.left, 0, safe.right, 0)
+            workspace.setPadding(0, safe.top, 0, workspace.paddingBottom)
+            dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, safe.bottom + dockBottomPadding)
+            drawer.applyContentInsets(insets.getInsets(homeInsets or WindowInsetsCompat.Type.ime()))
             insets
         }
         // The dock overlays the workspace and includes the navigation inset.

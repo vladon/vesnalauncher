@@ -28,6 +28,7 @@ class AppIconView @JvmOverloads constructor(
 
     private val iconView: ImageView
     private val labelView: TextView
+    private val labelGap: Int
     private var pointerDown = false
     private var showOptions: ((View) -> Unit)? = null
     private var dragOnHold: ((View) -> Unit)? = null
@@ -41,10 +42,13 @@ class AppIconView @JvmOverloads constructor(
         inflate(context, R.layout.view_app_icon, this)
         iconView = findViewById(R.id.app_icon)
         labelView = findViewById(R.id.app_label)
+        labelGap = (labelView.layoutParams as MarginLayoutParams).topMargin
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val artwork = iconView.layoutParams
+        val labelMargins = labelView.layoutParams as MarginLayoutParams
+        labelMargins.topMargin = labelGap
         val preferredWidth = artwork.width
         if (MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED) {
             // A fixed-width child would overflow the tile's padded content.
@@ -58,10 +62,14 @@ class AppIconView @JvmOverloads constructor(
         val line = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) labelView.layout else null
         if (line != null) {
             val lineHeight = line.getLineBottom(0) + labelView.compoundPaddingTop + labelView.compoundPaddingBottom
-            val artworkHeight = iconView.measuredHeight - (lineHeight - labelView.measuredHeight)
-            if (artworkHeight in 1 until iconView.measuredHeight) {
+            if (labelView.measuredHeight < lineHeight) {
+                val artworkMargins = artwork as MarginLayoutParams
+                val availableHeight = MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom -
+                    labelMargins.bottomMargin - artworkMargins.topMargin - artworkMargins.bottomMargin
                 val preferredHeight = artwork.height
-                artwork.height = artworkHeight
+                artwork.height = (availableHeight - lineHeight - labelGap).coerceIn(0, preferredHeight)
+                // If there is no room for artwork, don't spend part of the label line on its gap.
+                if (artwork.height == 0) labelMargins.topMargin = 0
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
                 artwork.height = preferredHeight
             }
