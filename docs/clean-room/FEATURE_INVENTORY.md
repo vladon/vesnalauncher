@@ -30,7 +30,7 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | HOME-001 | Home screen page management (add/remove/reorder pages) | pending |
-| HOME-002 | Grid sizing (rows/columns) | discovered (Desktop grid 6×5 picker) |
+| HOME-002 | Grid sizing (rows/columns) | Nova picker inventoried; Vesna 0.4.44 fixed grid; resize behavior not verified (OBS-VESNA-017) |
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
@@ -41,7 +41,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-010 | Workspace search bar / persistent search | discovered (Search bar placement: Dock Below icons) |
 | HOME-011 | Empty cell behavior and drop targeting | pending |
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
-| HOME-013 | Lock workspace (prevent changes) | discovered (Lock layout toggle in Advanced) |
+| HOME-013 | Lock workspace (prevent changes) | Nova control inventoried; no corresponding Vesna 0.4.44 control found; lock behavior not verified (OBS-VESNA-017) |
 | HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
 | HOME-015 | Overview / preview of all pages | pending |
 | HOME-106 | Try launcher from app icon without changing system Home | Nova behavior reported by user; Vesna 0.4.44 opens Settings instead (OBS-VESNA-016; AT-HOME-106). |
@@ -52,10 +52,10 @@ behavior, an ID is never reassigned to a different behavior.
 |---|---|---|
 | DRAWER-001 | Drawer open gesture(s) | observed (swipe up; free edition) |
 | DRAWER-002 | Drawer close gesture(s) | partially observed (BACK verified; swipe-down untested) |
-| DRAWER-003 | Drawer layout: list vs grid modes | discovered (App drawer style: Vertical; Horizontal Scroll section) |
+| DRAWER-003 | Drawer layout modes | Nova style selector inventoried; Vesna 0.4.44 vertical grid with no selector (OBS-VESNA-017) |
 | DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
 | DRAWER-005 | Drawer search | observed (filtering, prefix emphasis, providers, web suggestions) |
-| DRAWER-006 | Scrolling and fast-scroll behavior | discovered (Fast scrollbar toggle on) |
+| DRAWER-006 | Scrolling and fast-scroll behavior | Nova fast-scroll control inventoried; no corresponding Vesna 0.4.44 setting found (OBS-VESNA-017) |
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
 | DRAWER-008 | Hidden apps | discovered (Prime-gated) |
 | DRAWER-009 | App categories/tabs/folders in drawer | discovered (Tab bar placement: None; Drawer groups: Prime) |

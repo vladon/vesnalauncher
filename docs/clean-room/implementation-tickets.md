@@ -240,3 +240,4 @@ Traceability: every ticket's acceptance scenario lives in
   Settings entry points independent.
 - Spec: R-HOME-106.1–3. Accept: AT-HOME-106, starting from a fresh
   installation on an emulator with a different system Home.
+- Handoff: [Vesna issue #101](https://github.com/vladon/vesnalauncher/issues/101).

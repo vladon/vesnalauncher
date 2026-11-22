@@ -390,3 +390,25 @@ Nova remains the system HOME (comparison-only install).
   app-icon path.
 - Confidence: Nova app-icon behavior is user-reported; Vesna routing
   is verified from the release manifest. No new device test was run.
+
+## OBS-VESNA-017 — Home and drawer comparison coverage gaps
+
+The prior comparison emphasized cards, smart folders, and gestures. It
+did not carry these already-seen Nova controls through to a comparison
+of the released Vesna configuration surfaces:
+
+| Nova control | Existing Nova evidence | Vesna v0.4.44 release evidence | Remaining behavioral check |
+|---|---|---|---|
+| Workspace grid size | Grid-size picker observed (OBS-SETT-002; HOME-002) | Fixed 4×5 workspace documented in engineering backlog CAND-206; no grid preference in Settings | Resize a populated grid and trace displaced items, then restart |
+| Lock workspace editing | Lock control inventoried (OBS-SETT-002; HOME-013) | No corresponding control in Settings or the Home options menu | Check drag, removal, widget placement and ordinary app launch with lock on |
+| Auto-place newly installed apps | Separate New apps control inventoried (OBS-SETT-002) | No corresponding control in Settings or the Home options menu | Install a disposable app with the control on and off; check drawer and workspace separately |
+| Drawer layout mode | Style selector and horizontal-scroll section inventoried (OBS-SETT-003; DRAWER-003) | Drawer uses a responsive vertical grid; no mode selector in Settings | Switch modes and check app ordering, paging and search |
+| Alphabetical fast scroll | Fast-scroll control inventoried (OBS-SETT-003; DRAWER-006) | No corresponding control in released Settings | Drag the thumb across app sections; verify target section and search interaction |
+
+- Release references: [SettingsPage and SettingsScreen](https://github.com/vladon/vesnalauncher/tree/v0.4.44/app/src/main/java/dev/vladon/vesna/launcher/settings),
+  [HomeActivity](https://github.com/vladon/vesnalauncher/blob/v0.4.44/app/src/main/java/dev/vladon/vesna/launcher/ui/HomeActivity.kt),
+  [DrawerView](https://github.com/vladon/vesnalauncher/blob/v0.4.44/app/src/main/java/dev/vladon/vesna/launcher/ui/DrawerView.kt),
+  and [engineering backlog](https://github.com/vladon/vesnalauncher/blob/v0.4.44/docs/engineering/BACKLOG.md).
+- Confidence: Nova inventory plus released Vesna source and documentation;
+  the listed end-to-end behavior is not newly verified. This is not a
+  claim of exhaustive parity coverage.
