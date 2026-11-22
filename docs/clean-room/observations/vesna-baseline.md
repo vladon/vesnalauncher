@@ -253,3 +253,38 @@ Nova remains the system HOME (comparison-only install).
 - Evidence: `EVI-VESNA-003/nova901-cards-full-*`, `nova901-weather-query-*`,
   `nova901-groups-*`, `nova901-drawer-visible-*`, and
   `nova901-folder-scroll-*`. Confidence: observed for the checked surfaces.
+
+## OBS-VESNA-009 — Vesna 0.4.14 and Nova 9.0.1 card persistence
+
+- The GitHub Vesna APK matched the published SHA-256 and the Pixel
+  reported `versionName=0.4.14`. On the 1100 px mid-screen path,
+  665, 800, and 925 ms each opened the workspace menu instead of the
+  drawer in 2/2 trials. NT-GESTURE-03 still reproduces.
+- In Nova 9.0.1, tapping Save with only the name `VesnaSaveQA` left
+  the builder open. After adding a Calculator action and a Saturday-only
+  time condition, Save returned to Cards. Reopening the saved card
+  confirmed both the action and the condition persisted.
+- On Sunday, outside the saved Saturday time window, searching
+  `VesnaSaveQA` in Nova Now still displayed the card and Calculator
+  action. The condition did not gate that search result. Other condition
+  types, active-window transitions, and plain-drawer surfacing were not
+  retested. The temporary card was deleted.
+- Evidence: `EVI-VESNA-003/v414-*`, `nova901-save-*`,
+  `nova901-card-inactive-render-*`, and `nova901-saved-saturday-condition-*`.
+
+## OBS-VESNA-010 — Nova 9.0.1 fresh smart-folder defaults
+
+- Installed the Play-delivered Nova 9.0.1 APK and Prime companion
+  on an isolated Android 16/API 36 emulator (`emulator-5580`), without
+  restoring Nova settings. Android reported `versionName=90100 (9.0.1)`.
+- The master Smart Folders switch started ON. Each of the seven
+  generated folders (Entertainment, Finance, Food, Games, Shopping,
+  Social, Travel) offered **Enable** in its own menu, not Disable.
+  Thus all seven were individually off on the fresh profile, even
+  though the master switch was on. No folder was toggled.
+- This agrees with the Nova 8.9.9 per-folder behavior and is distinct
+  from the upgrade case where previously enabled folders remained
+  visible (OBS-VESNA-008).
+- Evidence: `EVI-VESNA-003/nova901-isolated-fresh-1-*`,
+  `nova901-isolated-groups-*`, and `nova901-isolated-default-*`.
+  Confidence: observed.

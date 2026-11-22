@@ -12,18 +12,18 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| CARDS-100 | Condition-gated drawer cards (AccuWeather/Media: activate toggle, Day/time & other conditions, render in Nova Now search) | discovered (render verified with Location grant; conditions DECORATIVE — non-gating for search, never surface in drawer, OBS-CARDS-117) |
+| CARDS-100 | Condition-gated cards | Nova 8.9.9: conditions did not gate search and did not surface cards in the plain drawer (OBS-CARDS-117). Nova 9.0.1: a saved inactive Day/time condition did not gate name search (OBS-VESNA-009). |
 | CARDS-101 | Custom card builder (Add card: name, featured content, up to 6 pinned actions, condition set) | discovered (overlay ⋮ ▸ Add card and Cards-page "+" FAB; OBS-CARDS-116) |
 | CARDS-102 | Overlay card affordances (card long-press = provider deep link; card gear = Card details w/ Save; search-bar ⋮ = Add card/API Integrations/Settings; Fahrenheit rendering; no manual location) | discovered (OBS-CARDS-116) |
 | CARDS-103 | Calendar card variant (permission empty-state + New event chip; in-app "Connect to Calendar" gate — adb grant insufficient; real events post-connect) | discovered (OBS-CARDS-118) |
-| CARDS-104 | Custom card builder save flow: Save gated on ≥1 action; custom section below built-ins; defaults Activate ON + pre-attached Wi-Fi condition; delete via ⋮ ▸ Delete | discovered (OBS-CARDS-119; search render of custom cards untested) |
+| CARDS-104 | Custom card builder save flow | Nova 8.9.9 baseline (OBS-CARDS-119); 9.0.1: name-only Save did not commit; the action and inactive Day/time condition persisted after reopening, and the card rendered by name (OBS-VESNA-009). |
 | CARDS-105 | Map locations built-in card (sixth card, below Screenshots): config = geocoded location editor (two-stage: text → resolve → display name + map preview; unresolvable text leaves OK disabled) | discovered (OBS-CARDS-119; card's own search render untested) |
 
 ## DRAWER — App drawer
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DRAWER-106 | Drawer groups (tabs + smart folders): management UI fully functional; TABS render/switch end-to-end (Tab bar Top required); smart folders ship PER-FOLDER DISABLED — each needs ⋮ ▸ Enable to render (master toggle insufficient) | discovered (OBS-DRAWER-112) |
+| DRAWER-106 | Drawer groups (tabs + smart folders) | Nova 8.9.9: tabs render and switch, generated folders require per-item Enable (OBS-DRAWER-112). Nova 9.0.1: fresh master ON but seven folders individually OFF; upgraded enabled folders render, including labeled empty ones (OBS-VESNA-008/010). |
 
 ## HOME — Home screen / workspace
 
@@ -108,7 +108,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| GESTURE-001 | Swipe up / down on home screen | Observed on Pixel: at 800 ms both launchers opened the drawer with a 1100 px swipe but not with an 800 px swipe; slow 1100 px swipes could open the workspace menu instead in Vesna 0.4.8 (OBS-VESNA-003; EVI-VESNA-003; AT-GESTURE-112.5) |
+| GESTURE-001 | Swipe up / down on home screen | Nova 8.9.9 and 9.0.1: the 1100 px/800 ms path opened the drawer in repeated checks (9.0.1: 3/3, after an earlier miss). Vesna 0.4.14 still opened the workspace menu on the slow path (OBS-VESNA-003, 006–007, 009; AT-GESTURE-112.5). |
 | GESTURE-002 | Double tap | discovered (Prime-gated) |
 | GESTURE-003 | Long press on empty space | observed (opens customize mode) |
 | GESTURE-004 | Pinch in/out | discovered (Prime-gated rows) |

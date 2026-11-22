@@ -155,6 +155,12 @@ will reclaim for content.
   "Smart Folders" toggle alone hides all of them. Once enabled, folders
   render immediately (alphabetical position, live), persist across
   restarts, and EMPTY folders render as bare unlabeled icons.
+- Nova 9.0.1 (OBS-VESNA-008, OBS-VESNA-010): on a fresh profile the
+  master switch started ON, but all seven generated folders still had
+  their own Enable action. On an upgraded profile the previously
+  enabled folders still rendered; the empty Food, Games, and Shopping
+  folders now had names. The labels improve discoverability but do
+  not change Vesna's requirement to omit empty generated folders.
 
 ### Vesna requirements
 

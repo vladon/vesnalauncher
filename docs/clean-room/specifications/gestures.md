@@ -108,3 +108,9 @@ Derived from `observations/gestures.md` and the gesture catalog inventory
 - Vesna 0.4.10 switched to the adjacent page on inward horizontal
   swipes and stayed on the first or last page on outward swipes.
   No wraparound was observed on the two-page layout (OBS-VESNA-004).
+- In Nova 9.0.1, the 1100 px / 800 ms mid-screen swipe opened the
+  drawer in three repeats after an earlier miss; the 800 px path did
+  not open it at 550, 650, or 750 ms in those repeats. Vesna 0.4.14
+  still opened the workspace menu on the 1100 px path at 665, 800,
+  and 925 ms (2/2 each). The slow-swipe acceptance case is still
+  failing (OBS-VESNA-006/007/009).
