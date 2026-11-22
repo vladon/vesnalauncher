@@ -301,7 +301,7 @@ class HomeActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         cancelDrawerGesture()
         super.onNewIntent(intent)
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) {
+        if (intent.hasCategory(Intent.CATEGORY_HOME) || intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
             snackbarJob?.cancel()
             pendingPageMenu?.cancel()
             pendingPageMenu = null
