@@ -190,6 +190,11 @@ Keep the draft, selection, and any visible validation message when Android recre
 
 - **App names.** When Android changes the launcher's language, refresh app names on Home, in the dock, in folders, and in the drawer, including their accessible names. Keep saved placements, custom folder titles, and the active drawer query unchanged. Search evaluates the query against the updated app names.
 - **Home.** Put wallpaper behind the workspace and dock. Preserve saved cell coordinates and spans in the current 4 × 5 layout. Use the Vesna wallpaper label backing where necessary. Holding a folder and dragging it highlights only empty cells on its current page. An invalid or canceled drop retains the original cell; a stationary hold opens the folder menu. The overflow button and long-pressing empty space open the same Home options menu for Settings, wallpaper, and page actions. **Reorder this page…** lists the available positions, keeps the first page fixed, and keeps the moved page selected. The **Move to page…** menu on an app shortcut or folder lists other pages with room in display order and keeps the source page selected.
+  When the workspace layout is locked, keep page navigation, folders, app
+  launches and App info available. Hide placement and customization actions
+  in Home options and shortcut menus. Cancel active drags and pending folder
+  renames when locking; a long press on an empty cell or folder explains
+  that the layout is locked.
   Keep Home's workspace, dock, and controls inside the safe side insets in landscape, with the wallpaper still edge to edge. Resolve drop targets in the same inset layout that draws them.
   Fit artwork inside the available width of a narrow workspace or dock tile without cropping it. When a short workspace cell would clip a scaled label, shrink the artwork to make room for the line. Keep the cell and its touch target unchanged. Long names still ellipsize horizontally and retain their full accessible names.
   In a short, wide cell, place the artwork beside the label when stacking would leave insufficient room for the artwork. Keep the 4 dp gap and mirror the order in RTL.
@@ -230,6 +235,9 @@ Keep the draft, selection, and any visible validation message when Android recre
   Restore keyboard focus to the same folder member if it is still present. A fresh open uses normal focus traversal.
   When the folder closes, return keyboard focus to its Home tile if it is still on the active page, including after recreation. In touch mode, do not force keyboard focus.
 - **Settings and About.** Use a small Material app bar, a `surface` canvas and standard list items for **Default launcher**, **Appearance**, and **About**. Use an accessible back button on each named page. The root has a rounded, outlined search field and opens with no query, field focus, or keyboard. Search filters the destination rows by their labels and supporting text. Android Back hides the keyboard before acting on the query. Place the Vesna lockup or mark on About. Appearance offers a single-select Theme group and a **Show app names** switch. Hiding app labels preserves icon positions, touch targets, accessible app names, and folder titles.
+  **Home screen** offers a searchable **Lock workspace layout** switch. It
+  uses the standard switch row with a supporting description, defaults to
+  off, and retains its value across launches.
   Keep Settings search above the scrolling results. Match setting titles and descriptions. Show the parent path on each outlined result card, and scroll the destination to the matching control. Mark that control with a labeled `tertiaryContainer` treatment without changing its value.
   Use the same case, spacing, and spelling normalization as app search for matching; keep the typed query and translated labels unchanged.
   In a short Settings directory viewport, keep the outlined search field and its focus ring in the Material app bar. Show the visual heading when space allows; otherwise keep the Settings pane name available to accessibility. Named subpages retain their Up button. Narrow fields use a brief placeholder without changing the accessible field name.

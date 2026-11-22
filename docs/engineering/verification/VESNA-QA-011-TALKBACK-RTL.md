@@ -106,8 +106,8 @@ Evidence in `qa-evidence/qa011-talkback-rtl-pr105/` (dumps `*.xml`, screenshots 
   truth for those moments came from prefs reads and screenshots.
 - The empty-page locked hint (`emptyHint` text swap) is code-verified only; exercising it would
   have required adding a workspace page to the seeded fixture.
-- Alternate window sizes, navigation modes, and foldable/posture states remain unverified
-  (unchanged from the implementation session).
+- Foldable postures remain unverified. See the compact-phone follow-up below
+  for coverage in both Android navigation modes.
 
 ## Device state after the sweep (desired = baseline: reached)
 
@@ -117,6 +117,19 @@ Evidence in `qa-evidence/qa011-talkback-rtl-pr105/` (dumps `*.xml`, screenshots 
   `shots/final_restored_home.png`.
 - Recorded delta: TalkBack's POST_NOTIFICATIONS is now denied with `USER_SET|USER_FIXED`
   (the sweep answered its prompt); previously the prompt was unanswered.
+
+## Compact-phone follow-up
+
+Verified the rebased PR at `291527e` (debug APK SHA-256
+`8b8d9b0cc4d90fb92abdbd6e6b24436124010ab3ee87a9ed840f5132e5393aae`)
+on the same Android 15 AVD at 320 × 640 dp and 200% text. Light used gesture
+navigation; Dark used three-button navigation. In both, the switch exposed
+one checkable row with a touch target larger than 48 dp. The title and
+supporting text wrapped without clipping, and the switch toggled both ways.
+A drag from Contacts into an empty cell while locked changed no shortcut,
+folder, or page rows. The drawer remained usable and launched Clock.
+Restored the original display size, font scale, night mode, navigation mode,
+and unlocked state. Pixel Launcher remained the default Home app.
 
 ## Evidence inventory
 
