@@ -1,5 +1,6 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.graphics.Rect
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -372,6 +373,43 @@ class DrawerSearchTest {
 
         onDrawer { host -> host.layoutParams = host.layoutParams.apply { width = minCellWidth * 4 } }
         assertFirstDrawerRow(fixture.take(4).map { it.label }, minCellWidth, focused = fixture.first().label)
+    }
+
+    @Test
+    fun shortKeyboardViewportKeepsSearchAndActionsUsable() {
+        setQuery("eld")
+        assertVisibleLabels(listOf("Elderberry"))
+        onDrawer { host ->
+            val search = host.findViewById<EditText>(R.id.drawer_search)
+            val close = host.findViewById<View>(R.id.drawer_close)
+            val clear = host.findViewById<View>(R.id.drawer_clear_search)
+            assertTrue(search.requestFocus())
+            val visibleHeight = ceil(86 * host.resources.displayMetrics.density).toInt()
+            host.applyContentInsets(Insets.of(0, 0, 0, host.height - visibleHeight))
+            host.measure(
+                View.MeasureSpec.makeMeasureSpec(host.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(host.height, View.MeasureSpec.EXACTLY),
+            )
+            host.layout(host.left, host.top, host.right, host.bottom)
+
+            fun bounds(view: View) = Rect().apply {
+                view.getDrawingRect(this)
+                host.offsetDescendantRectToMyCoords(view, this)
+            }
+            assertTrue("The search field lost its minimum height", search.height >= search.minimumHeight)
+            assertTrue("Close overlaps search", !Rect.intersects(bounds(close), bounds(search)))
+            assertTrue("Controls extend under the keyboard", maxOf(
+                bounds(search).bottom, bounds(close).bottom, bounds(clear).bottom,
+            ) <= visibleHeight)
+            assertTrue("Search results have no viewport", host.findViewById<View>(R.id.drawer_list).height > 0)
+            assertEquals("eld", search.text.toString())
+            assertTrue(search.hasFocus())
+            clear.performClick()
+            assertEquals("", search.text.toString())
+            assertTrue(search.hasFocus())
+            host.applyContentInsets(Insets.NONE)
+        }
+        assertVisibleLabels(fixture.map { it.label })
     }
 
     private fun assertFirstDrawerRow(expected: List<String>, minWidth: Int = 0, focused: String? = null) {

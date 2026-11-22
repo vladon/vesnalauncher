@@ -269,8 +269,21 @@ with its name and apps intact. The source page stays selected.
   full or removed destination handling. Debug lint passed.
 - Checked Light and Dark with gesture and three-button navigation, English,
   compact Russian at 200% type, and wide RTL. New menu labels fit, and the
-  destination rows measured 48 dp high. The existing Russian rename row
-  truncates at 320 dp and 200% type. TalkBack speech and physical devices
+  destination rows measured 48 dp high. The original Russian rename row
+  truncated at 320 dp and 200% type; it was fixed in
+  [0.4.17](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.17).
+
+### Context menu labels at enlarged text sizes
+
+- In [PR #73](https://github.com/vladon/vesnalauncher/pull/73), the Android 8
+  and 15 shortcut suites passed five checks each, including a wrapped row
+  that accepted the Android accessibility click action. Debug lint passed.
+- Verified Russian labels without truncation at 320 dp and 198 dp with
+  200% text, Light and Dark, RTL positioning, touch, D-pad selection of a
+  checked page, Back, and the chained Move to page menu.
+- The exact signed 0.4.16 → 0.4.17 update retained 13 Home pins, four dock pins
+  and the renamed folder and its member order. Tapping its wrapped menu item
+  opened the focused rename editor. TalkBack speech and physical devices
   were not checked.
 
 ### Move a folder on the same page
@@ -311,6 +324,12 @@ surrounding whitespace; a blank name shows an inline error without closing.
 - One Android 8 run crashed in Android's accessibility-state callback
   during an automated UI dump. Later open, cancel, and save checks on the
   same emulator did not reproduce the crash.
+- The [0.4.16 follow-up](https://github.com/vladon/vesnalauncher/pull/72)
+  kept the field above the keyboard at 198 × 339 dp and 200% text, where
+  signed 0.4.15 hid it. Android 8 and 15 passed four focused shortcut tests
+  each; Light and Russian Dark, Save, Done, blank validation, IME-first Back,
+  and Cancel were checked. The signed upgrade preserved the folder's member
+  order and Home and dock placement. No spoken TalkBack or physical tests ran.
 
 ### Compact folder layouts
 
@@ -508,6 +527,22 @@ focus so another query can be typed immediately.
   and Russian labels, and RTL placement. The drawer grid ended at the visible
   keyboard boundary on both Android versions; the final app could be scrolled
   fully above the keyboard on Android 15. TalkBack speech was not verified.
+
+### Search in short drawer windows
+
+When the keyboard leaves a short viewport, Close and Search share a row.
+The query and Clear stay accessible rather than being vertically clipped.
+In the shortest window, hiding the keyboard reveals the full matching
+results without clearing the query.
+
+- Signed 0.4.17 clipped the search text at 198 × 339 dp and 200% type. The
+  new regression failed on the old build and all 11 drawer tests passed
+  on Android 8 and 15 with the fix.
+- Checked the real keyboard at 198 dp, Light and Russian Dark, Android 8
+  three-button and Android 15 gesture navigation, mirrored RTL controls,
+  Clear, keyboard-first Back, and on-screen Done. The standard-height
+  drawer kept its stacked header and live results.
+- Spoken TalkBack, physical hardware, and floating keyboards were not tested.
 
 ### Drawer search matching
 
