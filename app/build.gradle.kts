@@ -14,10 +14,13 @@ android {
         applicationId = "dev.vladon.vesna.launcher"
         minSdk = 26
         targetSdk = 37
-        versionCode = 18
-        versionName = "0.4.13"
+        versionCode = 19
+        versionName = "0.4.14"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    // Package the approved adaptive icon handoff directly so artwork cannot drift.
+    sourceSets.getByName("main").res.directories.add(rootProject.file("design/system/adaptive-icon/res").path)
 
     signingConfigs {
         create("release") {

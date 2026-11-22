@@ -7,7 +7,6 @@
     <color name="icon_label_color">#FFFFFF</color>
     <color name="vesna_green">#4CAF50</color>
     <color name="vesna_green_dark">#2E7D32</color>
-    <color name="launcher_icon_background">#34A853</color>
 
     <!-- Vesna Material 3 roles shared by the wallpaper-backed launcher controls. -->
     <color name="home_control_surface">#E8E9DE</color>
