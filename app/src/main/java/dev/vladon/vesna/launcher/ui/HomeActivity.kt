@@ -134,6 +134,7 @@ class HomeActivity : ComponentActivity() {
 
     private val backCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
+            cancelDrawerGesture()
             drawer.close()
         }
     }
@@ -298,6 +299,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
+        cancelDrawerGesture()
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME)) {
             snackbarJob?.cancel()
@@ -424,7 +426,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun onDrawerOpenedChanged(opened: Boolean) {
-        backCallback.isEnabled = opened
+        // A drag hides the drawer itself, but Back should still cancel it.
+        if (!opened && !rootDragMoved) cancelDrawerGesture()
+        backCallback.isEnabled = opened || rootDragMoved
         applySystemBarAppearance(drawerOpened = opened)
         if (opened) drawerReturnFocus = homeContent.findFocus()
         // The drawer animates over Home, but only the active surface handles
@@ -531,11 +535,16 @@ class HomeActivity : ComponentActivity() {
         if (source != null && moved) commitDrop(source, x, y)
     }
 
+    private fun cancelDrawerGesture() {
+        if (dragSource?.fromDrawer == true) onRootDragCancelled()
+    }
+
     private fun onRootDragCancelled() {
         dragSource = null
         workspace.showDropHighlight(null)
         dock.showSlotHighlight(null)
         rootDragMoved = false
+        backCallback.isEnabled = drawer.isOpen
     }
 
     // The dock background extends behind navigation, but the drop area does not.

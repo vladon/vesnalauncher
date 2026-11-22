@@ -217,6 +217,8 @@ Keep the draft, selection, and any visible validation message when Android recre
   Android's touch slop. The first move beyond that threshold starts a drag.
   If the app being dragged becomes unavailable, clear the drop preview and
   cancel that gesture without saving a shortcut.
+  Dismissing the drawer cancels a pending shortcut hold. Back or Home also
+  cancels a drawer drag after it has revealed the workspace.
   In short available heights, including above the keyboard, put Close and Search in one row before compressing the field. In a narrow one-row header, omit the decorative search glyph to leave room for the query and Clear. Keep the query when the keyboard hides so results can use the expanded viewport.
   Request an inline keyboard for drawer search in landscape so a full-screen editor does not replace the drawer.
   Keep the no-results message visible above the keyboard. Let its vertical whitespace yield before clipping scaled text, and keep Clear available in the search field.
