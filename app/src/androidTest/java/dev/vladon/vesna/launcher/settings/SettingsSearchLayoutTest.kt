@@ -30,6 +30,7 @@ class SettingsSearchLayoutTest {
         val context = instrumentation.targetContext
         val minimumHeight = (56 * context.resources.displayMetrics.density).roundToInt()
         val expanded = mutableStateOf(false)
+        val draft = mutableStateOf("")
         ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 activity.setContent {
@@ -39,7 +40,10 @@ class SettingsSearchLayoutTest {
                         Box(Modifier.fillMaxWidth().height(if (expanded.value) 520.dp else 144.dp)) {
                             SettingsScreen(
                                 page = SettingsPage.ROOT,
-                                onNavigate = {},
+                                query = draft.value,
+                                onQueryChange = { draft.value = it },
+                                searchTarget = null,
+                                onNavigate = { _, _ -> },
                                 onResetInputFocus = {},
                                 versionName = "",
                                 defaultHome = DefaultHomeState.AVAILABLE,
@@ -60,9 +64,7 @@ class SettingsSearchLayoutTest {
                 bounds.height() >= minimumHeight
             })
             val query = context.getString(R.string.settings_theme)
-            assertTrue(editor()!!.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
-                putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, query)
-            }))
+            assertTrue(editor()!!.setQuery(query))
             assertTrue("The short editor did not accept the query", until { editor()?.text?.toString() == query })
             scenario.onActivity { expanded.value = true }
             assertTrue("The query or matching entry disappeared after expansion", until {
@@ -105,6 +107,52 @@ class SettingsSearchLayoutTest {
             })
         }
     }
+
+    @Test
+    fun queryAndMatchingRowsSurviveRecreation() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val query = instrumentation.targetContext.getString(R.string.settings_theme)
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            fun editor() = automation.rootInActiveWindow?.findVisible { it.isEditable }
+            assertTrue(until { editor() != null })
+            assertTrue(editor()!!.setQuery(query))
+            fun showsMatch() = editor()?.text?.toString() == query &&
+                automation.rootInActiveWindow?.findVisible { !it.isEditable && it.text?.toString() == query } != null
+
+            assertTrue(until { showsMatch() })
+            scenario.recreate()
+            assertTrue("Recreation should retain the query and its result", until { showsMatch() })
+        }
+    }
+
+    @Test
+    fun highlightedResultSurvivesRecreation() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val query = instrumentation.targetContext.getString(R.string.settings_theme)
+        val highlight = instrumentation.targetContext.getString(R.string.settings_search_match)
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun result() = find { !it.isEditable && it.text?.toString() == query }
+            fun isHighlighted() = find { it.text?.toString() == highlight } != null
+
+            assertTrue(until { find { it.isEditable } != null })
+            assertTrue(find { it.isEditable }!!.setQuery(query))
+            assertTrue(until { result() != null })
+            val card = generateSequence(result()) { it.parent }.first { it.isClickable }
+            assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("Opening the result should highlight the matching setting", until { isHighlighted() })
+            scenario.recreate()
+            assertTrue("Recreation should retain the highlighted setting", until { isHighlighted() })
+        }
+    }
+
+    private fun AccessibilityNodeInfo.setQuery(query: String) =
+        performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+            putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, query)
+        })
 
     private fun AccessibilityNodeInfo.findVisible(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo? {
         if (isVisibleToUser && predicate(this)) return this

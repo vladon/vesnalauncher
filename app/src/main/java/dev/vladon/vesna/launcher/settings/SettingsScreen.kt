@@ -95,7 +95,10 @@ internal enum class DefaultHomeState { ACTIVE, AVAILABLE, UNAVAILABLE }
 @Composable
 internal fun SettingsScreen(
     page: SettingsPage,
-    onNavigate: (SettingsPage) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    searchTarget: Int?,
+    onNavigate: (SettingsPage, Int?) -> Unit,
     onResetInputFocus: () -> Unit,
     versionName: String,
     defaultHome: DefaultHomeState,
@@ -105,10 +108,8 @@ internal fun SettingsScreen(
     showAppNames: Boolean,
     onShowAppNamesChanged: (Boolean) -> Unit,
 ) {
-    var target by remember { mutableStateOf<Int?>(null) }
-    var query by remember(page) { mutableStateOf("") }
     val inSubpage = page != SettingsPage.ROOT
-    val up = { onNavigate(SettingsPage.ROOT) }
+    val up = { onNavigate(SettingsPage.ROOT, null) }
     BackHandler(enabled = inSubpage, onBack = up)
     val density = LocalDensity.current
     val appBarHeight = maxOf(64.dp, with(density) {
@@ -163,7 +164,7 @@ internal fun SettingsScreen(
                     title = {
                         SettingsSearchField(
                             query = query,
-                            onQueryChange = { query = it },
+                            onQueryChange = onQueryChange,
                             onResetInputFocus = onResetInputFocus,
                             short = shortDirectory,
                             narrow = narrow,
@@ -196,17 +197,14 @@ internal fun SettingsScreen(
                             ),
                     ) {
                         when (page) {
-                            SettingsPage.ROOT -> SettingsDirectory(defaultHome, query) { destination, match ->
-                                target = match
-                                onNavigate(destination)
-                            }
-                            SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(target == R.string.settings_default_launcher) {
+                            SettingsPage.ROOT -> SettingsDirectory(defaultHome, query, onNavigate)
+                            SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(searchTarget == R.string.settings_default_launcher) {
                                 DefaultLauncherSetup(defaultHome, onSetDefaultHome)
                             }
                             SettingsPage.APPEARANCE -> {
-                                SearchTarget(target == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
+                                SearchTarget(searchTarget == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
                                 Spacer(Modifier.height(8.dp))
-                                SearchTarget(target == R.string.settings_show_app_names) {
+                                SearchTarget(searchTarget == R.string.settings_show_app_names) {
                                     AppNamesSetting(showAppNames, onShowAppNamesChanged)
                                 }
                             }
