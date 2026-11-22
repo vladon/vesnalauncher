@@ -89,6 +89,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.search.searchKey
 
 internal enum class DefaultHomeState { ACTIVE, AVAILABLE, UNAVAILABLE }
 
@@ -295,7 +296,7 @@ private fun SettingsDirectory(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val colors = MaterialTheme.colorScheme
-    val term = query.trim()
+    val term = remember(query) { searchKey(query) }
     val open: (SettingsPage, Int?) -> Unit = { page, target ->
         keyboard?.hide()
         focusManager.clearFocus()
@@ -318,7 +319,7 @@ private fun SettingsDirectory(
                 for (entry in entries) {
                     val title = stringResource(entry.title)
                     val summary = stringResource(entry.summary)
-                    if (!title.contains(term, ignoreCase = true) && !summary.contains(term, ignoreCase = true)) continue
+                    if (term !in searchKey(title) && term !in searchKey(summary)) continue
                     found = true
                     OutlinedCard(
                         onClick = {
@@ -345,7 +346,7 @@ private fun SettingsDirectory(
                 })
                 val title = stringResource(page.title)
                 if (term.isNotEmpty() && (page == SettingsPage.DEFAULT_LAUNCHER ||
-                        !title.contains(term, ignoreCase = true) && !summary.contains(term, ignoreCase = true))) continue
+                        term !in searchKey(title) && term !in searchKey(summary))) continue
                 found = true
                 ListItem(
                     headlineContent = { Text(title) },
