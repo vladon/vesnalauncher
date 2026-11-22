@@ -416,13 +416,14 @@ of the released Vesna configuration surfaces:
 ## OBS-VESNA-018 — Workspace editing lock in Nova 9.0.1
 
 - Android 15, isolated `emulator-5588`; Nova 9.0.1 Prime. The switch is
-  in Home screen → Advanced. In the OFF control, dragging Gmail moved
-  it to an empty cell; its long-press menu showed Remove, Widgets,
-  App info and Edit. Moved Gmail back before testing the lock.
-- With the lock ON, the same drag left Gmail in its original cell.
-  Its long-press menu retained App info but omitted Remove, Widgets
-  and Edit. Holding empty space showed a locked message rather than
-  workspace customization. An ordinary tap still launched Gmail.
+  in the advanced workspace settings. With the lock off, dragging a
+  mail shortcut moved it to an empty cell. Its menu offered removal,
+  shortcut editing, widget access and application details. Moved the
+  shortcut back before testing the lock.
+- With the lock on, the same drag left the shortcut in its original
+  cell. The menu still offered application details but no editing or
+  widget actions. Holding empty space reported that editing was
+  locked instead of opening customization. A tap still launched the app.
 - Restored the original OFF setting. Dock, folder, widget-mutation
   and restart behavior were not tested in this pass.
 - Evidence: `EVI-VESNA-003/nova901-lock-*`; app launch confirmed by
