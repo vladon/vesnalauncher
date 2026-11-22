@@ -547,6 +547,21 @@ and keeps Home out of keyboard and accessibility traversal while open.
   The 13 focused tests passed on Android 8 and 15. Debug build and lint
   passed. Physical devices and TalkBack speech were not tested.
 
+### Keyboard focus in drawer results through Home recreation
+
+- On signed 0.4.31, changing the system theme kept the `ca` search but
+  moved keyboard focus from Camera to Close. The fix restores the same
+  app once the restored search results are ready.
+- On Android 15 at 200% text, Camera kept focus from Light to Dark.
+  D-pad Left moved to Calendar, which kept focus on the switch back.
+  Also checked a scrolled result below the initial viewport in a
+  shorter window. Closing and reopening cleared the query and focus.
+- The Camera tile measured 103 × 98 dp, with its full accessible name
+  and focus outline-to-fill contrast of 4.96:1 in Light and 7.29:1 in Dark.
+  The new regression failed on 0.4.31; 22 focused tests passed on each
+  of Android 8 and 15 with the fix. Debug build and lint passed.
+  TalkBack speech and physical devices were not tested.
+
 ### Narrow drawer layouts
 
 The drawer keeps four columns when they fit. In narrower windows, it uses

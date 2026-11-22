@@ -19,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
@@ -72,7 +73,9 @@ class DrawerView @JvmOverloads constructor(
     private val minFlingDistancePx =
         3 * ViewConfiguration.get(context).scaledTouchSlop
 
-    private var appSearch = AppSearch(emptyList())
+    private var appSearch: AppSearch? = null
+    private var pendingAppFocus: AppKey? = null
+    private var focusSubmission = 0
     private var quickLaunchResult: LauncherApp? = null
     private var enterTarget: LauncherApp? = null
     private var searchEnterKey = KeyEvent.KEYCODE_UNKNOWN
@@ -215,12 +218,54 @@ class DrawerView @JvmOverloads constructor(
         // forward to the result list that actually commits.
         if (resetScroll) resetScrollOnCommit = true
         val query = searchField.text?.toString().orEmpty()
-        val filtered = appSearch.filter(query)
+        val search = appSearch
+        val filtered = search?.filter(query).orEmpty()
         // ListAdapter may still be applying its diff when Enter is pressed.
         quickLaunchResult = if (query.isNotBlank()) filtered.singleOrNull() else null
-        adapter.submitList(filtered, if (resetScrollOnCommit) commitScrollReset else null)
+        if (search != null && pendingAppFocus != null) {
+            val submission = ++focusSubmission
+            adapter.submitList(filtered) {
+                if (resetScrollOnCommit) resetScrollAfterFilter()
+                // A newer filter can supersede this commit before its holders are laid out.
+                list.doOnPreDraw {
+                    if (focusSubmission == submission) restoreCommittedAppFocus(submission)
+                }
+            }
+        } else {
+            adapter.submitList(filtered, if (resetScrollOnCommit) commitScrollReset else null)
+        }
         clearSearchButton.isVisible = query.isNotEmpty()
         noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
+    }
+
+    internal fun focusedAppKey(): AppKey? {
+        if (!isOpen) return null
+        val tile = list.focusedChild ?: return null
+        return adapter.currentList.getOrNull(list.getChildAdapterPosition(tile))?.key
+    }
+
+    internal fun restoreAppFocus(key: AppKey) {
+        pendingAppFocus = key
+        if (appSearch != null) applyFilter(resetScroll = false)
+    }
+
+    private fun restoreCommittedAppFocus(submission: Int) {
+        val key = pendingAppFocus ?: return
+        val position = adapter.currentList.indexOfFirst { it.key == key }
+        val tile = list.findViewHolderForAdapterPosition(position)?.itemView
+        if (position < 0 || tile != null || isInTouchMode) {
+            pendingAppFocus = null
+            tile?.requestFocus()
+            return
+        }
+        // The previous viewport may no longer contain the result after a reflow.
+        list.scrollToPosition(position)
+        list.doOnPreDraw {
+            if (focusSubmission == submission && pendingAppFocus == key) {
+                pendingAppFocus = null
+                list.findViewHolderForAdapterPosition(position)?.itemView?.requestFocus()
+            }
+        }
     }
 
     private fun resetScrollAfterFilter() {
@@ -300,6 +345,7 @@ class DrawerView @JvmOverloads constructor(
         if (!isOpen) return
         animate().cancel()
         isOpen = false
+        pendingAppFocus = null
         updateDrawerFocusability()
         searchField.setText("")
         searchField.clearFocus()

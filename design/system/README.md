@@ -209,6 +209,7 @@ Keep the draft, selection, and any visible validation message when Android recre
   Request an inline keyboard for drawer search in landscape so a full-screen editor does not replace the drawer.
   Keep the no-results message visible above the keyboard. Let its vertical whitespace yield before clipping scaled text, and keep Clear available in the search field.
   Keep the drawer and its active search open when Android recreates Home, including when the system theme changes. Closing the drawer or returning to Home clears the search.
+  If an app tile had keyboard focus, restore focus to that same app in the restored results. Scroll it into view if needed. Closing the drawer discards that focus.
 - **Folders.** Keep apps in their saved order in a scrollable grid inside the Material dialog. Use the same column rule as the drawer: up to four columns, 64 dp per cell after the dialog's content insets when space permits. Reflow the grid when the open dialog changes size. Keep rename and remove actions visible while the apps scroll.
   Keep the actions in one trailing row of Material `TextButton`s. If the localized labels do not fit at the current text size, use 24 dp rounded symbols in 48 dp targets, with the full action names as tooltips and accessible labels. The member grid remains the scrollable region.
   When Android recreates Home, reopen the current folder only if it still belongs to the active page. Back and Home dismiss it. Restore a pending rename above its invoking folder.
