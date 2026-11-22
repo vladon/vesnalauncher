@@ -388,13 +388,17 @@ class DrawerSearchTest {
             search.onCreateInputConnection(editor)
             assertTrue("The keyboard must leave the in-app editor and results visible",
                 editor.imeOptions and EditorInfo.IME_FLAG_NO_FULLSCREEN != 0)
-            val visibleHeight = ceil(86 * host.resources.displayMetrics.density).toInt()
-            host.applyContentInsets(Insets.of(0, 0, 0, host.height - visibleHeight))
-            host.measure(
-                View.MeasureSpec.makeMeasureSpec(host.width, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.makeMeasureSpec(host.height, View.MeasureSpec.EXACTLY),
-            )
-            host.layout(host.left, host.top, host.right, host.bottom)
+            fun layoutAboveKeyboard(heightDp: Int): Int {
+                val visibleHeight = ceil(heightDp * host.resources.displayMetrics.density).toInt()
+                host.applyContentInsets(Insets.of(0, 0, 0, host.height - visibleHeight))
+                host.measure(
+                    View.MeasureSpec.makeMeasureSpec(host.width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(host.height, View.MeasureSpec.EXACTLY),
+                )
+                host.layout(host.left, host.top, host.right, host.bottom)
+                return visibleHeight
+            }
+            val visibleHeight = layoutAboveKeyboard(86)
 
             fun bounds(view: View) = Rect().apply {
                 view.getDrawingRect(this)
@@ -408,6 +412,15 @@ class DrawerSearchTest {
             assertTrue("Search results have no viewport", host.findViewById<View>(R.id.drawer_list).height > 0)
             assertEquals("eld", search.text.toString())
             assertTrue(search.hasFocus())
+
+            search.setText("noSuchVesnaAppZZ")
+            val feedbackBottom = layoutAboveKeyboard(108)
+            val noResults = host.findViewById<TextView>(R.id.drawer_no_results)
+            assertTrue(noResults.isShown)
+            assertTrue("The no-results message is clipped above the keyboard",
+                noResults.layout.height <= noResults.height -
+                    noResults.compoundPaddingTop - noResults.compoundPaddingBottom &&
+                    bounds(noResults).bottom <= feedbackBottom)
             clear.performClick()
             assertEquals("", search.text.toString())
             assertTrue(search.hasFocus())

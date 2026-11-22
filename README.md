@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.27
+
+- Drawer search shows “No matching apps” above the keyboard even when
+  landscape and enlarged text leave little vertical space.
+
 ### 0.4.26
 
 - In landscape, drawer search stays in the app instead of opening a

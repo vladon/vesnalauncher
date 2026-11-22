@@ -526,6 +526,17 @@ The compact search bar uses a short localized hint and smaller side margins.
   fix. Debug build, lint and 13 focused tests passed on Android 8 and 15.
   Only the emulators' Gboard versions were tested; no physical or TalkBack checks ran.
 
+### No-results feedback above the drawer keyboard
+
+- On signed 0.4.26 at 200% text on Android 15, the short landscape
+  viewport had room for the message, but its fixed padding clipped it.
+- The candidate shows the full “No matching apps” line above Gboard in
+  Light and Dark at 200% on Android 15, and at standard text size on
+  Android 8. Clear still restores the app grid and keeps field focus.
+- The short-viewport test failed at the clipping assertion on the old
+  build. Build, lint and 13 focused tests passed on both emulator versions.
+  Physical devices, other keyboards, and TalkBack speech were not tested.
+
 ### Drawer refresh
 
 Installing, updating, or removing an app no longer sends the open drawer
