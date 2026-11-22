@@ -182,7 +182,7 @@ Use Material component motion defaults. For the custom drawer, track the finger 
 | Dock and page indicator | Vesna launcher patterns built from Material roles. The dock uses full app targets. Indicators use `primary` and `outline`, with an additional shape or size cue for the active page. | Preserve up to four favorites and their order. Keep named 48 dp Home options and drawer-entry targets. With multiple pages, the dots are a 48 dp minimum button that announces position and count. The page picker is also available through Home options and marks the current page with a checked radio item. |
 
 **Folder rename.** Use the same dialog from the Home folder menu and from an open folder. Focus and select the current name in the outlined field. **Save** and the keyboard's **Done** action trim surrounding whitespace; a blank name shows an inline error and leaves the editor open. **Cancel** discards the draft. Return to the invoking surface, keeping the folder open if renaming started there.
-Keep the draft and selection when Android recreates Home during a configuration change. Do not save the draft as the folder name until the user confirms it.
+Keep the draft, selection, and any visible validation message when Android recreates Home during a configuration change. Clear the validation message when the name is corrected. Do not save the draft as the folder name until the user confirms it.
 
 [Material buttons](https://developer.android.com/develop/ui/compose/components/button) · [Search bar](https://developer.android.com/develop/ui/compose/components/search-bar) · [Switch](https://developer.android.com/develop/ui/compose/components/switch) · [Dialogs](https://developer.android.com/develop/ui/compose/components/dialog)
 

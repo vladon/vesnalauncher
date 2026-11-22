@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.28
+
+- The folder rename dialog keeps the “Enter a folder name” message
+  after a system theme change. Entering a valid name clears it.
+
 ### 0.4.27
 
 - Drawer search shows “No matching apps” above the keyboard even when

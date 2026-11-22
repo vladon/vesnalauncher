@@ -21,13 +21,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -101,7 +99,7 @@ class HomeActivity : ComponentActivity() {
     private data class FolderRename(
         val folderId: Long,
         val fromFolder: Boolean,
-        val draft: TextFieldState,
+        val editor: FolderRenameEditorState,
     )
 
     private class FolderRenameState : ViewModel() {
@@ -546,7 +544,7 @@ class HomeActivity : ComponentActivity() {
         val rename = FolderRename(
             folderId = folderId,
             fromFolder = folderDialog != null,
-            draft = TextFieldState(folder.title, TextRange(0, folder.title.length)),
+            editor = FolderRenameEditorState(folder.title),
         )
         folderRenameState.session = rename
         showFolderRename(folder, rename)
@@ -570,7 +568,7 @@ class HomeActivity : ComponentActivity() {
         host.setContent {
             VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
                 FolderRenameDialog(
-                    draft = rename.draft,
+                    editor = rename.editor,
                     onDismiss = ::dismissFolderRename,
                     onSave = { title ->
                         if (title != folder.title) controller.renameFolder(folder.id, title)
