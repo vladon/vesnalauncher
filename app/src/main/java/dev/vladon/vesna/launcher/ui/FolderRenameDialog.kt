@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -48,7 +48,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -60,11 +59,10 @@ import kotlinx.coroutines.flow.first
 
 @Composable
 internal fun FolderRenameDialog(
-    initialTitle: String,
+    draft: TextFieldState,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
 ) {
-    val draft = rememberTextFieldState(initialTitle, TextRange(0, initialTitle.length))
     var showNameError by remember { mutableStateOf(false) }
     val errorMessage = stringResource(R.string.folder_name_required)
     val nameLabel = stringResource(R.string.folder_name)
