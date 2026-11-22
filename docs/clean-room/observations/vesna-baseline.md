@@ -462,3 +462,28 @@ of the released Vesna configuration surfaces:
   `parity-fast-after-extended-*`, and `parity-fast-filtered-results-*`.
 - Environment: isolated `emulator-5588`, Android 15. Confidence:
   observed for the exercised paths only. Physical phone untouched.
+
+## OBS-VESNA-020 — Additional gaps against Vesna 0.4.46
+
+These comparisons combine existing black-box Nova evidence with Vesna's
+released source. The icon launch, drawer entry, and search were also
+exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
+
+| Area | Nova reference | Vesna 0.4.46 | Verification boundary |
+|---|---|---|---|
+| Drawer entry and suggestions | With auto-keyboard enabled, the drawer focused search and showed the keyboard and frequently used app predictions (OBS-DRAWER-001). | On the AVD, opening Vesna's drawer left the keyboard hidden and showed the app grid, without a prediction row. No preference for auto-opening the keyboard was found. | Nova setting-OFF comparison and prediction ranking not verified. |
+| Search beyond installed apps | A drawer query showed installed apps, external search providers and web suggestions (OBS-DRAWER-002); the AVD reproduced this with an app-name query. | The released drawer filters installed apps; a nonmatching query on the AVD showed only a no-results state. | Provider launch/consent and offline behavior are separate checks. |
+| Shortcut actions in the workspace icon menu | Nova exposed app-provided actions with a drag affordance, plus access to widgets and shortcut editing (OBS-HOME-003). | Vesna's workspace menu offers docking, moving between pages, removal and app details, but not those app actions or entry points. | The Nova menu affordances were observed; edit, widget and dragged-action outcomes were not verified in that observation. |
+| Dock configuration | Independent enablement, slot count, pages and appearance controls were inventoried (OBS-DOCK-001). | Released dock capacity is tied to the four workspace columns; no equivalent dock settings surface was found. | Multi-page dock navigation and state persistence are not inferred from Nova's controls. |
+| User-managed layout transfer | Nova created a user-selected backup file and restored an earlier layout after confirmation, removing later additions (OBS-BACKUP-002/004). | Vesna offers no in-app export or restore. ENG-106 already tracks backup policy; its draft covers Android device transfer rather than in-app files. | Existing policy gap, not a new implementation ticket or a claim that platform backup cannot run. |
+
+- Vesna references: [drawer implementation](https://github.com/vladon/vesnalauncher/blob/v0.4.46/app/src/main/java/dev/vladon/vesna/launcher/ui/DrawerView.kt),
+  [workspace menus](https://github.com/vladon/vesnalauncher/blob/v0.4.46/app/src/main/java/dev/vladon/vesna/launcher/ui/HomeActivity.kt),
+  [dock geometry](https://github.com/vladon/vesnalauncher/blob/v0.4.46/app/src/main/java/dev/vladon/vesna/launcher/workspace/GridCanvas.kt),
+  [settings surfaces](https://github.com/vladon/vesnalauncher/tree/v0.4.46/app/src/main/java/dev/vladon/vesna/launcher/settings),
+  and [backup policy draft](https://github.com/vladon/vesnalauncher/blob/v0.4.46/docs/adr/0002-backup-and-privacy.md).
+- The app-icon gap from OBS-VESNA-016/019 did not reproduce in the
+  signed Vesna 0.4.46 APK. Tapping its result in Nova's drawer opened
+  the Vesna workspace; its drawer launched Clock; pressing system Home
+  returned to Nova. In-app Settings and the deep links were not part of
+  this replay. Evidence: `EVI-VESNA-003/parity046-*.xml`.

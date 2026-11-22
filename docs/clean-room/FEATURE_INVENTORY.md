@@ -34,7 +34,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
-| HOME-006 | Long-press context menu on workspace items | discovered (popup: close/widgets/info/edit + shortcuts) |
+| HOME-006 | Long-press context menu on workspace items | Nova exposes app actions and editing/widget entry points; Vesna 0.4.46 has a narrower menu (OBS-HOME-003; OBS-VESNA-020). |
 | HOME-007 | Wallpaper interactions (pick, scroll behavior) | discovered (Wallpapers button; wallpaper scrolling setting) |
 | HOME-008 | Icon labels (show/hide/edit) | discovered (Label toggle + sub-options) |
 | HOME-009 | Page transition effects and scrolling behavior | discovered (Transition effect, Infinite scroll, Page indicator settings) |
@@ -44,7 +44,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-013 | Lock workspace editing without blocking app launch | Observed in Nova 9.0.1 on Android 15; no Vesna 0.4.44 control found (OBS-VESNA-017/018; NT-HOME-02) |
 | HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
 | HOME-015 | Overview / preview of all pages | pending |
-| HOME-106 | Try launcher from app icon without changing system Home | Nova behavior reported by user; Vesna 0.4.44 opens Settings instead (OBS-VESNA-016; AT-HOME-106). |
+| HOME-106 | Try launcher from app icon without changing system Home | Vesna 0.4.46 verified with Nova as Home on Android 15; settings links not replayed (OBS-VESNA-020; AT-HOME-106). |
 
 ## DRAWER — App drawer
 
@@ -54,7 +54,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-002 | Drawer close gesture(s) | partially observed (BACK verified; swipe-down untested) |
 | DRAWER-003 | Drawer layout modes | Nova 9.0.1: single-column rendering, horizontal paging, and search verified (OBS-VESNA-019; #108) |
 | DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
-| DRAWER-005 | Drawer search | observed (filtering, prefix emphasis, providers, web suggestions) |
+| DRAWER-005 | Drawer search | Nova external providers and web suggestions observed; Vesna 0.4.46 searches installed apps (OBS-VESNA-020). |
 | DRAWER-006 | Scrolling and fast-scroll behavior | Nova 9.0.1: thumb jumps between letters and is absent during tested search (OBS-VESNA-019; #109) |
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
 | DRAWER-008 | Hidden apps | discovered (Prime-gated) |
