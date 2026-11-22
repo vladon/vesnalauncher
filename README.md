@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.19
+
+- Settings search stays visible above the keyboard in short windows at large
+  text sizes. The query stays in place when the keyboard hides, and matching
+  settings still open at the highlighted control.
+
 ### 0.4.18
 
 - The app drawer keeps search, Clear, and Close visible above the keyboard

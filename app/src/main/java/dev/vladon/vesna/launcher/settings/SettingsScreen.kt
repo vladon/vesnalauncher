@@ -5,9 +5,11 @@ import android.view.View
 import android.widget.ImageView
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
@@ -16,10 +18,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -31,6 +34,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,6 +77,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -100,64 +105,117 @@ internal fun SettingsScreen(
     onShowAppNamesChanged: (Boolean) -> Unit,
 ) {
     var target by remember { mutableStateOf<Int?>(null) }
+    var query by remember(page) { mutableStateOf("") }
     val inSubpage = page != SettingsPage.ROOT
     val up = { onNavigate(SettingsPage.ROOT) }
     BackHandler(enabled = inSubpage, onBack = up)
-    val titleHeight = with(LocalDensity.current) { MaterialTheme.typography.titleLarge.lineHeight.toDp() }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(page.title),
-                        modifier = Modifier.semantics { heading() },
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                navigationIcon = {
-                    if (inSubpage) {
-                        IconButton(onClick = up, modifier = Modifier.settingsFocusRing()) {
-                            Icon(
-                                painterResource(R.drawable.ic_settings_back),
-                                contentDescription = stringResource(R.string.settings_back_to_root),
-                            )
-                        }
+    val density = LocalDensity.current
+    val appBarHeight = maxOf(64.dp, with(density) {
+        MaterialTheme.typography.titleLarge.lineHeight.toDp() * 2 + 8.dp
+    })
+    val searchHeight = maxOf(56.dp, with(density) {
+        MaterialTheme.typography.bodyLarge.lineHeight.toDp() + 32.dp
+    })
+    val title = stringResource(page.title)
+    BoxWithConstraints(
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).safeDrawingPadding(),
+    ) {
+        // Keep the root search usable when the IME leaves no room for both
+        // the visual heading and the directory. Subpages keep their Up action.
+        val searchBarHeight = searchHeight + SettingsFocusRingOutset * 2
+        val standardChrome = appBarHeight + searchBarHeight + 12.dp + 12.dp + 24.dp
+        val shortDirectory = !inSubpage && maxHeight < standardChrome + 48.dp
+        val narrow = maxWidth < 320.dp
+        val availableSearchBarHeight = minOf(searchBarHeight, maxHeight)
+        // Match the directory's centered content width and 16 dp side margins.
+        val searchWidth = (minOf(maxWidth, 560.dp) - 32.dp).coerceAtLeast(0.dp)
+        Scaffold(
+            topBar = {
+                Column {
+                    if (!shortDirectory) {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    title,
+                                    modifier = Modifier.semantics { heading() },
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            },
+                            navigationIcon = {
+                                if (inSubpage) {
+                                    IconButton(onClick = up, modifier = Modifier.settingsFocusRing()) {
+                                        Icon(
+                                            painterResource(R.drawable.ic_settings_back),
+                                            contentDescription = stringResource(R.string.settings_back_to_root),
+                                        )
+                                    }
+                                }
+                            },
+                            expandedHeight = appBarHeight,
+                        )
                     }
-                },
-                expandedHeight = maxOf(64.dp, titleHeight * 2 + 8.dp),
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) { contentPadding ->
-        Box(
-            Modifier.fillMaxSize().padding(contentPadding).imePadding(),
-            contentAlignment = Alignment.TopCenter,
-        ) {
-            key(page) {
-                Column(
-                    Modifier
-                        .widthIn(max = 560.dp)
-                        .fillMaxWidth()
-                        .then(if (inSubpage) Modifier.verticalScroll(remember { ScrollState(0) }) else Modifier)
-                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
-                ) {
-                    when (page) {
-                        SettingsPage.ROOT -> SettingsDirectory(defaultHome, onResetInputFocus) { destination, match ->
-                            target = match
-                            onNavigate(destination)
-                        }
-                        SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(target == R.string.settings_default_launcher) {
-                            DefaultLauncherSetup(defaultHome, onSetDefaultHome)
-                        }
-                        SettingsPage.APPEARANCE -> {
-                            SearchTarget(target == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
-                            Spacer(Modifier.height(8.dp))
-                            SearchTarget(target == R.string.settings_show_app_names) {
-                                AppNamesSetting(showAppNames, onShowAppNamesChanged)
+                    if (!inSubpage) {
+                        CenterAlignedTopAppBar(
+                            modifier = if (shortDirectory) Modifier.semantics { paneTitle = title }
+                                else Modifier.padding(top = 12.dp),
+                            expandedHeight = availableSearchBarHeight,
+                            title = {
+                                SettingsSearchField(
+                                    query = query,
+                                    onQueryChange = { query = it },
+                                    onResetInputFocus = onResetInputFocus,
+                                    short = shortDirectory,
+                                    narrow = narrow,
+                                    modifier = Modifier
+                                        .width(searchWidth)
+                                        .padding(vertical = SettingsFocusRingOutset),
+                                )
+                            },
+                        )
+                    }
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) { contentPadding ->
+            Box(
+                Modifier.fillMaxSize().padding(contentPadding),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                key(page) {
+                    Column(
+                        Modifier
+                            .widthIn(max = 560.dp)
+                            .fillMaxWidth()
+                            .then(if (inSubpage) Modifier.verticalScroll(remember { ScrollState(0) }) else Modifier)
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = when {
+                                    inSubpage -> 16.dp
+                                    shortDirectory -> SettingsFocusRingOutset
+                                    else -> 12.dp
+                                },
+                                bottom = if (shortDirectory) SettingsFocusRingOutset else 24.dp,
+                            ),
+                    ) {
+                        when (page) {
+                            SettingsPage.ROOT -> SettingsDirectory(defaultHome, query) { destination, match ->
+                                target = match
+                                onNavigate(destination)
                             }
+                            SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(target == R.string.settings_default_launcher) {
+                                DefaultLauncherSetup(defaultHome, onSetDefaultHome)
+                            }
+                            SettingsPage.APPEARANCE -> {
+                                SearchTarget(target == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(target == R.string.settings_show_app_names) {
+                                    AppNamesSetting(showAppNames, onShowAppNamesChanged)
+                                }
+                            }
+                            SettingsPage.ABOUT -> AboutContent(versionName)
                         }
-                        SettingsPage.ABOUT -> AboutContent(versionName)
                     }
                 }
             }
@@ -167,35 +225,43 @@ internal fun SettingsScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SettingsDirectory(
-    defaultHome: DefaultHomeState,
+private fun SettingsSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
     onResetInputFocus: () -> Unit,
-    onNavigate: (SettingsPage, Int?) -> Unit,
+    short: Boolean,
+    narrow: Boolean,
+    modifier: Modifier,
 ) {
-    var query by remember { mutableStateOf("") }
     var focused by remember { mutableStateOf(false) }
-    val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val searchLabel = stringResource(R.string.settings_search)
     val colors = MaterialTheme.colorScheme
     // While the IME is visible, let Android handle Back before changing the search state.
     BackHandler(enabled = !WindowInsets.isImeVisible && (focused || query.isNotEmpty())) {
         onResetInputFocus()
-        query = ""
+        onQueryChange("")
     }
     OutlinedTextField(
         value = query,
-        onValueChange = { query = it },
-        modifier = Modifier
-            .fillMaxWidth()
+        onValueChange = onQueryChange,
+        modifier = modifier
             .settingsFocusRing()
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = searchLabel },
-        placeholder = { Text(searchLabel) },
-        leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { query = "" }, modifier = Modifier.settingsFocusRing()) {
+        placeholder = {
+            Text(
+                if (narrow) stringResource(R.string.settings_search_compact) else searchLabel,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        leadingIcon = if (short && narrow) null else {
+            { Icon(painterResource(R.drawable.ic_search), contentDescription = null) }
+        },
+        trailingIcon = if (query.isEmpty()) null else {
+            {
+                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.settingsFocusRing()) {
                     Icon(
                         painterResource(R.drawable.ic_clear_search),
                         contentDescription = stringResource(R.string.drawer_clear_search),
@@ -213,7 +279,17 @@ private fun SettingsDirectory(
             unfocusedContainerColor = colors.surfaceContainerHigh,
         ),
     )
-    Spacer(Modifier.height(16.dp))
+}
+
+@Composable
+private fun SettingsDirectory(
+    defaultHome: DefaultHomeState,
+    query: String,
+    onNavigate: (SettingsPage, Int?) -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val colors = MaterialTheme.colorScheme
     val term = query.trim()
     val open: (SettingsPage, Int?) -> Unit = { page, target ->
         keyboard?.hide()
@@ -430,7 +506,7 @@ private fun Modifier.settingsFocusRing(radius: Dp? = null): Modifier {
     return onFocusChanged { focused = it.isFocused }.drawBehind {
         if (focused) {
             // The center of the 2 dp stroke is 3 dp outside the control.
-            val offset = 3.dp.toPx()
+            val offset = (SettingsFocusRingOutset - 1.dp).toPx()
             drawRoundRect(
                 color = focusColor,
                 topLeft = Offset(-offset, -offset),
@@ -441,5 +517,7 @@ private fun Modifier.settingsFocusRing(radius: Dp? = null): Modifier {
         }
     }
 }
+
+private val SettingsFocusRingOutset = 4.dp
 
 private const val REPOSITORY_URL = "https://github.com/vladon/vesnalauncher"

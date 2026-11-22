@@ -13,6 +13,7 @@
     <string name="settings_about">О приложении</string>
     <string name="settings_about_detail">Версия, лицензия и исходный код</string>
     <string name="settings_search">Поиск по настройкам</string>
+    <string name="settings_search_compact">Поиск</string>
     <string name="settings_search_empty">Настройки не найдены</string>
     <string name="settings_search_breadcrumb">Настройки Vesna › %1$s</string>
     <string name="settings_search_match">Результат поиска</string>
