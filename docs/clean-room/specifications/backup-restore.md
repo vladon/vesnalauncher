@@ -68,7 +68,10 @@ Derived from `observations/backup-restore.md`.
 - Boundary conditions: cancellation and one plain-text file with the
   backup suffix left the current layout unchanged (OBS-VESNA-033).
   Other invalid inputs and transient error wording were not verified.
-- Evidence: OBS-BACKUP-004 (EVI-BACKUP-002), OBS-VESNA-033 (EVI-VESNA-003).
+  A valid restore with one app missing retained a marked placeholder at
+  its saved position. Reinstalling that app cleared the mark without
+  repinning (OBS-VESNA-034); no store-driven download was verified.
+- Evidence: OBS-BACKUP-004 (EVI-BACKUP-002), OBS-VESNA-033/034 (EVI-VESNA-003).
 - Confidence: Observed
 
 ### Vesna requirements

@@ -807,3 +807,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Follow-up for #116, not a backup-policy decision.
 - Evidence: `EVI-VESNA-003/parity33-*`. Confidence: observed for
   one valid file and one malformed file on the research AVD.
+
+## OBS-VESNA-034 — Restore keeps a placeholder for an absent app
+
+- On the Android 15 research AVD, Nova 9.0.1 Prime (90100)
+  exported a layout containing a disposable app shortcut.
+  Uninstalled that package and moved Gmail as a marker; the
+  disposable shortcut was no longer visible before restore.
+- Confirmed restore from the valid file while the package
+  was still absent. Gmail returned to its saved position.
+  The disposable shortcut reappeared at its saved position
+  with a visually distinct ring and remained after restarting
+  Nova, although Android still reported no installed package.
+- Reinstalled the same fixture. The ring cleared without
+  moving or repinning the shortcut; its menu opened Android's
+  app-details screen for the reinstalled package.
+- Removed the fixture and local backup and verified the
+  original workspace and dock. No share or store-based
+  reinstall was exercised. Signed Vesna v0.4.50 (55) has
+  no equivalent manual restore route in the matched fixture
+  (OBS-VESNA-033), so no Vesna import behavior is inferred.
+- Evidence: `EVI-VESNA-003/parity34-*` and
+  `parity33-cycle34-restore-missing-*`. Confidence: observed
+  for a single absent, later sideloaded app. Follow-up for #116.

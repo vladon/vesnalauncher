@@ -152,7 +152,7 @@ behavior, an ID is never reassigned to a different behavior.
 | BACKUP-001 | Backup creation | Nova exported a local file through the system picker; no matching route found in Vesna 0.4.50 (OBS-VESNA-033; #116). |
 | BACKUP-002 | Backup content categories | pending |
 | BACKUP-003 | Restore operation | Nova preserved the current layout on cancellation and malformed input; the valid backup replaced it after confirmation (OBS-VESNA-033). |
-| BACKUP-004 | Missing app handling on restore | pending |
+| BACKUP-004 | Missing app handling on restore | Nova restored a marked placeholder that survived restart; reinstall reactivated it in the same slot (OBS-VESNA-034; #116). |
 | BACKUP-005 | Widget restore behavior | pending |
 | BACKUP-006 | Restore errors/warnings | pending |
 
