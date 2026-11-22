@@ -1,0 +1,1 @@
+A small finger movement during a long press in the app drawer no longer starts a drag. Release to open the app’s options, or move farther to drag it.
