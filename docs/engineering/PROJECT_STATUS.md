@@ -1037,6 +1037,25 @@ or the next open position when adding. Hidden but saved pins still use capacity.
   tile is drawn for a reserved cell; TalkBack and physical devices were not
   checked.
 
+### Cancel drawer drags when the app disappears
+
+- On 0.4.42, disabling Drive during a drawer-to-Home drag left the
+  preview visible. Re-enabling Drive exposed a shortcut created by the
+  stale release.
+- The fixed build clears the preview as soon as the drawer catalogue loses
+  the dragged app and saves nothing. On Android 15, the saved placement and
+  folder rows did not change in Light English or Dark Arabic at 200% text.
+  Re-enabling Drive while the finger was still down did not revive the
+  gesture; a fresh drag after re-enable could pin Drive normally.
+- `WorkspaceDropTargetTest` also verifies that the same app in a different
+  profile cannot keep the drag alive and a label-only refresh does not
+  cancel it. No focus targets, touch targets, or colors changed. Physical
+  devices and TalkBack were not checked.
+- All 14 focused tests passed on Android 8 and 15, along with debug lint.
+  The dock navigation regression supplies the inset directly to the
+  production compat-inset handler so the test does not depend on the
+  emulator's navigation bar configuration.
+
 ### Atomic dock insertion
 
 A drawer drop now writes the new dock pin and the shifted slots in one Room

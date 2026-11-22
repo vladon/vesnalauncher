@@ -114,11 +114,13 @@ class DockDropTargetTest {
                 val previous = requireNotNull(ViewCompat.getRootWindowInsets(root))
                 val navigation = WindowInsetsCompat.Type.navigationBars()
                 val reserved = (32 * dock.resources.displayMetrics.density).toInt()
-                val withNavigation = WindowInsetsCompat.Builder(previous)
+                val withNavigation = WindowInsetsCompat.Builder()
                     .setInsets(navigation, Insets.of(0, 0, 0, reserved))
                     .setVisible(navigation, true)
                     .build()
-                ViewCompat.dispatchApplyWindowInsets(root, withNavigation)
+                // Apply as compat insets: pre-30 devices drop synthetic typed
+                // values if they are round-tripped through platform dispatch.
+                activity.updateSystemBarInsets(withNavigation)
                 try {
                     dock.measure(
                         View.MeasureSpec.makeMeasureSpec(dock.width, View.MeasureSpec.EXACTLY),
@@ -133,13 +135,13 @@ class DockDropTargetTest {
                     try {
                         requireNotNull(dock.onDragProgress)(x.toFloat(), y.toFloat())
                         assertNotEquals("The dock body must show the drop preview", before, dock.pixels(x, x, y).first)
-                        requireNotNull(dock.onDragProgress)(x.toFloat(), (dock.height - reserved / 2).toFloat())
+                        requireNotNull(dock.onDragProgress)(x.toFloat(), dock.height - reserved / 2f)
                         assertEquals("The navigation inset must clear the preview", before, dock.pixels(x, x, y).first)
                     } finally {
                         requireNotNull(dock.onDragReleased)(x.toFloat(), y.toFloat(), true, true, source.app, tile)
                     }
                 } finally {
-                    ViewCompat.dispatchApplyWindowInsets(root, previous)
+                    activity.updateSystemBarInsets(previous)
                 }
             }
         }
