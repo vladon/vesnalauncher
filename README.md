@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.24
+
+- An open app drawer keeps its search when Android recreates the launcher,
+  for example after a system theme change. Closing the drawer still clears the search.
+
 ### 0.4.23
 
 - Home shortcuts and the dock stay clear of side navigation bars in

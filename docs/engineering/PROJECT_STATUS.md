@@ -475,6 +475,19 @@ and keeps Home out of keyboard and accessibility traversal while open.
   the test pin restored the exact original placement and folder rows. TalkBack
   speech and handheld-device behavior were not verified.
 
+### Drawer search through Home recreation
+
+- Changing the Android system theme while searching for Calendar on signed
+  0.4.23 returned to Home, hiding the open drawer and its results.
+- On Android 15 at 200% text, the drawer stayed open from Light to Dark
+  with the query, search focus, keyboard and matching app intact. Rotation
+  after hiding the keyboard retained the result; closing and reopening
+  started an empty search.
+- `DrawerRecreationTest` failed on the previous debug build and verified
+  the query, cursor, focus, empty result, and clean reopen on the fix.
+  The 13 focused tests passed on Android 8 and 15. Debug build and lint
+  passed. Physical devices and TalkBack speech were not tested.
+
 ### Narrow drawer layouts
 
 The drawer keeps four columns when they fit. In narrower windows, it uses

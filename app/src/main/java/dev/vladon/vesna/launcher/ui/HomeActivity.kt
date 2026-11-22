@@ -54,6 +54,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+private const val DRAWER_OPEN_STATE = "drawer_open"
+
 /**
  * The HOME activity: hosts workspace, dock, and drawer, and opens the launcher
  * and app-item context menus.
@@ -221,6 +223,9 @@ class HomeActivity : ComponentActivity() {
 
         applySystemBarInsets()
 
+        // Open before hierarchy restoration so Android can restore the search text and focus.
+        if (savedInstanceState?.getBoolean(DRAWER_OPEN_STATE) == true) drawer.open()
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -231,6 +236,11 @@ class HomeActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(DRAWER_OPEN_STATE, drawer.isOpen)
     }
 
     override fun onResume() {
