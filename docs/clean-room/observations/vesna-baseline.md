@@ -225,3 +225,31 @@ Nova remains the system HOME (comparison-only install).
 - Double-tap and leftward swipe left Home unchanged; rightward
   swipe opened Nova Now.
 - Evidence: `EVI-VESNA-003/nova901-*.xml`. Confidence: observed.
+
+## OBS-VESNA-007 — Nova 9.0.1 repeats and Vesna 0.4.13
+
+- Nova 9.0.1 opened the drawer on all three 1100 px mid-screen
+  swipes at 800 ms, unlike the earlier single closed result.
+  At 800 px from the same start, 550, 650, and 750 ms stayed
+  closed in both attempts each. See `EVI-VESNA-003/v413-nova*`.
+- Upgraded Vesna to the GitHub release v0.4.13; the APK SHA-256
+  matched and `versionName=0.4.13` was confirmed. On the same
+  1100 px path, 665, 800, and 925 ms opened the workspace menu
+  instead of the drawer in both attempts each. NT-GESTURE-03
+  remains reproducible. See `EVI-VESNA-003/v413-vesna*`.
+
+## OBS-VESNA-008 — Nova 9.0.1 cards and smart folders
+
+- Settings still showed the same six built-ins as 8.9.9: Media
+  controls, AccuWeather, Games, Photos, Screenshots, and Map locations.
+  The Add control remained available. Nova Now search for `weather`
+  rendered an AccuWeather card, as on 8.9.9. Save, scheduling, and
+  condition enforcement were not retested.
+- All seven smart folders enabled during the 8.9.9 research still
+  rendered after the update. Unlike the prior unlabeled empty icons,
+  the 9.0.1 drawer exposed names for Food, Games, and Shopping, with
+  zero items each. The per-folder enable default was not retested
+  on a fresh installation; no folder settings were changed.
+- Evidence: `EVI-VESNA-003/nova901-cards-full-*`, `nova901-weather-query-*`,
+  `nova901-groups-*`, `nova901-drawer-visible-*`, and
+  `nova901-folder-scroll-*`. Confidence: observed for the checked surfaces.
