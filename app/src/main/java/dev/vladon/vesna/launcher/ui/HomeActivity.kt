@@ -98,16 +98,16 @@ class HomeActivity : ComponentActivity() {
     private var folderDialog: FolderDialog? = null
     private data class FolderRename(
         val folderId: Long,
-        val fromFolder: Boolean,
         val editor: FolderRenameEditorState,
     )
 
-    private class FolderRenameState : ViewModel() {
-        var session: FolderRename? = null
+    private class FolderUiState : ViewModel() {
+        var openFolderId: Long? = null
+        var rename: FolderRename? = null
     }
 
-    private val folderRenameState: FolderRenameState by viewModels {
-        viewModelFactory { initializer { FolderRenameState() } }
+    private val folderUiState: FolderUiState by viewModels {
+        viewModelFactory { initializer { FolderUiState() } }
     }
     private var folderRenameHost: ComposeView? = null
     private var snackbarJob: Job? = null
@@ -282,7 +282,7 @@ class HomeActivity : ComponentActivity() {
             pendingPageMenu = null
             activePopup?.dismiss()
             dismissFolderRename()
-            folderDialog?.dismiss()
+            dismissFolderDialog()
         }
         drawer.close()
     }
@@ -317,7 +317,6 @@ class HomeActivity : ComponentActivity() {
             folderDialog?.dismiss()
         }
         renderedState = state
-        folderDialog?.update(state)
         if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
         if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
         if (state.apps != previous.apps) drawer.submitApps(state.apps)
@@ -340,7 +339,7 @@ class HomeActivity : ComponentActivity() {
             }
             pageIndicator.bind(position, state.pageIds.size)
         }
-        restoreFolderRename(state)
+        renderFolderUi(state)
     }
 
     private fun openDrawer() {
@@ -514,12 +513,19 @@ class HomeActivity : ComponentActivity() {
             onDismissed = {
                 snackbarJob?.cancel()
                 folderDialog = null
+                folderUiState.openFolderId = null
             },
         )
         dialog.showAppNames = showAppNames
         folderDialog = dialog
+        folderUiState.openFolderId = folder.id
         dialog.show(homeContent, themeMode)
         dialog.update(renderedState)
+    }
+
+    private fun dismissFolderDialog() {
+        folderUiState.openFolderId = null
+        folderDialog?.dismiss()
     }
 
     private fun showFolderMenu(folder: Folder, anchor: View) {
@@ -543,21 +549,28 @@ class HomeActivity : ComponentActivity() {
         dismissFolderRename()
         val rename = FolderRename(
             folderId = folderId,
-            fromFolder = folderDialog != null,
             editor = FolderRenameEditorState(folder.title),
         )
-        folderRenameState.session = rename
+        folderUiState.rename = rename
         showFolderRename(folder, rename)
     }
 
-    private fun restoreFolderRename(state: LauncherUiState) {
-        val rename = folderRenameState.session ?: return
+    private fun renderFolderUi(state: LauncherUiState) {
         if (state.pageIds.isEmpty()) return
+        // Rebuild the folder before restoring the rename editor above it.
+        folderUiState.openFolderId?.let { id ->
+            val folder = state.folders[id]
+            when {
+                folder == null || folder.pageId != state.activePageId -> dismissFolderDialog()
+                folderDialog == null -> showFolderDialog(folder)
+                else -> folderDialog?.update(state)
+            }
+        }
+        val rename = folderUiState.rename ?: return
         val folder = state.folders[rename.folderId]
         if (folder == null || folder.pageId != state.activePageId) {
             dismissFolderRename()
         } else if (folderRenameHost == null) {
-            if (rename.fromFolder) showFolderDialog(folder)
             showFolderRename(folder, rename)
         }
     }
@@ -582,7 +595,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun dismissFolderRename() {
-        folderRenameState.session = null
+        folderUiState.rename = null
         val host = folderRenameHost ?: return
         folderRenameHost = null
         homeContent.removeView(host)

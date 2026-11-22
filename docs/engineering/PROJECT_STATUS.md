@@ -364,6 +364,19 @@ changing the member order. Members scroll independently of the dialog actions.
   resize test passed on both emulators; debug lint passed. TalkBack speech
   and physical devices were not checked.
 
+### Keep an open folder through Home recreation
+
+- On signed 0.4.28, switching the system theme closed the folder and
+  returned to Home. On Android 15 at 200% text, the fix kept the same
+  folder and member order from Light to Dark.
+- Back closed the folder, and the next theme switch did not reopen it.
+  A Home intent still dismissed it, and Cancel on a restored rename
+  returned to the invoking folder.
+- The integration regression uses an isolated folder on a temporary
+  secondary page. It reproduced the loss on the previous debug APK.
+  The 20 focused tests passed on Android 8 and 15; build and lint passed.
+  Physical devices and TalkBack speech were not tested.
+
 ### Home labels at large text sizes
 
 On compact Home grids, app and folder artwork shrinks when needed to fit a
