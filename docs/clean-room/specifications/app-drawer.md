@@ -161,14 +161,17 @@ will reclaim for content.
   enabled folders still rendered; the empty Food, Games, and Shopping
   folders now had names. The labels improve discoverability but do
   not change Vesna's requirement to omit empty generated folders.
+- Nova 9.0.1 also reset individual state when the master switch was
+  turned OFF and back ON: all seven previously enabled folders stayed
+  hidden until individually enabled again (OBS-VESNA-012).
 
 ### Vesna requirements
 
-- R-DRAWER-106.1: The master toggle is sufficient: ON = every generated
-  folder renders; per-folder granularity lives only in the folder's own
-  editor, never as a hidden second gate (Nova counter-example recorded:
-  seven folders, master ON, zero rendered until each was individually
-  enabled — a discoverability failure, not dead code).
+- R-DRAWER-106.1: On first enablement, the master toggle is sufficient:
+  every non-empty generated folder renders without a per-item Enable
+  step. Any later per-folder override lives in its editor (Nova
+  counter-example: master ON did not render any of the seven fresh
+  folders until each was individually enabled).
 - R-DRAWER-106.2: First enablement of auto-organization is a first-run
   choice presented once, surfacing the generated result immediately.
 - R-DRAWER-106.3: Empty generated folders are not rendered (no bare
@@ -177,3 +180,7 @@ will reclaim for content.
   (verified pattern).
 - R-DRAWER-106.5: A generated folder's editor exposes its rules and its
   enabled state in one surface.
+- R-DRAWER-106.6: Turning the master switch OFF hides generated folders
+  without changing individual folder preferences. Turning it back ON
+  restores the previously visible folders without requiring individual
+  re-enablement. Explicitly disabled folders remain disabled.

@@ -321,3 +321,21 @@ Nova remains the system HOME (comparison-only install).
   `nova901-master-off-*`, `nova901-master-restored-*`,
   `nova901-master-reset-*`, and `nova901-master-final-drawer-*`.
   Confidence: observed on the upgraded profile.
+
+## OBS-VESNA-013 — Vesna 0.4.15 and Nova drawer search
+
+- Verified the GitHub APK digest and installed `versionName=0.4.15`
+  on the Pixel. The 1100 px mid-screen upward swipe opened the Vesna
+  workspace menu instead of the drawer at 665, 800, and 925 ms (2/2
+  each). NT-GESTURE-03 still reproduces.
+- In Nova 9.0.1, opened the full app drawer, tapped its own Search apps
+  field, and entered the exact name of a disposable card. The result
+  showed the card name, Edit button, and Calculator action within
+  `apps_view`. This is distinct from query-free browsing, where the
+  earlier active-window card did not surface (OBS-VESNA-011).
+- Tapping Bluetooth connection in the builder opened Android's
+  permission prompt. Dismissed it without granting access; the
+  permission stayed denied and the Pixel reported zero bonded devices.
+  Connection-triggered rendering was not tested. Deleted the test card.
+- Evidence: `EVI-VESNA-003/v415-*`, `nova901-exact-*` and
+  `nova901-bt-*`. Confidence: observed for the checked paths.

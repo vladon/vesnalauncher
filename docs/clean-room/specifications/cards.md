@@ -114,11 +114,13 @@ Vesna's own, stricter behavior.
 - Evidence: OBS-CARDS-119 (VesnaRender create/render/delete cycle,
   re-verified 2026-11-20).
 
-- Nova 9.0.1 follow-up (OBS-VESNA-009): a custom card with a saved
-  Saturday-only condition still rendered in Nova Now name search on
-  Sunday. This confirms the inactive time condition did not gate that
-  search result; other condition types and drawer surfacing were not
-  retested on 9.0.1.
+- Nova 9.0.1 follow-up (OBS-VESNA-009/011/013): a saved inactive
+  Day/time rule and a mismatched Wi-Fi rule each failed to gate
+  exact-name Nova Now search. A card with an active time window did
+  not surface in query-free drawer browsing; exact-name search in
+  the drawer itself can show a custom card and its action. The
+  weather-change trigger and Bluetooth connection behavior were
+  not verified.
 
 ### CARDS-104 — Builder UX
 

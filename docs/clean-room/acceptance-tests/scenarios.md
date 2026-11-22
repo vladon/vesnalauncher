@@ -261,6 +261,13 @@ its feature ID. These describe externally observable behavior only.
 - Then it persists across an app restart
 - And the folder's editor shows its rules and enabled state in one
   surface
+- Given two non-empty generated folders, one enabled and one explicitly
+  disabled in its editor
+- When the master switch is turned OFF and the drawer is reopened
+- Then neither folder appears
+- When the master switch is turned back ON
+- Then the previously enabled folder reappears without individual
+  re-enablement and the explicitly disabled folder stays hidden
 
 ## Gestures
 
