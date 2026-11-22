@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.38
+
+- The app drawer keeps its scroll position and search when Android
+  recreates Home, including after a system theme change.
+
 ### 0.4.37
 
 - App names on Home, in the dock, in folders, and in drawer search update

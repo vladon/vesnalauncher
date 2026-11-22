@@ -271,6 +271,7 @@ class HomeActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(DRAWER_OPEN_STATE, drawer.isOpen)
+        drawer.saveResultViewport(outState)
         homeUiState.drawerAppFocus = drawer.focusedAppKey()
         homeUiState.shortcutFocus = focusedHomeShortcut()
         folderDialog?.let { homeUiState.focusedMemberId = it.focusedMemberId() }
@@ -278,10 +279,10 @@ class HomeActivity : ComponentActivity() {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        // Android restores the search field before the drawer resolves the focused result.
+        // Resolve the viewport and focused result after Android restores the search field.
         val focus = homeUiState.drawerAppFocus
         homeUiState.drawerAppFocus = null
-        if (drawer.isOpen && focus != null) drawer.restoreAppFocus(focus)
+        drawer.restoreResults(savedInstanceState, focus)
     }
 
     override fun onResume() {

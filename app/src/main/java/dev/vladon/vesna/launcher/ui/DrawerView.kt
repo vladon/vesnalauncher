@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.os.Bundle
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.Gravity
@@ -82,6 +83,10 @@ class DrawerView @JvmOverloads constructor(
     private var resetScrollOnCommit = false
     private val commitScrollReset = Runnable(::resetScrollAfterFilter)
     private var refreshAnchor: AppKey? = null
+
+    private data class Viewport(val position: Int, val offset: Int)
+
+    private var pendingViewport: Viewport? = null
 
     internal var isOpen = false
         private set
@@ -216,19 +221,32 @@ class DrawerView @JvmOverloads constructor(
     private fun applyFilter(resetScroll: Boolean) {
         // A package refresh can supersede a pending search diff. Carry the reset
         // forward to the result list that actually commits.
-        if (resetScroll) resetScrollOnCommit = true
+        if (resetScroll) {
+            pendingViewport = null
+            resetScrollOnCommit = true
+        }
         val query = searchField.text?.toString().orEmpty()
         val search = appSearch
         val filtered = search?.filter(query).orEmpty()
         // ListAdapter may still be applying its diff when Enter is pressed.
         quickLaunchResult = if (query.isNotBlank()) filtered.singleOrNull() else null
-        if (search != null && pendingAppFocus != null) {
+        if (search != null && (pendingAppFocus != null || (pendingViewport != null && filtered.isNotEmpty()))) {
             val submission = ++focusSubmission
             adapter.submitList(filtered) {
                 if (resetScrollOnCommit) resetScrollAfterFilter()
-                // A newer filter can supersede this commit before its holders are laid out.
-                list.doOnPreDraw {
-                    if (focusSubmission == submission) restoreCommittedAppFocus(submission)
+                if (adapter.itemCount > 0) {
+                    pendingViewport?.let { viewport ->
+                        pendingViewport = null
+                        grid.scrollToPositionWithOffset(
+                            viewport.position.coerceAtMost(adapter.itemCount - 1), viewport.offset,
+                        )
+                    }
+                }
+                if (pendingAppFocus != null) {
+                    // A newer filter can supersede this commit before its holders are laid out.
+                    list.doOnPreDraw {
+                        if (focusSubmission == submission) restoreCommittedAppFocus(submission)
+                    }
                 }
             }
         } else {
@@ -244,9 +262,28 @@ class DrawerView @JvmOverloads constructor(
         return adapter.currentList.getOrNull(list.getChildAdapterPosition(tile))?.key
     }
 
-    internal fun restoreAppFocus(key: AppKey) {
-        pendingAppFocus = key
-        if (appSearch != null) applyFilter(resetScroll = false)
+    internal fun saveResultViewport(state: Bundle) {
+        if (!isOpen || resetScrollOnCommit) return
+        val position = grid.findFirstVisibleItemPosition()
+        val tile = grid.findViewByPosition(position)
+        val viewport = if (tile != null) {
+            Viewport(position, grid.getDecoratedTop(tile) - list.paddingTop)
+        } else {
+            pendingViewport
+        } ?: return
+        state.putInt(SCROLL_POSITION, viewport.position)
+        state.putInt(SCROLL_OFFSET, viewport.offset)
+    }
+
+    internal fun restoreResults(state: Bundle, focusedApp: AppKey?) {
+        if (!isOpen) return
+        if (state.containsKey(SCROLL_POSITION)) {
+            pendingViewport = Viewport(state.getInt(SCROLL_POSITION), state.getInt(SCROLL_OFFSET))
+            // The saved query arrives through the text watcher, but it isn't a user edit.
+            resetScrollOnCommit = false
+        }
+        pendingAppFocus = focusedApp
+        if (appSearch != null && (pendingViewport != null || focusedApp != null)) applyFilter(resetScroll = false)
     }
 
     private fun restoreCommittedAppFocus(submission: Int) {
@@ -476,6 +513,8 @@ class DrawerView @JvmOverloads constructor(
         LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
 
     private companion object {
+        const val SCROLL_POSITION = "drawer_scroll_position"
+        const val SCROLL_OFFSET = "drawer_scroll_offset"
         const val ANIMATION_MS = 250L
         const val MAX_FLING_DURATION_MS = 400L
     }

@@ -562,6 +562,19 @@ and keeps Home out of keyboard and accessibility traversal while open.
   The 13 focused tests passed on Android 8 and 15. Debug build and lint
   passed. Physical devices and TalkBack speech were not tested.
 
+### Drawer scroll position through Home recreation
+
+- On signed 0.4.37 at 200% text in a short Android 15 viewport, switching
+  from Light to Dark reset a scrolled drawer to the first row.
+- The fixed build restored the exact visible rows and offsets from Light
+  to Dark in the full list and from Dark to Light with an active query.
+  Clearing the query returned to the top, and reopening started at the
+  beginning. The Android activity instance changed in both transitions.
+- A regression test restores a scrolled, filtered drawer before its apps
+  arrive, then verifies the same row and offset and a clean reset on Clear.
+  All 16 focused Android 15 cases and debug lint passed. Physical devices
+  and TalkBack speech were not checked.
+
 ### Keyboard focus in drawer results through Home recreation
 
 - On signed 0.4.31, changing the system theme kept the `ca` search but
