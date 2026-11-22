@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher.settings
 
 import android.graphics.Rect
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -9,7 +10,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
+import androidx.compose.runtime.saveable.SaveableStateRegistry
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ActivityScenario
@@ -146,6 +150,86 @@ class SettingsSearchLayoutTest {
             assertTrue("Opening the result should highlight the matching setting", until { isHighlighted() })
             scenario.recreate()
             assertTrue("Recreation should retain the highlighted setting", until { isHighlighted() })
+        }
+    }
+
+    @Test
+    fun settingsDirectoryKeepsScrollPositionAfterRestoration() {
+        verifyRestoredScroll(SettingsPage.ROOT, target = null, anchor = R.string.settings_about_detail)
+    }
+
+    @Test
+    fun highlightedPageKeepsTheReadersPositionAfterRestoration() {
+        verifyRestoredScroll(SettingsPage.APPEARANCE, target = R.string.settings_theme, anchor = R.string.settings_show_app_names_detail)
+    }
+
+    private fun verifyRestoredScroll(page: SettingsPage, target: Int?, anchor: Int) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val title = instrumentation.targetContext.getString(anchor)
+        val registry = mutableStateOf(SaveableStateRegistry(null) { true })
+        val visible = mutableStateOf(true)
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                activity.setContent {
+                    // Recreate the composition at a fixed short height with the values Android saves.
+                    if (visible.value) {
+                        CompositionLocalProvider(LocalSaveableStateRegistry provides registry.value) {
+                            VesnaTheme(dark = false) {
+                                Box(Modifier.fillMaxWidth().height(224.dp)) {
+                                    SettingsScreen(
+                                        page = page,
+                                        query = "",
+                                        onQueryChange = {},
+                                        searchTarget = target,
+                                        onNavigate = { _, _ -> },
+                                        onResetInputFocus = {},
+                                        versionName = "",
+                                        defaultHome = DefaultHomeState.AVAILABLE,
+                                        onSetDefaultHome = {},
+                                        themeMode = ThemeMode.SYSTEM,
+                                        onThemeSelected = {},
+                                        showAppNames = true,
+                                        onShowAppNamesChanged = {},
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            fun scroller() = automation.rootInActiveWindow?.findVisible {
+                it.isScrollable && AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD in it.actionList
+            }
+            fun anchorBounds() = automation.rootInActiveWindow
+                ?.findVisible { it.text?.lineSequence()?.any { line -> line == title } == true }
+                ?.let { Rect().also(it::getBoundsInScreen) }
+
+            assertTrue("The fixture must have more Settings content below the viewport", until { scroller() != null })
+            automation.waitForIdle(250, 4_000)
+            val initialBounds = anchorBounds()
+            for (step in 0 until 10) {
+                val region = scroller() ?: break
+                val bounds = Rect().also(region::getBoundsInScreen)
+                val x = bounds.centerX()
+                val margin = bounds.height() / 8
+                val swipe = "input swipe $x ${bounds.bottom - margin} $x ${bounds.top + margin} 300"
+                ParcelFileDescriptor.AutoCloseInputStream(automation.executeShellCommand(swipe)).use { it.readBytes() }
+                automation.waitForIdle(300, 4_000)
+            }
+            assertTrue("The Settings list must be at its scroll limit before saving", until { scroller() == null })
+            val scrolledBounds = requireNotNull(anchorBounds()) { "Scrolling should reveal $title" }
+            assertTrue("Scrolling must move the anchor before saving", scrolledBounds != initialBounds)
+
+            scenario.onActivity {
+                registry.value = SaveableStateRegistry(registry.value.performSave()) { true }
+                visible.value = false
+            }
+            assertTrue("The initial composition must leave the window", until { anchorBounds() == null })
+            scenario.onActivity { visible.value = true }
+            automation.waitForIdle(250, 4_000)
+            val restored = until { anchorBounds() == scrolledBounds }
+            assertTrue("Settings should restore the scrolled position on $page: expected $scrolledBounds, got ${anchorBounds()}", restored)
         }
     }
 

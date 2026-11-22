@@ -4,7 +4,6 @@ import android.content.Intent
 import android.view.View
 import android.widget.ImageView
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -55,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -184,7 +185,7 @@ internal fun SettingsScreen(
                         Modifier
                             .widthIn(max = 560.dp)
                             .fillMaxWidth()
-                            .then(if (inSubpage) Modifier.verticalScroll(remember { ScrollState(0) }) else Modifier)
+                            .then(if (inSubpage) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                             .padding(
                                 start = 16.dp,
                                 end = 16.dp,
@@ -301,7 +302,7 @@ private fun SettingsDirectory(
         onNavigate(page, target)
     }
     key(term) {
-        Column(Modifier.verticalScroll(remember { ScrollState(0) }), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             var found = false
             if (term.isNotEmpty()) {
                 val entries = listOf(
@@ -372,8 +373,13 @@ private fun SearchTarget(highlighted: Boolean, content: @Composable () -> Unit) 
     }
     val requester = remember { BringIntoViewRequester() }
     var placed by remember { mutableStateOf(false) }
+    var revealed by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(placed) {
-        if (placed) requester.bringIntoView()
+        // A search result scrolls into view once, not over a restored reading position.
+        if (placed && !revealed) {
+            requester.bringIntoView()
+            revealed = true
+        }
     }
     Surface(
         modifier = Modifier.fillMaxWidth().bringIntoViewRequester(requester).onPlaced { placed = true },
