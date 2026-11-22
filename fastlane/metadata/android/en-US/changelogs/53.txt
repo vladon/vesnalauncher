@@ -1,0 +1,1 @@
+Lock your Home layout from Settings > Home screen to prevent accidental changes to shortcuts, folders, the dock, and pages. You can still open apps and folders and switch pages.
