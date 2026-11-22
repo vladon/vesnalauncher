@@ -14,9 +14,14 @@ android {
         applicationId = "dev.vladon.vesna.launcher"
         minSdk = 26
         targetSdk = 37
-        versionCode = 51
-        versionName = "0.4.46"
+        versionCode = 52
+        versionName = "0.4.47"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    dependenciesInfo {
+        // F-Droid rejects the Play Console dependency metadata signing block.
+        includeInApk = false
     }
 
     // Package the approved adaptive icon handoff directly so artwork cannot drift.
