@@ -50,6 +50,7 @@ Pinned spec: [`specifications/home-screen.md`](https://github.com/vladon/vesnala
 |---|---|---|---|---|
 | `HOME-104` | **Workspace page management via drag** (not Android HOME registration) | none — single fixed 4×5 page | Named scenario absent from research inventory | **Not implemented**; matrix "complete" unsupported. Research candidate for [ENG-101 in BACKLOG.md](BACKLOG.md#eng-101-workspace-page-identities-and-schema-migration) |
 | Workspace placement/ordering | — | `GridCanvas`, `WorkspaceResolver`, `WorkspaceRepository` | `GridCanvasTest` (11), `WorkspaceResolverTest` (6) | **Test-verified (grid/order model)** |
+| Keyboard focus after Home recreation | Restore the same app or folder at its cell on the active page, or the same dock pin; leave an open drawer or dialog in control | [Keep keyboard focus on Home and in the dock through recreation](PROJECT_STATUS.md#keep-keyboard-focus-on-home-and-in-the-dock-through-recreation) | **Live theme change verified on API 35 at 200% text; duplicate shortcuts covered by instrumentation.** |
 
 ## HOME role and launching
 

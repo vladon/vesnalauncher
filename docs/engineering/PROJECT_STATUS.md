@@ -393,6 +393,20 @@ changing the member order. Members scroll independently of the dialog actions.
   focused tests passed on Android 8 and 15; debug build and lint passed.
   TalkBack speech and physical devices were not tested.
 
+### Keep keyboard focus on Home and in the dock through recreation
+
+- With signed 0.4.30 on Android 15, a system theme switch moved focus
+  from Gmail on the workspace or Chrome in the dock to Contacts.
+- At 200% text on Android 15, verified focus retention on the workspace
+  app and folder tiles and on a dock favorite, in Light and Dark. D-pad
+  moved focus normally after recreation. The tested app tiles measured
+  at least 90 dp on each axis; the outline-to-focus-fill contrast was
+  4.96:1 in Light and 7.29:1 in Dark on the fixture wallpaper.
+- Duplicate shortcuts in the regression distinguish the exact focused
+  copy from another copy of the same app. Both cases failed on 0.4.30.
+  With the fix, 11 focused tests passed on each of Android 8 and Android 15;
+  debug build and lint passed. TalkBack speech and physical devices were not tested.
+
 ### Home labels at large text sizes
 
 On compact Home grids, app and folder artwork shrinks when needed to fit a
