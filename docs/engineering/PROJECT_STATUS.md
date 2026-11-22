@@ -1071,6 +1071,20 @@ or the next open position when adding. Hidden but saved pins still use capacity.
   including movement within and at the threshold. Debug lint passed.
   Physical devices and TalkBack were not checked.
 
+### Cancel drawer gestures on dismissal
+
+- On 0.4.44, pressing Back during a drawer hold closed the drawer but a
+  subsequent move and release still installed a shortcut on Home.
+- On Android 15, Back and the Android Home intent each cancelled both
+  pending holds and active drags in Light English and Dark Arabic RTL at
+  200% text. The preview cleared and release left the placement and folder
+  rows unchanged.
+- `ShortcutActionsTest` checks that Back leaves Home open and focused
+  without opening a shortcut menu. Appearance, touch targets and
+  accessibility labels were unchanged. Physical devices and TalkBack were
+  not checked.
+- All 16 focused tests passed on Android 8 and 15, along with debug lint.
+
 ### Atomic dock insertion
 
 A drawer drop now writes the new dock pin and the shifted slots in one Room

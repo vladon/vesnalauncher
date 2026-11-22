@@ -315,6 +315,60 @@ class ShortcutActionsTest {
     }
 
     @Test
+    fun backDismissesAHeldOrDraggingDrawerTileAndLeavesHomeOpen() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val menu = instrumentation.targetContext.getString(R.string.menu_add_to_workspace)
+        for (dragging in listOf(false, true)) {
+            ActivityScenario.launch(HomeActivity::class.java).use { home ->
+                home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+                assertTrue("Drawer must be ready before testing Back (dragging=$dragging)", until {
+                    var ready = false
+                    home.onActivity {
+                        val drawer = it.findViewById<DrawerView>(R.id.drawer)
+                        val list = drawer.findViewById<RecyclerView>(R.id.drawer_list)
+                        ready = drawer.isOpen && drawer.translationY == 0f && list.childCount > 1 && list.hasWindowFocus()
+                    }
+                    ready
+                })
+                home.onActivity { activity ->
+                    val root = activity.findViewById<LauncherDragLayer>(R.id.launcher_root)
+                    val drawer = activity.findViewById<DrawerView>(R.id.drawer)
+                    val tile = drawer.findViewById<RecyclerView>(R.id.drawer_list).getChildAt(1)
+                    val rect = Rect(0, 0, tile.width, tile.height).also { root.offsetDescendantRectToMyCoords(tile, it) }
+                    val down = SystemClock.uptimeMillis()
+                    fun send(action: Int, x: Float, y: Float) {
+                        val event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, x, y, 0)
+                        try {
+                            event.source = InputDevice.SOURCE_TOUCHSCREEN
+                            root.dispatchTouchEvent(event)
+                        } finally {
+                            event.recycle()
+                        }
+                    }
+                    send(MotionEvent.ACTION_DOWN, rect.exactCenterX(), rect.exactCenterY())
+                    try {
+                        assertTrue(tile.performLongClick())
+                        if (dragging) send(MotionEvent.ACTION_MOVE, 0f, 0f)
+                        assertEquals(!dragging, drawer.isOpen)
+                        activity.onBackPressedDispatcher.onBackPressed()
+                        assertTrue("Back must return to Vesna's Home", !drawer.isOpen && !activity.isFinishing)
+                        assertTrue("Back must discard the held gesture", root.isDragActive?.invoke() == false)
+                        send(MotionEvent.ACTION_MOVE, 0f, 0f)
+                        send(MotionEvent.ACTION_UP, 0f, 0f)
+                    } finally {
+                        if (root.isDragActive?.invoke() == true) send(MotionEvent.ACTION_CANCEL, 0f, 0f)
+                    }
+                }
+                assertTrue("Home must regain focus without a shortcut menu", until {
+                    var homeFocused = false
+                    home.onActivity { homeFocused = it.findViewById<View>(R.id.home_open_drawer).hasWindowFocus() }
+                    homeFocused && instrumentation.uiAutomation.rootInActiveWindow?.hasVisibleText(menu) == false
+                })
+            }
+        }
+    }
+
+    @Test
     fun secondFingerCancelsAFolderDragWithoutBlockingTheNextDrag() {
         ActivityScenario.launch(HomeActivity::class.java).use { home ->
             assertTrue(until {

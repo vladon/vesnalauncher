@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.45
+
+- Pressing Back or Home during a hold or drag from the app drawer cancels the
+  gesture. Lifting your finger afterward no longer adds an unwanted shortcut.
+
 ### 0.4.44
 
 - A slight finger movement during a long press in the app drawer no longer

@@ -102,7 +102,8 @@ class DrawerView @JvmOverloads constructor(
                 hideKeyboard()
                 onItemOptions?.invoke(app, anchor)
             },
-            onItemTouchHold = { app, anchor ->
+            onItemTouchHold = hold@{ app, anchor ->
+                if (!isOpen) return@hold
                 hideKeyboard()
                 onItemDragStarted?.invoke(app, anchor)
                 // While armed, the drag layer owns subsequent MOVE events; the UP
