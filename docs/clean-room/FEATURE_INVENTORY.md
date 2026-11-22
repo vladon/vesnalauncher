@@ -30,7 +30,7 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | HOME-001 | Home screen page management (add/remove/reorder pages) | pending |
-| HOME-002 | Grid sizing (rows/columns) | Nova 9.0.1: 6 rows × 5 columns → 4×4 reflow and restart verified for three shortcuts (OBS-VESNA-019; #106) |
+| HOME-002 | Grid sizing (rows/columns) | Nova 9.0.1: shrinking sends overflow to another page, keeps it after restart, and restores original positions when re-expanded. Vesna v0.4.50 has no tested grid selector (OBS-VESNA-019/032; #106). |
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |

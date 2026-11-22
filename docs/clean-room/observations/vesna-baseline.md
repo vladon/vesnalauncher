@@ -763,3 +763,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Evidence: `EVI-VESNA-003/parity31-*`. Confidence: observed
   on this fixture with test queries and no active default
   network during the offline pass.
+
+## OBS-VESNA-032 — Workspace overflow goes to the next page
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.50 (55). On Nova, started with three existing
+  shortcuts and added two identifiable disposable shortcuts
+  to the bottom-right of a 4×4 workspace.
+- Reduced the workspace to 2×2. Four shortcuts filled the
+  original page, and a left swipe revealed the fifth alone
+  on the next page. All five appeared exactly once across
+  the two inspected pages. The division and positions
+  survived a Nova process restart.
+- Restoring 4×4 returned all five to their original page and
+  bounds, with no manual repinning. Removed the disposable
+  package; verified the original three shortcut positions
+  and dock pins. In Vesna, Settings search for grid returned
+  no control to run the same resize. Follow-up for #106.
+- Widget migration was not tested: the widget placement
+  prompted for access and was cancelled without granting it.
+- Evidence: `EVI-VESNA-003/parity32-*`. Confidence: observed
+  for five shortcuts shrinking from 4×4 to 2×2 and back.
