@@ -270,3 +270,4 @@ Traceability: every ticket's acceptance scenario lives in
 | NT-HOME-05 | App shortcuts, widgets and editing in the workspace icon menu | [#114](https://github.com/vladon/vesnalauncher/issues/114) |
 | NT-DOCK-06 | Independent dock configuration and paging | [#115](https://github.com/vladon/vesnalauncher/issues/115) |
 | NT-BACKUP-01 | Manual layout file export and restore policy; linked to ENG-106 | [#116](https://github.com/vladon/vesnalauncher/issues/116) |
+| NT-DRAWER-09 | Per-app drawer visibility without disabling the app or removing pins (OBS-VESNA-021) | [#119](https://github.com/vladon/vesnalauncher/issues/119) |

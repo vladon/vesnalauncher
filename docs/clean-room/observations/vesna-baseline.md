@@ -487,3 +487,30 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   the Vesna workspace; its drawer launched Clock; pressing system Home
   returned to Nova. In-app Settings and the deep links were not part of
   this replay. Evidence: `EVI-VESNA-003/parity046-*.xml`.
+
+## OBS-VESNA-021 — Shortcut actions, dock pages, and drawer visibility
+
+- Nova 9.0.1 Prime on the isolated Android 15 AVD: the mail app's
+  workspace context menu offered its app action, an app-scoped widget
+  picker, and a shortcut editor with label and per-icon swipe options.
+  Tapping the app action opened the mail app's initial setup, so the
+  compose screen was not verified. Dragging the action from the menu
+  did place it as a standalone workspace shortcut. No mail was sent.
+- With two dock pages configured, a horizontal swipe on the dock
+  switched from the original five favorites to an empty second page,
+  without changing the workspace. Moved the test shortcut to page two:
+  both pages kept separate contents. A process restart landed on
+  page one, but the pinned action was still on page two. Removed the
+  test pin. Infinite scrolling and page-position preference variants
+  were not exercised.
+- Hiding Chrome in Nova kept the package enabled and its dock favorite
+  intact. The app was absent between Camera and Clock in alphabetical
+  drawer browsing, but exact-name search still returned it. Restored
+  the visibility setting. This is a browsing filter, not access control.
+  Vesna 0.4.46 has no matching settings control (NT-DRAWER-09, #119).
+- Release triage: Vesna 0.4.46 includes the app-icon fix from PR #104
+  (#101 closed; see OBS-VESNA-020 device replay). The workspace lock
+  PR #105 was still open; #103, #106–109 and #112–116 were not shipped
+  fixes in this release.
+- Evidence: `EVI-VESNA-003/nova901-shortcut-*`, `nova901-dock-*`,
+  and `nova901-hidden-*`. Confidence: observed for these emulator paths.

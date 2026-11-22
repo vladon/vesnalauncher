@@ -34,7 +34,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
-| HOME-006 | Long-press context menu on workspace items | Nova exposes app actions and editing/widget entry points; Vesna 0.4.46 has a narrower menu (OBS-HOME-003; OBS-VESNA-020). |
+| HOME-006 | Long-press context menu on workspace items | Nova 9.0.1: app action launches the app and can be pinned; editor and app-scoped widgets open (OBS-VESNA-021; #114). |
 | HOME-007 | Wallpaper interactions (pick, scroll behavior) | discovered (Wallpapers button; wallpaper scrolling setting) |
 | HOME-008 | Icon labels (show/hide/edit) | discovered (Label toggle + sub-options) |
 | HOME-009 | Page transition effects and scrolling behavior | discovered (Transition effect, Infinite scroll, Page indicator settings) |
@@ -57,7 +57,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-005 | Drawer search | Nova external providers and web suggestions observed; Vesna 0.4.46 searches installed apps (OBS-VESNA-020). |
 | DRAWER-006 | Scrolling and fast-scroll behavior | Nova 9.0.1: thumb jumps between letters and is absent during tested search (OBS-VESNA-019; #109) |
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
-| DRAWER-008 | Hidden apps | discovered (Prime-gated) |
+| DRAWER-008 | Hide apps from alphabetical browsing | Nova 9.0.1: kept the app installed, pinned and searchable (OBS-VESNA-021; #119). |
 | DRAWER-009 | App categories/tabs/folders in drawer | discovered (Tab bar placement: None; Drawer groups: Prime) |
 | DRAWER-010 | App context menus in drawer | pending |
 | DRAWER-011 | App launching from drawer | pending |
@@ -72,7 +72,7 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | DOCK-001 | Dock visibility and placement | discovered (Dock subpage under Home screen; 5 icons visible) |
-| DOCK-002 | Dock icon count / paging | pending |
+| DOCK-002 | Dock icon count / paging | Nova 9.0.1: independent horizontal paging; page-two shortcut persisted after restart. Slot-count changes not tested (OBS-VESNA-021; #115). |
 | DOCK-003 | Dock background styles | discovered (Dock subpage: background setting) |
 | DOCK-004 | Add/remove/reorder dock items | pending |
 | DOCK-005 | Folders in dock | pending |
