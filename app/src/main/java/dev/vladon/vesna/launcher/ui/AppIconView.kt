@@ -29,6 +29,7 @@ class AppIconView @JvmOverloads constructor(
     private val iconView: ImageView
     private val labelView: TextView
     private val labelGap: Int
+    private var inlineLabel = false
     private var pointerDown = false
     private var showOptions: ((View) -> Unit)? = null
     private var dragOnHold: ((View) -> Unit)? = null
@@ -46,14 +47,13 @@ class AppIconView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        inlineLabel = false
         val artwork = iconView.layoutParams
-        val labelMargins = labelView.layoutParams as MarginLayoutParams
-        labelMargins.topMargin = labelGap
         val preferredWidth = artwork.width
+        val widthLimit = (MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight).coerceAtLeast(0)
         if (MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED) {
             // A fixed-width child would overflow the tile's padded content.
-            val contentWidth = MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
-            artwork.width = minOf(preferredWidth, contentWidth.coerceAtLeast(0))
+            artwork.width = minOf(preferredWidth, widthLimit)
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
@@ -63,18 +63,47 @@ class AppIconView @JvmOverloads constructor(
         if (line != null) {
             val lineHeight = line.getLineBottom(0) + labelView.compoundPaddingTop + labelView.compoundPaddingBottom
             if (labelView.measuredHeight < lineHeight) {
-                val artworkMargins = artwork as MarginLayoutParams
-                val availableHeight = MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom -
-                    labelMargins.bottomMargin - artworkMargins.topMargin - artworkMargins.bottomMargin
+                val contentHeight = (measuredHeight - paddingTop - paddingBottom).coerceAtLeast(0)
                 val preferredHeight = artwork.height
-                artwork.height = (availableHeight - lineHeight - labelGap).coerceIn(0, preferredHeight)
-                // If there is no room for artwork, don't spend part of the label line on its gap.
-                if (artwork.height == 0) labelMargins.topMargin = 0
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-                artwork.height = preferredHeight
+                val stackedArtHeight = contentHeight - lineHeight - labelGap
+                val inlineArtSize = minOf(preferredWidth, preferredHeight, contentHeight)
+                val contentWidth = measuredWidth - paddingLeft - paddingRight
+                if (stackedArtHeight <= labelGap && contentHeight >= lineHeight &&
+                    inlineArtSize > 0 && contentWidth >= 2 * inlineArtSize + labelGap
+                ) {
+                    // A short, wide cell has room beside the label even when it has none above it.
+                    inlineLabel = true
+                    val artSpec = MeasureSpec.makeMeasureSpec(inlineArtSize, MeasureSpec.EXACTLY)
+                    iconView.measure(artSpec, artSpec)
+                    labelView.measure(
+                        MeasureSpec.makeMeasureSpec(contentWidth - inlineArtSize - labelGap, MeasureSpec.AT_MOST),
+                        MeasureSpec.makeMeasureSpec(contentHeight, MeasureSpec.AT_MOST),
+                    )
+                } else {
+                    artwork.height = stackedArtHeight.coerceIn(minOf(1, contentHeight), preferredHeight)
+                    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+                    artwork.height = preferredHeight
+                }
             }
         }
         artwork.width = preferredWidth
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        if (!inlineLabel) {
+            super.onLayout(changed, left, top, right, bottom)
+            return
+        }
+        val artWidth = iconView.measuredWidth
+        val labelWidth = labelView.measuredWidth
+        val start = paddingLeft + (width - paddingLeft - paddingRight - artWidth - labelGap - labelWidth) / 2
+        val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+        val artLeft = if (rtl) start + labelWidth + labelGap else start
+        val labelLeft = if (rtl) start else start + artWidth + labelGap
+        val artTop = paddingTop + (height - paddingTop - paddingBottom - iconView.measuredHeight) / 2
+        val labelTop = paddingTop + (height - paddingTop - paddingBottom - labelView.measuredHeight) / 2
+        iconView.layout(artLeft, artTop, artLeft + artWidth, artTop + iconView.measuredHeight)
+        labelView.layout(labelLeft, labelTop, labelLeft + labelWidth, labelTop + labelView.measuredHeight)
     }
 
     /** Tiles on an opaque drawer or folder surface don't need wallpaper label treatment. */

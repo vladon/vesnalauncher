@@ -47,7 +47,7 @@ The Android package name is `dev.vladon.vesna.launcher`.
 ### 0.4.23
 
 - Home shortcuts and the dock stay clear of side navigation bars in
-  landscape. Short Home tiles keep a complete line of the app or folder name.
+  landscape. Wide, short Home tiles show the icon alongside the app or folder name.
 
 ### 0.4.22
 

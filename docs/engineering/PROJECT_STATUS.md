@@ -371,16 +371,18 @@ full accessible names, tap targets, and saved positions stay unchanged.
   dock tiles extended to x=1887 and x=1910. Workspace label lines were
   cut off even at normal text size.
 - Home now uses safe side insets for its grid, dock, and controls without
-  moving the wallpaper or changing saved cells. Short tiles reserve the
-  actual label line; the artwork and its gap give way if necessary.
-- On Android 15, checked the right bar at normal text and the left bar
-  in Dark at 200%. Drawer-to-Home and workspace drags next to a left
-  inset landed in the intended cells. Android 8 showed full label lines
-  on a populated Home page in landscape beside its navigation bar.
-- The side-inset and short-label checks reproduced the failures on the
-  previous debug build. The focused Home, paging, dock and shortcut
-  suites passed 14/14 on each Android version; build and lint passed.
-  Notched hardware and TalkBack speech were not tested.
+  moving the wallpaper or changing saved cells. Wide, short tiles put
+  the artwork beside a complete label line, with the same 4 dp gap.
+- Android 15 showed both the artwork and a 91 px label line at 200% in
+  Light with a right bar and Dark with a left bar. At normal text size
+  in portrait, the artwork returned to 48 dp above the label. Drawer-to-Home
+  and workspace drags next to a left inset landed in the intended cells.
+  Android 8 showed full label lines on a populated landscape Home page.
+- The focused Home, paging, dock and shortcut tests passed 14/14 on
+  each Android version, including the compact app and folder tiles in
+  LTR and RTL. The artwork regression failed on the earlier candidate
+  as expected. Build and lint passed. Physical cutouts and TalkBack
+  speech were not tested.
 
 ### Cancel a drag when a second finger touches
 

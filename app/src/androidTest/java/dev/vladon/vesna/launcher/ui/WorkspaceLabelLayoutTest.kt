@@ -2,6 +2,8 @@ package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.View.MeasureSpec
 import android.widget.TextView
@@ -40,7 +42,7 @@ class WorkspaceLabelLayoutTest {
         val workspace = WorkspaceView(context)
         workspace.bind(
             mapOf(
-                0 to CellContent.App(LauncherApp(AppKey("qa.calendar", "Main"), appName, null)),
+                0 to CellContent.App(LauncherApp(AppKey("qa.calendar", "Main"), appName, ColorDrawable(Color.BLUE))),
                 1 to CellContent.FolderCell(Folder(1L, folderName, cellIndex = 1), memberCount = 2),
             ),
         )
@@ -81,17 +83,28 @@ class WorkspaceLabelLayoutTest {
             assertTrue(artwork[i].height in 1 until fullArtworkHeights[i])
         }
 
-        // At the minimum size for the label, even the artwork gap would clip it.
-        labels.forEachIndexed { i, label ->
-            val tile = tiles[i]
-            val height = landscapeLineHeights[i] + tile.paddingTop + tile.paddingBottom
-            val width = tile.width
-            tile.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY))
-            tile.layout(0, 0, width, height)
-            assertEquals("Label must use the gap when artwork cannot fit", landscapeLineHeights[i], label.height)
-            assertEquals(0, artwork[i].height)
-            assertTrue(label.bottom <= tiles[i].height)
+        // A wide tile with no space above its label must still draw the app or folder art.
+        for (direction in listOf(View.LAYOUT_DIRECTION_LTR, View.LAYOUT_DIRECTION_RTL)) {
+            labels.forEachIndexed { i, label ->
+                val tile = tiles[i]
+                val icon = artwork[i]
+                val height = landscapeLineHeights[i] + tile.paddingTop + tile.paddingBottom
+                val width = tile.width
+                tile.layoutDirection = direction
+                tile.measure(
+                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
+                )
+                tile.layout(0, 0, width, height)
+                assertEquals("The scaled label must stay complete", landscapeLineHeights[i], label.height)
+                assertEquals("Artwork must use the available height", landscapeLineHeights[i], icon.height)
+                val gap = if (direction == View.LAYOUT_DIRECTION_RTL) icon.left - label.right else label.left - icon.right
+                assertEquals(dp(4), gap)
+                for (child in listOf(icon, label)) {
+                    assertTrue(child.left >= tile.paddingLeft && child.right <= width - tile.paddingRight)
+                    assertTrue(child.top >= tile.paddingTop && child.bottom <= height - tile.paddingBottom)
+                }
+            }
         }
 
         layout(height = 560)
