@@ -1,8 +1,7 @@
 # Specifications — Dock
 
 Derived from `observations/dock.md` (inventory) and workspace captures.
-Behavioral testing of dock interactions is pending; this file covers the
-approved inventory-derived structure plus verified rendering.
+The inventory and the observable paging behavior are covered here.
 
 ## DOCK-100 — Dock structure and configuration
 
@@ -12,7 +11,7 @@ approved inventory-derived structure plus verified rendering.
 - Configuration parameters (observed):
   1. Enable/disable the dock entirely.
   2. Icon count via a discrete selector (observed 5).
-  3. Dock pages: number of dock pages (observed 1).
+  3. Dock pages: number of dock pages (one, two and three observed).
   4. Infinite scroll across dock pages (default off).
   5. Icon size, with a "match desktop size" mode (checked by default; the
      independent size control is disabled while matching).
@@ -29,18 +28,22 @@ approved inventory-derived structure plus verified rendering.
   (exact min/max to verify behaviorally).
 - Interactions: search bar placement interacts with dock position
   (HOME-010: "Dock (Below icons)" places search under the dock).
-- Persistence: dock contents/config persist across launcher restart
-  (workspace-level persistence verified under OBS-HOME-005; dock-specific
-  re-test pending).
-- Evidence: OBS-DOCK-001, OBS-DOCK-002 (EVI-DOCK-001)
-- Confidence: Observed (inventory/rendering); interactions Not Tested
+- Persistence: a pin on the second dock page survived launcher restart
+  (OBS-VESNA-021); wrap preference and position-memory variants were not
+  replayed.
+- Evidence: OBS-DOCK-001/002 (EVI-DOCK-001), OBS-VESNA-021/022
+  (EVI-VESNA-003).
+- Confidence: Observed for rendering and tested paging paths.
 
 ### Vesna requirements
 
 - R-DOCK-100.1: Provide a dock that can be enabled/disabled.
 - R-DOCK-100.2: Dock icon count is user-configurable via a discrete
   selector.
-- R-DOCK-100.3: Dock supports multiple pages with optional infinite scroll.
+- R-DOCK-100.3: Dock supports multiple pages. With infinite scroll
+  disabled, an outward swipe on either end stays on the current dock
+  page. With infinite scroll enabled, such swipes wrap first-to-last
+  and last-to-first without changing workspace page.
 - R-DOCK-100.4: Dock icon size may follow the desktop size or be set
   independently (matching disables the independent control).
 - R-DOCK-100.5: Dock labels are independently togglable (default off).

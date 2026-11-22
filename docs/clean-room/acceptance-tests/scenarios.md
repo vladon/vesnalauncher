@@ -202,6 +202,14 @@ its feature ID. These describe externally observable behavior only.
 - When the launcher process is force-stopped and restarted
 - Then every dock setting and its contents restore exactly
 
+### AT-DOCK-104 — Dock wraps only when enabled
+- Given three distinguishable dock pages and infinite scroll disabled
+- When the user swipes outward from the first and last dock pages
+- Then each swipe leaves the dock on the current page
+- When the user enables infinite scroll and repeats the boundary swipes
+- Then the dock wraps from first to last and from last to first
+- And the workspace page does not change in either setting
+
 ## Folders
 
 ### AT-FOLDER-100 — Folder creation

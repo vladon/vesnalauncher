@@ -519,3 +519,39 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   against GitHub tags and issue states, not replayed on the emulator.
 - Evidence: `EVI-VESNA-003/nova901-shortcut-*`, `nova901-dock-*`,
   and `nova901-hidden-*`. Confidence: observed for these emulator paths.
+
+## OBS-VESNA-022 — Vesna main lock, Nova dock wrap and drawer menus
+
+- Vesna `main` at `33f6cbc69a8ddc6b88338d5839e909aea14c0c88`,
+  debug 0.4.48 (version code 53), built and installed on the isolated
+  Android 15 `VesnaIssue103_QA` AVD. Enabling the workspace lock left
+  all 19 placement rows unchanged under a staged Contacts drag.
+  With the lock off the same drag moved Contacts from cell 0 to 10;
+  the reverse drag restored the original rows.
+- When locked, the workspace, dock, and drawer app menus retained
+  application details but omitted placement actions. The folder opened
+  without rename/remove controls, Home options omitted page creation,
+  and holding empty space showed lock feedback. A normal Gmail tap
+  still launched the app. The enabled switch survived a process restart.
+  Restored the off setting; system Home was unchanged. This is an
+  emulator replay of #103, not a widget or full accessibility sweep.
+- Nova 9.0.1 Prime, on a separate Android 15 AVD: configured three
+  distinguishable dock pages. With wrap off, a right swipe on page one
+  stayed on page one and a left swipe on page three stayed on page
+  three. With wrap on, the same gestures crossed the boundary in both
+  directions. The workspace did not change. Restored two pages and
+  wrap off. The wrap preference was not tested across a restart.
+- Long-pressing Gmail in Nova's alphabetical drawer exposed its
+  compose action, widget and shortcut-editor entry points, app
+  information, and drawer hiding. Tapping the compose action reached
+  Gmail's initial setup; composing itself was not verified. Dragging
+  from this drawer menu was not replayed.
+- New comparison gap: long-pressing the same app in Nova's prediction
+  row offered per-item dismissal instead of drawer hiding. Dismissal
+  removed Gmail from predictions, including after a Nova restart,
+  while it remained in the alphabetical drawer. The Vesna drawer
+  build tested here has no prediction row or corresponding action.
+  This refines [#112](https://github.com/vladon/vesnalauncher/issues/112);
+  the regular drawer menu complements #114 and #119.
+- Evidence: `EVI-VESNA-003/parity22-vesna-*`, `parity22-nova-wrap-*`,
+  and `parity22-nova-drawer-*`. Confidence: observed for these paths.
