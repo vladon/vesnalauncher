@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.31
+
+- Keyboard focus stays on the same Home or dock shortcut when the system
+  theme changes.
+
 ### 0.4.30
 
 - Keyboard focus stays on the same app in an open Home folder when the

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK
 import androidx.lifecycle.Lifecycle
@@ -40,6 +41,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.VesnaApplication
+import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.ThemeMode
@@ -101,15 +103,23 @@ class HomeActivity : ComponentActivity() {
         val editor: FolderRenameEditorState,
     )
 
-    private class FolderUiState : ViewModel() {
+    private sealed interface ShortcutFocus {
+        data class WorkspaceApp(val pageId: Long, val cell: Int, val key: AppKey) : ShortcutFocus
+        data class WorkspaceFolder(val pageId: Long, val cell: Int, val id: Long) : ShortcutFocus
+        data class Dock(val id: Long) : ShortcutFocus
+    }
+
+    private class HomeUiState : ViewModel() {
+        var shortcutFocus: ShortcutFocus? = null
         var openFolderId: Long? = null
         var focusedMemberId: Long? = null
         var rename: FolderRename? = null
     }
 
-    private val folderUiState: FolderUiState by viewModels {
-        viewModelFactory { initializer { FolderUiState() } }
+    private val homeUiState: HomeUiState by viewModels {
+        viewModelFactory { initializer { HomeUiState() } }
     }
+    private var pendingShortcutFocus: ShortcutFocus? = null
     private var folderRenameHost: ComposeView? = null
     private var snackbarJob: Job? = null
     private val homeSnackbar by lazy { createHomeSnackbar() }
@@ -143,6 +153,8 @@ class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingShortcutFocus = homeUiState.shortcutFocus
+        homeUiState.shortcutFocus = null
         WindowCompat.setDecorFitsSystemWindows(window, false)
         applySystemBarAppearance(drawerOpened = false)
         setContentView(R.layout.activity_home)
@@ -258,7 +270,8 @@ class HomeActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(DRAWER_OPEN_STATE, drawer.isOpen)
-        folderDialog?.let { folderUiState.focusedMemberId = it.focusedMemberId() }
+        homeUiState.shortcutFocus = focusedHomeShortcut()
+        folderDialog?.let { homeUiState.focusedMemberId = it.focusedMemberId() }
     }
 
     override fun onResume() {
@@ -342,6 +355,45 @@ class HomeActivity : ComponentActivity() {
             pageIndicator.bind(position, state.pageIds.size)
         }
         renderFolderUi(state)
+        restoreHomeShortcut(state)
+    }
+
+    private fun focusedHomeShortcut(): ShortcutFocus? {
+        if (drawer.isOpen || folderDialog != null || folderRenameHost != null) return null
+        val state = renderedState
+        val cell = workspace.focusedChild?.tag as? Int
+        if (cell != null) {
+            return when (val content = state.workspaceCells[cell]) {
+                is CellContent.App -> ShortcutFocus.WorkspaceApp(state.activePageId, cell, content.app.key)
+                is CellContent.FolderCell -> ShortcutFocus.WorkspaceFolder(state.activePageId, cell, content.folder.id)
+                null -> null
+            }
+        }
+        val tile = dock.focusedChild ?: return null
+        return state.dock.pins.getOrNull(dock.indexOfChild(tile))?.let { ShortcutFocus.Dock(it.id) }
+    }
+
+    private fun restoreHomeShortcut(state: LauncherUiState) {
+        val focus = pendingShortcutFocus ?: return
+        if (state.pageIds.isEmpty()) return
+        pendingShortcutFocus = null
+        // Configuration changes restore the window's default focus during its first layout.
+        homeContent.doOnPreDraw {
+            if (drawer.isOpen || folderDialog != null || folderRenameHost != null) return@doOnPreDraw
+            val current = renderedState
+            val tile = when (focus) {
+                is ShortcutFocus.WorkspaceApp -> workspace.findChildForCell(focus.cell).takeIf {
+                    current.activePageId == focus.pageId &&
+                        (current.workspaceCells[focus.cell] as? CellContent.App)?.app?.key == focus.key
+                }
+                is ShortcutFocus.WorkspaceFolder -> workspace.findChildForCell(focus.cell).takeIf {
+                    current.activePageId == focus.pageId &&
+                        (current.workspaceCells[focus.cell] as? CellContent.FolderCell)?.folder?.id == focus.id
+                }
+                is ShortcutFocus.Dock -> dock.getChildAt(current.dock.pins.indexOfFirst { it.id == focus.id })
+            }
+            tile?.requestFocus()
+        }
     }
 
     private fun openDrawer() {
@@ -516,21 +568,21 @@ class HomeActivity : ComponentActivity() {
             onDismissed = {
                 snackbarJob?.cancel()
                 folderDialog = null
-                folderUiState.openFolderId = null
-                folderUiState.focusedMemberId = null
+                homeUiState.openFolderId = null
+                homeUiState.focusedMemberId = null
             },
         )
         dialog.showAppNames = showAppNames
         folderDialog = dialog
-        folderUiState.openFolderId = folder.id
-        folderUiState.focusedMemberId = null
+        homeUiState.openFolderId = folder.id
+        homeUiState.focusedMemberId = null
         dialog.show(homeContent, themeMode)
         dialog.update(renderedState)
     }
 
     private fun dismissFolderDialog() {
-        folderUiState.openFolderId = null
-        folderUiState.focusedMemberId = null
+        homeUiState.openFolderId = null
+        homeUiState.focusedMemberId = null
         folderDialog?.dismiss()
     }
 
@@ -557,22 +609,22 @@ class HomeActivity : ComponentActivity() {
             folderId = folderId,
             editor = FolderRenameEditorState(folder.title),
         )
-        folderUiState.rename = rename
+        homeUiState.rename = rename
         showFolderRename(folder, rename)
     }
 
     private fun renderFolderUi(state: LauncherUiState) {
         if (state.pageIds.isEmpty()) return
         // Rebuild the folder before restoring the rename editor above it.
-        folderUiState.openFolderId?.let { id ->
+        homeUiState.openFolderId?.let { id ->
             val folder = state.folders[id]
             when {
                 folder == null || folder.pageId != state.activePageId -> dismissFolderDialog()
-                folderDialog == null -> showFolderDialog(folder, folderUiState.focusedMemberId)
+                folderDialog == null -> showFolderDialog(folder, homeUiState.focusedMemberId)
                 else -> folderDialog?.update(state)
             }
         }
-        val rename = folderUiState.rename ?: return
+        val rename = homeUiState.rename ?: return
         val folder = state.folders[rename.folderId]
         if (folder == null || folder.pageId != state.activePageId) {
             dismissFolderRename()
@@ -601,7 +653,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun dismissFolderRename() {
-        folderUiState.rename = null
+        homeUiState.rename = null
         val host = folderRenameHost ?: return
         folderRenameHost = null
         homeContent.removeView(host)

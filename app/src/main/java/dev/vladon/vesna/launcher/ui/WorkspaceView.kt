@@ -336,7 +336,7 @@ class WorkspaceView @JvmOverloads constructor(
     /** The content bound to [cell], or null when the cell is empty. */
     fun contentAt(cell: Int): CellContent? = boundContent[cell]
 
-    private fun findChildForCell(cell: Int): AppIconView? {
+    internal fun findChildForCell(cell: Int): AppIconView? {
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             if ((child.tag as? Int) == cell) return child as AppIconView
