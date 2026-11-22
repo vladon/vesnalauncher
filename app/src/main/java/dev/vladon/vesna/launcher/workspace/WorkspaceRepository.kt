@@ -13,6 +13,7 @@ import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
 import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.data.toDomain
 import dev.vladon.vesna.launcher.data.toEntity
+import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -40,6 +41,7 @@ class WorkspaceRepository(
     private val folderDao: FolderDao,
     private val prefs: SharedPreferences,
 ) {
+    private val workspacePreferences = WorkspacePreferences(prefs)
 
     // Serializes read-modify-write operations so two quick actions (for example two
     // "add to dock" taps) cannot both compute placements from the same snapshot.
@@ -165,11 +167,30 @@ class WorkspaceRepository(
         if (db.workspacePageDao().getById(pageId) == null) return@withLock false
         val occupied = occupiedCells(dao.getAll(), folderDao.getAll(), pageId)
         val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
+        insertWorkspaceApp(app, cell, pageId)
+        true
+    }
+
+    /** Auto-pins only to the selected page, without moving or duplicating existing items. */
+    internal suspend fun pinNewlyInstalledApp(app: LauncherApp): Unit = mutationMutex.withLock {
+        if (!allowsAutomaticPlacement()) return@withLock
+        val pageId = savedActivePageId()
+        if (db.workspacePageDao().getById(pageId) == null) return@withLock
+        val items = dao.getAll()
+        if (items.any { it.packageName == app.key.packageName && it.userSerial == app.key.userSerial }) return@withLock
+        val cell = GridCanvas.firstFreeCell(occupiedCells(items, folderDao.getAll(), pageId)) ?: return@withLock
+        // Settings can change while Room reads are suspended.
+        if (allowsAutomaticPlacement()) insertWorkspaceApp(app, cell, pageId)
+    }
+
+    private fun allowsAutomaticPlacement(): Boolean =
+        workspacePreferences.pinNewApps && !workspacePreferences.layoutLocked
+
+    private suspend fun insertWorkspaceApp(app: LauncherApp, cell: Int, pageId: Long) {
         dao.insert(
             WorkspaceItem(id = 0, key = app.key, container = Container.WORKSPACE, cellIndex = cell, pageId = pageId)
                 .toEntity(),
         )
-        true
     }
 
     /** Reads the selected pin and destinations from the same layout snapshot. */
@@ -361,16 +382,7 @@ class WorkspaceRepository(
     ): Boolean = mutationMutex.withLock {
         if (!GridCanvas.isValidCell(cell) || db.workspacePageDao().getById(pageId) == null) return@withLock false
         if (cellIsOccupied(dao.getAll(), pageId, cell)) return@withLock false
-        dao.insert(
-            WorkspaceItem(
-                id = 0,
-                key = app.key,
-                container = Container.WORKSPACE,
-                cellIndex = cell,
-                userSerial = app.key.userSerial,
-                pageId = pageId,
-            ).toEntity(),
-        )
+        insertWorkspaceApp(app, cell, pageId)
         true
     }
 

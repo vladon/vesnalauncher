@@ -39,6 +39,7 @@ class SettingsActivity : ComponentActivity() {
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var layoutLocked by mutableStateOf(false)
+    private var pinNewApps by mutableStateOf(false)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
@@ -91,6 +92,11 @@ class SettingsActivity : ComponentActivity() {
                             workspace.layoutLocked = locked
                             layoutLocked = locked
                         },
+                        pinNewApps = pinNewApps,
+                        onPinNewAppsChanged = { enabled ->
+                            workspace.pinNewApps = enabled
+                            pinNewApps = enabled
+                        },
                         drawerLayoutMode = drawerLayoutMode,
                         onDrawerLayoutModeSelected = ::changeDrawerLayoutMode,
                         drawerApps = drawerApps,
@@ -130,6 +136,7 @@ class SettingsActivity : ComponentActivity() {
         themeMode = appearance.themeMode
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
+        pinNewApps = workspace.pinNewApps
         drawerLayoutMode = drawerPreferences.layoutMode
         hiddenDrawerApps = drawerPreferences.hiddenApps
     }

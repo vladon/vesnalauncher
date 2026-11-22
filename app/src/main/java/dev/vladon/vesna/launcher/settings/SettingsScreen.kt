@@ -118,6 +118,8 @@ internal fun SettingsScreen(
     onShowAppNamesChanged: (Boolean) -> Unit,
     layoutLocked: Boolean,
     onLayoutLockedChanged: (Boolean) -> Unit,
+    pinNewApps: Boolean,
+    onPinNewAppsChanged: (Boolean) -> Unit,
     drawerLayoutMode: DrawerLayoutMode,
     onDrawerLayoutModeSelected: (DrawerLayoutMode) -> Unit,
     drawerApps: List<LauncherApp>,
@@ -218,11 +220,20 @@ internal fun SettingsScreen(
                             SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(searchTarget == R.string.settings_default_launcher) {
                                 DefaultLauncherSetup(defaultHome, onSetDefaultHome)
                             }
-                            SettingsPage.HOME_SCREEN -> SearchTarget(searchTarget == R.string.settings_lock_layout) {
-                                SettingsSwitch(
-                                    R.string.settings_lock_layout, R.string.settings_lock_layout_detail,
-                                    layoutLocked, onLayoutLockedChanged,
-                                )
+                            SettingsPage.HOME_SCREEN -> {
+                                SearchTarget(searchTarget == R.string.settings_lock_layout) {
+                                    SettingsSwitch(
+                                        R.string.settings_lock_layout, R.string.settings_lock_layout_detail,
+                                        layoutLocked, onLayoutLockedChanged,
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_pin_new_apps) {
+                                    SettingsSwitch(
+                                        R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail,
+                                        pinNewApps, onPinNewAppsChanged,
+                                    )
+                                }
                             }
                             SettingsPage.APP_DRAWER -> DrawerAppSettings(
                                 drawerLayoutMode, onDrawerLayoutModeSelected,
@@ -344,6 +355,7 @@ private fun SettingsDirectory(
                         defaultHome.summary,
                     ),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),

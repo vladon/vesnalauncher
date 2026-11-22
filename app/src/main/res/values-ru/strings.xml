@@ -12,6 +12,8 @@
     <string name="settings_home_screen_detail">Размещение на главном экране</string>
     <string name="settings_lock_layout">Заблокировать расположение</string>
     <string name="settings_lock_layout_detail">Запретить изменение ярлыков, папок, панели избранного и страниц.</string>
+    <string name="settings_pin_new_apps">Добавлять новые приложения на главный экран</string>
+    <string name="settings_pin_new_apps_detail">Пока Vesna запущена, добавлять ярлык нового приложения, если на текущей странице есть место и расположение не заблокировано.</string>
     <string name="workspace_layout_locked">Расположение заблокировано</string>
     <string name="settings_app_drawer">Список приложений</string>
     <string name="settings_app_drawer_detail">Какие приложения видны при просмотре</string>

@@ -130,7 +130,7 @@ class LauncherController(
                 if (event is PackageEvent.Removed) {
                     workspaceRepository.removeAllForPackage(event.packageName, event.userSerial)
                 }
-                refresh()
+                refresh(event as? PackageEvent.Added)
             }
         }
     }
@@ -324,7 +324,7 @@ class LauncherController(
      * [WorkspaceRepository.seedOrAdopt] additionally keeps the adopt-or-seed
      * decision atomic against pins placed before the first seed completes.
      */
-    private suspend fun refresh() = refreshMutex.withLock {
+    private suspend fun refresh(added: PackageEvent.Added? = null): Unit = refreshMutex.withLock {
         val catalogue = discoverApps()
         appCatalogue.value = catalogue
         if (!workspaceRepository.isSeeded() && catalogue.apps.isNotEmpty()) {
@@ -332,6 +332,12 @@ class LauncherController(
         }
         withContext(Dispatchers.IO) {
             workspaceRepository.pruneUninstalled(catalogue.byKey.keys, discovery::isPackageInstalled)
+        }
+        if (added != null) {
+            val app = catalogue.apps.firstOrNull {
+                it.key.packageName == added.packageName && it.key.userSerial == added.userSerial
+            }
+            if (app != null) workspaceRepository.pinNewlyInstalledApp(app)
         }
     }
 }
