@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.16
+
+- The folder name stays visible while typing in short windows, even with
+  enlarged text and the keyboard open. The dialog scrolls to make its
+  title, validation message and actions reachable.
+
 ### 0.4.15
 
 - Folder apps remain visible and scrollable in short, narrow windows with
