@@ -1,0 +1,1 @@
+Pressing Back or Home during a hold or drag from the app drawer cancels the gesture. Lifting your finger afterward no longer adds an unwanted shortcut.
