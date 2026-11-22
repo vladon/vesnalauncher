@@ -93,12 +93,44 @@
             android:textSize="14sp"
             android:visibility="gone" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/drawer_list"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:saveEnabled="false"
-            android:scrollbars="vertical" />
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/drawer_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:saveEnabled="false"
+                android:scrollbars="vertical" />
+
+            <dev.vladon.vesna.launcher.ui.DrawerFastScroller
+                android:id="@+id/drawer_fast_scroller"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:contentDescription="@string/drawer_fast_scroll"
+                android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/drawer_section_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_marginEnd="48dp"
+                android:background="@drawable/drawer_section_indicator"
+                android:fontFamily="@font/inter_regular"
+                android:gravity="center"
+                android:importantForAccessibility="no"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:paddingHorizontal="12dp"
+                android:textColor="@color/home_control_on_surface"
+                android:textSize="22sp"
+                android:visibility="invisible" />
+        </FrameLayout>
     </LinearLayout>
 </merge>
