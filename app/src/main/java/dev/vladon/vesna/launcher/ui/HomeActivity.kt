@@ -502,6 +502,7 @@ class HomeActivity : ComponentActivity() {
         val dialog = FolderDialog(
             context = this,
             folder = folder,
+            pendingMemberFocus = focusedMemberId,
             onLaunch = { launchApp(it) },
             onAppInfo = { controller.openAppInfo(it) },
             onRemoveFromFolder = { pinId ->
@@ -525,7 +526,6 @@ class HomeActivity : ComponentActivity() {
         folderUiState.focusedMemberId = null
         dialog.show(homeContent, themeMode)
         dialog.update(renderedState)
-        focusedMemberId?.let(dialog::restoreMemberFocus)
     }
 
     private fun dismissFolderDialog() {

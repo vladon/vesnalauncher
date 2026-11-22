@@ -44,6 +44,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
@@ -61,6 +62,7 @@ import dev.vladon.vesna.launcher.workspace.LauncherUiState
 internal class FolderDialog(
     context: Context,
     private val folder: Folder,
+    private var pendingMemberFocus: Long?,
     private val onLaunch: (LauncherApp) -> Unit,
     private val onAppInfo: (LauncherApp) -> Unit,
     private val onRemoveFromFolder: (Long) -> Unit,
@@ -125,7 +127,13 @@ internal class FolderDialog(
     fun update(state: LauncherUiState) {
         val folder = state.folders[folder.id] ?: return dismiss()
         currentTitle = folder.title
-        adapter.submitList(state.folderContents[folder.id].orEmpty())
+        val members = state.folderContents[folder.id].orEmpty()
+        if (pendingMemberFocus == null) {
+            adapter.submitList(members)
+        } else {
+            // A newer submission may skip this callback; keep the target until a list commits.
+            adapter.submitList(members) { list.doOnLayout { restoreMemberFocus() } }
+        }
     }
 
     fun focusedMemberId(): Long? {
@@ -133,21 +141,20 @@ internal class FolderDialog(
         return adapter.currentList.getOrNull(list.getChildAdapterPosition(focused))?.id
     }
 
-    fun restoreMemberFocus(memberId: Long) {
-        // Wait for the restored RecyclerView layout before taking focus from the default tile.
-        list.doOnNextLayout {
-            val position = adapter.currentList.indexOfFirst { it.id == memberId }
-            if (position < 0) return@doOnNextLayout
-            val tile = list.findViewHolderForAdapterPosition(position)?.itemView
-            if (tile != null) {
-                tile.requestFocus()
-            } else {
-                list.scrollToPosition(position)
-                list.doOnNextLayout {
-                    val currentPosition = adapter.currentList.indexOfFirst { it.id == memberId }
-                    if (currentPosition >= 0) {
-                        list.findViewHolderForAdapterPosition(currentPosition)?.itemView?.requestFocus()
-                    }
+    private fun restoreMemberFocus() {
+        val memberId = pendingMemberFocus ?: return
+        pendingMemberFocus = null
+        val position = adapter.currentList.indexOfFirst { it.id == memberId }
+        if (position < 0) return
+        val tile = list.findViewHolderForAdapterPosition(position)?.itemView
+        if (tile != null) {
+            tile.requestFocus()
+        } else {
+            list.scrollToPosition(position)
+            list.doOnNextLayout {
+                val currentPosition = adapter.currentList.indexOfFirst { it.id == memberId }
+                if (currentPosition >= 0) {
+                    list.findViewHolderForAdapterPosition(currentPosition)?.itemView?.requestFocus()
                 }
             }
         }
