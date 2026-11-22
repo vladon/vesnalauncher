@@ -144,10 +144,11 @@ the dedicated API 26 AVD).
 
 ### ENG-101: Workspace page identities and schema migration
 
-Stable page identifiers and the additive Room 3→4 migration follow
-[ADR-PAGE-1](../adr/0001-workspace-page-identity.md). The launcher still
-shows a single 4×5 default page. Page-management interactions remain a separate
-product decision; `HOME-104` is still a research candidate.
+**Status:** done — shipped in 0.4.3. Stable page identifiers and the additive
+Room 3→4 migration follow [ADR-PAGE-1](../adr/0001-workspace-page-identity.md).
+The migration preserved existing placements on the first page. Page controls
+also shipped; page management by drag (`HOME-104`) remains a separate research
+candidate. See the [migration evidence](REQUIREMENTS_TRACEABILITY.md#data-and-platform-behaviors-without-research-ids).
 
 ### ENG-102: Widget host — lifecycle only
 
@@ -170,6 +171,9 @@ scenarios do not establish a need for pagination; revisit only with evidence
 that the current interaction is insufficient.
 
 ### ENG-104: Settings search and structured preferences
+
+**Status:** done — Settings navigation shipped in 0.4.4 and Settings search
+shipped in 0.4.5.
 
 Settings reset is not part of this item. It belongs to the backup/reset policy
 ([ENG-106](#eng-106-backuprestore-policy), research `BACKUP-101`).
@@ -231,9 +235,8 @@ and an explicit approval before becoming engineering work:
 
 ## ADR candidates
 
-ADR drafts to write before the dependent work starts. Each becomes an
-`docs/adr/NNNN-*.md` entry when accepted (directory to be created by the first
-ADR).
+Architecture decisions and proposals for the work above. Each linked ADR
+records whether its design is accepted or still awaiting review.
 
 ### ADR-PAGE-1: Workspace page identity and its migration
 
@@ -257,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| NT-HOME-01: Open the workspace from the Vesna app icon ([#101](https://github.com/vladon/vesnalauncher/issues/101)) | Shipped in [0.4.46](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.46) via [PR #104](https://github.com/vladon/vesnalauncher/pull/104). On an Android 15 emulator running the signed APK, real icon taps from Pixel Launcher opened Vesna's workspace on cold launch and relaunch. Vesna's drawer launched Clock, Android Home returned to Pixel Launcher without changing the Home role, and Settings opened from Home options and all four deep links. |
 | Drawer search QA baseline (`R-DRAWER-100.4` order-preservation subset, `R-DRAWER-101.1` local-filtering subset) | `DrawerSearchTest` added in PR #9 and strengthened by [VESNA-QA-008 (PR #34)](https://github.com/vladon/vesnalauncher/pull/34). The updated suite passed 8/8 on the dedicated API 35 AVD. |
 | VESNA-QA-004 migration and restart verification | Part A: `RoomMigrationQaTest` ([PR #13](https://github.com/vladon/vesnalauncher/pull/13), merge `14ec712`), both migration cases plus `DrawerSearchTest` on the dedicated API 35 AVD; part B: [VESNA-QA-004B](verification/VESNA-QA-004B.md) (force-stop, full guest reboot, no re-seed) — see [PROJECT_STATUS.md](PROJECT_STATUS.md#instrumentation-verification-record) |
 | VESNA-QA-005 minimum SDK (API 26) smoke verification | [VESNA-QA-005-API26](verification/VESNA-QA-005-API26.md) (2026-11-19, dedicated API 26 AVD): build, HOME discoverability, cold start, workspace/drawer render, fixture round-trip, instrumentation suite 3/3; VESNA-BUG-004 fixed in [PR #23](https://github.com/vladon/vesnalauncher/pull/23) |
