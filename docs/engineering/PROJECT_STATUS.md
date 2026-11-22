@@ -364,6 +364,26 @@ full accessible names, tap targets, and saved positions stay unchanged.
   passed on both emulators with English app and Cyrillic folder names.
   Debug build and lint passed.
 
+### Home shortcuts in landscape
+
+- On signed 0.4.22 in Android 15 landscape (1920 × 1080 px, 420 dpi),
+  the right navigation bar began at x=1794, but the last workspace and
+  dock tiles extended to x=1887 and x=1910. Workspace label lines were
+  cut off even at normal text size.
+- Home now uses safe side insets for its grid, dock, and controls without
+  moving the wallpaper or changing saved cells. Wide, short tiles put
+  the artwork beside a complete label line, with the same 4 dp gap.
+- Android 15 showed both the artwork and a 91 px label line at 200% in
+  Light with a right bar and Dark with a left bar. At normal text size
+  in portrait, the artwork returned to 48 dp above the label. Drawer-to-Home
+  and workspace drags next to a left inset landed in the intended cells.
+  Android 8 showed full label lines on a populated landscape Home page.
+- The focused Home, paging, dock and shortcut tests passed 14/14 on
+  each Android version, including the compact app and folder tiles in
+  LTR and RTL. The artwork regression failed on the earlier candidate
+  as expected. Build and lint passed. Physical cutouts and TalkBack
+  speech were not tested.
+
 ### Cancel a drag when a second finger touches
 
 On the signed 0.4.20 APK, letting a second finger take over a drawer drag
