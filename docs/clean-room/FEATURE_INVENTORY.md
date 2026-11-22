@@ -72,7 +72,7 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | DOCK-001 | Dock visibility and placement | discovered (Dock subpage under Home screen; 5 icons visible) |
-| DOCK-002 | Dock icon count / paging | Nova 9.0.1: independent paging, pin persistence, and optional wrap at both ends. Slot-count changes not tested (OBS-VESNA-021/022; #115). |
+| DOCK-002 | Dock icon count / paging | Nova 9.0.1: independent paging, optional wrap, and a fifth pin hidden at four slots but restored when capacity increased again (OBS-VESNA-021/022/029; #115). |
 | DOCK-003 | Dock background styles | discovered (Dock subpage: background setting) |
 | DOCK-004 | Add/remove/reorder dock items | pending |
 | DOCK-005 | Folders in dock | pending |

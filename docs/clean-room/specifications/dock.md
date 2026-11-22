@@ -24,8 +24,10 @@ The inventory and the observable paging behavior are covered here.
      gesture is used) and "remember position" (off default).
 - Expected rendering (verified): a single row of icons without labels or
   background, positioned above the workspace search bar.
-- Boundary conditions: icon-count selector bounds the dock width behavior
-  (exact min/max to verify behaviorally).
+- Boundary conditions: reducing a five-pin dock to four slots hid
+  the overflow pin rather than moving it to the empty second page.
+  Restoring capacity restored its original position (OBS-VESNA-029);
+  the selector's exact limits are not established.
 - Interactions: search bar placement interacts with dock position
   (HOME-010: "Dock (Below icons)" places search under the dock).
 - Persistence: a pin on the second dock page survived launcher restart

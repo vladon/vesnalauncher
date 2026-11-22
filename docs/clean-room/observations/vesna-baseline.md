@@ -692,3 +692,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   setting was changed for this case.
 - Evidence: `EVI-VESNA-003/parity27-{nova,vesna}-provider-*`.
   Confidence: observed for one provider and one synthetic query.
+
+## OBS-VESNA-029 — Dock capacity reduction preserves an overflow pin
+
+- On the Android 15 research AVD, Nova 9.0.1 Prime (90100) had two
+  dock pages, five slots per page, five pins on page one, and an
+  empty second page. Reduced the slot count to four without
+  changing the page count.
+- The first four pins widened to fill the dock. The fifth pin
+  was not visible on either dock page. The workspace icon
+  positions did not change. After restarting Nova, the dock
+  still showed four pins. Restoring five slots brought the fifth
+  pin back in its original position without repinning it.
+- On the same AVD, signed Vesna v0.4.49 (54) showed its four
+  existing dock pins. Settings search found descriptions that
+  mentioned the dock, but no slot-count control to run the
+  same capacity change. Follow-up for #115.
+- Evidence: `EVI-VESNA-003/parity29-{nova,vesna}-dock-*`.
+  Confidence: observed for a reduction by one and an empty
+  second page; no claim about larger reductions or adding
+  pins while the capacity is reduced.
