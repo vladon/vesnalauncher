@@ -653,3 +653,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   replayed here.
 - Evidence: `EVI-VESNA-003/parity25-{vesna-fast-baseline,nova-fast,release049}-*`
   and `parity26-main-*`. Confidence: observed on Android 15.
+
+## OBS-VESNA-027 — Horizontal drawer position across search and reopen
+
+- Nova 9.0.1 Prime (90100) and signed Vesna v0.4.49 (54) on the same
+  Android 15 research AVD with 52 disposable A–Z entries. Nova's
+  starting List style was changed to Horizontal for this run.
+- In Nova, page two contained a distinct set of fixture entries.
+  Searching there found a fixture that was visible on page one,
+  not page two. Clearing the query and dismissing the IME, without
+  leaving the drawer, restored exactly the tested page-two fixture
+  set. Closing and reopening the drawer started on page one.
+- Restarting Nova while page two was visible also started on
+  page one, while the selected Horizontal style persisted.
+  Searching for Maps from the first page found and launched the
+  app even though its icon was not on that page.
+- In Vesna, the same horizontal swipe left the visible fixture
+  set unchanged; a vertical swipe changed it. Drawer search
+  found and launched Maps. No alternate style was found on
+  the visible Settings pages. Restored Nova's initial List
+  style and confirmed it was retained. Follow-up for #108.
+- Evidence: `EVI-VESNA-003/parity27-*`. Confidence: observed
+  for this style, fixture and the tested close/reopen routes.
