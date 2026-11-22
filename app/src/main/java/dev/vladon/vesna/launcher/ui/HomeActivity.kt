@@ -92,7 +92,6 @@ class HomeActivity : ComponentActivity() {
     )
 
     private var dragSource: DragSource? = null
-    private var drawerClosedForDrag = false
     private var rootDragMoved = false
     private var dockBottomInset = 0
     private var drawerReturnFocus: View? = null
@@ -231,16 +230,13 @@ class HomeActivity : ComponentActivity() {
 
         val dragLayer = findViewById<LauncherDragLayer>(R.id.launcher_root)
         dragLayer.isDragActive = { dragSource != null || workspace.isDragging }
-        dragLayer.dragInterceptor = { ev ->
-            dragSource?.fromDrawer == true && ev.actionMasked == MotionEvent.ACTION_MOVE
-        }
+        dragLayer.isDrawerHoldArmed = { dragSource?.fromDrawer == true }
         dragLayer.dragTouchHandler = drawerDrag@{ ev ->
             if (dragSource?.fromDrawer != true) return@drawerDrag
             when (ev.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
-                    rootDragMoved = true
-                    if (!drawerClosedForDrag) {
-                        drawerClosedForDrag = true
+                    if (!rootDragMoved) {
+                        rootDragMoved = true
                         drawer.close()
                     }
                     updateDragTarget(ev.x, ev.y)
@@ -530,13 +526,9 @@ class HomeActivity : ComponentActivity() {
     /** Root-driven drag release (drawer sources; the drawer closes mid-gesture). */
     private fun onRootDragReleased(x: Float, y: Float) {
         val source = dragSource
-        workspace.showDropHighlight(null)
-        dock.showSlotHighlight(null)
-        dragSource = null
-        drawerClosedForDrag = false
-        if (source == null) return
-        if (rootDragMoved) commitDrop(source, x, y)
-        rootDragMoved = false
+        val moved = rootDragMoved
+        onRootDragCancelled()
+        if (source != null && moved) commitDrop(source, x, y)
     }
 
     private fun onRootDragCancelled() {
@@ -544,7 +536,6 @@ class HomeActivity : ComponentActivity() {
         workspace.showDropHighlight(null)
         dock.showSlotHighlight(null)
         rootDragMoved = false
-        drawerClosedForDrag = false
     }
 
     // The dock background extends behind navigation, but the drop area does not.

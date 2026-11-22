@@ -3,31 +3,39 @@ package dev.vladon.vesna.launcher.ui
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
+import android.view.ViewConfiguration
 import android.widget.FrameLayout
+import kotlin.math.abs
 
 /**
- * Root view of the launcher. Delegates touch interception to the active drag
- * session: when the coordinator arms a session (for example after a long-press in
- * the drawer that must close mid-gesture), the layer takes the stream over from
- * the child and drives the drag through [dragTouchHandler].
+ * Root view of the launcher. After a drawer item recognizes a long press,
+ * the layer takes over only once the pointer moves beyond touch slop.
  */
 class LauncherDragLayer @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : FrameLayout(context, attrs) {
 
-    /** Called on every event while a session may want to intercept MOVE events. */
-    var dragInterceptor: ((MotionEvent) -> Boolean)? = null
+    /** Whether a drawer hold is armed and eligible to become a drag. */
+    internal var isDrawerHoldArmed: (() -> Boolean)? = null
 
     /** Receives root-owned touch events and cancellation of the original stream. */
     var dragTouchHandler: ((MotionEvent) -> Unit)? = null
 
     internal var isDragActive: (() -> Boolean)? = null
+    private val dragSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private var downX = 0f
+    private var downY = 0f
+    private var interceptedMove = false
     private var discardTouchStream = false
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         val action = ev.actionMasked
-        if (action == MotionEvent.ACTION_DOWN) discardTouchStream = false
+        if (action == MotionEvent.ACTION_DOWN) {
+            discardTouchStream = false
+            downX = ev.x
+            downY = ev.y
+        }
         if (discardTouchStream) return true
         if (action != MotionEvent.ACTION_CANCEL && ev.pointerCount > 1 && isDragActive?.invoke() == true) {
             // Cancel before ViewGroup can split the pointers or hand the drag to another finger.
@@ -45,19 +53,25 @@ class LauncherDragLayer @JvmOverloads constructor(
     }
 
     private fun dispatchStream(ev: MotionEvent): Boolean {
-        // Intercepting a move sends a synthetic CANCEL to the child only. A
-        // CANCEL delivered to the root ends the drag, even before interception.
-        val cancelled = ev.actionMasked == MotionEvent.ACTION_CANCEL
+        interceptedMove = false
         val handled = super.dispatchTouchEvent(ev)
-        if (cancelled) dragTouchHandler?.invoke(ev)
+        // ViewGroup gives the old target a CANCEL instead of delivering the
+        // intercepted MOVE to us. Process it after that target is cancelled.
+        val report = interceptedMove || ev.actionMasked == MotionEvent.ACTION_CANCEL
+        interceptedMove = false
+        if (report) dragTouchHandler?.invoke(ev)
         return handled
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean =
-        dragInterceptor?.invoke(ev) ?: false
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        interceptedMove = ev.actionMasked == MotionEvent.ACTION_MOVE &&
+            (abs(ev.x - downX) > dragSlop || abs(ev.y - downY) > dragSlop) &&
+            isDrawerHoldArmed?.invoke() == true
+        return interceptedMove
+    }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.actionMasked != MotionEvent.ACTION_CANCEL) dragTouchHandler?.invoke(ev)
+        if (!interceptedMove && ev.actionMasked != MotionEvent.ACTION_CANCEL) dragTouchHandler?.invoke(ev)
         return true
     }
 }
