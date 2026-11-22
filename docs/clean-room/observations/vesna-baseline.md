@@ -508,9 +508,14 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   drawer browsing, but exact-name search still returned it. Restored
   the visibility setting. This is a browsing filter, not access control.
   Vesna 0.4.46 has no matching settings control (NT-DRAWER-09, #119).
-- Release triage: Vesna 0.4.46 includes the app-icon fix from PR #104
-  (#101 closed; see OBS-VESNA-020 device replay). The workspace lock
-  PR #105 was still open; #103, #106–109 and #112–116 were not shipped
-  fixes in this release.
+- Release triage: [v0.4.47](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.47)
+  carries the #101 app-icon fix from PR #104, already replayed on
+  v0.4.46 (OBS-VESNA-020). The release changed APK packaging for
+  F-Droid compatibility, not launcher behavior. Workspace lock #103
+  is closed and [PR #105](https://github.com/vladon/vesnalauncher/pull/105)
+  is merged, but its merge commit `c13d2fb0d` is one commit beyond
+  the v0.4.47 tag `e4f460839`, so the released APK does not include it.
+  #106–109, #112–116 and #119 remain open. Vesna v0.4.47 was checked
+  against GitHub tags and issue states, not replayed on the emulator.
 - Evidence: `EVI-VESNA-003/nova901-shortcut-*`, `nova901-dock-*`,
   and `nova901-hidden-*`. Confidence: observed for these emulator paths.
