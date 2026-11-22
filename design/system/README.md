@@ -192,6 +192,7 @@ Use Material component motion defaults. For the custom drawer, track the finger 
   When the Home control row is too narrow for both page arrows at full size, show only the 48 dp minimum targets for Home options, the page picker, and the app drawer. Keep swipe navigation and the picker available, and move keyboard focus from a disappearing arrow to the picker.
   Reduce the Home control row's outer spacing before touching its 48 dp targets. Keep page picker labels short enough to show the number at 184 dp with enlarged text, while exposing the full page name and checked radio state to accessibility.
   Android Home returns to the same workspace page and closes launcher menus, the drawer, and open folder dialogs without saving a rename draft. Back still dismisses the frontmost layer first.
+  If a second finger joins an active drag, clear the highlight and restore the starting layout. The remaining touches cannot finish the drop; a new touch can start another drag.
   Dock drag hit testing and highlights follow the rendered columns from the
   start edge, including in RTL. Changing layout direction mirrors the visual
   order without changing the stored order.

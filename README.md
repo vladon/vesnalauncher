@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.21
+
+- Touching the screen with a second finger during a drag cancels the move
+  instead of adding or moving a shortcut by accident.
+
 ### 0.4.20
 
 - The first Tab in Settings reaches Search. Activating Clear with the keyboard

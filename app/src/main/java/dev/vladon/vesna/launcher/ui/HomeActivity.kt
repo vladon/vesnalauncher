@@ -197,6 +197,7 @@ class HomeActivity : ComponentActivity() {
         drawer.onOpenedChanged = ::onDrawerOpenedChanged
 
         val dragLayer = findViewById<LauncherDragLayer>(R.id.launcher_root)
+        dragLayer.isDragActive = { dragSource != null || workspace.isDragging }
         dragLayer.dragInterceptor = { ev ->
             dragSource?.fromDrawer == true && ev.actionMasked == MotionEvent.ACTION_MOVE
         }
