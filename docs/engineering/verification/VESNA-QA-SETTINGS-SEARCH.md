@@ -50,3 +50,19 @@ Lint passed. TalkBack and RTL were not exercised.
   Touch Clear still worked with the docked keyboard open and did not reopen
   a dismissed keyboard. The Theme result and Android 8 IME-first Back
   behavior were unchanged. Physical keyboards and TalkBack were not tested.
+
+## Rotation follow-up (0.4.22)
+
+- On the signed 0.4.21 APK, rotating Settings cleared the query and result
+  list. Rotating after opening the Theme result retained Appearance but
+  removed the Search match highlight.
+- Both activity recreation tests failed on the previous debug build and
+  passed with the fix. Settings and shortcut tests passed 10/10 on each of
+  Android 8 and 15; debug assembly and lint passed.
+- Android 15 rotation replay retained both the query and the highlight in
+  Light and Dark, including at 200% text. Direct links still opened clean:
+  Appearance had no search highlight and the root had an empty, unfocused
+  editor. On Android 8, the same query stayed visible across a full
+  portrait–landscape round trip after dismissing the keyboard with Back.
+- The session state is kept in memory, not saved as a preference. Spoken
+  TalkBack, physical devices, and fold/unfold hardware were not tested.

@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.22
+
+- Rotating the device keeps your Settings search query or the setting you
+  opened from a search result. Opening Settings again starts clean.
+
 ### 0.4.21
 
 - Touching the screen with a second finger during a drag cancels the move

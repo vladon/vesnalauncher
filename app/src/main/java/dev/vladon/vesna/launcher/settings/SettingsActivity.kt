@@ -54,7 +54,10 @@ class SettingsActivity : ComponentActivity() {
                 key(navigation.entry) {
                     SettingsScreen(
                         page = navigation.page,
-                        onNavigate = { navigation.page = it },
+                        query = navigation.query,
+                        onQueryChange = { navigation.query = it },
+                        searchTarget = navigation.searchTarget,
+                        onNavigate = navigation::navigate,
                         onResetInputFocus = ::parkWindowFocus,
                         versionName = version,
                         defaultHome = defaultHome,
@@ -131,14 +134,24 @@ class SettingsActivity : ComponentActivity() {
     }
 }
 
-/** Keeps an explicitly selected page through resize/rotation, not through a cold launch. */
+/** The current Settings session survives configuration changes, not a new entry. */
 private class SettingsNavigation(initialPage: SettingsPage) : ViewModel() {
     var page by mutableStateOf(initialPage)
+        private set
+    var query by mutableStateOf("")
+    var searchTarget by mutableStateOf<Int?>(null)
+        private set
     var entry by mutableIntStateOf(0)
         private set
 
+    fun navigate(destination: SettingsPage, target: Int?) {
+        query = ""
+        searchTarget = target
+        page = destination
+    }
+
     fun open(intent: Intent) {
-        page = SettingsPage.fromIntent(intent)
+        navigate(SettingsPage.fromIntent(intent), target = null)
         entry++
     }
 }
