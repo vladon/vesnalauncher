@@ -48,6 +48,19 @@ jobs:
           name: vesna-launcher-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+      - name: Independently build unsigned release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: ./gradlew assembleRelease --no-build-cache
+
+      - name: Upload unsigned release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: vesna-launcher-unsigned-release-apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 1
+
   release:
     name: Publish signed release APK
     runs-on: ubuntu-latest
@@ -85,12 +98,29 @@ jobs:
           VESNA_RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           VESNA_RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           VESNA_RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-build-cache
 
       - name: Verify APK signature
         run: |
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs \
             app/build/outputs/apk/release/app-release.apk
+
+      - name: Download independent unsigned APK
+        uses: actions/download-artifact@v8
+        with:
+          name: vesna-launcher-unsigned-release-apk
+          path: ${{ runner.temp }}/unsigned-release
+
+      - name: Verify release APK is reproducible
+        run: |
+          python3 -m venv "$RUNNER_TEMP/apk-repro-check"
+          "$RUNNER_TEMP/apk-repro-check/bin/pip" install apksigcopier==1.1.1
+          signed=app/build/outputs/apk/release/app-release.apk
+          rebuilt="$RUNNER_TEMP/reproduced-release.apk"
+          "$RUNNER_TEMP/apk-repro-check/bin/apksigcopier" copy \
+            "$signed" "$RUNNER_TEMP/unsigned-release/app-release-unsigned.apk" "$rebuilt"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$rebuilt"
+          cmp "$signed" "$rebuilt"
 
       - name: Name release APK
         run: |
