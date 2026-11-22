@@ -932,6 +932,26 @@ cell for a drop; changing direction does not rewrite the layout.
   each version, and debug lint passed. Physical devices and TalkBack speech
   were not checked.
 
+### App names after a language change
+
+The process-wide app catalogue updates when Android changes the locale list.
+This refresh does not seed the workspace or remove any saved placements.
+
+- On signed 0.4.36, switching from English to Arabic on Android 15 mirrored
+  Home but left Contacts and Calendar in English in the running process.
+  Returning from Arabic to the system language left Arabic labels until
+  relaunch.
+- On the fixed build, applying `ar-SA` and clearing it with
+  `adb shell cmd locale set-app-locales dev.vladon.vesna.launcher --user 0`
+  updated the visible and accessible names without changing the process ID.
+  An open folder stayed open and Files updated in place. The drawer kept
+  the typed query and reevaluated it against the newly localized labels.
+  After clearing the locale override, all Home and dock tiles returned to
+  their original positions.
+- Light and Dark at 200% text and 23 focused instrumentation tests passed
+  on Android 15. Debug lint passed. Physical devices and TalkBack speech
+  were not checked.
+
 ### Dock drop previews
 
 The dock previews the position a dropped icon will actually occupy. In a

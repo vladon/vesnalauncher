@@ -2,6 +2,8 @@ package dev.vladon.vesna.launcher
 
 import android.app.Application
 import android.content.Context
+import android.content.res.Configuration
+import android.os.LocaleList
 import dev.vladon.vesna.launcher.data.FolderDao
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.platform.AppDiscovery
@@ -54,13 +56,23 @@ class VesnaApplication : Application() {
 
     lateinit var graph: LauncherGraph
         private set
+    private lateinit var appLocales: LocaleList
 
     override fun onCreate() {
         super.onCreate()
+        appLocales = resources.configuration.locales
         graph = LauncherGraph(this)
         // Registered for the whole process lifetime, which is how launchers observe
         // install and uninstall storms without restarting.
         graph.packageChangeMonitor.start()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val locales = newConfig.locales
+        if (locales == appLocales) return
+        appLocales = locales
+        graph.controller.refreshLocalizedApps()
     }
 
     companion object {
