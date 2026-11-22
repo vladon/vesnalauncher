@@ -339,3 +339,26 @@ Nova remains the system HOME (comparison-only install).
   Connection-triggered rendering was not tested. Deleted the test card.
 - Evidence: `EVI-VESNA-003/v415-*`, `nova901-exact-*` and
   `nova901-bt-*`. Confidence: observed for the checked paths.
+
+## OBS-VESNA-014 — Vesna 0.4.16 and Nova 9.0.1 follow-up
+
+- Vesna 0.4.16: verified the GitHub APK digest and installed version.
+  On the 1100 px mid-screen path, 665, 800, and 925 ms opened the
+  workspace menu rather than the drawer in 2/2 trials each. See
+  `EVI-VESNA-003/v416-*.xml`; NT-GESTURE-03 still reproduces.
+- Nova drawer search: a disposable `VesnaPrefixQuartz` card with a
+  Calculator action appeared for the prefix `VesnaPre`, suffix `Quartz`,
+  and full name; it did not appear for `VesnaNoMatch`. Each positive
+  result showed the card and its Edit control. Verified that the test
+  card was removed. See `EVI-VESNA-003/nova901-partial-*`.
+- Nova smart folders: all seven appeared before and after force-stop
+  and relaunch, with identical member counts. The process was absent
+  after force-stop and relaunched with a new PID. No folder setting
+  changed. This differs from the master OFF→ON reset in OBS-VESNA-012.
+  See `EVI-VESNA-003/nova901-restart-*`.
+- Bluetooth feasibility: Android Emulator 37.2.13 with an isolated API
+  36 AVD reported Bluetooth ON and active discovery. The scan found
+  no available peer, and the other isolated instances did not provide
+  a usable second ADB target. Bluetooth support is present; pairing,
+  connection changes, and the Nova trigger remain unverified. See
+  `EVI-VESNA-003/emulator-bt-discovery-*`.

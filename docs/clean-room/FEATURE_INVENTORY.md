@@ -16,14 +16,14 @@ behavior, an ID is never reassigned to a different behavior.
 | CARDS-101 | Custom card builder (Add card: name, featured content, up to 6 pinned actions, condition set) | discovered (overlay ⋮ ▸ Add card and Cards-page "+" FAB; OBS-CARDS-116) |
 | CARDS-102 | Overlay card affordances (card long-press = provider deep link; card gear = Card details w/ Save; search-bar ⋮ = Add card/API Integrations/Settings; Fahrenheit rendering; no manual location) | discovered (OBS-CARDS-116) |
 | CARDS-103 | Calendar card variant (permission empty-state + New event chip; in-app "Connect to Calendar" gate — adb grant insufficient; real events post-connect) | discovered (OBS-CARDS-118) |
-| CARDS-104 | Custom card builder save flow | Nova 8.9.9 baseline (OBS-CARDS-119); 9.0.1: name-only Save did not commit; the action and inactive Day/time condition persisted after reopening, and the card rendered by name (OBS-VESNA-009). |
+| CARDS-104 | Custom card builder save flow | Nova 8.9.9 baseline (OBS-CARDS-119); 9.0.1: name-only Save did not commit, action and inactive Day/time condition persisted, and drawer search matched full name, prefix and suffix (OBS-VESNA-009/013/014). |
 | CARDS-105 | Map locations built-in card (sixth card, below Screenshots): config = geocoded location editor (two-stage: text → resolve → display name + map preview; unresolvable text leaves OK disabled) | discovered (OBS-CARDS-119; card's own search render untested) |
 
 ## DRAWER — App drawer
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DRAWER-106 | Drawer groups (tabs + smart folders) | Nova 8.9.9: tabs render and switch, generated folders require per-item Enable (OBS-DRAWER-112). Nova 9.0.1: fresh master ON with seven folders individually OFF; master OFF hides enabled folders and master ON does not restore them (OBS-VESNA-008/010/012). |
+| DRAWER-106 | Drawer groups (tabs + smart folders) | Nova 8.9.9: tabs render and switch, generated folders require per-item Enable (OBS-DRAWER-112). Nova 9.0.1: all seven enabled folders survive process restart, but toggling the master OFF→ON resets them (OBS-VESNA-008/010/012/014). |
 
 ## HOME — Home screen / workspace
 
