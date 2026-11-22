@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.29
+
+- An open Home folder stays open when the system theme changes. Back
+  and Home still close it.
+
 ### 0.4.28
 
 - The folder rename dialog keeps the “Enter a folder name” message
