@@ -260,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| NT-HOME-04: Opt-in placement of newly installed apps ([#107](https://github.com/vladon/vesnalauncher/issues/107)) | 0.4.52 — verified first install with the setting off and on, updates, locked layout, and no changes while Vesna is stopped in [Android 15 QA](verification/VESNA-QA-NEW-APP-PLACEMENT.md). |
 | NT-DRAWER-05: Selectable drawer layouts ([#108](https://github.com/vladon/vesnalauncher/issues/108)) | 0.4.51 — verified vertical grid, list, horizontal paging, global search, and persisted layout selection in [Android 15 QA](verification/VESNA-QA-DRAWER-LAYOUTS.md). |
 | NT-DRAWER-09: Hide individual apps from drawer browsing ([#119](https://github.com/vladon/vesnalauncher/issues/119)) | 0.4.50 — verified browsing, exact search, unchanged pins, restart and unhide in [Android 15 QA](verification/VESNA-QA-DRAWER-HIDDEN-APPS.md). |
 | NT-DRAWER-06: Alphabetical drawer fast scroller ([#109](https://github.com/vladon/vesnalauncher/issues/109)) | 0.4.49 — verified real thumb drags, visible letters, search and launch in [Android 15 QA](verification/VESNA-QA-DRAWER-FAST-SCROLL.md). |

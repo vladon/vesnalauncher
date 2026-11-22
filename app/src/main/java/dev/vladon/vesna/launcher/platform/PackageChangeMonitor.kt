@@ -15,6 +15,9 @@ sealed interface PackageEvent {
     /** Refresh the launchable app list without treating the change as an uninstall. */
     data object CatalogueChanged : PackageEvent
 
+    /** A fresh install in one Android profile, not a replacing update. */
+    data class Added(val packageName: String, val userSerial: Long) : PackageEvent
+
     /** An uninstall in one Android profile. */
     data class Removed(val packageName: String, val userSerial: Long) : PackageEvent
 }
@@ -37,7 +40,7 @@ class PackageChangeMonitor(private val appContext: Context) {
 
     private val callback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
-            catalogueChanged()
+            _events.tryEmit(PackageEvent.Added(packageName, userManager.getSerialNumberForUser(user)))
         }
 
         override fun onPackageRemoved(packageName: String, user: UserHandle) {

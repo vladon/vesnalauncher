@@ -1,0 +1,1 @@
+Turn on Add new apps to Home in Settings > Home screen. A new app can get a shortcut on the current page when Vesna is running and the layout is unlocked. App updates and full pages leave your layout unchanged.

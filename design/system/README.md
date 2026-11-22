@@ -268,6 +268,10 @@ Keep the draft, selection, and any visible validation message when Android recre
   **Home screen** offers a searchable **Lock workspace layout** switch. It
   uses the standard switch row with a supporting description, defaults to
   off, and retains its value across launches.
+  A separate searchable **Add new apps to Home** switch uses the same row
+  and is off by default. Its supporting text explains that Vesna adds a
+  shortcut only for a new install it sees while running, when the current
+  page has room and the layout is unlocked.
   **App drawer** offers a searchable **Drawer layout** radio group for
   Vertical grid, Vertical list, and Horizontal pages. It also offers a
   searchable **Hide apps** section. List all
