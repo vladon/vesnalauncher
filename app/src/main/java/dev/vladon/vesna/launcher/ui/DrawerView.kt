@@ -80,7 +80,8 @@ class DrawerView @JvmOverloads constructor(
     private val commitScrollReset = Runnable(::resetScrollAfterFilter)
     private var refreshAnchor: AppKey? = null
 
-    private var isOpen = false
+    internal var isOpen = false
+        private set
 
     init {
         inflate(context, R.layout.view_drawer, this)
