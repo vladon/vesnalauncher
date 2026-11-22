@@ -234,19 +234,19 @@ class HomeActivity : ComponentActivity() {
         dragLayer.dragInterceptor = { ev ->
             dragSource?.fromDrawer == true && ev.actionMasked == MotionEvent.ACTION_MOVE
         }
-        dragLayer.dragTouchHandler = { ev ->
-            val source = dragSource
+        dragLayer.dragTouchHandler = drawerDrag@{ ev ->
+            if (dragSource?.fromDrawer != true) return@drawerDrag
             when (ev.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
                     rootDragMoved = true
-                    if (source?.fromDrawer == true && !drawerClosedForDrag) {
+                    if (!drawerClosedForDrag) {
                         drawerClosedForDrag = true
                         drawer.close()
                     }
                     updateDragTarget(ev.x, ev.y)
                 }
                 MotionEvent.ACTION_UP -> onRootDragReleased(ev.x, ev.y)
-                MotionEvent.ACTION_CANCEL -> if (source?.fromDrawer == true) onRootDragCancelled()
+                MotionEvent.ACTION_CANCEL -> onRootDragCancelled()
             }
         }
 
@@ -347,7 +347,7 @@ class HomeActivity : ComponentActivity() {
         workspace.reservedCellsMask = state.reservedWorkspaceCellsMask
         if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
         if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
-        if (state.apps != previous.apps) drawer.submitApps(state.apps)
+        if (state.apps != previous.apps) updateAppCatalogue(state.apps)
         emptyHint.isVisible = state.isWorkspaceEmpty
         if (state.pageIds != previous.pageIds || state.activePageId != previous.activePageId) {
             val position = state.pageIds.indexOf(state.activePageId)
@@ -369,6 +369,16 @@ class HomeActivity : ComponentActivity() {
         }
         renderFolderUi(state)
         restoreHomeShortcut(state)
+    }
+
+    internal fun updateAppCatalogue(apps: List<LauncherApp>) {
+        val source = dragSource
+        if (source?.fromDrawer == true && apps.none { it.key == source.app.key }) {
+            // The root may already own the touch stream; losing a drawer tile
+            // cannot cancel that stream on its own.
+            onRootDragCancelled()
+        }
+        drawer.submitApps(apps)
     }
 
     private fun focusedHomeShortcut(): ShortcutFocus? {
@@ -794,22 +804,26 @@ class HomeActivity : ComponentActivity() {
 
     private fun applySystemBarInsets() {
         val root = findViewById<View>(R.id.launcher_root)
-        val dockBottomPadding = dock.paddingBottom
-        val homeInsets = WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
-            val safe = insets.getInsets(homeInsets)
-            dockBottomInset = safe.bottom
-            // Keep the wallpaper edge to edge and center Home content between side insets.
-            homeContent.setPadding(safe.left, 0, safe.right, 0)
-            workspace.setPadding(0, safe.top, 0, workspace.paddingBottom)
-            dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, dockBottomInset + dockBottomPadding)
-            drawer.applyContentInsets(insets.getInsets(homeInsets or WindowInsetsCompat.Type.ime()))
+            updateSystemBarInsets(insets)
             insets
         }
         // The dock overlays the workspace and includes the navigation inset.
         dock.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
             if (bottom - top != oldBottom - oldTop) updateWorkspaceBottom()
         }
+    }
+
+    internal fun updateSystemBarInsets(insets: WindowInsetsCompat) {
+        val homeInsets = WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        val safe = insets.getInsets(homeInsets)
+        val dockBottomPadding = dock.paddingBottom - dockBottomInset
+        dockBottomInset = safe.bottom
+        // Keep the wallpaper edge to edge and center Home content between side insets.
+        homeContent.setPadding(safe.left, 0, safe.right, 0)
+        workspace.setPadding(0, safe.top, 0, workspace.paddingBottom)
+        dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, dockBottomInset + dockBottomPadding)
+        drawer.applyContentInsets(insets.getInsets(homeInsets or WindowInsetsCompat.Type.ime()))
     }
 
     private fun updateWorkspaceBottom() {

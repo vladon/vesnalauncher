@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.43
+
+- Dragging an app from the drawer now cancels if the app becomes unavailable
+  before you drop it. This prevents creating a shortcut to an unavailable app.
+
 ### 0.4.42
 
 - Home no longer highlights cells reserved for temporarily unavailable

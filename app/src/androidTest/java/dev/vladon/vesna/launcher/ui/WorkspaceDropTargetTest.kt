@@ -61,7 +61,7 @@ class WorkspaceDropTargetTest {
     }
 
     @Test
-    fun drawerDragHighlightsOnlyTheOtherProfileOfTheSameApp() {
+    fun drawerDragDistinguishesProfilesAndCancelsWhenItsSourceDisappears() {
         val personal = LauncherApp(AppKey("qa.dual", "Main"), "Tile")
         val work = personal.copy(key = personal.key.copy(userSerial = 10))
         ActivityScenario.launch(HomeActivity::class.java).use { scenario ->
@@ -70,6 +70,7 @@ class WorkspaceDropTargetTest {
                 val root = activity.findViewById<LauncherDragLayer>(R.id.launcher_root)
                 val drawer = activity.findViewById<DrawerView>(R.id.drawer)
                 val workspace = activity.findViewById<WorkspaceView>(R.id.workspace)
+                activity.updateAppCatalogue(listOf(personal, work))
                 workspace.bind(mapOf(0 to CellContent.App(personal), 1 to CellContent.App(work)))
                 workspace.measure(
                     View.MeasureSpec.makeMeasureSpec(workspace.width, View.MeasureSpec.EXACTLY),
@@ -104,6 +105,14 @@ class WorkspaceDropTargetTest {
                     val after = workspace.pixels(x, otherX, y)
                     assertEquals(before.first, after.first)
                     assertNotEquals("A copy in the other profile is a valid drop target", before.second, after.second)
+
+                    activity.updateAppCatalogue(listOf(personal.copy(label = "Renamed"), work))
+                    assertEquals("A catalogue refresh that retains the app keeps the preview", after, workspace.pixels(x, otherX, y))
+                    activity.updateAppCatalogue(listOf(work))
+                    assertEquals("The other profile cannot keep a disappearing app's drag alive", before, workspace.pixels(x, otherX, y))
+                    activity.updateAppCatalogue(listOf(personal, work))
+                    send(MotionEvent.ACTION_MOVE, otherX)
+                    assertEquals("Returning to the catalogue does not revive the cancelled gesture", before, workspace.pixels(x, otherX, y))
                 } finally {
                     send(MotionEvent.ACTION_CANCEL, x)
                 }
