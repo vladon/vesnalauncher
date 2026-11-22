@@ -712,3 +712,28 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Confidence: observed for a reduction by one and an empty
   second page; no claim about larger reductions or adding
   pins while the capacity is reduced.
+
+## OBS-VESNA-030 — Signed v0.4.50 hides apps; prefix search differs from Nova
+
+- On the Android 15 research AVD, the signed Vesna v0.4.49 (54)
+  baseline had Chrome in its drawer and dock, with no hide action
+  in the drawer menu. Nova 9.0.1 Prime (90100) was unchanged.
+- [PR #125](https://github.com/vladon/vesnalauncher/pull/125) merged
+  at `4d3c30621f8a2e283f0aaeb3e98b2c78d3a5b8f6`. The signed
+  [v0.4.50](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.50)
+  tag pointed to that commit. Verified the official asset digest
+  and prior release signer, then upgraded the research AVD between
+  runs. Installed version: 0.4.50 (55).
+- Hiding Chrome via Vesna's drawer settings removed it from the
+  alphabetical grid after a process restart. Its existing dock
+  pin stayed in place and launched Chrome. Entering the prefix
+  `Chro` in the drawer returned no app; entering `Chrome` returned
+  and launched Chrome. Unhiding restored it in the grid after
+  another restart.
+- Nova still returned the hidden app itself for both the same
+  prefix and the full name, not just a web suggestion. This is a
+  difference from Vesna's documented full-name-only policy, not
+  a failure of #119. Restored both hide settings; no other profile
+  or entry with a duplicate label was tested.
+- Evidence: `EVI-VESNA-003/parity29-{nova-hidden,vesna-hidden-baseline,vesna050}-*`.
+  Confidence: observed in the installed, signed release.
