@@ -1,7 +1,10 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.graphics.Rect
+import android.os.Bundle
+import android.os.Parcelable
 import android.os.SystemClock
+import android.util.SparseArray
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -311,6 +314,44 @@ class DrawerSearchTest {
         }
         assertVisibleLabels((listOf(latest) + before + tools).map { it.label })
         assertFirstVisibleApp(latest.label, offset = 0)
+    }
+
+    @Test
+    fun recreatedDrawerRestoresTheFilteredRowAfterAppsArriveAndClearingStartsAtTop() {
+        val tools = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
+        val other = app("dev.vladon.fixture.other", ".Main", "Other")
+        val catalogue = listOf(other) + tools
+        onDrawer { it.submitApps(catalogue) }
+        setQuery("tool")
+        assertVisibleLabels(tools.map { it.label })
+        onDrawer { host ->
+            val grid = host.findViewById<RecyclerView>(R.id.drawer_list).layoutManager as GridLayoutManager
+            grid.scrollToPositionWithOffset(40, -12)
+        }
+        assertFirstVisibleApp(tools[40].label, offset = -12)
+
+        onDrawer { host ->
+            val viewState = SparseArray<Parcelable>().also(host::saveHierarchyState)
+            val resultState = Bundle().also(host::saveResultViewport)
+            val content = host.parent as ViewGroup
+            val params = host.layoutParams
+            content.removeView(host)
+            val replacement = DrawerView(host.context)
+            content.addView(replacement, params)
+            replacement.open()
+            replacement.restoreHierarchyState(viewState)
+            replacement.restoreResults(resultState, focusedApp = null)
+            replacement.submitApps(emptyList())
+            drawer = replacement
+        }
+        assertVisibleLabels(emptyList())
+        onDrawer { assertEquals("tool", it.findViewById<EditText>(R.id.drawer_search).text.toString()) }
+
+        onDrawer { it.submitApps(catalogue) }
+        assertFirstVisibleApp(tools[40].label, offset = -12)
+
+        onDrawer { it.findViewById<View>(R.id.drawer_clear_search).performClick() }
+        assertFirstVisibleApp(other.label, offset = 0)
     }
 
     @Test
