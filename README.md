@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.15
+
+- Folder apps remain visible and scrollable in short, narrow windows with
+  large text. When the action labels do not fit, Rename and Remove stay
+  available as compact, accessible icon buttons.
+
 ### 0.4.14
 
 - Replaced the placeholder app icon with the approved Vesna mark. The
