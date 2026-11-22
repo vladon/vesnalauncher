@@ -625,3 +625,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   the app. This refines #112; ranking was not measured.
 - Evidence: `EVI-VESNA-003/parity25-*`. Confidence: observed for the
   tested entry routes and switch combinations.
+
+## OBS-VESNA-026 — Fast scroll verified in signed Vesna v0.4.49
+
+- Started on the Android 15 research AVD with 52 disposable A–Z
+  entries. The full Nova 9.0.1 Prime (90100) drawer exposed its
+  fast scroller; signed Vesna v0.4.48 (53) had no fast-scroll
+  control on the same fixture. Nova's jump and letter behavior
+  were already observed in OBS-VESNA-019.
+- During this cycle #123 merged into `main` at
+  `4516dc6b3eeea58b28e65dfa379501821cb8fc60`. On a separate owned
+  Android 15 AVD, the [CI debug artifact](https://github.com/vladon/vesnalauncher/actions/runs/45077360823)
+  from that SHA jumped to a viewport containing Z, showed a live
+  letter, and hid the control for a Gmail query. This was not yet
+  evidence about the signed release.
+- After publication, verified the v0.4.49 asset digest and signer
+  continuity and upgraded the first AVD between runs. The release
+  tag resolves to the same merge, and the installed APK reported
+  v0.4.49 (54). Dragging down reached Z and dragging up returned to
+  A, with each target letter visible while held. Typing Gmail
+  hid the scroller without blocking the result; clearing the
+  query restored the control without reopening the drawer.
+- Removed the disposable package from the release AVD. On the
+  resulting short unfiltered list, the rail was absent. System
+  Home stayed Nova. Verified #109 in the signed release; RTL,
+  enlarged text and accessibility actions were not independently
+  replayed here.
+- Evidence: `EVI-VESNA-003/parity25-{vesna-fast-baseline,nova-fast,release049}-*`
+  and `parity26-main-*`. Confidence: observed on Android 15.
