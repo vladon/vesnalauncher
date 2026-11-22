@@ -338,6 +338,14 @@ surrounding whitespace; a blank name shows an inline error without closing.
   intent still closed the editor and folder. Build and lint passed, as
   did 18 focused tests each on Android 8 and 15. The live theme-switch
   check was on Android 15; physical devices and TalkBack were not tested.
+- Signed 0.4.27 kept a blank draft during a theme switch but lost the
+  validation message. The editor now retains both, including the field's
+  accessibility error. On Android 15 at 200% text, Light to Dark kept the
+  message; entering a name cleared it, and Cancel left the folder unchanged.
+- `FolderRenameValidationTest` verified the visual text and accessibility
+  error through editor recreation, whitespace rejection, and saving a
+  corrected Cyrillic name. Build, lint and 19 focused tests passed on
+  Android 8 and 15. Physical devices and spoken TalkBack were not tested.
 
 ### Compact folder layouts
 

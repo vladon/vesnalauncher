@@ -48,6 +48,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -57,20 +58,26 @@ import androidx.compose.ui.window.DialogWindowProvider
 import dev.vladon.vesna.launcher.R
 import kotlinx.coroutines.flow.first
 
+internal class FolderRenameEditorState(initialTitle: String) {
+    val draft = TextFieldState(initialTitle, TextRange(0, initialTitle.length))
+    var showNameError by mutableStateOf(false)
+}
+
 @Composable
 internal fun FolderRenameDialog(
-    draft: TextFieldState,
+    editor: FolderRenameEditorState,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
 ) {
-    var showNameError by remember { mutableStateOf(false) }
+    val draft = editor.draft
+    val showNameError = editor.showNameError
     val errorMessage = stringResource(R.string.folder_name_required)
     val nameLabel = stringResource(R.string.folder_name)
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(showNameError) {
         if (showNameError) {
             snapshotFlow { draft.text.isNotBlank() }.first { it }
-            showNameError = false
+            editor.showNameError = false
         }
     }
 
@@ -106,7 +113,7 @@ internal fun FolderRenameDialog(
                 val submit: () -> Unit = {
                     val title = draft.text.toString().trim()
                     if (title.isEmpty()) {
-                        showNameError = true
+                        editor.showNameError = true
                         focusRequester.requestFocus()
                         // In this space the keyboard leaves room for the field, not its error.
                         if (compactField) keyboard?.hide()
