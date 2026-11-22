@@ -44,6 +44,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.18
+
+- The app drawer keeps search, Clear, and Close visible above the keyboard
+  in short windows, including at 200% text. Hiding the keyboard keeps the
+  current search and results.
+
 ### 0.4.17
 
 - Long context menu labels wrap instead of being cut off in narrow windows

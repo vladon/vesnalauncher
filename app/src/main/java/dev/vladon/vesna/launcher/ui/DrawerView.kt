@@ -1,8 +1,10 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.os.SystemClock
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -13,6 +15,7 @@ import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
@@ -52,9 +55,14 @@ class DrawerView @JvmOverloads constructor(
     private val list: RecyclerView
     private val grid = GridLayoutManager(context, MAX_APP_GRID_COLUMNS)
     private val appNames: GridAppNames
+    private val header: LinearLayout
     private val closeButton: View
     private val searchBar: View
     private val searchField: EditText
+    private val searchIcon: Drawable?
+    private val searchVerticalPadding: Int
+    private val headerGap: Int
+    private var showsSearchIcon = true
     private val clearSearchButton: View
     private val noResultsView: TextView
     private val adapter: DrawerAppsAdapter
@@ -118,6 +126,10 @@ class DrawerView @JvmOverloads constructor(
         noResultsView = findViewById(R.id.drawer_no_results)
         searchField = findViewById(R.id.drawer_search)
         searchBar = findViewById(R.id.drawer_search_bar)
+        header = findViewById(R.id.drawer_header)
+        headerGap = (header.layoutParams as MarginLayoutParams).bottomMargin
+        searchIcon = searchField.compoundDrawablesRelative[0]
+        searchVerticalPadding = searchField.paddingTop
         searchField.setOnFocusChangeListener { _, focused ->
             searchBar.isActivated = focused
             if (!focused) {
@@ -370,10 +382,42 @@ class DrawerView @JvmOverloads constructor(
             }
         }
         grid.spanCount = columns
+        updateHeader(height - content.paddingTop - content.paddingBottom, compact)
         content.measure(
             MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
         )
+    }
+
+    private fun updateHeader(availableHeight: Int, narrow: Boolean) {
+        val searchHeight = maxOf(searchBar.minimumHeight, searchField.lineHeight + 2 * searchVerticalPadding)
+        val minResultHeight = (48 * density + 0.5f).toInt()
+        val oneRow = availableHeight < closeButton.layoutParams.height + searchHeight + headerGap + minResultHeight
+        val orientation = if (oneRow) LinearLayout.HORIZONTAL else LinearLayout.VERTICAL
+        if (header.orientation != orientation) {
+            header.orientation = orientation
+            closeButton.updateLayoutParams<LinearLayout.LayoutParams> {
+                gravity = if (oneRow) Gravity.CENTER_VERTICAL else Gravity.CENTER_HORIZONTAL
+            }
+            searchBar.updateLayoutParams<LinearLayout.LayoutParams> {
+                width = if (oneRow) 0 else LayoutParams.MATCH_PARENT
+                weight = if (oneRow) 1f else 0f
+            }
+        }
+        val gap = if (oneRow) (availableHeight - searchHeight).coerceIn(0, headerGap) else headerGap
+        if ((header.layoutParams as MarginLayoutParams).bottomMargin != gap) {
+            header.updateLayoutParams<MarginLayoutParams> { bottomMargin = gap }
+        }
+        // On the shortest IME viewport, cut padding before clipping the query.
+        val padding = ((availableHeight - searchField.lineHeight) / 2).coerceIn(0, searchVerticalPadding)
+        if (searchField.paddingTop != padding) {
+            searchField.setPaddingRelative(searchField.paddingStart, padding, searchField.paddingEnd, padding)
+        }
+        val showIcon = !(oneRow && narrow)
+        if (showIcon != showsSearchIcon) {
+            showsSearchIcon = showIcon
+            searchField.setCompoundDrawablesRelative(if (showIcon) searchIcon else null, null, null, null)
+        }
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
