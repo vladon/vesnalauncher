@@ -1,0 +1,1 @@
+Open the Vesna app icon to go to its Home workspace, even when another launcher is the default. This release also adds store descriptions, the Vesna icon, and screenshots for F-Droid.

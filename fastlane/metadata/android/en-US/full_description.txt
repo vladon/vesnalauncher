@@ -1,0 +1,8 @@
+Vesna Launcher is a free, open-source home screen for Android. Keep your favorite apps in the dock and find the rest by name in the app drawer.
+
+• Organize your Home pages with shortcuts and folders. Drag apps from the drawer or drop one shortcut onto another to create a folder.
+• Search for apps with or without accents. With a hardware keyboard, press Enter to open a single result.
+• Find and launch work-profile apps with their Android work badges.
+• Follow the system theme or choose Light or Dark, and decide whether to show app names.
+
+Vesna saves your Home layout locally. It has no ads, in-app purchases, or tracking SDKs. Available in English and Russian on Android 8.0 and later.
