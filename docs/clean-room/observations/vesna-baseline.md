@@ -429,3 +429,36 @@ of the released Vesna configuration surfaces:
 - Evidence: `EVI-VESNA-003/nova901-lock-*`; app launch confirmed by
   the foreground activity. Confidence: observed. Implementation handoff:
   [Vesna issue #103](https://github.com/vladon/vesnalauncher/issues/103).
+
+## OBS-VESNA-019 — Workspace and drawer parity checks on Android 15
+
+- Nova 9.0.1 Prime: reduced a populated workspace from a 6-row,
+  5-column grid to 4×4. Three existing shortcuts moved into valid cells
+  on the first row and retained those positions after stopping and
+  restarting Nova. Widgets, a fully occupied grid, and overflow were
+  not tested. Evidence: `EVI-VESNA-003/parity-grid-*`.
+- Nova's new-app shortcut preference was tested off and on. Installing
+  a disposable APK through ADB did not place a shortcut on the visible
+  workspace in either case; the enabled-case app was found by drawer
+  search. This does not verify Nova's behavior for store-driven installs.
+  Removed the fixture. Evidence:
+  `EVI-VESNA-003/parity-autoplace-*`.
+- Vesna v0.4.45: verified the APK digest and installed version. Tapped
+  the ordinary Vesna icon while Pixel Launcher was system Home. The
+  foreground activity was Vesna Settings, not the workspace, and the
+  system Home did not change. Issue #101 still reproduces. Evidence:
+  `EVI-VESNA-003/parity-vesna045-icon-result-*`.
+- Nova's drawer style selector offered a vertical grid, single-column
+  list, and horizontal grid. The single-column view displayed one
+  labeled entry per row. With 52 synthetic app entries installed, a
+  horizontal swipe moved from an early to a later alphabetic page;
+  searching still returned the installed maps app. Evidence:
+  `EVI-VESNA-003/parity-drawer-list-grid-*` and `parity-horizontal-*`.
+- In the single-column drawer with an empty query and keyboard hidden,
+  dragging the right-hand thumb moved from early entries to V–Z. The
+  thumb showed the letter P partway through. A text query returned
+  matching app results without the thumb. Evidence:
+  `EVI-VESNA-003/parity-fast-populated-settled-*`, `parity-fast-during.png`,
+  `parity-fast-after-extended-*`, and `parity-fast-filtered-results-*`.
+- Environment: isolated `emulator-5588`, Android 15. Confidence:
+  observed for the exercised paths only. Physical phone untouched.

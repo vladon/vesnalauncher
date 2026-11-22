@@ -251,3 +251,12 @@ Traceability: every ticket's acceptance scenario lives in
   actions, and a hold on empty space does not enter customization.
   A normal tap still launches the shortcut, and unlocking restores editing.
 - Handoff: [Vesna issue #103](https://github.com/vladon/vesnalauncher/issues/103).
+
+## OBS-VESNA-019 handoffs
+
+| Ticket | Scope | Implementation tracker |
+|---|---|---|
+| NT-HOME-03 | Resize the workspace grid without losing shortcuts | [#106](https://github.com/vladon/vesnalauncher/issues/106) |
+| NT-HOME-04 | Opt-in placement of newly installed apps; first verify Nova's positive installer path | [#107](https://github.com/vladon/vesnalauncher/issues/107) |
+| NT-DRAWER-05 | Selectable drawer layouts | [#108](https://github.com/vladon/vesnalauncher/issues/108) |
+| NT-DRAWER-06 | Alphabetical fast scroller | [#109](https://github.com/vladon/vesnalauncher/issues/109) |

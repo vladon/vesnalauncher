@@ -30,7 +30,7 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | HOME-001 | Home screen page management (add/remove/reorder pages) | pending |
-| HOME-002 | Grid sizing (rows/columns) | Nova picker inventoried; Vesna 0.4.44 fixed grid; resize behavior not verified (OBS-VESNA-017) |
+| HOME-002 | Grid sizing (rows/columns) | Nova 9.0.1: 6 rows × 5 columns → 4×4 reflow and restart verified for three shortcuts (OBS-VESNA-019; #106) |
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
@@ -52,10 +52,10 @@ behavior, an ID is never reassigned to a different behavior.
 |---|---|---|
 | DRAWER-001 | Drawer open gesture(s) | observed (swipe up; free edition) |
 | DRAWER-002 | Drawer close gesture(s) | partially observed (BACK verified; swipe-down untested) |
-| DRAWER-003 | Drawer layout modes | Nova style selector inventoried; Vesna 0.4.44 vertical grid with no selector (OBS-VESNA-017) |
+| DRAWER-003 | Drawer layout modes | Nova 9.0.1: single-column rendering, horizontal paging, and search verified (OBS-VESNA-019; #108) |
 | DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
 | DRAWER-005 | Drawer search | observed (filtering, prefix emphasis, providers, web suggestions) |
-| DRAWER-006 | Scrolling and fast-scroll behavior | Nova fast-scroll control inventoried; no corresponding Vesna 0.4.44 setting found (OBS-VESNA-017) |
+| DRAWER-006 | Scrolling and fast-scroll behavior | Nova 9.0.1: thumb jumps between letters and is absent during tested search (OBS-VESNA-019; #109) |
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
 | DRAWER-008 | Hidden apps | discovered (Prime-gated) |
 | DRAWER-009 | App categories/tabs/folders in drawer | discovered (Tab bar placement: None; Drawer groups: Prime) |
