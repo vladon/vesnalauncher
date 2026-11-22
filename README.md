@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.41
+
+- Dragging over Android's navigation bar no longer highlights a dock
+  slot, and releasing there leaves the dock unchanged.
+
 ### 0.4.40
 
 - Dragging from the app drawer no longer highlights a matching Home

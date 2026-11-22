@@ -6,12 +6,21 @@ import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.DockPin
 import dev.vladon.vesna.launcher.workspace.GridCanvas
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -89,6 +98,51 @@ class DockDropTargetTest {
         dispatch(MotionEvent.ACTION_MOVE, x, moving)
         dispatch(MotionEvent.ACTION_UP, x, moving)
         assertEquals("Returning to the origin must not turn a drag into a menu", true to false, release)
+    }
+
+    @Test
+    fun movingIntoTheSystemNavigationInsetClearsTheDockDropPreview() = runBlocking<Unit> {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val controller = VesnaApplication.graph(instrumentation.targetContext).controller
+        withTimeout(10_000) { controller.state.first { it.dock.pins.isNotEmpty() } }
+        ActivityScenario.launch(HomeActivity::class.java).use { scenario ->
+            instrumentation.waitForIdleSync()
+            scenario.onActivity { activity ->
+                val root = activity.findViewById<View>(R.id.launcher_root)
+                val dock = activity.findViewById<DockView>(R.id.dock)
+                val source = controller.state.value.dock.pins.first()
+                val previous = requireNotNull(ViewCompat.getRootWindowInsets(root))
+                val navigation = WindowInsetsCompat.Type.navigationBars()
+                val reserved = (32 * dock.resources.displayMetrics.density).toInt()
+                val withNavigation = WindowInsetsCompat.Builder(previous)
+                    .setInsets(navigation, Insets.of(0, 0, 0, reserved))
+                    .setVisible(navigation, true)
+                    .build()
+                ViewCompat.dispatchApplyWindowInsets(root, withNavigation)
+                try {
+                    dock.measure(
+                        View.MeasureSpec.makeMeasureSpec(dock.width, View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(dock.height, View.MeasureSpec.EXACTLY),
+                    )
+                    dock.layout(dock.left, dock.top, dock.right, dock.bottom)
+                    val tile = dock.getChildAt(0)
+                    val x = tile.left + tile.width / 8
+                    val y = (tile.top + tile.bottom) / 2
+                    val before = dock.pixels(x, x, y).first
+                    requireNotNull(dock.onDragStarted)(source, tile)
+                    try {
+                        requireNotNull(dock.onDragProgress)(x.toFloat(), y.toFloat())
+                        assertNotEquals("The dock body must show the drop preview", before, dock.pixels(x, x, y).first)
+                        requireNotNull(dock.onDragProgress)(x.toFloat(), (dock.height - reserved / 2).toFloat())
+                        assertEquals("The navigation inset must clear the preview", before, dock.pixels(x, x, y).first)
+                    } finally {
+                        requireNotNull(dock.onDragReleased)(x.toFloat(), y.toFloat(), true, true, source.app, tile)
+                    }
+                } finally {
+                    ViewCompat.dispatchApplyWindowInsets(root, previous)
+                }
+            }
+        }
     }
 
     private fun withDock(check: (DockView, List<DockPin>) -> Unit) {

@@ -94,6 +94,7 @@ class HomeActivity : ComponentActivity() {
     private var dragSource: DragSource? = null
     private var drawerClosedForDrag = false
     private var rootDragMoved = false
+    private var dockBottomInset = 0
     private var drawerReturnFocus: View? = null
     private var activePopup: VesnaPopupMenu? = null
     private var pendingPageMenu: Job? = null
@@ -480,7 +481,7 @@ class HomeActivity : ComponentActivity() {
         val source = dragSource ?: return
         if (y >= dock.top) {
             workspace.showDropHighlight(null)
-            dock.showSlotHighlight(if (withinDockWidth(x)) dockDropColumn(source, x) else null)
+            dock.showSlotHighlight(if (withinDockDropBounds(x, y)) dockDropColumn(source, x) else null)
             return
         }
         dock.showSlotHighlight(null)
@@ -535,7 +536,9 @@ class HomeActivity : ComponentActivity() {
         drawerClosedForDrag = false
     }
 
-    private fun withinDockWidth(x: Float): Boolean = x >= dock.left && x < dock.right
+    // The dock background extends behind navigation, but the drop area does not.
+    private fun withinDockDropBounds(x: Float, y: Float): Boolean =
+        x >= dock.left && x < dock.right && y < dock.bottom - dockBottomInset
 
     private fun dockDropColumn(source: DragSource, x: Float): Int? =
         renderedState.dock.dropColumn(dock.slotAtLocalX(x - dock.left), reordering = source.container == Container.DOCK)
@@ -557,7 +560,7 @@ class HomeActivity : ComponentActivity() {
 
     private fun commitDrop(source: DragSource, x: Float, y: Float) {
         if (y >= dock.top) {
-            if (!withinDockWidth(x)) return
+            if (!withinDockDropBounds(x, y)) return
             val column = dockDropColumn(source, x)
             if (column == null) {
                 if (source.container != Container.DOCK) showMessage(LauncherMessage.DOCK_FULL)
@@ -794,10 +797,11 @@ class HomeActivity : ComponentActivity() {
         val homeInsets = WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val safe = insets.getInsets(homeInsets)
+            dockBottomInset = safe.bottom
             // Keep the wallpaper edge to edge and center Home content between side insets.
             homeContent.setPadding(safe.left, 0, safe.right, 0)
             workspace.setPadding(0, safe.top, 0, workspace.paddingBottom)
-            dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, safe.bottom + dockBottomPadding)
+            dock.setPadding(dock.paddingLeft, dock.paddingTop, dock.paddingRight, dockBottomInset + dockBottomPadding)
             drawer.applyContentInsets(insets.getInsets(homeInsets or WindowInsetsCompat.Type.ime()))
             insets
         }

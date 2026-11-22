@@ -208,6 +208,8 @@ Keep the draft, selection, and any visible validation message when Android recre
   highlights the last possible position for that drag. Temporarily unavailable
   favorites remain saved and count toward capacity; a full dock does not show
   an insertion highlight.
+  Keep the dock background behind the system navigation bar, but do not
+  highlight or accept dock drops inside Android's reserved area.
 - **App drawer.** Use an opaque Material surface with inset search and a scrollable app grid. Use up to four columns, choosing the largest count that gives each cell 64 dp after horizontal insets. In layouts with fewer than four columns, use 8 dp search margins and the short **Search** hint. Keep the viewport in place when installed apps refresh. Start at the top of the new results when the query changes or clears. Restore focus by app identity when that app remains visible. If an active drag cannot continue through a layout change, restore the original position.
   In short available heights, including above the keyboard, put Close and Search in one row before compressing the field. In a narrow one-row header, omit the decorative search glyph to leave room for the query and Clear. Keep the query when the keyboard hides so results can use the expanded viewport.
   Request an inline keyboard for drawer search in landscape so a full-screen editor does not replace the drawer.
