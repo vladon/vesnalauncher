@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.20
+
+- The first Tab in Settings reaches Search. Activating Clear with the keyboard
+  returns focus to Search so you can type a new query immediately.
+
 ### 0.4.19
 
 - Settings search stays visible above the keyboard in short windows at large

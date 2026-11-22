@@ -3,6 +3,7 @@ package dev.vladon.vesna.launcher.settings
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.SystemClock
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -68,6 +69,39 @@ class SettingsSearchLayoutTest {
                 editor()?.text?.toString() == query && automation.rootInActiveWindow?.findVisible {
                     !it.isEditable && it.text?.toString() == query
                 } != null
+            })
+        }
+    }
+
+    @Test
+    fun tabStartsInSearchAndKeyboardClearReturnsToTheEditor() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val clearLabel = instrumentation.targetContext.getString(R.string.drawer_clear_search)
+        ActivityScenario.launch(SettingsActivity::class.java).use {
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+
+            assertTrue(until { find { it.isEditable } != null })
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_TAB)
+            assertTrue("First Tab should reach Settings search", until {
+                find { it.isEditable && it.isFocused } != null
+            })
+            instrumentation.sendStringSync("theme")
+            assertTrue(until { find { it.isEditable && it.text?.toString() == "theme" } != null })
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_TAB)
+            assertTrue("Tab from the editor should reach Clear search", until {
+                find { node -> node.isFocused && node.findVisible { child ->
+                    child.contentDescription?.toString() == clearLabel
+                } != null } != null
+            })
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_ENTER)
+            assertTrue("Clear search should return keyboard focus to the empty editor", until {
+                find { it.isEditable && it.isFocused && it.text.isNullOrEmpty() } != null
+            })
+            instrumentation.sendStringSync("about")
+            assertTrue("Typing should continue without another Tab", until {
+                find { it.isEditable && it.text?.toString() == "about" } != null
             })
         }
     }

@@ -44,7 +44,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -60,6 +59,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -129,57 +130,52 @@ internal fun SettingsScreen(
         val availableSearchBarHeight = minOf(searchBarHeight, maxHeight)
         // Match the directory's centered content width and 16 dp side margins.
         val searchWidth = (minOf(maxWidth, 560.dp) - 32.dp).coerceAtLeast(0.dp)
-        Scaffold(
-            topBar = {
-                Column {
-                    if (!shortDirectory) {
-                        TopAppBar(
-                            title = {
-                                Text(
-                                    title,
-                                    modifier = Modifier.semantics { heading() },
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            },
-                            navigationIcon = {
-                                if (inSubpage) {
-                                    IconButton(onClick = up, modifier = Modifier.settingsFocusRing()) {
-                                        Icon(
-                                            painterResource(R.drawable.ic_settings_back),
-                                            contentDescription = stringResource(R.string.settings_back_to_root),
-                                        )
-                                    }
-                                }
-                            },
-                            expandedHeight = appBarHeight,
+        // Put the app bars before the scrollable body in keyboard traversal order.
+        Column(Modifier.fillMaxSize()) {
+            if (!shortDirectory) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            title,
+                            modifier = Modifier.semantics { heading() },
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
-                    }
-                    if (!inSubpage) {
-                        CenterAlignedTopAppBar(
-                            modifier = if (shortDirectory) Modifier.semantics { paneTitle = title }
-                                else Modifier.padding(top = 12.dp),
-                            expandedHeight = availableSearchBarHeight,
-                            title = {
-                                SettingsSearchField(
-                                    query = query,
-                                    onQueryChange = { query = it },
-                                    onResetInputFocus = onResetInputFocus,
-                                    short = shortDirectory,
-                                    narrow = narrow,
-                                    modifier = Modifier
-                                        .width(searchWidth)
-                                        .padding(vertical = SettingsFocusRingOutset),
+                    },
+                    navigationIcon = {
+                        if (inSubpage) {
+                            IconButton(onClick = up, modifier = Modifier.settingsFocusRing()) {
+                                Icon(
+                                    painterResource(R.drawable.ic_settings_back),
+                                    contentDescription = stringResource(R.string.settings_back_to_root),
                                 )
-                            },
+                            }
+                        }
+                    },
+                    expandedHeight = appBarHeight,
+                )
+            }
+            if (!inSubpage) {
+                CenterAlignedTopAppBar(
+                    modifier = if (shortDirectory) Modifier.semantics { paneTitle = title }
+                        else Modifier.padding(top = 12.dp),
+                    expandedHeight = availableSearchBarHeight,
+                    title = {
+                        SettingsSearchField(
+                            query = query,
+                            onQueryChange = { query = it },
+                            onResetInputFocus = onResetInputFocus,
+                            short = shortDirectory,
+                            narrow = narrow,
+                            modifier = Modifier
+                                .width(searchWidth)
+                                .padding(vertical = SettingsFocusRingOutset),
                         )
-                    }
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) { contentPadding ->
+                    },
+                )
+            }
             Box(
-                Modifier.fillMaxSize().padding(contentPadding),
+                Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.TopCenter,
             ) {
                 key(page) {
@@ -234,6 +230,7 @@ private fun SettingsSearchField(
     modifier: Modifier,
 ) {
     var focused by remember { mutableStateOf(false) }
+    val editorFocus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val searchLabel = stringResource(R.string.settings_search)
     val colors = MaterialTheme.colorScheme
@@ -246,6 +243,7 @@ private fun SettingsSearchField(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier
+            .focusRequester(editorFocus)
             .settingsFocusRing()
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = searchLabel },
@@ -261,7 +259,15 @@ private fun SettingsSearchField(
         },
         trailingIcon = if (query.isEmpty()) null else {
             {
-                IconButton(onClick = { onQueryChange("") }, modifier = Modifier.settingsFocusRing()) {
+                var clearFocused by remember { mutableStateOf(false) }
+                IconButton(
+                    onClick = {
+                        // Clear removes this button. Return keyboard focus before that happens.
+                        if (clearFocused) editorFocus.requestFocus()
+                        onQueryChange("")
+                    },
+                    modifier = Modifier.settingsFocusRing().onFocusChanged { clearFocused = it.isFocused },
+                ) {
                     Icon(
                         painterResource(R.drawable.ic_clear_search),
                         contentDescription = stringResource(R.string.drawer_clear_search),
