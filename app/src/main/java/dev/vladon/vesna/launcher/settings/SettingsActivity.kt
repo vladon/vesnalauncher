@@ -23,14 +23,16 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.vladon.vesna.launcher.VesnaApplication
 
-/** The app entry point for default launcher setup, appearance, and About. */
+/** The app entry point for default launcher setup, workspace, appearance, and About. */
 class SettingsActivity : ComponentActivity() {
+    private lateinit var workspace: WorkspacePreferences
     private lateinit var appearance: AppearancePreferences
     private val navigation: SettingsNavigation by viewModels {
         viewModelFactory { initializer { SettingsNavigation(SettingsPage.fromIntent(intent)) } }
     }
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
+    private var layoutLocked by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
     private var setupIntent: Intent? = null
     private val homeRequest =
@@ -39,7 +41,8 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appearance = AppearancePreferences(this)
-        readAppearance()
+        workspace = WorkspacePreferences(this)
+        readPreferences()
         enableEdgeToEdge()
         val version = readVersionName()
         setContent {
@@ -66,6 +69,11 @@ class SettingsActivity : ComponentActivity() {
                         onThemeSelected = ::selectTheme,
                         showAppNames = showAppNames,
                         onShowAppNamesChanged = ::changeAppNameVisibility,
+                        layoutLocked = layoutLocked,
+                        onLayoutLockedChanged = { locked ->
+                            workspace.layoutLocked = locked
+                            layoutLocked = locked
+                        },
                     )
                 }
             }
@@ -83,7 +91,7 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        readAppearance()
+        readPreferences()
         refreshDefaultHome()
     }
 
@@ -96,9 +104,10 @@ class SettingsActivity : ComponentActivity() {
         }
     }
 
-    private fun readAppearance() {
+    private fun readPreferences() {
         themeMode = appearance.themeMode
         showAppNames = appearance.showAppNames
+        layoutLocked = workspace.layoutLocked
     }
 
     private fun selectTheme(mode: ThemeMode) {

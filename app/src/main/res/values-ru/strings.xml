@@ -8,6 +8,11 @@
     <string name="settings_default_home_active">Vesna — ваш лаунчер по умолчанию.</string>
     <string name="settings_default_home_unavailable">Android не позволяет выбрать лаунчер на этом устройстве.</string>
 
+    <string name="settings_home_screen">Главный экран</string>
+    <string name="settings_home_screen_detail">Размещение на главном экране</string>
+    <string name="settings_lock_layout">Заблокировать расположение</string>
+    <string name="settings_lock_layout_detail">Запретить изменение ярлыков, папок, панели избранного и страниц.</string>
+    <string name="workspace_layout_locked">Расположение заблокировано</string>
     <string name="settings_appearance">Внешний вид</string>
     <string name="settings_appearance_detail">Тема и названия приложений</string>
     <string name="settings_about">О приложении</string>

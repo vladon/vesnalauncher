@@ -39,6 +39,8 @@ class DrawerView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : ViewGroup(context, attrs) {
 
+    var isLayoutLocked: () -> Boolean = { false }
+
     var onAppClick: ((LauncherApp) -> Boolean)? = null
     internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
@@ -105,6 +107,10 @@ class DrawerView @JvmOverloads constructor(
             onItemTouchHold = hold@{ app, anchor ->
                 if (!isOpen) return@hold
                 hideKeyboard()
+                if (isLayoutLocked()) {
+                    onItemOptions?.invoke(app, anchor)
+                    return@hold
+                }
                 onItemDragStarted?.invoke(app, anchor)
                 // While armed, the drag layer owns subsequent MOVE events; the UP
                 // (no movement) arrives here and opens the app menu. The listener

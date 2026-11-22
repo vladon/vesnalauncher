@@ -7,6 +7,7 @@ import dev.vladon.vesna.launcher.R
 internal enum class SettingsPage(private val path: String, @StringRes val title: Int) {
     ROOT("/", R.string.menu_launcher_settings),
     DEFAULT_LAUNCHER("/default-launcher", R.string.settings_default_launcher),
+    HOME_SCREEN("/home-screen", R.string.settings_home_screen),
     APPEARANCE("/appearance", R.string.settings_appearance),
     ABOUT("/about", R.string.settings_about),
     ;

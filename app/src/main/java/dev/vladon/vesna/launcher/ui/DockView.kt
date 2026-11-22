@@ -42,6 +42,8 @@ class DockView @JvmOverloads constructor(
         }
 
     /** The user lifted a dock icon by long-pressing it; a drag session has begun. */
+    var isLayoutLocked: () -> Boolean = { false }
+
     var onDragStarted: ((pin: DockPin, anchor: View) -> Unit)? = null
 
     /** Drag progress in dock-local coordinates. */
@@ -108,6 +110,10 @@ class DockView @JvmOverloads constructor(
 
     /** Starts a drag for the selected dock pin; the item dims until drop. */
     private fun beginDrag(pin: DockPin, anchor: View) {
+        if (isLayoutLocked()) {
+            onAppOptions?.invoke(pin, anchor)
+            return
+        }
         dragSourceApp = pin.app
         dragAnchor = anchor
         dragMoved = false
@@ -193,6 +199,11 @@ class DockView @JvmOverloads constructor(
             )
             addView(view)
         }
+    }
+
+    internal fun cancelDrag() {
+        val anchor = dragAnchor ?: return
+        endDrag(0f, 0f, cancelled = true, anchor)
     }
 
     private fun endDrag(x: Float, y: Float, cancelled: Boolean, anchor: View) {

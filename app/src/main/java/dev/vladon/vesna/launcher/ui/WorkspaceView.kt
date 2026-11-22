@@ -41,6 +41,7 @@ class WorkspaceView @JvmOverloads constructor(
 
     /** A workspace cell was tapped: an app (launch) or a folder (open). */
     var onCellClick: ((CellContent) -> Unit)? = null
+    var isLayoutLocked: () -> Boolean = { false }
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
     var onSwipePage: ((forward: Boolean) -> Unit)? = null
@@ -204,6 +205,13 @@ class WorkspaceView @JvmOverloads constructor(
     /** Starts a drag for the icon at [cell]; the item dims until it is dropped. */
     private fun beginDrag(cell: Int, content: CellContent, anchor: View) {
         longPressed = true
+        if (isLayoutLocked()) {
+            when (content) {
+                is CellContent.App -> onAppOptions?.invoke(cell, content.app, anchor)
+                is CellContent.FolderCell -> onFolderLongClick?.invoke(content.folder, anchor)
+            }
+            return
+        }
         dragContent = content
         dragAnchor = anchor
         dragMoved = false
@@ -235,7 +243,7 @@ class WorkspaceView @JvmOverloads constructor(
             is CellContent.FolderCell -> if (!cancelled) {
                 if (!moved) {
                     onFolderLongClick?.invoke(content.folder, anchor)
-                } else {
+                } else if (!isLayoutLocked()) {
                     folderDropTarget(x, y)?.let { cell -> onFolderDrop?.invoke(content.folder, cell) }
                 }
             }
