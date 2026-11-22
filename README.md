@@ -44,6 +44,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
 <details>
 <summary>Feature history</summary>
 
+### 0.4.17
+
+- Long context menu labels wrap instead of being cut off in narrow windows
+  or at larger text sizes.
+
 ### 0.4.16
 
 - The folder name stays visible while typing in short windows, even with

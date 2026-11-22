@@ -24,13 +24,7 @@
     </style>
 
     <style name="ThemeOverlay.Vesna.PopupMenu" parent="">
-        <item name="android:popupMenuStyle">@style/Widget.Vesna.PopupMenu</item>
-        <item name="android:textAppearanceLargePopupMenu">@style/TextAppearance.Vesna.PopupMenu</item>
         <item name="android:colorControlHighlight">@color/home_control_focus_press</item>
-    </style>
-
-    <style name="Widget.Vesna.PopupMenu" parent="android:Widget.Material.PopupMenu">
-        <item name="android:popupBackground">@drawable/vesna_popup_menu_background</item>
     </style>
 
     <style name="TextAppearance.Vesna.PopupMenu" parent="android:TextAppearance.Material.Body1">
