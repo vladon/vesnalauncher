@@ -103,6 +103,7 @@ class HomeActivity : ComponentActivity() {
 
     private class FolderUiState : ViewModel() {
         var openFolderId: Long? = null
+        var focusedMemberId: Long? = null
         var rename: FolderRename? = null
     }
 
@@ -257,6 +258,7 @@ class HomeActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean(DRAWER_OPEN_STATE, drawer.isOpen)
+        folderDialog?.let { folderUiState.focusedMemberId = it.focusedMemberId() }
     }
 
     override fun onResume() {
@@ -495,11 +497,12 @@ class HomeActivity : ComponentActivity() {
         if (cell != source.fromCell) commitOnCell(source, source.app, cell)
     }
 
-    private fun showFolderDialog(folder: Folder) {
+    private fun showFolderDialog(folder: Folder, focusedMemberId: Long? = null) {
         folderDialog?.dismiss()
         val dialog = FolderDialog(
             context = this,
             folder = folder,
+            pendingMemberFocus = focusedMemberId,
             onLaunch = { launchApp(it) },
             onAppInfo = { controller.openAppInfo(it) },
             onRemoveFromFolder = { pinId ->
@@ -514,17 +517,20 @@ class HomeActivity : ComponentActivity() {
                 snackbarJob?.cancel()
                 folderDialog = null
                 folderUiState.openFolderId = null
+                folderUiState.focusedMemberId = null
             },
         )
         dialog.showAppNames = showAppNames
         folderDialog = dialog
         folderUiState.openFolderId = folder.id
+        folderUiState.focusedMemberId = null
         dialog.show(homeContent, themeMode)
         dialog.update(renderedState)
     }
 
     private fun dismissFolderDialog() {
         folderUiState.openFolderId = null
+        folderUiState.focusedMemberId = null
         folderDialog?.dismiss()
     }
 
@@ -562,7 +568,7 @@ class HomeActivity : ComponentActivity() {
             val folder = state.folders[id]
             when {
                 folder == null || folder.pageId != state.activePageId -> dismissFolderDialog()
-                folderDialog == null -> showFolderDialog(folder)
+                folderDialog == null -> showFolderDialog(folder, folderUiState.focusedMemberId)
                 else -> folderDialog?.update(state)
             }
         }
