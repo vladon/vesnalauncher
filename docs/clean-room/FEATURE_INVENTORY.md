@@ -88,7 +88,7 @@ behavior, an ID is never reassigned to a different behavior.
 | FOLDER-003 | Folder open/close behavior | observed (window mode; BACK closes) |
 | FOLDER-004 | Folder icon appearance (preview grid) | observed (mini previews) |
 | FOLDER-005 | Add/remove apps inside folder | Both accept a drop onto a closed folder; only Nova offered batch addition with Save/Cancel (OBS-VESNA-061; #134). Signed Vesna v0.4.55 supports exact-cell drag-out and dissolution; cancellation and layout lock preserve placement (OBS-VESNA-057/065; #130, PR #136). |
-| FOLDER-006 | Reorder inside folder | Nova supports drag reorder and alphabetical sort. Signed Vesna v0.4.55 rejects the tested internal drop without extracting the member; no sort was found on v0.4.54 (OBS-VESNA-058/062/066; #131, #135). |
+| FOLDER-006 | Reorder inside folder | Nova and signed Vesna v0.4.57 insert a dragged member at the chosen rank and preserve order after restart. Vesna preserves order on cancel and under lock. One-action alphabetical sort remains separate (OBS-VESNA-062/072; #131, #135). |
 | FOLDER-007 | Folder deletion and last-item behavior | Both dissolve to the last member at the folder cell. Removing a whole folder unpins its members with Undo in Nova; Vesna v0.4.54 returns the pins to Home (OBS-VESNA-057/059; #132). |
 | FOLDER-008 | Folder layout (grid size inside folder) | Nova overflow pages along the selected axis; Vesna v0.4.54 scrolls its member grid vertically with stationary actions. All 12 members reachable in both at about 198×339 dp and 200% text (OBS-VESNA-060; #133). |
 

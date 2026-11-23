@@ -1617,3 +1617,33 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   and Remember position, and Vesna's original grid. Evidence:
   `EVI-VESNA-003/parity72-*`, `parity65-cycle72-*`,
   `parity70-cycle72-*`, and `parity71-cycle72-*`.
+
+## OBS-VESNA-072 — Signed v0.4.57 in-folder reorder
+
+- [PR #140](https://github.com/vladon/vesnalauncher/pull/140)
+  merged at `701c65db61396bb392f153a4ad7887cf7cd5522b`.
+  The [v0.4.57 release tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.57)
+  points to that commit. Matched the public APK SHA-256
+  `f5d1928ca59feca37842fd4e81d9f745ef30dc6ecc552882e72de8cf7c3584a3`
+  and the v0.4.56 signer. Installed signed v0.4.57 (62) on
+  the independent Android 15 research AVD.
+- Started with Files, Gmail, Photos in both Nova 9.0.1
+  Prime (90100) and Vesna. Moving Photos over Files
+  produced Photos, Files, Gmail; moving it to the last
+  position restored the original sequence. In both
+  directions, the intervening members shifted rather than
+  swapping, with all three still in the folder.
+- In Vesna, cancelling a live internal drag and repeating a
+  drag with layout lock on both kept the prior order. A
+  stationary long-press still opened the member menu. The
+  changed order survived folder reopen and cold launch,
+  without any Home pin changing.
+- Moving Files outside the panel still placed it in the
+  chosen empty cell (927,1772), as in #130. Photos and Gmail
+  stayed in the folder in that order; both persisted across
+  another cold launcher start.
+- Restored both layouts and unlock state, leaving v0.4.57
+  installed. Evidence: `EVI-VESNA-003/parity73-*` and
+  `parity66-cycle73-*`. Overflow, RTL, and another Home
+  page were outside this independent replay.
+  [Result in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7091728287).
