@@ -54,7 +54,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-002 | Drawer close gesture(s) | partially observed (BACK verified; swipe-down untested) |
 | DRAWER-003 | Drawer layout modes | Nova 9.0.1 and signed Vesna 0.4.51 have vertical list and horizontal pages. Both retain the horizontal page on search clear; Vesna resets vertical list scroll on clear (OBS-VESNA-027/035; #108). |
 | DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
-| DRAWER-005 | Drawer search | Both launchers found and launched a local app offline. Nova separates provider buttons from web suggestions and handed a query to Maps (OBS-VESNA-028/031; #113). |
+| DRAWER-005 | Drawer search | Both launch local apps offline. Nova separates provider buttons from web suggestions and passes the query to Maps even offline; Vesna v0.4.54 opens the installed Maps app by name only on the tested paths (OBS-VESNA-028/031/056; #113). |
 | DRAWER-006 | Scrolling and fast-scroll behavior | Nova 9.0.1 and signed Vesna 0.4.49 jump by letter and suppress the rail during search; Vesna restores it after clear (OBS-VESNA-019/026; #109). |
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
 | DRAWER-008 | Hide apps from alphabetical browsing | Nova 9.0.1 and signed Vesna 0.4.50 retain pins and exact-name search after hiding. Nova also matches a hidden app by prefix; Vesna requires its full name (OBS-VESNA-023/030; #119). |

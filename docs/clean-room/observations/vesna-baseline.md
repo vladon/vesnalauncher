@@ -1281,3 +1281,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Observed only the backup UI and file metadata, not its
   contents. Evidence: `EVI-VESNA-003/parity56-*` and
   `parity33-cycle56-*`; follow-up for #116.
+
+## OBS-VESNA-056 — Nova hands a Maps query off while offline
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). Enabled airplane mode and disabled Wi-Fi
+  and mobile data; Android showed no active default network.
+- Used the same fresh place query, `Plaza Mayor Lima QA 5726`,
+  in both launchers. Vesna showed no matching apps and no
+  provider action. A separate search for `Maps` still opened
+  the installed app but did not pass the place query.
+- Nova's **Google Maps** provider opened the installed Maps
+  app and populated its search field with the exact query.
+  Maps showed “Looks like you're offline” and asked for a
+  connection to search the area. Android still had no active
+  default network after the handoff.
+- This verifies local handoff, not remote results, network
+  transmission or behavior of other providers. Restored the
+  original radios and layouts. Evidence: `EVI-VESNA-003/parity57-*`
+  and `parity31-*cycle57-*`; follow-up for #113.
