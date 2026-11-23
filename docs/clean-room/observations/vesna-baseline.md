@@ -2861,3 +2861,109 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   LINE, both original layouts.
   Evidence: `EVI-VESNA-003/parity120-*`.
   [Issue #174](https://github.com/vladon/vesnalauncher/issues/174).
+
+## OBS-VESNA-120 — Layout lock, page cap and emptied pages
+
+- Android 15 research AVD, `en-US`, signed Vesna
+  v0.4.70 (75) on a 4×5 grid and Nova 9.0.1 Prime
+  (90100) on its default 4×4 grid. Each launcher
+  had one closed folder that held Gmail → Photos.
+  This closes the two acceptance points of #167
+  that the earlier pass left open.
+- **Vesna, layout lock on** (Settings › Home screen ›
+  Lock workspace layout): the long-press on the
+  closed folder showed **Workspace layout is
+  locked**. The folder did not lift, the right edge
+  previewed no page, and a release in the same cell
+  or over an empty cell left the single page and
+  every pin unchanged. With the lock off, the same
+  hold showed **Home page 2 of 2**.
+- **Vesna, page creation and cap:** seven
+  consecutive outer-edge drops each showed
+  **Home page n+1 of n+1** while held and moved the
+  folder to the same cell of the new page. At
+  **Home page 8 of 8** the outer edge previewed
+  nothing, **Add home page** was absent from Home
+  options, and the left edge still showed **Home
+  page 7 of 8**. A cold restart kept the eight
+  pages. A left-edge drag then moved the folder to
+  the same cell on page 7.
+- **Vesna, emptied pages:** pages 2 to 7 stayed in
+  place as empty pages, also after the restart, and
+  so did page 8 after the drag to page 7. Home
+  options offered **Remove empty page** on them.
+- **Nova, layout lock on** (Settings → Home screen
+  → Advanced → Lock layout): the long-press opened a
+  **Home screen is locked** sheet with a padlock and
+  **Long press the padlock to allow changes to the
+  home screen**, plus an **Automatically relock?**
+  switch that was on. The folder did not move. The
+  padlock was not pressed. A drag with a downward
+  component while the sheet was up left the system
+  notification shade open; the cause was not
+  followed up.
+- **Nova, page creation:** unlocked, eight
+  consecutive outer-edge drops each showed the
+  blank page and created a new page with the folder
+  in the same cell. Nova has no eight-page cap on
+  this path, as with shortcuts in 101.
+- **Nova, emptied pages:** each page the folder
+  left disappeared at once. After the eight drops
+  two pages were left, and after a drag back to the
+  first page the second page was gone.
+- The folder kept its members in both launchers.
+  Restored through the loadable baseline snapshot
+  and checked both lock switches against their
+  original frames.
+- Evidence: `EVI-VESNA-003/parity121-*`.
+  [#167 verification](https://github.com/vladon/vesnalauncher/issues/167#issuecomment-7111561732),
+  [decision on emptied pages #176](https://github.com/vladon/vesnalauncher/issues/176),
+  [unlock from the locked message #177](https://github.com/vladon/vesnalauncher/issues/177).
+
+## OBS-VESNA-121 — Signed v0.4.71 keyboard on drawer open
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.71 (76), tag at PR #175 merge
+  `a9708473331d374712df1f14bb27cb03a279ecc5`, APK
+  SHA-256
+  `84247477f27a6f5c9c3ecd6ecb1c920bede532e8e45d59da7176e1f2c70ea774`,
+  with the same verified v2 signer as v0.4.70. It
+  was installed in place over the restored original
+  state, and both original layouts survived the
+  upgrade. Nova 9.0.1 Prime (90100) is unchanged.
+- **New setting:** Settings search for `keyboard`
+  found **Vesna settings › App drawer › Show keyboard
+  on open** ("Focus search and open the keyboard
+  each time the app drawer opens.") under a
+  **Search match** band. It was off by default.
+- **Off:** an upward swipe on the workspace and the
+  **Open app drawer** button both opened the drawer
+  with the keyboard hidden and the search field
+  unfocused.
+- **On:** both entry points opened the drawer with
+  the search field focused and the keyboard shown.
+  Typing `se` left Settings and Voice Search. Back
+  hid the keyboard first and closed the drawer
+  second, with and without a typed query. The
+  setting and the behaviour survived a force-stop.
+- **Nova:** Settings → App drawer → **Show
+  Keyboard** ("Immediately show keyboard when the
+  drawer is opened") was on by default here. With
+  it on, the swipe opened focused search with the
+  keyboard, and Back acted the same way with an
+  empty query. With it off, the swipe opened the
+  drawer with the keyboard hidden and search
+  unfocused.
+- The two launchers differ only in the default:
+  off in Vesna, on in Nova on this AVD.
+- Not tested: an open drawer across recreation,
+  Russian strings, Dark and compact RTL, and
+  Nova's frequent-app predictions, which stay
+  deferred by decision.
+- Restored: the Vesna switch is pixel-identical to
+  its default frame and Nova's to its pre-test
+  frame. Saved `baseline_research_0.4.71`, proved
+  that it loads, and deleted the 0.4.70 baseline.
+  Evidence: `EVI-VESNA-003/parity122-*`,
+  `release-0.4.71/`.
+  [Independent verification in #112](https://github.com/vladon/vesnalauncher/issues/112#issuecomment-7111954487).

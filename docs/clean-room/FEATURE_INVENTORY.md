@@ -41,7 +41,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-010 | Workspace search bar / persistent search | discovered (Search bar placement: Dock Below icons) |
 | HOME-011 | Empty cell behavior and drop targeting | pending |
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
-| HOME-013 | Lock workspace editing without blocking app launch | Verified in Nova 9.0.1, Vesna main and signed v0.4.48 on Android 15 (OBS-VESNA-018/022/023; #103). |
+| HOME-013 | Lock workspace editing without blocking app launch | Verified in Nova 9.0.1, Vesna main and signed v0.4.48 on Android 15 (OBS-VESNA-018/022/023; #103). Signed v0.4.70 also blocks the whole-folder page append. Nova's locked sheet offers a padlock to unlock and an automatic relock switch; the Vesna message has no action (OBS-VESNA-120; #177). |
 | HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
 | HOME-015 | Overview / preview of all pages | pending |
 | HOME-106 | Try launcher from app icon without changing system Home | Vesna 0.4.46 verified with Nova as Home on Android 15; settings links not replayed (OBS-VESNA-020; AT-HOME-106). |
@@ -50,7 +50,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DRAWER-001 | Drawer open gesture(s) | observed (swipe up; free edition) |
+| DRAWER-001 | Drawer open gesture(s) | observed (swipe up; free edition). Signed Vesna v0.4.71 adds an off-by-default Show keyboard on open: with it on, a swipe and the drawer button focus search and show the keyboard, like Nova's Show Keyboard; with it off, neither does (OBS-VESNA-121; #112). |
 | DRAWER-002 | Drawer close gesture(s) | Both dismiss on the tested fast top swipe or via two Back presses from an active query in list mode. Signed Vesna v0.4.56 and Nova match on auto-close off/on in the list, vertical grid and first horizontal page (OBS-VESNA-063/068–070; #137). |
 | DRAWER-003 | Drawer layout modes | Nova 9.0.1 and signed Vesna 0.4.51 have vertical list and horizontal pages. Both retain the horizontal page on search clear; Vesna resets vertical list scroll on clear (OBS-VESNA-027/035; #108). |
 | DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
