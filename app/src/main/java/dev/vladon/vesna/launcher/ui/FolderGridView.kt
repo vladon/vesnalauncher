@@ -1,13 +1,17 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.workspace.FolderPin
 import kotlin.math.abs
 
@@ -15,15 +19,9 @@ import kotlin.math.abs
  * The member grid of an open folder. Touch works like any grid: taps launch,
  * holds open the item menu, and drags scroll.
  *
- * A hold may also leave the folder. The tile's own long-press fires first (its
- * pointer never crossed the touch slop, so scrolling and stationary menus are
- * untouched); [onMemberHold] then arms a drag session and captures the rest of
- * the stream here, before RecyclerView can intercept it. Movement beyond the
- * touch slop turns the hold into a member drag: the owner receives the pointer
- * in raw screen coordinates and decides the drop target while the dialog
- * surface hides itself, so Home stays visible underneath. The grid keeps the
- * captured stream until it ends; a second finger, Back, ACTION_CANCEL,
- * detachment and layout lock all cancel.
+ * After touch slop, an armed hold previews ordering within the folder or
+ * hands its coordinates to Home after leaving the panel. The grid retains
+ * the original touch stream through release or cancellation.
  */
 internal class FolderGridView(context: Context, attrs: AttributeSet) : RecyclerView(context, attrs) {
 
@@ -47,6 +45,25 @@ internal class FolderGridView(context: Context, attrs: AttributeSet) : RecyclerV
 
     private val grid = GridLayoutManager(context, MAX_APP_GRID_COLUMNS)
     private val dragSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private val screenLocation = IntArray(2)
+    private val density = resources.displayMetrics.density
+    private val targetInset = 6 * density
+    private val targetRadius = 12 * density
+    private val targetPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = ColorUtils.setAlphaComponent(context.getColor(R.color.workspace_page_primary), 41)
+    }
+    private val scrollZone = 24 * density
+    private val scrollStep = (6 * density).toInt().coerceAtLeast(1)
+    private var reorderTarget: View? = null
+    private var reorderScrollDirection = 0
+    private val scrollDuringReorder = Runnable {
+        val direction = reorderScrollDirection
+        reorderScrollDirection = 0
+        if (session != null && direction != 0 && canScrollVertically(direction)) {
+            scrollBy(0, direction * scrollStep)
+            onMemberDragMoved?.invoke(lastRawX, lastRawY)
+        }
+    }
 
     /** One armed hold. [moved] latches at the first slop crossing. */
     private class Session(val pin: FolderPin, val anchor: View) {
@@ -127,6 +144,60 @@ internal class FolderGridView(context: Context, attrs: AttributeSet) : RecyclerV
         }
     }
 
+    fun previewReorder(rawX: Float, rawY: Float) {
+        val source = session?.pin?.id ?: return
+        getLocationOnScreen(screenLocation)
+        val x = rawX - screenLocation[0]
+        val y = rawY - screenLocation[1]
+        setReorderTarget(memberViewAt(x, y)?.takeUnless { getChildViewHolder(it).itemId == source })
+        setReorderScrollDirection(when {
+            x < 0 || x >= width || y < 0 || y >= height -> 0
+            y < scrollZone && canScrollVertically(-1) -> -1
+            y >= height - scrollZone && canScrollVertically(1) -> 1
+            else -> 0
+        })
+    }
+
+    fun reorderTargetAt(rawX: Float, rawY: Float): Long? {
+        getLocationOnScreen(screenLocation)
+        val tile = memberViewAt(rawX - screenLocation[0], rawY - screenLocation[1]) ?: return null
+        return getChildViewHolder(tile).itemId
+    }
+
+    fun clearReorderPreview() {
+        setReorderTarget(null)
+        setReorderScrollDirection(0)
+    }
+
+    private fun memberViewAt(x: Float, y: Float): View? {
+        if (x < 0 || x >= width || y < 0 || y >= height) return null
+        return findChildViewUnder(x, y)?.takeIf { getChildAdapterPosition(it) != NO_POSITION }
+    }
+
+    private fun setReorderTarget(tile: View?) {
+        if (tile === reorderTarget) return
+        reorderTarget = tile
+        invalidate()
+    }
+
+    private fun setReorderScrollDirection(direction: Int) {
+        if (direction == reorderScrollDirection) return
+        if (reorderScrollDirection != 0) removeCallbacks(scrollDuringReorder)
+        reorderScrollDirection = direction
+        if (direction != 0) postOnAnimation(scrollDuringReorder)
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        reorderTarget?.takeIf { it.parent === this }?.let { tile ->
+            canvas.drawRoundRect(
+                tile.x + targetInset, tile.y + targetInset,
+                tile.x + tile.width - targetInset, tile.y + tile.height - targetInset,
+                targetRadius, targetRadius, targetPaint,
+            )
+        }
+        super.dispatchDraw(canvas)
+    }
+
     /** Cancels an armed or active member drag; the stream remainder is discarded. */
     fun cancelMemberDrag(): Boolean {
         if (session == null) return false
@@ -140,6 +211,7 @@ internal class FolderGridView(context: Context, attrs: AttributeSet) : RecyclerV
     fun clearMemberDrag() {
         session = null
         discardStream = false
+        clearReorderPreview()
     }
 
     private fun endMemberSession(active: Session, cancelled: Boolean, menu: Boolean) {

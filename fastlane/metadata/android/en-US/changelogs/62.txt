@@ -1,0 +1,1 @@
+Reorder shortcuts inside an open Home folder: hold a shortcut and drag it onto another position. Nearby shortcuts shift without leaving the folder. Drag outside the panel to move a shortcut to Home instead.

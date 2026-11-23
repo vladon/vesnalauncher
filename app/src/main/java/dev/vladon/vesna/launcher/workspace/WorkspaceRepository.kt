@@ -761,6 +761,35 @@ class WorkspaceRepository(
         FolderRemovalResult.REMOVED
     }
 
+    /** Inserts the moving pin at the target pin's current rank, shifting intervening members. */
+    internal suspend fun reorderFolderMember(
+        folderId: Long,
+        pageId: Long,
+        pinId: Long,
+        targetId: Long,
+    ): Boolean = mutationMutex.withLock {
+        if (workspacePreferences.layoutLocked || pinId == targetId) return@withLock false
+        if (folderDao.getById(folderId)?.pageId != pageId) return@withLock false
+        val members = dao.folderMembersInOrder(folderId)
+        val from = members.indexOfFirst { it.id == pinId }
+        val to = members.indexOfFirst { it.id == targetId }
+        if (from < 0 || to < 0) return@withLock false
+        db.withTransaction {
+            // Older membership moves retained the previous cell, so ranks may be sparse or equal.
+            for (index in members.indices) {
+                val previousIndex = when {
+                    index == to -> from
+                    from < to && index in from until to -> index + 1
+                    to < from && index > to && index <= from -> index - 1
+                    else -> index
+                }
+                val member = members[previousIndex]
+                if (member.cellIndex != index) dao.updateCellIndex(member.id, index)
+            }
+        }
+        true
+    }
+
     /**
      * Drops the folder member [pinId] onto the exact Home [cell] the user chose
      * on the folder's own [pageId]. Revalidated under [mutationMutex]: the

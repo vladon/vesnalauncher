@@ -364,4 +364,60 @@ class WorkspaceRepositoryFolderRemovalTest {
         assertEquals("the lock changed nothing either", before, dao.getAll().associateBy { it.id })
         assertEquals(foldersBefore, db.folderDao().getAll())
     }
+
+    @Test
+    fun reorderingInsertsAcrossTiedAndSparseRanksWithoutChangingOtherFolderRows() = runBlocking {
+        val folders = db.folderDao()
+        val folder = folders.insert(FolderEntity(title = "Editing", cellIndex = 8))
+        val other = folders.insert(FolderEntity(title = "Unchanged", cellIndex = 9))
+        seedMember("qa.copy", other, cellIndex = 3)
+        seedMember("qa.sibling", other, cellIndex = 10)
+        val first = seedMember("qa.first", folder, cellIndex = 5)
+        val second = seedMember("qa.second", folder, cellIndex = 5)
+        val third = dao.insert(WorkspaceItemEntity(
+            packageName = "qa.copy", className = "qa.copy.Activity", container = "WORKSPACE",
+            cellIndex = 20, userSerial = 7, folderId = folder,
+            shortcutId = "open", customLabel = "Custom", shortcutLabel = "Published",
+        ))
+        val before = dao.getAll().associateBy { it.id }
+        val originalFolders = folders.getAll()
+        assertTrue(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, third, first))
+        val reordered = before + mapOf(
+            third to before.getValue(third).copy(cellIndex = 0),
+            first to before.getValue(first).copy(cellIndex = 1),
+            second to before.getValue(second).copy(cellIndex = 2),
+        )
+        assertEquals(reordered, dao.getAll().associateBy { it.id })
+        assertTrue(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, third, second))
+        val restored = before + mapOf(
+            first to before.getValue(first).copy(cellIndex = 0),
+            second to before.getValue(second).copy(cellIndex = 1),
+            third to before.getValue(third).copy(cellIndex = 2),
+        )
+        assertEquals(restored, dao.getAll().associateBy { it.id })
+        assertEquals(originalFolders, folders.getAll())
+    }
+
+    @Test
+    fun lockedInvalidAndCrossFolderReordersLeaveEveryRowUnchanged() = runBlocking {
+        val folders = db.folderDao()
+        val folder = folders.insert(FolderEntity(title = "Selected", cellIndex = 8))
+        val other = folders.insert(FolderEntity(title = "Other", cellIndex = 9))
+        val first = seedMember("qa.first", folder, cellIndex = 10)
+        val second = seedMember("qa.second", folder, cellIndex = 12)
+        val foreign = seedMember("qa.second", other, cellIndex = 12)
+        val anotherPage = requireNotNull(repo.createPage())
+        val before = dao.getAll().associateBy { it.id }
+        val originalFolders = folders.getAll()
+
+        assertFalse(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, first, foreign))
+        assertFalse(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, foreign, second))
+        assertFalse(repo.reorderFolderMember(folder, anotherPage, first, second))
+        assertFalse(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, first, first))
+        WorkspacePreferences(prefs).layoutLocked = true
+        assertFalse(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, first, second))
+
+        assertEquals(before, dao.getAll().associateBy { it.id })
+        assertEquals(originalFolders, folders.getAll())
+    }
 }

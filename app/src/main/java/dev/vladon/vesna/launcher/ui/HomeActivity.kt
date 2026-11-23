@@ -712,6 +712,18 @@ class HomeActivity : ComponentActivity() {
         return true
     }
 
+    private fun reorderFolderMember(targetId: Long): Boolean {
+        val source = folderMemberDrag ?: return false
+        clearFolderMemberDrag()
+        val dialog = folderDialog ?: return false
+        if (layoutLocked || source.pinId == targetId || renderedState.activePageId != source.pageId) return false
+        lifecycleScope.launch {
+            controller.reorderFolderMember(source.folderId, source.pageId, source.pinId, targetId)
+            if (dialog === folderDialog) dialog.finishMemberReorder()
+        }
+        return true
+    }
+
     private fun showFolderDialog(folder: Folder, focusedMemberId: Long? = null) {
         folderDialog?.dismiss()
         val dialog = FolderDialog(
@@ -722,6 +734,7 @@ class HomeActivity : ComponentActivity() {
             onMemberDragStarted = { startFolderMemberDrag(folder, it.id) },
             onMemberDragMoved = ::updateFolderMemberDrag,
             onMemberDragFinished = ::finishFolderMemberDrag,
+            onMemberReordered = ::reorderFolderMember,
             onAppInfo = { controller.openAppInfo(it) },
             onRemoveFromFolder = { pinId ->
                 removeFolderItems(folder.pageId) { controller.removeFromFolder(pinId, folder.id) }
