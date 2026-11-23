@@ -3326,3 +3326,44 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity128-*`,
   `release-0.4.74/`.
   [Independent verification in #144](https://github.com/vladon/vesnalauncher/issues/144#issuecomment-7115689678).
+
+## OBS-VESNA-129 — Dock item management on v0.4.74
+
+- Android 15 research AVD, `en-US`. Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.74 (79); the two
+  interim releases changed only icon sizes and
+  shapes. Docks: Vesna Calendar, Camera, Chrome,
+  Clock; Nova Phone, Messages, Maps, Chrome,
+  Camera. This fills the DOCK-004 gap of the
+  inventory.
+- **Reorder by drag:** dropping a Vesna dock pin
+  on an adjacent dock pin swapped the two
+  (Camera and Calendar), as in 041 on v0.4.52.
+  Dropping a Nova dock pin on another dock pin
+  made a two-item dock folder (041); reordering
+  Nova dock pins without overlap was not
+  exercised.
+- **Remove:** Vesna shows no dock-pin menu while
+  the finger is down; after release the menu
+  offers **Remove from dock** and **App info**.
+  Remove from dock deleted the Calendar shortcut
+  from the dock and from the launcher (it did not
+  move to the workspace) and the dock compacted to
+  three pins. Nova's menu opens while the finger
+  is down and offers Remove, App info and Edit;
+  Remove removed Camera and the dock compacted to
+  four pins.
+- **Add:** Vesna's drawer item menu offers Add to
+  workspace, **Add to dock** and App info; Add to
+  dock put Calendar in the dock's first slot (the
+  dock had three pins after the removal). Nova's
+  fifth slot, freed by the removal, took a Home
+  shortcut dropped onto it.
+- A dock long-press in Nova opens its menu while
+  the finger is still down; Vesna's menu appears
+  only after release.
+- Restart persistence of these changes was not
+  checked. The dock-add toast at full capacity is
+  recorded in 113.
+- Restored through the baseline snapshot.
+  Evidence: `EVI-VESNA-003/parity129-*`.
