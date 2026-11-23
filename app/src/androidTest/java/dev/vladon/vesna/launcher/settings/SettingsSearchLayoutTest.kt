@@ -76,6 +76,8 @@ class SettingsSearchLayoutTest {
                                 onHideHomeAppNamesChanged = {},
                                 homeIconPercent = 100,
                                 onHomeIconPercentChanged = {},
+                                dockIconPercent = 100,
+                                onDockIconPercentChanged = {},
                                 drawerLayoutMode = DrawerLayoutMode.GRID,
                                 onDrawerLayoutModeSelected = {},
                                 closeDrawerOnLaunch = false,
@@ -263,6 +265,7 @@ class SettingsSearchLayoutTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.uiAutomation
         lateinit var homeSize: String
+        lateinit var dockSize: String
         lateinit var drawerSize: String
         lateinit var matchHome: String
         lateinit var homePage: String
@@ -270,6 +273,7 @@ class SettingsSearchLayoutTest {
         ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 homeSize = activity.getString(R.string.settings_home_icon_size)
+                dockSize = activity.getString(R.string.settings_dock_icon_size)
                 drawerSize = activity.getString(R.string.settings_drawer_icon_size)
                 matchHome = activity.getString(R.string.settings_drawer_follow_home)
                 homePage = activity.getString(R.string.settings_home_screen)
@@ -282,8 +286,8 @@ class SettingsSearchLayoutTest {
 
             assertTrue(until { editor() != null })
             assertTrue(editor()!!.setQuery(query))
-            assertTrue("Settings should offer all three icon size settings for \"$query\"", until {
-                result(homeSize) != null && result(drawerSize) != null && result(matchHome) != null
+            assertTrue("Settings should offer all four icon size settings for \"$query\"", until {
+                result(homeSize) != null && result(dockSize) != null && result(drawerSize) != null && result(matchHome) != null
             })
             val card = generateSequence(result(homeSize)) { it.parent }.first { it.isClickable }
             assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
@@ -520,6 +524,8 @@ class SettingsSearchLayoutTest {
                                         onHideHomeAppNamesChanged = {},
                                         homeIconPercent = 100,
                                         onHomeIconPercentChanged = {},
+                                        dockIconPercent = 100,
+                                        onDockIconPercentChanged = {},
                                         drawerLayoutMode = DrawerLayoutMode.GRID,
                                         onDrawerLayoutModeSelected = {},
                                         closeDrawerOnLaunch = false,
@@ -633,6 +639,8 @@ class SettingsSearchLayoutTest {
                             onHideHomeAppNamesChanged = {},
                             homeIconPercent = 100,
                             onHomeIconPercentChanged = {},
+                            dockIconPercent = 100,
+                            onDockIconPercentChanged = {},
                             drawerLayoutMode = DrawerLayoutMode.GRID,
                             onDrawerLayoutModeSelected = {},
                             closeDrawerOnLaunch = false,

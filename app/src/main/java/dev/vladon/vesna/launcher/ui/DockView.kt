@@ -41,6 +41,14 @@ class DockView @JvmOverloads constructor(
             }
         }
 
+    /** Scales only the artwork of every tile; slots, labels and saved pins keep their size. */
+    internal var iconScale = 1f
+        set(value) {
+            if (field == value) return
+            field = value
+            for (index in 0 until childCount) (getChildAt(index) as AppIconView).artworkScale = value
+        }
+
     /** The user lifted a dock icon by long-pressing it; a drag session has begun. */
     var isLayoutLocked: () -> Boolean = { false }
 
@@ -191,6 +199,7 @@ class DockView @JvmOverloads constructor(
             val view = AppIconView(context)
             view.layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
             view.bind(app)
+            view.artworkScale = iconScale
             view.setAppNameVisible(showAppNames)
             view.setOnClickListener { onAppClick?.invoke(app) }
             view.bindOptions(

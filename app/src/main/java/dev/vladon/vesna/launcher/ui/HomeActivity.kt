@@ -55,6 +55,7 @@ import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.AppearancePreferences
+import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.DrawerPreferences
 import dev.vladon.vesna.launcher.settings.IconShapeMode
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
@@ -190,6 +191,7 @@ class HomeActivity : ComponentActivity() {
     private val homeSnackbar by lazy { createHomeSnackbar() }
     private var renderedState = LauncherUiState()
     private val workspacePreferences by lazy { WorkspacePreferences(this) }
+    private val dockPreferences by lazy { DockPreferences(this) }
     private val drawerPreferences by lazy { DrawerPreferences(this) }
     private var hiddenDrawerApps = emptySet<AppKey>()
     private var layoutLocked = false
@@ -425,6 +427,7 @@ class HomeActivity : ComponentActivity() {
     private fun applyIconScales() {
         val home = workspacePreferences.iconScalePercent
         workspace.iconScale = home / 100f
+        dock.iconScale = dockPreferences.iconScalePercent / 100f
         val drawerSize = if (drawerPreferences.followsHomeIconScale) home else drawerPreferences.iconScalePercent
         drawer.iconScale = drawerSize / 100f
     }

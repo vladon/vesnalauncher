@@ -45,10 +45,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
   app. This does not remember filtered searches.
   Enable **Show keyboard on open** to focus search and open the keyboard
   each time the drawer opens. It is off by default.
-- **Icon sizes.** Choose the artwork size for Home and for the app drawer
-  separately in Vesna settings. The drawer matches Home by default; turn
-  **Match Home icon size** off to pick its own size. Only the artwork changes:
-  cells, labels and shortcuts stay where they are.
+- **Icon sizes.** Choose the artwork size for Home, for the dock and for the
+  app drawer separately in Vesna settings. The drawer matches Home by default;
+  turn **Match Home icon size** off to pick its own size. Only the artwork
+  changes: cells, labels and shortcuts stay where they are. Dock pins keep
+  their order, and Home cells adjust so the dock stays below them.
 - **Icon shape.** In Vesna settings, choose the shape of adaptive app icons:
   the system shape, which is the default, or a rounded square. It applies on
   Home, in the dock, in the app drawer and in folders. Other icons and work

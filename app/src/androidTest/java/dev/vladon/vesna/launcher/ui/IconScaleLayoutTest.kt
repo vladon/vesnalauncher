@@ -11,6 +11,7 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.CellContent
+import dev.vladon.vesna.launcher.workspace.DockPin
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertEquals
@@ -132,6 +133,42 @@ class IconScaleLayoutTest {
         adapter.iconScale = 1.3f
         adapter.bindTile(tile, app(context, 0))
         assertEquals("A rebound tile uses the new size", (dp(48) * 1.3f + 0.5f).toInt(), tile.findViewById<View>(R.id.app_icon).layoutParams.width)
+    }
+
+    @Test
+    fun dockScaleGrowsOnlyTheArtworkWithinItsBar() = checkLayout { context ->
+        fun dp(value: Int) = (value * context.resources.displayMetrics.density).roundToInt()
+        val dock = DockView(context)
+        dock.bind((0 until GridCanvas.DOCK_CAPACITY).map { DockPin(it + 1L, app(context, it)) })
+        fun measure() {
+            dock.measure(
+                MeasureSpec.makeMeasureSpec(dp(360), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+            )
+            dock.layout(0, 0, dock.measuredWidth, dock.measuredHeight)
+        }
+        measure()
+        val tiles = (0 until dock.childCount).map(dock::getChildAt)
+        val baseArtwork = tiles.map { it.findViewById<View>(R.id.app_icon).width }
+        val baseWidths = tiles.map { it.width }
+        val baseBarHeight = dock.measuredHeight
+        assertTrue("The default is the unscaled artwork", baseArtwork.all { it == dp(48) })
+
+        dock.iconScale = 1.3f
+        measure()
+        tiles.forEachIndexed { index, tile ->
+            assertEquals("Slot $index keeps its width", baseWidths[index], tile.width)
+            assertEquals("Slot $index artwork at 130 %", (dp(48) * 1.3f + 0.5f).toInt(), tile.findViewById<View>(R.id.app_icon).width)
+            assertTrue("The enlarged artwork stays inside its slot", tile.findViewById<View>(R.id.app_icon).bottom <= tile.height)
+        }
+        assertTrue("The dock bar grows with the artwork", dock.measuredHeight > baseBarHeight)
+
+        dock.iconScale = 0.8f
+        measure()
+        tiles.forEachIndexed { index, tile ->
+            assertEquals("Slot $index artwork at 80 %", (dp(48) * 0.8f + 0.5f).toInt(), tile.findViewById<View>(R.id.app_icon).width)
+        }
+        assertTrue("A smaller artwork shrinks the bar", dock.measuredHeight < baseBarHeight)
     }
 
     private fun checkLayout(check: (Context) -> Unit) {

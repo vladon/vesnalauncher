@@ -1,0 +1,1 @@
+Choose the dock icon size separately in Vesna settings. The pins keep their order and Home cells adjust so the dock stays below them.

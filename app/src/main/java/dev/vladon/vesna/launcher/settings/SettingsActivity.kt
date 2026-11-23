@@ -33,6 +33,7 @@ import dev.vladon.vesna.launcher.workspace.GridCanvas
 class SettingsActivity : ComponentActivity() {
     private lateinit var workspace: WorkspacePreferences
     private lateinit var appearance: AppearancePreferences
+    private lateinit var dockPreferences: DockPreferences
     private lateinit var drawerPreferences: DrawerPreferences
     private val navigation: SettingsNavigation by viewModels {
         viewModelFactory { initializer { SettingsNavigation(SettingsPage.fromIntent(intent)) } }
@@ -46,6 +47,7 @@ class SettingsActivity : ComponentActivity() {
     private var pinNewApps by mutableStateOf(false)
     private var hideHomeAppNames by mutableStateOf(false)
     private var homeIconPercent by mutableStateOf(IconScale.DEFAULT)
+    private var dockIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var closeDrawerOnLaunch by mutableStateOf(false)
     private var rememberDrawerPosition by mutableStateOf(false)
@@ -63,6 +65,7 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         appearance = AppearancePreferences(this)
         workspace = WorkspacePreferences(this)
+        dockPreferences = DockPreferences(this)
         drawerPreferences = DrawerPreferences(this)
         readPreferences()
         enableEdgeToEdge()
@@ -127,6 +130,11 @@ class SettingsActivity : ComponentActivity() {
                         onHomeIconPercentChanged = { percent ->
                             workspace.iconScalePercent = percent
                             homeIconPercent = percent
+                        },
+                        dockIconPercent = dockIconPercent,
+                        onDockIconPercentChanged = { percent ->
+                            dockPreferences.iconScalePercent = percent
+                            dockIconPercent = percent
                         },
                         drawerLayoutMode = drawerLayoutMode,
                         onDrawerLayoutModeSelected = ::changeDrawerLayoutMode,
@@ -200,6 +208,7 @@ class SettingsActivity : ComponentActivity() {
         rememberDrawerPosition = drawerPreferences.rememberPosition
         showKeyboardOnDrawerOpen = drawerPreferences.keyboardOnOpen
         homeIconPercent = workspace.iconScalePercent
+        dockIconPercent = dockPreferences.iconScalePercent
         drawerIconPercent = drawerPreferences.iconScalePercent
         drawerFollowsHome = drawerPreferences.followsHomeIconScale
         hiddenDrawerApps = drawerPreferences.hiddenApps
