@@ -335,6 +335,7 @@ while Vesna has no widget host.
   cancels a drawer drag after it has revealed the workspace.
   In short available heights, including above the keyboard, put Close and Search in one row before compressing the field. In a narrow one-row header, omit the decorative search glyph to leave room for the query and Clear. Keep the query when the keyboard hides so results can use the expanded viewport.
   Request an inline keyboard for drawer search in landscape so a full-screen editor does not replace the drawer.
+  By default the drawer opens with the keyboard hidden and focus on Close. With the off-by-default **Show keyboard on open** switch, a user opening focuses search and raises the keyboard. A drawer restored by recreation keeps the keyboard state it had, and no launch history is collected.
   Keep the no-results message visible above the keyboard. Let its vertical whitespace yield before clipping scaled text, and keep Clear available in the search field.
   Keep the drawer open with its current search and scroll position when Android recreates Home, including when the system theme changes. Once the results are ready, restore the first visible row using the saved app and its profile. If that app is gone, use the nearest available position. Closing the drawer or returning to Home clears the search and scroll position.
   The selected layout survives restart; the browsing page does not survive a
@@ -374,6 +375,9 @@ while Vesna has no widget host.
   only when the user returns through Android Home, not through Back.
   Keep that position only in memory; persist the switch, not the offset.
   Filtered results and other layouts keep their existing reset behavior.
+  **Show keyboard on open** is a third searchable switch, off by default.
+  When enabled, every user opening of the drawer focuses search and shows
+  the keyboard. Persist only the switch; record nothing about launches.
   The page also offers a searchable **Hide apps** section. List all
   launchable apps, including hidden ones, in drawer order with their
   original artwork and profile labels. Each row is one Material switch

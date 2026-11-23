@@ -78,6 +78,8 @@ class SettingsSearchLayoutTest {
                                 onCloseDrawerOnLaunchChanged = {},
                                 rememberDrawerPosition = false,
                                 onRememberDrawerPositionChanged = {},
+                                showKeyboardOnDrawerOpen = false,
+                                onShowKeyboardOnDrawerOpenChanged = {},
                                 drawerApps = emptyList(),
                                 hiddenDrawerApps = emptySet(),
                                 onDrawerAppHiddenChanged = { _, _ -> },
@@ -213,6 +215,38 @@ class SettingsSearchLayoutTest {
             assertTrue("Opening the result should highlight the matching setting", until { isHighlighted() })
             scenario.recreate()
             assertTrue("Recreation should retain the highlighted setting", until { isHighlighted() })
+        }
+    }
+
+    @Test
+    fun keyboardOptionIsFoundFromSearchAndHighlightedOnTheDrawerPage() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        // Read the strings from the activity so a per-app locale, such as Russian, is honored.
+        lateinit var title: String
+        lateinit var detail: String
+        lateinit var highlight: String
+        var query = "keyboard"
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                title = activity.getString(R.string.settings_drawer_show_keyboard)
+                detail = activity.getString(R.string.settings_drawer_show_keyboard_detail)
+                highlight = activity.getString(R.string.settings_search_match)
+                if (activity.resources.configuration.locales[0].language == "ru") query = "клавиатур"
+            }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun editor() = find { it.isEditable }
+            fun result() = find { !it.isEditable && it.text?.toString() == title }
+
+            assertTrue(until { editor() != null })
+            assertTrue(editor()!!.setQuery(query))
+            assertTrue("Settings should find the keyboard option for \"$query\"", until { result() != null })
+            val card = generateSequence(result()) { it.parent }.first { it.isClickable }
+            assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("The result should open the app drawer page and highlight its switch", until {
+                find { it.text?.toString() == detail } != null && find { it.text?.toString() == highlight } != null
+            })
         }
     }
 
@@ -414,6 +448,8 @@ class SettingsSearchLayoutTest {
                                         onCloseDrawerOnLaunchChanged = {},
                                         rememberDrawerPosition = false,
                                         onRememberDrawerPositionChanged = {},
+                                        showKeyboardOnDrawerOpen = false,
+                                        onShowKeyboardOnDrawerOpenChanged = {},
                                         drawerApps = emptyList(),
                                         hiddenDrawerApps = emptySet(),
                                         onDrawerAppHiddenChanged = { _, _ -> },
@@ -517,6 +553,8 @@ class SettingsSearchLayoutTest {
                             onCloseDrawerOnLaunchChanged = {},
                             rememberDrawerPosition = false,
                             onRememberDrawerPositionChanged = {},
+                            showKeyboardOnDrawerOpen = false,
+                            onShowKeyboardOnDrawerOpenChanged = {},
                             drawerApps = emptyList(),
                             hiddenDrawerApps = emptySet(),
                             onDrawerAppHiddenChanged = { _, _ -> },

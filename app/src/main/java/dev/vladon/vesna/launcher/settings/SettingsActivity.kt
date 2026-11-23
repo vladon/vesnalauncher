@@ -47,6 +47,7 @@ class SettingsActivity : ComponentActivity() {
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var closeDrawerOnLaunch by mutableStateOf(false)
     private var rememberDrawerPosition by mutableStateOf(false)
+    private var showKeyboardOnDrawerOpen by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
     private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
@@ -128,6 +129,11 @@ class SettingsActivity : ComponentActivity() {
                             drawerPreferences.rememberPosition = enabled
                             rememberDrawerPosition = enabled
                         },
+                        showKeyboardOnDrawerOpen = showKeyboardOnDrawerOpen,
+                        onShowKeyboardOnDrawerOpenChanged = { enabled ->
+                            drawerPreferences.keyboardOnOpen = enabled
+                            showKeyboardOnDrawerOpen = enabled
+                        },
                         drawerApps = drawerApps,
                         hiddenDrawerApps = hiddenDrawerApps,
                         onDrawerAppHiddenChanged = ::changeDrawerVisibility,
@@ -170,6 +176,7 @@ class SettingsActivity : ComponentActivity() {
         drawerLayoutMode = drawerPreferences.layoutMode
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         rememberDrawerPosition = drawerPreferences.rememberPosition
+        showKeyboardOnDrawerOpen = drawerPreferences.keyboardOnOpen
         hiddenDrawerApps = drawerPreferences.hiddenApps
     }
 

@@ -43,6 +43,8 @@ The Android package name is `dev.vladon.vesna.launcher`.
   Enable **Remember position** to reopen the vertical list at the same place
   after pressing Android Home, even if the drawer closed when you opened an
   app. This does not remember filtered searches.
+  Enable **Show keyboard on open** to focus search and open the keyboard
+  each time the drawer opens. It is off by default.
 - **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
   pins between the workspace and dock. Drop an app on another in the workspace
   to create a folder. In the open folder, hold and drag a shortcut onto another
