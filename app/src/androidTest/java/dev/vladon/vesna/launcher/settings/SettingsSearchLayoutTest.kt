@@ -3,6 +3,7 @@ package dev.vladon.vesna.launcher.settings
 import android.app.UiAutomation
 import android.content.Context
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
@@ -69,6 +70,8 @@ class SettingsSearchLayoutTest {
                                 onApplyGridResize = { GridResizeResult.APPLIED },
                                 pinNewApps = false,
                                 onPinNewAppsChanged = {},
+                                hideHomeAppNames = false,
+                                onHideHomeAppNamesChanged = {},
                                 drawerLayoutMode = DrawerLayoutMode.GRID,
                                 onDrawerLayoutModeSelected = {},
                                 closeDrawerOnLaunch = false,
@@ -262,7 +265,7 @@ class SettingsSearchLayoutTest {
         ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
             composeGridFixture(scenario, grid) { submissions.incrementAndGet(); GridResizeResult.APPLIED }
             fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
-                automation.rootInActiveWindow?.findVisible(predicate)
+                automation.freshGridRoot()?.findVisible(predicate)
             fun clickable(text: String) = find { it.text?.toString() == text }
                 ?.let { node -> generateSequence(node) { it.parent }.firstOrNull { it.isClickable } }
 
@@ -277,11 +280,11 @@ class SettingsSearchLayoutTest {
             val discard = reveal(automation) { clickable(cancel) }
             assertTrue("Cancel should stay reachable while scrolled", discard != null)
             assertTrue(discard!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
-            assertTrue("Cancel should close the editor", until { clickable(apply) == null })
+            assertTrue("Cancel should close the editor", reveal(automation, forward = false) { clickable(title) } != null)
             assertTrue("Cancel must not submit a resize", submissions.get() == 0)
-            assertTrue("Cancel should keep the current dimensions", until {
-                find { it.text?.toString() == summary } != null
-            })
+            assertTrue("Cancel should keep the current dimensions", reveal(automation, forward = false) {
+                find { it.text?.toString() == summary }
+            } != null)
         }
     }
 
@@ -300,16 +303,18 @@ class SettingsSearchLayoutTest {
         ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
             composeGridFixture(scenario, grid) { submissions.incrementAndGet(); GridResizeResult.TOO_MANY_ITEMS }
             fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
-                automation.rootInActiveWindow?.findVisible(predicate)
+                automation.freshGridRoot()?.findVisible(predicate)
             fun clickable(text: String) = find { it.text?.toString() == text }
                 ?.let { node -> generateSequence(node) { it.parent }.firstOrNull { it.isClickable } }
 
             assertTrue(until { clickable(title) != null })
             assertTrue(clickable(title)!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
             assertTrue(until { find { it.text?.toString() == hint } != null })
-            val button = reveal(automation) { clickable(apply) }
-            assertTrue("Apply should stay reachable in a short viewport", button != null)
-            assertTrue(button!!.performAction(AccessibilityNodeInfo.ACTION_FOCUS))
+            val button = requireNotNull(reveal(automation) { clickable(apply) }) {
+                "Apply should stay reachable in a short viewport"
+            }
+            assertTrue("Apply should accept input focus", button.performAction(AccessibilityNodeInfo.ACTION_FOCUS))
+            assertTrue("Apply should hold input focus before Enter", until { clickable(apply)?.isFocused == true })
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_ENTER)
             assertTrue("Enter on the focused Apply should submit the draft", until { submissions.get() == 1 })
             // Keyboard focus can scroll Apply below the rejection notice, which precedes it.
@@ -344,7 +349,7 @@ class SettingsSearchLayoutTest {
                 GridResizeResult.APPLIED
             }
             fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
-                automation.rootInActiveWindow?.findVisible(predicate)
+                automation.freshGridRoot()?.findVisible(predicate)
             fun clickable(text: String) = find { it.text?.toString() == text }
                 ?.let { node -> generateSequence(node) { it.parent }.firstOrNull { it.isClickable } }
 
@@ -359,9 +364,11 @@ class SettingsSearchLayoutTest {
                 clickable(apply)?.isEnabled == false
             })
             gate.complete(Unit)
-            assertTrue("A successful resize should close the editor", until { clickable(apply) == null })
+            assertTrue("A successful resize should close the editor", reveal(automation, forward = false) { clickable(title) } != null)
             assertTrue("A disabled Apply must not submit again", submissions.get() == 1)
-            assertTrue(until { find { it.text?.toString() == summary } != null })
+            assertTrue("The saved dimensions should remain reachable after Apply", reveal(automation, forward = false) {
+                find { it.text?.toString() == summary }
+            } != null)
         }
     }
 
@@ -399,6 +406,8 @@ class SettingsSearchLayoutTest {
                                         onApplyGridResize = { GridResizeResult.APPLIED },
                                         pinNewApps = false,
                                         onPinNewAppsChanged = {},
+                                        hideHomeAppNames = false,
+                                        onHideHomeAppNamesChanged = {},
                                         drawerLayoutMode = DrawerLayoutMode.GRID,
                                         onDrawerLayoutModeSelected = {},
                                         closeDrawerOnLaunch = false,
@@ -500,6 +509,8 @@ class SettingsSearchLayoutTest {
                             onApplyGridResize = resize,
                             pinNewApps = false,
                             onPinNewAppsChanged = {},
+                            hideHomeAppNames = false,
+                            onHideHomeAppNamesChanged = {},
                             drawerLayoutMode = DrawerLayoutMode.GRID,
                             onDrawerLayoutModeSelected = {},
                             closeDrawerOnLaunch = false,
@@ -525,6 +536,13 @@ class SettingsSearchLayoutTest {
         )
     }
 
+    private fun UiAutomation.freshGridRoot(): AccessibilityNodeInfo? {
+        // After scrolling or moving focus, Compose nodes in the accessibility
+        // cache can still describe the previous viewport.
+        if (Build.VERSION.SDK_INT >= 34) clearCache()
+        return rootInActiveWindow
+    }
+
     /** Scrolls the page until the node appears, or gives up after several steps. */
     private fun reveal(
         automation: UiAutomation,
@@ -534,17 +552,19 @@ class SettingsSearchLayoutTest {
         var attempts = 0
         while (true) {
             find()?.let { return it }
-            val scrollArea = automation.rootInActiveWindow?.findVisible { it.isScrollable } ?: return null
-            if (attempts++ >= 8) return null
+            val scrollArea = automation.freshGridRoot()?.findVisible { it.isScrollable } ?: return null
+            if (attempts++ >= 12) return null
             val bounds = Rect().also(scrollArea::getBoundsInScreen)
             val x = bounds.centerX()
-            val margin = bounds.height() / 5
-            val lower = bounds.bottom - margin
-            val upper = bounds.top + margin
+            val middle = bounds.centerY()
+            // Move less than one viewport without a fling so a control
+            // cannot be skipped between accessibility snapshots.
+            val lower = middle + bounds.height() / 6
+            val upper = middle - bounds.height() / 6
             val start = if (forward) lower else upper
             val end = if (forward) upper else lower
             ParcelFileDescriptor.AutoCloseInputStream(
-                automation.executeShellCommand("input swipe $x $start $x $end 300"),
+                automation.executeShellCommand("input swipe $x $start $x $end 720"),
             ).use { it.readBytes() }
             automation.waitForIdle(250, 4_000)
         }

@@ -43,6 +43,7 @@ class SettingsActivity : ComponentActivity() {
     /** Null until the persisted grid arrives; the row must not flash the default. */
     private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
+    private var hideHomeAppNames by mutableStateOf(false)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var closeDrawerOnLaunch by mutableStateOf(false)
     private var rememberDrawerPosition by mutableStateOf(false)
@@ -110,6 +111,11 @@ class SettingsActivity : ComponentActivity() {
                             workspace.pinNewApps = enabled
                             pinNewApps = enabled
                         },
+                        hideHomeAppNames = hideHomeAppNames,
+                        onHideHomeAppNamesChanged = { hidden ->
+                            workspace.hideHomeAppNames = hidden
+                            hideHomeAppNames = hidden
+                        },
                         drawerLayoutMode = drawerLayoutMode,
                         onDrawerLayoutModeSelected = ::changeDrawerLayoutMode,
                         closeDrawerOnLaunch = closeDrawerOnLaunch,
@@ -160,6 +166,7 @@ class SettingsActivity : ComponentActivity() {
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
         pinNewApps = workspace.pinNewApps
+        hideHomeAppNames = workspace.hideHomeAppNames
         drawerLayoutMode = drawerPreferences.layoutMode
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         rememberDrawerPosition = drawerPreferences.rememberPosition

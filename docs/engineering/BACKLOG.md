@@ -260,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| Hide Home app labels without hiding drawer labels ([#152](https://github.com/vladon/vesnalauncher/issues/152)) | 0.4.63 — [Android 15 QA](verification/VESNA-QA-HOME-LABEL-VISIBILITY.md) verified independent Home and drawer labels, restart, and unchanged placement and accessibility. |
 | Remember the vertical list with drawer auto-close enabled ([#147](https://github.com/vladon/vesnalauncher/issues/147)) | 0.4.62 — [Android 15 QA](verification/VESNA-QA-DRAWER-REMEMBER-AUTO-CLOSE.md) verified exact Clock → Android Home restoration, Back, filtered launch, both switch controls and restart. |
 | Drag a Home or folder shortcut to an existing neighboring page ([#139](https://github.com/vladon/vesnalauncher/issues/139)) | 0.4.61 — [Android 15 QA](verification/VESNA-QA-HOME-EDGE-DRAG.md) verified held previews, exact cells, occupied and canceled drops, layout lock, restart and RTL. |
 | Add several apps to an existing Home folder ([#134](https://github.com/vladon/vesnalauncher/issues/134)) | 0.4.60 — [Android 15 QA](verification/VESNA-QA-FOLDER-BATCH-ADD.md) verified one save, both cancel paths, layout lock, restart, single-app drag, and enlarged keyboard access. |

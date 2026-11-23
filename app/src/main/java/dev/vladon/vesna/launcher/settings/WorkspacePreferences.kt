@@ -15,6 +15,10 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean(PIN_NEW_APPS, false)
         set(value) = prefs.edit { putBoolean(PIN_NEW_APPS, value) }
 
+    var hideHomeAppNames: Boolean
+        get() = prefs.getBoolean(HIDE_HOME_APP_NAMES, false)
+        set(value) = prefs.edit { putBoolean(HIDE_HOME_APP_NAMES, value) }
+
     fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         prefs.registerOnSharedPreferenceChangeListener(listener)
     }
@@ -26,5 +30,6 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
     companion object {
         const val LAYOUT_LOCKED = "workspace_layout_locked"
         private const val PIN_NEW_APPS = "workspace_pin_new_apps"
+        private const val HIDE_HOME_APP_NAMES = "workspace_hide_app_names"
     }
 }

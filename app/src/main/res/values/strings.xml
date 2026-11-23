@@ -14,6 +14,8 @@
     <string name="settings_lock_layout_detail">Prevent changes to shortcuts, folders, dock, and pages.</string>
     <string name="settings_pin_new_apps">Add new apps to Home</string>
     <string name="settings_pin_new_apps_detail">When Vesna is running, add a shortcut for a newly installed app if the current page has space and the layout is unlocked.</string>
+    <string name="settings_hide_home_app_names">Hide app names on Home</string>
+    <string name="settings_hide_home_app_names_detail">Also hides dock labels. The app drawer is unchanged.</string>
     <string name="settings_workspace_grid">Workspace grid</string>
     <string name="settings_workspace_grid_detail">Columns and rows on home pages</string>
     <string name="settings_workspace_grid_summary_fmt">%1$s × %2$s</string>
