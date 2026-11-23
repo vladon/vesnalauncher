@@ -686,7 +686,7 @@ class HomeActivity : ComponentActivity() {
             if (current < 0) return
             state.pageIds.getOrNull(current + step) ?: if (
                 step > 0 && current == state.pageIds.lastIndex && state.pageIds.size < MAX_WORKSPACE_PAGES &&
-                drag.homePin?.app?.key?.let { it.shortcutId == null } == true
+                (folderMemberDrag != null || drag.homePin?.app?.key?.let { it.shortcutId == null } == true)
             ) NEW_WORKSPACE_PAGE_PREVIEW_ID else return
         }
         drag.dwell = lifecycleScope.launch {
@@ -885,7 +885,7 @@ class HomeActivity : ComponentActivity() {
             state.folderContents[folder.id].orEmpty().none { it.id == pinId }
         ) return false
         folderMemberDrag = FolderMemberDrag(folder.id, pinId, folder.pageId)
-        if (state.pageIds.size > 1) edgePageDrag = EdgePageDrag()
+        edgePageDrag = EdgePageDrag()
         return true
     }
 
@@ -925,9 +925,18 @@ class HomeActivity : ComponentActivity() {
         clearFolderMemberDrag(keepPreview = cell != null && destination != null)
         if (cell == null || dialog == null) return false
         if (drag != null && destination != null) {
+            val grid = renderedState.grid
             submitEdgeDrop(
                 drag, destination,
-                move = { controller.moveFolderMemberToCell(source.pinId, source.folderId, source.pageId, cell, destination) },
+                move = {
+                    if (destination == NEW_WORKSPACE_PAGE_PREVIEW_ID) {
+                        controller.finishNewWorkspacePagePreviewFromFolder(
+                            source.pinId, source.folderId, source.pageId, cell, grid,
+                        )
+                    } else {
+                        controller.moveFolderMemberToCell(source.pinId, source.folderId, source.pageId, cell, destination)
+                    }
+                },
                 finish = { placed -> if (dialog === folderDialog) dialog.finishMemberDrop(placed) },
             )
         } else {

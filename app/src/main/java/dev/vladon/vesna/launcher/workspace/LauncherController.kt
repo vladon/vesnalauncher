@@ -275,14 +275,27 @@ class LauncherController(
         sourceCell: Int,
         cell: Int,
         grid: GridCanvas,
-    ): Boolean = pageActionMutex.withLock {
-        val preview = pageSelection.value.dragPreview as? DragPagePreview.Append ?: return@withLock false
-        val pageId = workspaceRepository.appendPageWithWorkspacePin(
-            pinId, sourcePageId, sourceCell, preview.afterPageId, cell, grid,
-        ) ?: return@withLock false
-        if (workspaceRepository.selectPage(pageId)) pageSelection.value = PageSelection(pageId)
-        true
+    ): Boolean = commitNewWorkspacePagePreview { afterPageId ->
+        workspaceRepository.appendPageWithWorkspacePin(pinId, sourcePageId, sourceCell, afterPageId, cell, grid)
     }
+
+    internal suspend fun finishNewWorkspacePagePreviewFromFolder(
+        pinId: Long,
+        folderId: Long,
+        sourcePageId: Long,
+        cell: Int,
+        grid: GridCanvas,
+    ): Boolean = commitNewWorkspacePagePreview { afterPageId ->
+        workspaceRepository.appendPageWithFolderMember(pinId, folderId, sourcePageId, afterPageId, cell, grid)
+    }
+
+    private suspend inline fun commitNewWorkspacePagePreview(append: (Long) -> Long?): Boolean =
+        pageActionMutex.withLock {
+            val preview = pageSelection.value.dragPreview as? DragPagePreview.Append ?: return@withLock false
+            val pageId = append(preview.afterPageId) ?: return@withLock false
+            if (workspaceRepository.selectPage(pageId)) pageSelection.value = PageSelection(pageId)
+            true
+        }
 
     /** Removes the captured page only if it is still active and has no saved content. */
     fun removeEmptyWorkspacePage(pageId: Long) {

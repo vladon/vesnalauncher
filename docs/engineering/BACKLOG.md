@@ -260,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| Create a Home page by dropping a folder member past the last page ([#160](https://github.com/vladon/vesnalauncher/issues/160)) | 0.4.67 — [Android 15 QA](verification/VESNA-QA-FOLDER-MEMBER-EDGE-APPEND.md) verified exact drops and cancellation, sparse-folder cleanup on the source page, compact RTL, and restart. |
 | Unpin a Home folder with its shortcuts and Undo ([#132](https://github.com/vladon/vesnalauncher/issues/132)) | 0.4.66 — [Android 15 QA](verification/VESNA-QA-FOLDER-UNPIN-UNDO.md) verified an independent action, exact cell and order on Undo, layout lock, stable other pins, and the packed 2 × 2 case. |
 | Create a Home page by dropping an app shortcut past the last page ([#151](https://github.com/vladon/vesnalauncher/issues/151)) | 0.4.65 — [Android 15 QA](verification/VESNA-QA-HOME-EDGE-APPEND.md) verified mirrored blank previews, cancellation and invalid release, exact placement and restart. |
 | Remove a secondary Home page emptied by unpinning ([#153](https://github.com/vladon/vesnalauncher/issues/153)) | 0.4.64 — [Android 15 QA](verification/VESNA-QA-HOME-PAGE-UNPIN.md) verified immediate cleanup, stable remaining placements, cold restart and compact RTL keyboard removal. |

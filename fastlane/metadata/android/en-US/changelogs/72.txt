@@ -1,0 +1,1 @@
+Drag a shortcut out of a folder and pause at the outer edge of the last Home page to preview a new page. Drop on an empty cell to keep the page, or cancel to leave your folder and layout unchanged.

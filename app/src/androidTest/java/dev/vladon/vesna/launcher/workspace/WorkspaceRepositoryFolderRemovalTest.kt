@@ -664,4 +664,80 @@ class WorkspaceRepositoryFolderRemovalTest {
         assertEquals("the lock changed nothing either", before, dao.getAll().associateBy { it.id })
         assertEquals(foldersBefore, db.folderDao().getAll())
     }
+
+    @Test
+    fun memberDropCreatesOnlyTheTrailingPageAndKeepsTheSurvivorInTheSourceCell() = runBlocking {
+        val source = DEFAULT_WORKSPACE_PAGE_ID
+        val folderCell = 3
+        val destinationCell = GridCanvas.DEFAULT.capacity - 1
+        val folderId = db.folderDao().insert(FolderEntity(title = "Mail", cellIndex = folderCell))
+        val leaving = dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.mail", className = "Main", container = "WORKSPACE",
+                cellIndex = 0, folderId = folderId, userSerial = 7,
+                shortcutId = "compose", shortcutLabel = "Compose", customLabel = "New message",
+            ),
+        )
+        val survivor = seedMember("qa.photos", folderId, cellIndex = 1)
+        dao.insert(
+            WorkspaceItemEntity(packageName = "qa.mail", className = "Main", container = "DOCK", cellIndex = 0),
+        )
+        val before = dao.getAll().associateBy { it.id }
+        val pagesBefore = db.workspacePageDao().getAll()
+
+        val destination = requireNotNull(
+            repo.appendPageWithFolderMember(leaving, folderId, source, source, destinationCell, GridCanvas.DEFAULT),
+        )
+
+        val pagesAfter = db.workspacePageDao().getAll()
+        assertEquals(pagesBefore, pagesAfter.dropLast(1))
+        assertEquals(destination, pagesAfter.last().id)
+        assertNull(db.folderDao().getById(folderId))
+        assertEquals(
+            before + mapOf(
+                leaving to before.getValue(leaving).copy(
+                    container = "WORKSPACE", cellIndex = destinationCell, folderId = null, pageId = destination,
+                ),
+                survivor to before.getValue(survivor).copy(
+                    container = "WORKSPACE", cellIndex = folderCell, folderId = null, pageId = source,
+                ),
+            ),
+            dao.getAll().associateBy { it.id },
+        )
+    }
+
+    @Test
+    fun invalidMemberAppendKeepsEveryPageFolderAndPin() = runBlocking {
+        val source = DEFAULT_WORKSPACE_PAGE_ID
+        val folderId = db.folderDao().insert(FolderEntity(title = "Mail", cellIndex = 3))
+        val member = seedMember("qa.mail", folderId, cellIndex = 0)
+        seedMember("qa.photos", folderId, cellIndex = 1)
+        val foreign = dao.insert(
+            WorkspaceItemEntity(packageName = "qa.mail", className = "Main", container = "WORKSPACE", cellIndex = 4),
+        )
+        val tail = requireNotNull(repo.createPage())
+        val pages = db.workspacePageDao()
+        val pagesBefore = pages.getAll()
+        val foldersBefore = db.folderDao().getAll()
+        val pinsBefore = dao.getAll().associateBy { it.id }
+        val grid = GridCanvas.DEFAULT
+
+        assertNull(repo.appendPageWithFolderMember(foreign, folderId, source, tail, 7, grid))
+        assertNull(repo.appendPageWithFolderMember(member, folderId, tail, tail, 7, grid))
+        assertNull(repo.appendPageWithFolderMember(member, folderId, source, source, 7, grid))
+        assertNull(repo.appendPageWithFolderMember(member, folderId, source, tail, grid.capacity, grid))
+        assertNull(repo.appendPageWithFolderMember(member, folderId, source, tail, 7, grid.copy(columns = 3)))
+        val settings = WorkspacePreferences(prefs)
+        settings.layoutLocked = true
+        assertNull(repo.appendPageWithFolderMember(member, folderId, source, tail, 7, grid))
+        assertEquals(pagesBefore, pages.getAll())
+
+        settings.layoutLocked = false
+        repeat(MAX_WORKSPACE_PAGES - 2) { requireNotNull(repo.createPage()) }
+        val capped = pages.getAll()
+        assertNull(repo.appendPageWithFolderMember(member, folderId, source, capped.last().id, 7, grid))
+        assertEquals(capped, pages.getAll())
+        assertEquals(foldersBefore, db.folderDao().getAll())
+        assertEquals(pinsBefore, dao.getAll().associateBy { it.id })
+    }
 }
