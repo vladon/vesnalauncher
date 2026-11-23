@@ -1,0 +1,1 @@
+Drag a shortcut out of an open Home folder to an empty cell you choose. Cancelling or dropping on an occupied cell leaves the folder unchanged. If only one shortcut remains, it takes the folder’s place.

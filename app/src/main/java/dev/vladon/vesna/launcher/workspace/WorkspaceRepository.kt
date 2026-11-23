@@ -757,11 +757,43 @@ class WorkspaceRepository(
         val pageId = folder.pageId ?: return@withLock FolderRemovalResult.UNAVAILABLE
         val occupied = occupiedCells(items, folderDao.getAll(), pageId)
         val cell = readGrid().firstFreeCell(occupied) ?: return@withLock FolderRemovalResult.NO_ROOM
+        promoteMemberToWorkspace(pinId, cell, pageId, folderId)
+        FolderRemovalResult.REMOVED
+    }
+
+    /**
+     * Drops the folder member [pinId] onto the exact Home [cell] the user chose
+     * on the folder's own [pageId]. Revalidated under [mutationMutex]: the
+     * layout must be unlocked, the member must still belong to [folderId], the
+     * folder must still sit on [pageId], the cell must be valid for the current
+     * grid and free of any top-level row or folder. A rejected drop never
+     * substitutes another cell. On success only container, cell and page change
+     * via [promoteMemberToWorkspace], so the row keeps its stable ID, profile
+     * and labels, and a folder left sparse dissolves in the same transaction.
+     */
+    internal suspend fun moveFolderMemberToCell(pinId: Long, folderId: Long, pageId: Long, cell: Int): Boolean =
+        mutationMutex.withLock {
+            if (workspacePreferences.layoutLocked) return@withLock false
+            val items = dao.getAll()
+            if (items.none { it.id == pinId && it.folderId == folderId }) return@withLock false
+            val folder = folderDao.getById(folderId) ?: return@withLock false
+            if (folder.pageId != pageId) return@withLock false
+            if (!readGrid().isValidCell(cell) || cellIsOccupied(items, pageId, cell)) return@withLock false
+            promoteMemberToWorkspace(pinId, cell, pageId, folderId)
+            true
+        }
+
+    /**
+     * The shared write behind "remove from folder" and an exact member drop:
+     * moves [pinId] to the top-level workspace [cell] on [pageId] and resolves
+     * the folder in one Room transaction, so a folder left with fewer than two
+     * members dissolves with its remaining member returning to the folder cell.
+     */
+    private suspend fun promoteMemberToWorkspace(pinId: Long, cell: Int, pageId: Long, folderId: Long) {
         db.withTransaction {
             dao.updatePlacement(pinId, Container.WORKSPACE.name, cell, pageId)
-            dissolveIfSparse(folder.id)
+            dissolveIfSparse(folderId)
         }
-        FolderRemovalResult.REMOVED
     }
 
     /** Renames a folder. Returns false when the folder does not exist. */
