@@ -95,3 +95,16 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
     add-widget flow.
   - #133: vertical scrolling stays; horizontal paging is deferred
     until vertical navigation is shown to hinder access.
+  - #112: split; only an off-by-default option that focuses
+    search and opens the keyboard when the drawer opens;
+    launch history and frequency suggestions deferred.
+  - #113: split; only optional off-by-default actions that pass
+    a query to the chosen app on an explicit tap; no network
+    suggestions while typing and no change to offline search.
+  - #115: in stages, visibility and icon size first, then
+    capacity and paging; overflow carries to later pages in
+    order, and a change is rejected if the dock cannot hold
+    every pin.
+  - #116: explicit export to a user-selected file and restore
+    from it, with a preview and explicit confirmation before
+    an atomic replacement; no launcher-managed cloud backup.
