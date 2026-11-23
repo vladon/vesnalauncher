@@ -1976,3 +1976,30 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   No widget was selected for binding. Evidence:
   `EVI-VESNA-003/parity85-widget-*`.
   [Issue #149](https://github.com/vladon/vesnalauncher/issues/149).
+
+## OBS-VESNA-087 — RTL edge drag with and without a neighbor
+
+- Android 15 research AVD, Android system language Arabic
+  (Egypt), confirmed `ar-EG` and RTL. Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.61 (66) used two unlocked
+  Home pages and a four-column, five-row grid.
+- From logical page two, holding Drive at the **physical
+  right** edge showed the Contacts marker on logical page
+  one while still held. Cancel preserved the source pin in
+  both. A drop placed Drive in the chosen bottom-row cell
+  on page one; in Vesna this placement persisted after a
+  cold start.
+- For the outer-edge comparison, logical page two contained
+  Drive and Contacts in both. Holding Drive at the **physical
+  left** edge, returning to its original cell coordinates
+  and releasing created a third page in Nova. Contacts
+  stayed on page two and Drive on page three after restart.
+  Vesna kept exactly two pages and both original page-two
+  cells, including after restart.
+- Existing-neighbor RTL behavior is
+  [verified in #139](https://github.com/vladon/vesnalauncher/issues/139#issuecomment-7094088125).
+  On-demand creation is separate ([#151](https://github.com/vladon/vesnalauncher/issues/151));
+  page auto-removal and folder-member drag in RTL were not
+  independently tested here.
+- Restored `en-US`, both original one-page layouts and docks.
+  Evidence: `EVI-VESNA-003/parity86-*`.
