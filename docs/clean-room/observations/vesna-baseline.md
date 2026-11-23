@@ -1647,3 +1647,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `parity66-cycle73-*`. Overflow, RTL, and another Home
   page were outside this independent replay.
   [Result in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7091728287).
+
+## OBS-VESNA-073 — Offscreen reorder in a compact folder
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.57 (62). Matched all twelve items and
+  their initial order. Set both to 520×890 px at 420 dpi
+  (about 198×339 dp) with 200% text. Contacts started at
+  rank one; YT Music was initially offscreen at the end.
+- Dragged Contacts toward the right edge of Nova's folder
+  and the bottom edge of Vesna's. Without lifting, reached
+  the last page in Nova and the bottom of the list in Vesna.
+  Released at the last rank. Both inserted Contacts last and
+  preserved the other eleven members' relative order. Cold
+  launches confirmed all twelve ranks; no Contacts pin was
+  created on Home.
+- In separate cancelled trials, both still showed Contacts
+  first when reopened. Immediately after cancel, Vesna kept
+  the folder open at the far end; Nova dismissed it to Home.
+- Restored the display, font scale, original layouts,
+  and default Nova. Kept v0.4.57 installed. Evidence:
+  `EVI-VESNA-003/parity74-*`.
+  [Follow-up in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7091858726).
+  This did not test RTL or crossing Home pages while dragging.
