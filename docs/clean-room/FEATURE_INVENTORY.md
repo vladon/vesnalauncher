@@ -71,7 +71,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| DOCK-001 | Dock visibility and placement | Nova retains pins when disabled and supports gesture hide/show and auto-close on app launch. No corresponding control found in Vesna v0.4.51 (OBS-VESNA-036/037; #115). |
+| DOCK-001 | Dock visibility and placement | Nova retains pins when disabled and supports gesture hide/show and auto-close on app launch. Signed Vesna v0.4.76 adds the Show dock switch (on by default): hiding gives the freed space back to Home, drops Add to dock from menus and survives restart (OBS-VESNA-132; #115 stage 2). |
 | DOCK-002 | Dock icon count / paging | Nova 9.0.1: independent paging, optional wrap, and a fifth pin hidden at four slots but restored when capacity increased again (OBS-VESNA-021/022/029; #115). |
 | DOCK-003 | Dock background styles | discovered (Dock subpage: background setting) |
 | DOCK-004 | Add/remove/reorder dock items | Vesna v0.4.74: a dock pin swap on drop (041, re-checked), **Remove from dock** from the pin's menu — which appears after release — compacts the dock and deletes the shortcut, and **Add to dock** (drawer item menu) appends to the free last slot; the full-dock toast is recorded in 113. Nova 9.0.1: Remove, App info and Edit in the press-hold menu, and drop-to-fill or overlap-folder routes. Restart persistence not re-checked (OBS-VESNA-129). |
