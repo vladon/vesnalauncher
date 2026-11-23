@@ -1546,3 +1546,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Identical behavior in this case; no issue filed. Restored
   Vesna's original grid, Nova as system Home, and both
   layouts. Evidence: `EVI-VESNA-003/parity69-*`.
+
+## OBS-VESNA-069 — Signed v0.4.56 drawer auto-close
+
+- [PR #138](https://github.com/vladon/vesnalauncher/pull/138)
+  merged at `922dbac5795c415bb96fc924f8da2fbfad14d31e`.
+  The [v0.4.56 release tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.56)
+  points to that commit. Verified public APK SHA-256
+  `09f22a1d798298a1ad348e6970dbb9202eba04f06cbeedb073a36af3e136ba28`
+  and the same APK signer as v0.4.55. Upgraded the
+  Android 15 research AVD in place and checked 0.4.56 (61).
+- As system Home, Vesna defaulted to auto-close off. On
+  Home page two, opening Clock from the scrolled app list
+  and pressing BACK restored the same rows and bounds.
+- Settings search for `automatically close` found the new
+  switch. After enabling it, opening Clock from the same
+  list returned directly to Home page two on BACK. A cold
+  launcher restart produced a new PID and retained both
+  the switch and the selected page.
+- With auto-close enabled, pressing Enter on the Clock
+  search result opened Clock and BACK returned to Home
+  page two in both signed Vesna v0.4.56 and Nova 9.0.1
+  Prime (90100). Each was default Home for its own run.
+- Restored both original layouts, default Nova, Vesna's
+  grid, and both switches off; kept v0.4.56 installed.
+  Evidence: `EVI-VESNA-003/parity70-*`,
+  `parity65-cycle70-*`, and `parity69-cycle70-*`.
+  Grid/pager launch cases and launch failure were outside
+  this independent replay. [Result in #137](https://github.com/vladon/vesnalauncher/issues/137#issuecomment-7091328895).
