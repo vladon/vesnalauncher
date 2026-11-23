@@ -1130,3 +1130,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - The original layouts and package state were restored. This
   tests in-session paging, not dock position memory on restart.
   Evidence: `EVI-VESNA-003/parity49-*`; follow-up for #115.
+
+## OBS-VESNA-049 — A built-in icon override is local to the Home shortcut
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.53 (58). Both had an ordinary Gmail shortcut on Home.
+- In Nova, long-press Gmail → **Edit** → tap the icon preview
+  → **Built-in** → select the pink mail icon → **Done**.
+  The new artwork survived a cold launcher restart. The label
+  and cell were unchanged, and tapping the pin still opened Gmail.
+  The Gmail icon in the drawer search result was unchanged.
+- The standard Gmail thumbnail under **Common** brought the
+  original artwork back. The pre-test checkpoint and both
+  launcher layouts were restored and checked.
+- Vesna's matching Gmail Home menu showed Add to dock, Remove
+  from workspace and App info, with no per-shortcut icon editor.
+  No gallery import or installable icon pack was tested.
+- Evidence: `EVI-VESNA-003/parity50-*`; follow-up for #114.
