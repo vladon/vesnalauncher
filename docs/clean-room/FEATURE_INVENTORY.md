@@ -42,7 +42,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-011 | Empty cell behavior and drop targeting | pending |
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
 | HOME-013 | Lock workspace editing without blocking app launch | Verified in Nova 9.0.1, Vesna main and signed v0.4.48 on Android 15 (OBS-VESNA-018/022/023; #103). Signed v0.4.70 also blocks the whole-folder page append. Nova's locked sheet offers a padlock to unlock and an automatic relock switch; the Vesna message has no action (OBS-VESNA-120; #177). |
-| HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
+| HOME-014 | Orientation/display-size behavior of workspace | Nova 9.0.1: **Allow Home screen rotation** (Look & feel, off by default) locks the workspace to portrait; with it on the dock and search bar move to a side and pages swipe vertically. Signed Vesna v0.4.75 follows the device orientation with no setting (OBS-VESNA-131; #189). |
 | HOME-015 | Overview / preview of all pages | Nova 9.0.1: pinch-in, bound to Desktop previews, opened the customize screen in seven trials, and no page overview. In edit mode a swipe past the last page shows a + that adds a blank page, and the house button sets the Home page. Signed Vesna v0.4.72: Go to page…, Reorder this page… one step at a time, Add home page and Remove empty page; page 1 stays the main page (OBS-VESNA-125; #184). |
 | HOME-106 | Try launcher from app icon without changing system Home | Vesna 0.4.46 verified with Nova as Home on Android 15; settings links not replayed (OBS-VESNA-020; AT-HOME-106). |
 

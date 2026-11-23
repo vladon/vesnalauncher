@@ -3411,3 +3411,35 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   baseline. Evidence: `EVI-VESNA-003/parity129-*`,
   `release-0.4.75/`.
   [Stage 1 verification in #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7116536290).
+
+## OBS-VESNA-131 — Home screen rotation
+
+- Android 15 research AVD, `en-US`, gesture
+  navigation, default settings. Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.75 (80). The
+  device was forced to landscape (system
+  auto-rotate off, user rotation set to 90°) and
+  back.
+- **Nova:** Settings → Look & feel → **Allow Home
+  screen rotation** exists and is off by default.
+  With it off, the forced landscape left the
+  workspace portrait (1080 × 2400 kept). With it
+  on, Nova rotated to landscape (2400 × 1080):
+  the dock and search bar moved to the left edge,
+  as in 040/047. Restored off.
+- **Vesna:** the same forced landscape rotated the
+  workspace to landscape (2400 × 1080): four to
+  five pins per row, the page controls centred
+  and the dock kept as a bottom row (as in 040).
+  Settings search for `rotat` returned **No
+  settings found**; no rotation control exists.
+- **Difference:** Nova can lock the Home screen
+  to portrait; Vesna follows the device
+  orientation with no user control. Recorded in
+  #189.
+- Restored: Nova's toggle off, the system
+  accelerometer rotation back to automatic and
+  the user rotation to 0; both layouts equal the
+  baselines. Evidence:
+  `EVI-VESNA-003/parity129-*`.
+  [Issue #189](https://github.com/vladon/vesnalauncher/issues/189).
