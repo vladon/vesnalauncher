@@ -1398,3 +1398,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Batch addition and cancellation tracked in #134. This did not
   test duplicate members, removing apps with the selector, or
   sorting.
+
+## OBS-VESNA-062 — One-action alphabetical folder sort
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). Both Home folders started with the same
+  nonalphabetical visual order: Gmail, Photos, Files.
+- Long-pressed Nova's closed folder and tapped **Sort**. It
+  applied without another prompt. Reopening the folder showed
+  Files, Gmail, Photos in the same folder cell with the same
+  membership; the new order survived a cold restart.
+- Vesna's closed-folder menu and open-folder actions offered
+  rename and removal, not sorting. Settings search for `sort`
+  found no match. The original nonalphabetical order survived
+  a cold restart.
+- Restored both layouts. Evidence: `EVI-VESNA-003/parity63-*`.
+  The one-action sort is tracked in #135, separate from manual
+  in-folder drag reorder (#131).
