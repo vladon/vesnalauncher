@@ -133,6 +133,8 @@ internal fun SettingsScreen(
     onPinNewAppsChanged: (Boolean) -> Unit,
     drawerLayoutMode: DrawerLayoutMode,
     onDrawerLayoutModeSelected: (DrawerLayoutMode) -> Unit,
+    closeDrawerOnLaunch: Boolean,
+    onCloseDrawerOnLaunchChanged: (Boolean) -> Unit,
     drawerApps: List<LauncherApp>,
     hiddenDrawerApps: Set<AppKey>,
     onDrawerAppHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -256,9 +258,11 @@ internal fun SettingsScreen(
                             }
                             SettingsPage.APP_DRAWER -> DrawerAppSettings(
                                 drawerLayoutMode, onDrawerLayoutModeSelected,
+                                closeDrawerOnLaunch, onCloseDrawerOnLaunchChanged,
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
                                 searchTarget == R.string.settings_hide_drawer_apps,
                                 searchTarget == R.string.settings_drawer_layout,
+                                searchTarget == R.string.settings_drawer_close_on_launch,
                             )
                             SettingsPage.APPEARANCE -> {
                                 SearchTarget(searchTarget == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
@@ -377,6 +381,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_close_on_launch, R.string.settings_drawer_close_on_launch_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
@@ -518,18 +523,33 @@ private fun SettingsSwitch(
 private fun DrawerAppSettings(
     layoutMode: DrawerLayoutMode,
     onLayoutModeSelected: (DrawerLayoutMode) -> Unit,
+    closeOnLaunch: Boolean,
+    onCloseOnLaunchChanged: (Boolean) -> Unit,
     apps: List<LauncherApp>,
     hiddenApps: Set<AppKey>,
     onHiddenChanged: (AppKey, Boolean) -> Unit,
     hideHighlighted: Boolean,
     layoutHighlighted: Boolean,
+    closeOnLaunchHighlighted: Boolean,
 ) {
-    // The lazy hide-apps heading might not be composed in a short, scaled viewport.
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = if (hideHighlighted) 1 else 0)
+    // A search target may not be composed yet in a short, scaled viewport.
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = when {
+        hideHighlighted -> 2
+        closeOnLaunchHighlighted -> 1
+        else -> 0
+    })
     LazyColumn(Modifier.fillMaxWidth(), state = listState) {
         item(key = "drawer-layout") {
             SearchTarget(layoutHighlighted) {
                 DrawerLayoutSettings(layoutMode, onLayoutModeSelected)
+            }
+        }
+        item(key = "close-on-launch") {
+            SearchTarget(closeOnLaunchHighlighted) {
+                SettingsSwitch(
+                    R.string.settings_drawer_close_on_launch, R.string.settings_drawer_close_on_launch_detail,
+                    closeOnLaunch, onCloseOnLaunchChanged,
+                )
             }
         }
         item(key = "hide-apps") {

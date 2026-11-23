@@ -44,6 +44,7 @@ class SettingsActivity : ComponentActivity() {
     private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
+    private var closeDrawerOnLaunch by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
     private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
@@ -110,6 +111,11 @@ class SettingsActivity : ComponentActivity() {
                         },
                         drawerLayoutMode = drawerLayoutMode,
                         onDrawerLayoutModeSelected = ::changeDrawerLayoutMode,
+                        closeDrawerOnLaunch = closeDrawerOnLaunch,
+                        onCloseDrawerOnLaunchChanged = { enabled ->
+                            drawerPreferences.closeOnLaunch = enabled
+                            closeDrawerOnLaunch = enabled
+                        },
                         drawerApps = drawerApps,
                         hiddenDrawerApps = hiddenDrawerApps,
                         onDrawerAppHiddenChanged = ::changeDrawerVisibility,
@@ -149,6 +155,7 @@ class SettingsActivity : ComponentActivity() {
         layoutLocked = workspace.layoutLocked
         pinNewApps = workspace.pinNewApps
         drawerLayoutMode = drawerPreferences.layoutMode
+        closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         hiddenDrawerApps = drawerPreferences.hiddenApps
     }
 

@@ -34,6 +34,8 @@ The Android package name is `dev.vladon.vesna.launcher`.
   Use **Edit name** to rename a Home pin without changing its drawer name.
 - **App drawer and search.** Swipe up or tap the app-grid button. Search by name
   with or without accents, and press Enter to open a single result.
+  Enable **Automatically close drawer** in App drawer settings if you want
+  Back to return to Home after launching an app.
 - **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
   pins between the workspace and dock. Drop an app on another in the workspace
   to create a folder. Open the folder, hold a shortcut and drag it to an empty

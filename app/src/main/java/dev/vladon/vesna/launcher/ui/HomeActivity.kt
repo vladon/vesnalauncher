@@ -251,6 +251,7 @@ class HomeActivity : ComponentActivity() {
         }
 
         drawer.onAppClick = ::launchApp
+        drawer.closeOnLaunch = { drawerPreferences.closeOnLaunch }
         drawer.onItemOptions = { app, anchor -> showDrawerItemMenu(anchor, app, renderedState.activePageId) }
         drawer.onItemDragStarted = { app, _ ->
             dragSource = DragSource(app, Container.WORKSPACE, -1, renderedState.activePageId, fromDrawer = true)

@@ -1,0 +1,1 @@
+Optional: automatically close the app drawer when an app opens, so Back brings you to Home. Find the switch in App drawer settings. It's off by default, so returning to your scrolled drawer still works as before.
