@@ -230,6 +230,10 @@ Traceability: every ticket's acceptance scenario lives in
   A stationary hold still opens the workspace menu.
 - Accept: AT-GESTURE-112.5, including matched start zones, a shorter
   slow swipe, a faster short swipe, and the stationary-hold control.
+- Handoff: [Vesna issue #170](https://github.com/vladon/vesnalauncher/issues/170).
+  Reproduced on signed v0.4.68 from two starting cells: the
+  menu opened in 11 of 11 slow long swipes and 3 of 3 slow
+  short swipes, while Nova opened the drawer (OBS-VESNA-112).
 
 ## NT-HOME-01 (P1) — Open the workspace from Vesna's app icon
 

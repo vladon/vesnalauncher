@@ -109,7 +109,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| GESTURE-001 | Swipe up / down on home screen | Nova 8.9.9 and 9.0.1: the 1100 px/800 ms path opened the drawer in repeated checks (9.0.1: 3/3, after an earlier miss). Vesna 0.4.14 still opened the workspace menu on the slow path (OBS-VESNA-003, 006–007, 009; AT-GESTURE-112.5). |
+| GESTURE-001 | Swipe up / down on home screen | Nova 8.9.9 and 9.0.1 open the drawer on the 1100 px path at 500–925 ms as well as in fast swipes. Signed Vesna v0.4.68 opens the workspace menu instead on every slow swipe and on a slow 400 px swipe (OBS-VESNA-003, 006–007, 009, 112; AT-GESTURE-112.5; #170). |
 | GESTURE-002 | Double tap | discovered (Prime-gated) |
 | GESTURE-003 | Long press on empty space | observed (opens customize mode) |
 | GESTURE-004 | Pinch in/out | discovered (Prime-gated rows) |

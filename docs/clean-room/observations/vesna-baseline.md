@@ -2636,3 +2636,29 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   snapshot and re-checked both layouts, both docks and the
   4×4 Nova grid. Evidence: `EVI-VESNA-003/parity111-*`.
   [New fact in #168](https://github.com/vladon/vesnalauncher/issues/168#issuecomment-7106555120).
+
+## OBS-VESNA-112 — Slow upward swipe on signed v0.4.68
+
+- Android 15 research AVD, `en-US`, gesture navigation,
+  1080×2400 px at 420 dpi. Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.68 (73). Both started with the drawer
+  closed from the same two empty bottom-row cells; each
+  swipe was one continuous gesture of 1100 px or 400 px,
+  repeated from both cells.
+- **1100 px in 500, 665, 800 or 925 ms:** Vesna opened the
+  workspace menu in 11 of 11 trials and never the drawer.
+  Nova opened the drawer in 11 of 11.
+- **400 px in 800 ms:** Vesna opened the menu in 3 of 3;
+  Nova opened neither surface in 3 of 3.
+- **Controls:** the long swipe in 300 ms opened the drawer
+  for Vesna (2 of 2) and for Nova (3 of 4). The short swipe
+  in 150 ms opened the drawer for Vesna (2 of 2) and nothing
+  for Nova (3 of 3). A stationary hold opened the workspace
+  menu in Vesna and the Widgets sheet in Nova.
+- This is NT-GESTURE-03 again, last recorded on v0.4.16
+  (OBS-VESNA-014). The slow swipes pass touch slop in their
+  first frames, so movement should cancel the pending long
+  press. The timings describe the repro, not product
+  thresholds. No setting was changed.
+  Evidence: `EVI-VESNA-003/parity112-*`.
+  [Issue #170](https://github.com/vladon/vesnalauncher/issues/170).
