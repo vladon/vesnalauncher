@@ -301,8 +301,13 @@ while Vesna has no widget host.
   explain why in the editor. The dock keeps its own fixed size. Disable grid
   resizing when the workspace is locked.
   **App drawer** offers a searchable **Drawer layout** radio group for
-  Vertical grid, Vertical list, and Horizontal pages. It also offers a
-  searchable **Hide apps** section. List all
+  Vertical grid, Vertical list, and Horizontal pages. The searchable
+  **Automatically close drawer** switch is off by default. When enabled,
+  a successful app launch from the drawer dismisses it, using the same
+  focus and search cleanup as a manual close. Back then returns to the
+  same Home page. When disabled, keep the drawer and its current position
+  available on return. An unsuccessful launch never closes the drawer.
+  The page also offers a searchable **Hide apps** section. List all
   launchable apps, including hidden ones, in drawer order with their
   original artwork and profile labels. Each row is one Material switch
   target; on means hidden from browsing. Tell users how to find a hidden

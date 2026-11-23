@@ -354,6 +354,27 @@ class DrawerSearchTest {
     }
 
     @Test
+    fun autoCloseKeepsAFailedSearchLaunchOpenButClosesAfterSuccess() {
+        setQuery("quokka")
+        assertVisibleLabels(listOf("Quokka"))
+
+        onDrawer { host ->
+            host.closeOnLaunch = { true }
+            val search = host.findViewById<EditText>(R.id.drawer_search)
+            search.requestFocus()
+            host.onAppClick = { false }
+            typeKey(host, KeyEvent.KEYCODE_ENTER)
+            assertTrue("A failed launch must keep the drawer open", host.isOpen)
+            assertEquals("quokka", search.text.toString())
+
+            host.onAppClick = { true }
+            typeKey(host, KeyEvent.KEYCODE_ENTER)
+            assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, host.importantForAccessibility)
+            assertEquals("", search.text.toString())
+        }
+    }
+
+    @Test
     fun releasingEnterDoesNotLaunchAnotherAppIfTheMatchChangesWhileHeld() {
         val launched = mutableListOf<AppKey>()
         onDrawer { host ->

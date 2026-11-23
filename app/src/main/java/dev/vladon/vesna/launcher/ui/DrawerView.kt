@@ -44,6 +44,7 @@ class DrawerView @JvmOverloads constructor(
     var isLayoutLocked: () -> Boolean = { false }
 
     var onAppClick: ((LauncherApp) -> Boolean)? = null
+    internal var closeOnLaunch: () -> Boolean = { false }
     internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
     /** Long-press on a drawer item arms a drag from the drawer (drag layer drives). */
@@ -470,7 +471,8 @@ class DrawerView @JvmOverloads constructor(
     }
 
     private fun launchApp(app: LauncherApp) {
-        if (onAppClick?.invoke(app) == true) hideKeyboard()
+        if (onAppClick?.invoke(app) != true) return
+        if (closeOnLaunch()) close() else hideKeyboard()
     }
 
     private fun hideKeyboard() {
