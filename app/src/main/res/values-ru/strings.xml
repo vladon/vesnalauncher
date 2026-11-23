@@ -118,6 +118,7 @@
     <string name="name_required">Введите название.</string>
     <string name="rename_save">Сохранить</string>
     <string name="rename_reset">Сбросить</string>
+    <string name="folder_sort_alphabetically">Сортировать по алфавиту</string>
     <string name="folder_remove_from_folder">Убрать из папки</string>
     <string name="folder_removal_no_room">На этой странице мало места. Переместите или уберите ярлыки, чтобы освободить место.</string>
     <string name="folder_open_hint">Папка с %1$d приложениями</string>

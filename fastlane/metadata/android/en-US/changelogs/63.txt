@@ -1,0 +1,1 @@
+Hold a Home folder and choose Sort alphabetically. The shortcuts stay in the folder, and the new order is saved. Vesna never sorts folders automatically.

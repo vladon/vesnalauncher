@@ -23,6 +23,7 @@ import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
 import dev.vladon.vesna.launcher.platform.ShortcutPublisher
+import java.util.Locale
 
 /** Non-fatal feedback from launcher actions, mapped to user-visible strings by the UI. */
 enum class LauncherMessage {
@@ -275,6 +276,15 @@ class LauncherController(
 
     internal suspend fun reorderFolderMember(folderId: Long, pageId: Long, pinId: Long, targetId: Long): Boolean =
         workspaceRepository.reorderFolderMember(folderId, pageId, pinId, targetId)
+
+    internal fun sortFolderMembers(folder: Folder, locale: Locale) {
+        val members = state.value.folderContents[folder.id] ?: return
+        if (members.size < 2) return
+        val labels = buildMap(members.size) {
+            for (member in members) put(member.id, member.app.label)
+        }
+        scope.launch { workspaceRepository.sortFolderMembers(folder.id, folder.pageId, labels, locale) }
+    }
 
     internal suspend fun moveFolderMemberToCell(pinId: Long, folderId: Long, pageId: Long, cell: Int): Boolean =
         workspaceRepository.moveFolderMemberToCell(pinId, folderId, pageId, cell)

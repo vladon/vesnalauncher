@@ -42,6 +42,8 @@ The Android package name is `dev.vladon.vesna.launcher`.
   to change its position. Drag outside the folder to place it in an empty cell
   on the same Home page, or use **Remove from folder** to let Vesna choose a
   free cell. If only one shortcut remains, it takes the folder's place.
+- **Folder sorting.** Hold a closed Home folder and choose **Sort alphabetically**
+  to save an order based on the shortcut names. Opening a folder never sorts it.
 - **Work profiles.** Launch work apps from badged icons. Removing a work copy
   leaves its personal counterpart's pins in place.
 - **Appearance and accessibility.** Choose System, Light, or Dark and decide
