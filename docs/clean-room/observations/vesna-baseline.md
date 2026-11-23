@@ -2340,3 +2340,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored both original layouts and Nova's 4×4 grid.
   Evidence: `EVI-VESNA-003/parity97-*`.
   [Issue #160](https://github.com/vladon/vesnalauncher/issues/160).
+
+## OBS-VESNA-101 — Outer edge at the eight-page cap
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.65 (70). Each used
+  a 4×5 tail page with Clock at top-left and Gmail
+  at bottom-right.
+- In Vesna, the right edge at **7 of 7** previewed the
+  eighth page; release put Gmail in its chosen bottom-right
+  cell and left Clock in place on page seven. At **8 of 8**
+  the same outward gesture did not show a successor. Clock,
+  Gmail and the dock stayed in place on the same-cell drop.
+  **Add home page** was absent at the cap. Cold restart
+  preserved the page count and both final-page cells.
+- Nova accepted the same drop from its eighth page onto a
+  ninth. Eight distinct previous-page swipes led back to
+  the first page, with a stationary Clock marker on each
+  intermediate page. This proves at least nine pages, not
+  Nova's maximum. Vesna's existing cap is preserved as intended.
+- Restored both original single-page layouts, docks, and
+  the Nova 4×4 grid. Evidence: `EVI-VESNA-003/parity98-*`.
+  [Cap verification in #151](https://github.com/vladon/vesnalauncher/issues/151#issuecomment-7096855113).
