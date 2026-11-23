@@ -221,14 +221,14 @@ copies elsewhere. Offer **Undo** in a dismissible Material snackbar. Restore
 the original page, cell, title and member order; never replace a shortcut
 that now occupies the cell. Hide both editing actions while locked.
 
-**Drag to a neighboring Home page.** While dragging a Home shortcut or a
-shortcut out of a folder, dwell briefly at either workspace edge to reveal
-the next existing page in that direction. Mirror the physical edge mapping
-in RTL. Turn once per edge entry; moving back into the workspace rearms it.
-Reuse the existing dragged state layer for empty destination cells. Save the
-destination and exact cell only after a valid drop; canceling or dropping on
-an occupied target restores the source page and placements. Keep regular navigation and
-the keyboard-accessible **Move to page…** menu available outside the drag.
+**Drag to a neighboring Home page.** While dragging a Home shortcut, a folder
+member, or a closed folder, dwell briefly at either workspace edge to reveal
+the next existing page. Mirror the edge mapping in RTL. Turn once per edge
+entry; moving into the workspace rearms it. Reuse the dragged state layer
+for empty cells. Only a valid drop saves the destination and exact cell.
+Moving a closed folder keeps its name and members together and never creates
+a page. Cancellation or an occupied target restores the source layout.
+Keep the keyboard-accessible **Move to page…** menu available outside a drag.
 
 **Home shortcut actions.** In the anchored tile menu, list publisher action
 names only when Android makes enabled actions available from that app and
@@ -252,7 +252,7 @@ while Vesna has no widget host.
   switch still applies across the launcher; drawer labels, folder members and
   folder titles are unaffected by the Home-only setting. Leave tile geometry,
   artwork, touch targets and accessible names unchanged.
-- **Home.** Put wallpaper behind the workspace and dock. The default workspace has four columns and five rows. Preserve saved cell coordinates until the user changes the grid. Use the Vesna wallpaper label backing where necessary. Holding a folder and dragging it highlights only empty cells on its current page. An invalid or canceled drop retains the original cell; a stationary hold opens the folder menu. The overflow button and long-pressing empty space open the same Home options menu for Settings, wallpaper, and page actions. **Reorder this page…** lists the available positions, keeps the first page fixed, and keeps the moved page selected. The **Move to page…** menu on an app shortcut or folder lists other pages with room in display order and keeps the source page selected.
+- **Home.** Put wallpaper behind the workspace and dock. The default workspace has four columns and five rows. Preserve saved cell coordinates until the user changes the grid. Use the Vesna wallpaper label backing where necessary. Holding and dragging a folder highlights only empty cells on the current or previewed page. An invalid or canceled drop retains the original cell; a stationary hold opens the folder menu. The overflow button and long-pressing empty space open the same Home options menu for Settings, wallpaper, and page actions. **Reorder this page…** lists the available positions, keeps the first page fixed, and keeps the moved page selected. The **Move to page…** menu on an app shortcut or folder lists other pages with room in display order and keeps the source page selected.
   When the workspace layout is locked, keep page navigation, folders, app
   launches and App info available. Hide placement and customization actions
   in Home options and shortcut menus. Cancel active drags and pending folder

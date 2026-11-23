@@ -145,7 +145,7 @@ class WorkspaceDropTargetTest {
         assertNull(grid.findChildForCell(1))
         val before = grid.pixels(reservedX, emptyX, y)
         val drops = mutableListOf<Int>()
-        grid.onFolderDrop = { _, cell -> drops += cell }
+        grid.onFolderDragReleased = { _, cell -> if (cell != null) drops += cell }
 
         fun drag(to: Int, preview: () -> Unit) {
             val down = SystemClock.uptimeMillis()

@@ -271,7 +271,8 @@ class HomeActivity : ComponentActivity() {
             if (content is CellContent.FolderCell) showFolderDialog(content.folder)
         }
         workspace.onFolderLongClick = { folder, anchor -> showFolderMenu(folder, anchor) }
-        workspace.onFolderDrop = controller::moveFolderWithinPage
+        workspace.onFolderDragProgress = ::updateWholeFolderDrag
+        workspace.onFolderDragReleased = ::finishWholeFolderDrag
         workspace.onEmptyAreaLongClick = {
             if (layoutLocked) showSnackbar(R.string.workspace_layout_locked, null)
             else showLauncherMenu()
@@ -509,7 +510,7 @@ class HomeActivity : ComponentActivity() {
         workspace.reservedCellsMask = state.reservedWorkspaceCellsMask
         // A geometry-only change rebinds the same cells so the grid still resizes.
         if (gridChanged || state.workspaceCells != previous.workspaceCells) {
-            workspace.bind(state.grid, state.workspaceCells)
+            workspace.bind(state.grid, state.workspaceCells, state.isDragPagePreview)
         }
         if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
         if (state.apps != previous.apps) updateAppCatalogue(state.apps)
@@ -760,6 +761,33 @@ class HomeActivity : ComponentActivity() {
                     controller.moveWorkspacePinToCell(pinId, source.pageId, source.fromCell, destination, cell)
                 }
             })
+        }
+    }
+
+    private fun updateWholeFolderDrag(x: Float, y: Float): Boolean {
+        if (dragSource != null || edgePageDrag?.submitting == true) return false
+        val drag = edgePageDrag ?: EdgePageDrag().also {
+            edgePageDrag = it
+            backCallback.isEnabled = true
+        }
+        updateEdgeDwell(drag, x, y)
+        return !layoutLocked && isRenderedDragPage(drag)
+    }
+
+    private fun finishWholeFolderDrag(folder: Folder, cell: Int?) {
+        val drag = edgePageDrag ?: return
+        if (drag.submitting) return
+        if (cell == null || !isRenderedDragPage(drag)) {
+            clearEdgeDrag()
+            return
+        }
+        val destination = drag.requestedPage
+        val grid = renderedState.grid
+        if (destination != null) {
+            submitEdgeDrop(drag, destination, move = { controller.moveFolderToCell(folder, destination, cell, grid) })
+        } else {
+            clearEdgeDrag()
+            lifecycleScope.launch { controller.moveFolderToCell(folder, folder.pageId, cell, grid) }
         }
     }
 
