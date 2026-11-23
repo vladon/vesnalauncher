@@ -1593,3 +1593,27 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   and `parity70-cycle71-*`. No second drawer page or failed
   launch was exercised.
   [Additional result in #137](https://github.com/vladon/vesnalauncher/issues/137#issuecomment-7091492246).
+
+## OBS-VESNA-071 — Drawer position after system Home and reopen
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.56 (61). Each was system Home during
+  its trials. Both used the single-column app list, no query
+  or IME, with auto-close off. Disabled Nova's Show Keyboard
+  so opening the drawer did not enter search.
+- Scrolled away from the top, launched Clock from its normal
+  row, pressed system HOME, then explicitly reopened the
+  drawer. Nova with **Remember position** off returned to
+  its original top rows. Switching it on preserved the
+  pre-launch visible rows and their bounds on reopening.
+- Vesna reset to its original top rows. The tested drawer
+  settings and `remember position` settings search did not
+  expose the optional retention behavior.
+- Distinct from BACK into a drawer that stayed open (#137),
+  restoring position upon clearing a query (#108), and dock
+  memory (#115). Other drawer layouts, screen-off and process
+  persistence of the offset were not tested. Filed #141.
+- Restored both layouts, system Home, Nova's Show Keyboard
+  and Remember position, and Vesna's original grid. Evidence:
+  `EVI-VESNA-003/parity72-*`, `parity65-cycle72-*`,
+  `parity70-cycle72-*`, and `parity71-cycle72-*`.
