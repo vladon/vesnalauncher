@@ -1670,3 +1670,32 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `EVI-VESNA-003/parity74-*`.
   [Follow-up in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7091858726).
   This did not test RTL or crossing Home pages while dragging.
+
+## OBS-VESNA-074 — Signed v0.4.58 sorts by the visible label
+
+- [PR #142](https://github.com/vladon/vesnalauncher/pull/142)
+  merged at `0c4f408383542b0c40511ce6e1579c137a4a020e`.
+  The [v0.4.58 release tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.58)
+  points to that commit. Verified public APK SHA-256
+  `dd473b100143ee86b10e10458462d0350c8fb350247c5c6e55c7a9f7d710a12b`
+  and the same signer as v0.4.57. Installed signed v0.4.58
+  (63) on the independent Android 15 research AVD.
+- Renamed the Gmail Home pin to `Zulu QA`. In Nova 9.0.1
+  Prime (90100) and signed Vesna v0.4.57/58, prepared the
+  same visible order: Zulu QA, Photos, Files. v0.4.57 kept
+  the custom name but had no sort in the tested menu.
+- Opening the folder or dismissing its menu on v0.4.58
+  did not change order. Choosing **Sort alphabetically**
+  produced Files, Photos, Zulu QA, matching Nova's **Sort**.
+  Using the original Gmail label would have placed it
+  before Photos. The custom label, folder cell, unrelated
+  pins and sorted order were preserved after cold start.
+- Moving the renamed pin first afterward persisted on
+  reopening without implicit sort. With layout lock on,
+  the closed-folder sort action was unavailable and the
+  manually chosen order remained.
+- Restored both original layouts, labels and lock state;
+  kept v0.4.58 installed. Evidence: `EVI-VESNA-003/parity75-*`
+  and `parity66-cycle75-*`. Ties, locale-specific collation,
+  RTL, and keyboard operation were outside this replay.
+  [Result in #135](https://github.com/vladon/vesnalauncher/issues/135#issuecomment-7092040787).
