@@ -1,0 +1,1 @@
+Remove a Home folder and all its shortcuts without uninstalling apps. Tap Undo to restore the folder to the same place, or use Ungroup folder to keep its shortcuts on Home.

@@ -22,11 +22,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarVisuals
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -55,6 +63,7 @@ import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.FolderRemovalResult
+import dev.vladon.vesna.launcher.workspace.FolderRestoreResult
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
 import dev.vladon.vesna.launcher.workspace.MAX_WORKSPACE_PAGES
@@ -63,12 +72,23 @@ import dev.vladon.vesna.launcher.workspace.PageMoveOptions
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val DRAWER_OPEN_STATE = "drawer_open"
 private const val DRAG_PAGE_EDGE_DP = 32
 private const val DRAG_PAGE_DWELL_MS = 650L
+
+private class FolderUndoVisuals(
+    override val message: String,
+    override val actionLabel: String,
+    val focusAction: Boolean,
+) : SnackbarVisuals {
+    override val duration = SnackbarDuration.Long
+    override val withDismissAction = true
+}
 
 /**
  * The HOME activity: hosts workspace, dock, and drawer, and opens the launcher
@@ -999,9 +1019,11 @@ class HomeActivity : ComponentActivity() {
                 }
             }
         }
-        popup.add(R.string.folder_remove) {
+        popup.add(R.string.folder_ungroup) {
             removeFolderItems(folder.pageId) { controller.removeFolder(folder.id) }
         }
+        val keyboardMenu = !anchor.isInTouchMode && anchor.hasFocus()
+        popup.add(R.string.folder_unpin) { unpinFolderWithUndo(folder, keyboardMenu) }
         showPopup(popup)
     }
 
@@ -1248,6 +1270,37 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    private fun unpinFolderWithUndo(folder: Folder, keyboardMenu: Boolean) {
+        if (layoutLocked || renderedState.activePageId != folder.pageId) return
+        snackbarJob?.cancel()
+        snackbarJob = lifecycleScope.launch {
+            // Acquire the removal token even if Home stops just as the Room transaction commits.
+            val removed = withContext(NonCancellable) { controller.unpinFolderWithUndo(folder) } ?: return@launch
+            var undo = false
+            val result: FolderRestoreResult?
+            try {
+                if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                    undo = homeSnackbar.showSnackbar(
+                        FolderUndoVisuals(
+                            getString(R.string.folder_unpinned),
+                            getString(R.string.folder_unpin_undo),
+                            focusAction = keyboardMenu,
+                        ),
+                    ) == SnackbarResult.ActionPerformed
+                }
+            } finally {
+                result = withContext(NonCancellable) { controller.finishFolderUnpin(removed, undo) }
+            }
+            val notice = when (result) {
+                FolderRestoreResult.NO_ROOM -> R.string.folder_restore_no_room
+                FolderRestoreResult.UNAVAILABLE -> R.string.folder_restore_unavailable
+                FolderRestoreResult.LOCKED -> R.string.workspace_layout_locked
+                FolderRestoreResult.RESTORED, null -> return@launch
+            }
+            homeSnackbar.showSnackbar(getString(notice))
+        }
+    }
+
     private fun showSnackbar(messageId: Int, dialog: FolderDialog?) {
         snackbarJob?.cancel()
         val message = getString(messageId)
@@ -1270,7 +1323,18 @@ class HomeActivity : ComponentActivity() {
                         .padding(8.dp),
                     contentAlignment = Alignment.BottomCenter,
                 ) {
-                    SnackbarHost(state)
+                    SnackbarHost(state) { data ->
+                        val undo = data.visuals as? FolderUndoVisuals
+                        if (undo == null) {
+                            Snackbar(data)
+                        } else {
+                            val action = remember { FocusRequester() }
+                            // Use the standard Material action and dismiss affordance on
+                            // their own row so enlarged localized text can use the full width.
+                            Snackbar(data, Modifier.focusRequester(action), actionOnNewLine = true)
+                            if (undo.focusAction) LaunchedEffect(data) { action.requestFocus() }
+                        }
+                    }
                 }
             }
         }

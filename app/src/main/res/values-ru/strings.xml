@@ -130,7 +130,12 @@
     <string name="folder_remove_from_folder">Убрать из папки</string>
     <string name="folder_removal_no_room">На этой странице мало места. Переместите или уберите ярлыки, чтобы освободить место.</string>
     <string name="folder_open_hint">Папка с %1$d приложениями</string>
-    <string name="folder_remove">Удалить папку</string>
+    <string name="folder_ungroup">Разгруппировать папку</string>
+    <string name="folder_unpin">Убрать папку с ярлыками</string>
+    <string name="folder_unpinned">Папка и ярлыки убраны</string>
+    <string name="folder_unpin_undo">Отменить</string>
+    <string name="folder_restore_no_room">Не удалось вернуть папку: прежнее место недоступно.</string>
+    <string name="folder_restore_unavailable">Эту папку больше нельзя восстановить.</string>
 
     <!-- Специальные возможности шторки приложений -->
     <string name="drawer_open">Открыть список приложений</string>

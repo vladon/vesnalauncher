@@ -214,6 +214,13 @@ Canceling or dropping without a target restores that page and open folder.
 The unlocked menu keeps **Remove from folder** available to keyboard and
 accessibility users. Locking the layout cancels the drag and hides edits.
 
+**Remove a closed folder.** Keep **Ungroup folder** for returning its
+shortcuts to the same page when there is room. **Remove folder and shortcuts**
+unpins just that folder and its contents without uninstalling apps or changing
+copies elsewhere. Offer **Undo** in a dismissible Material snackbar. Restore
+the original page, cell, title and member order; never replace a shortcut
+that now occupies the cell. Hide both editing actions while locked.
+
 **Drag to a neighboring Home page.** While dragging a Home shortcut or a
 shortcut out of a folder, dwell briefly at either workspace edge to reveal
 the next existing page in that direction. Mirror the physical edge mapping

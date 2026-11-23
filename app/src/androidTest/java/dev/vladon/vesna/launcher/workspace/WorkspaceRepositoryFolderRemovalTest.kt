@@ -11,6 +11,7 @@ import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
 import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -210,6 +211,80 @@ class WorkspaceRepositoryFolderRemovalTest {
         )
         assertNull(db.folderDao().getById(folderId))
         assertEquals(FolderRemovalResult.UNAVAILABLE, repo.removeFolder(folderId))
+    }
+
+    @Test
+    fun fullTwoByTwoPageCanUnpinAndRestoreExactFolderWithoutMovingOtherPins() = runBlocking {
+        assertEquals(GridResizeResult.APPLIED, repo.resizeGrid(GridCanvas(columns = 2, rows = 2)))
+        val pageId = requireNotNull(repo.createPage())
+        val folders = db.folderDao()
+        val folder = FolderEntity(title = "Tools", cellIndex = 3, pageId = pageId)
+        val folderId = folders.insert(folder)
+        val target = Folder(folderId, folder.title, folder.cellIndex, pageId)
+        for (cell in 0..2) {
+            dao.insert(
+                WorkspaceItemEntity(
+                    packageName = "qa.same", className = "Main", container = "WORKSPACE", cellIndex = cell, pageId = pageId,
+                ),
+            )
+        }
+        dao.insert(WorkspaceItemEntity(packageName = "qa.same", className = "Main", container = "DOCK", cellIndex = 0))
+        seedMember("qa.same", folderId, cellIndex = 2)
+        seedMember("qa.other", folderId, cellIndex = 5)
+        dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.actions", className = "Main", container = "WORKSPACE",
+                cellIndex = 9, folderId = folderId, shortcutId = "compose",
+                customLabel = "My action", shortcutLabel = "Compose",
+            ),
+        )
+        val original = dao.getAll().sortedBy { it.id }
+        val members = dao.folderMembersInOrder(folderId)
+
+        assertEquals(FolderRemovalResult.NO_ROOM, repo.removeFolder(folderId))
+        assertNull(repo.unpinFolder(target.copy(cellIndex = 2)))
+        WorkspacePreferences(prefs).layoutLocked = true
+        assertNull(repo.unpinFolder(target))
+        assertEquals(original, dao.getAll().sortedBy { it.id })
+        WorkspacePreferences(prefs).layoutLocked = false
+
+        val removed = requireNotNull(repo.unpinFolder(target))
+        assertNull(folders.getById(folderId))
+        val remaining = original.filterNot { it.folderId == folderId }
+        assertEquals(remaining, dao.getAll().sortedBy { it.id })
+        assertEquals(emptySet<String>(), repo.shortcutIds("qa.actions", 0))
+        assertEquals(listOf(DEFAULT_WORKSPACE_PAGE_ID, pageId), repo.savedLayout.first().pageIds)
+
+        // Other insertions during the Undo window must not collide with the removed IDs.
+        val addedFolderId = folders.insert(FolderEntity(title = "Later", cellIndex = 1))
+        val addedPinId = seedMember("qa.later", addedFolderId, cellIndex = 0)
+        val addedPin = dao.getAll().single { it.id == addedPinId }
+        WorkspacePreferences(prefs).layoutLocked = true
+        assertEquals(FolderRestoreResult.LOCKED, repo.restoreFolder(removed))
+        assertEquals(remaining + addedPin, dao.getAll().sortedBy { it.id })
+        WorkspacePreferences(prefs).layoutLocked = false
+
+        assertEquals(FolderRestoreResult.RESTORED, repo.restoreFolder(removed))
+        assertEquals(folder.copy(id = folderId), folders.getById(folderId))
+        assertEquals(members, dao.folderMembersInOrder(folderId))
+        assertEquals(original + addedPin, dao.getAll().sortedBy { it.id })
+        assertEquals(setOf("compose"), repo.shortcutIds("qa.actions", 0))
+    }
+
+    @Test
+    fun undoCannotOverwriteAnOccupiedFolderCell() = runBlocking {
+        val folders = db.folderDao()
+        val folderId = folders.insert(FolderEntity(title = "Tools", cellIndex = 4))
+        val target = Folder(folderId, "Tools", 4, DEFAULT_WORKSPACE_PAGE_ID)
+        seedMember("qa.one", folderId, cellIndex = 0)
+        seedMember("qa.two", folderId, cellIndex = 1)
+        val removed = requireNotNull(repo.unpinFolder(target))
+        dao.insert(WorkspaceItemEntity(packageName = "qa.replacement", className = "Main", container = "WORKSPACE", cellIndex = 4))
+        val remaining = dao.getAll()
+
+        assertEquals(FolderRestoreResult.NO_ROOM, repo.restoreFolder(removed))
+        assertEquals(remaining, dao.getAll())
+        assertNull(folders.getById(folderId))
     }
 
     /** VESNA-BUG-011: abort folder deletion and verify both memberships roll back. */

@@ -305,7 +305,7 @@ internal class FolderDialog(
 @Composable
 private fun FolderActions(onRename: () -> Unit, onRemove: () -> Unit) {
     val rename = stringResource(R.string.folder_rename)
-    val remove = stringResource(R.string.folder_remove)
+    val remove = stringResource(R.string.folder_ungroup)
     val label = MaterialTheme.typography.labelLarge
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
