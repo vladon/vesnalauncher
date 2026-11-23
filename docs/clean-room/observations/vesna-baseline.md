@@ -1718,3 +1718,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `EVI-VESNA-003/parity76-*`.
   [Follow-up in #135](https://github.com/vladon/vesnalauncher/issues/135#issuecomment-7092156729).
   Case and accent collation and RTL were not exercised.
+
+## OBS-VESNA-076 — Whole folder removal on a packed Home page
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.58 (63). Each had one 2×2 Home page
+  with all four cells occupied: Contacts, Drive, Google,
+  and a folder containing Files, Gmail and Photos.
+- Nova **Remove** unpinned the folder and all three
+  members even with no spare cells. The other pins stayed
+  put and survived restart. In a separate timed trial,
+  **Undo** restored the exact folder cell, membership and
+  original order.
+- Vesna **Remove folder** refused with “Not enough room
+  on this page” and kept both Home and folder unchanged.
+  After freeing exactly two cells, the same command
+  ungrouped all three members onto the page, including
+  the former folder cell. Google stayed in its own cell;
+  the ungrouped result survived cold start.
+- This supports a separate unpin action, not a change
+  to the existing capacity safeguard. Restored both
+  original grids, layouts and docks.
+  Evidence: `EVI-VESNA-003/parity77-*` and `parity45-cycle77-*`.
+  [Follow-up in #132](https://github.com/vladon/vesnalauncher/issues/132#issuecomment-7092378192).
