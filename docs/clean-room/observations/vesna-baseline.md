@@ -2239,6 +2239,11 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   9.0.1 Prime (90100) and signed Vesna v0.4.64 (69).
   Both used their unfiltered vertical app list for this
   comparison.
+- Nova's in-app update screen reported **Latest: 90100
+  (9.0.1)**, matching the installed version. The legacy
+  direct-download links still served 8.0.18 (stable) and
+  8.1.1 (beta), so those links were not used to decide whether
+  to update. Evidence: `parity94-nova-version-*`.
 - Nova Settings → **Style → App drawer → Colors → Surface**
   allowed choosing a pale pink swatch while the global
   **Palette** remained **System** and **Mode** remained
