@@ -2540,3 +2540,29 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `parity96-*`, `parity97-*`, `parity98-*`, `parity100-*`
   and `parity101-*`, versus `parity86-*`, `parity88-*`,
   `parity89-*` and `parity106-*`.
+
+## OBS-VESNA-108 — Icon pack fallback and removal in Nova
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime (90100)
+  with official Arcticons Black 15.4.7 (1580) installed and
+  selected as the Icon theme. Signed Vesna v0.4.68 (73) was
+  present and still offers no pack selector (OBS-VESNA-095).
+- Apps covered by the pack showed its artwork in the drawer,
+  on Home and in the dock. **Vesna Launcher**, which the pack
+  does not cover, kept its own full-colour icon in all three
+  places: its centre pixel stayed green on Home and white in
+  the dock while neighbouring icons were dark pack artwork.
+  The drawer's app-action chips (Gmail's Compose and the Nova
+  Settings entry) also kept their original artwork.
+- After uninstalling the pack while it was selected, Nova
+  kept the drawn pack icons on Home and in the dock until its
+  process restarted. After the restart every surface showed
+  the apps' normal artwork. The **Icon theme** row still named
+  the removed pack; the chooser offered only **System**, and
+  choosing it cleared the name.
+- These are reference facts for #157's decision on unmatched
+  icons and removed packs, not a Vesna comparison. Restored
+  through the loadable baseline snapshot and re-checked both
+  layouts, both docks and the System theme.
+  Evidence: `EVI-VESNA-003/parity107-*`.
+  [Follow-up in #157](https://github.com/vladon/vesnalauncher/issues/157#issuecomment-7102057099).
