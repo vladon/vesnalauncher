@@ -2097,3 +2097,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Restored both original layouts, grid settings and docks.
   Evidence: `EVI-VESNA-003/parity89-*`.
   [Issue #153](https://github.com/vladon/vesnalauncher/issues/153).
+
+## OBS-VESNA-092 — Compact folder overflow in RTL
+
+- Android 15 research AVD, system `ar-EG` in RTL, Nova 9.0.1
+  Prime (90100) and signed Vesna v0.4.62 (67). Both had the
+  same 12 folder members in the same saved order. The viewport
+  was 520×890 px at 420 dpi (about 198×339 dp) with 200% text.
+- With Nova's **Horizontal** direction, a physical rightward
+  swipe advanced through three groups of four. Leftward
+  swiping returned to the previous group. A vertical swipe
+  did not advance; another rightward swipe on the last group
+  stayed there. All members were reachable.
+- In Vesna, the equivalent rightward swipe did not advance.
+  Vertical scrolling reached all 12 in the saved RTL order.
+  The final YouTube/YT Music row was fully inside the viewport;
+  reverse scrolling worked. **Rename folder** and **Remove
+  folder** stayed at the same bounds. This is a paging-option
+  difference, not a loss of access to members.
+- Restored `en-US`, 1080×2400 px, 420 dpi, 100% text, both
+  layouts and docks. Verified Nova's original 4×4 Desktop
+  grid in its picker after rollback.
+  Evidence: `EVI-VESNA-003/parity90-*`.
+  [Follow-up in #133](https://github.com/vladon/vesnalauncher/issues/133#issuecomment-7094935713).
