@@ -2588,3 +2588,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   both layouts, both docks and the 4×4 Nova grid.
   Evidence: `EVI-VESNA-003/parity109-*`.
   [Issue #167](https://github.com/vladon/vesnalauncher/issues/167).
+
+## OBS-VESNA-110 — Drops onto occupied cells
+
+- Android 15 research AVD, `en-US`, real 4×5 grids (Nova's
+  row height checked on the workspace). Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.68 (73).
+- **App onto an app, same page:** both created a two-app
+  folder at the target cell (Vesna: Drive onto Files; Nova:
+  Photos onto Gmail).
+- **App onto an app, another page:** Drive was dragged from
+  page one to the right edge and released on Files on page
+  two. Nova created a folder with Drive and Files at the
+  Files cell, and page one lost Drive. Vesna previewed page
+  two while held but created nothing: Drive stayed in its
+  original cell and both pages were unchanged.
+- **Closed folder onto an app, same page:** Nova placed the
+  folder in the occupied cell and moved the app to the free
+  cell the folder had left. Vesna refused; folder, app and
+  dock stayed exactly as before. The cross-page variant
+  behaved the same way in OBS-VESNA-106.
+- The two refusals are what #139 and #163 specified, so they
+  are scope questions rather than regressions. Restart
+  persistence of Nova's cross-page folder was not exercised.
+  Restored through the loadable baseline snapshot and
+  re-checked both layouts, both docks and the 4×4 Nova grid.
+  Evidence: `EVI-VESNA-003/parity110-*`.
+  [Issue #168](https://github.com/vladon/vesnalauncher/issues/168)
+  and [#169](https://github.com/vladon/vesnalauncher/issues/169).
