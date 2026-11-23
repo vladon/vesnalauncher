@@ -1339,3 +1339,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `EVI-VESNA-003/parity58-cycle59-*`. Internal ordering is
   tracked in #131, separate from drag-out (#130). Multi-page
   behavior was not exercised.
+
+## OBS-VESNA-059 — Whole folder removal and member pins
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). Both used a closed Home folder with
+  Gmail, Photos and Files and available workspace cells.
+- Nova's **Remove** hid the folder and all three Home pins.
+  Each app remained searchable in the drawer. In a second
+  run, **Undo** restored the exact folder cell and the three
+  members in the original order.
+- Vesna's **Remove folder** instead returned all three pins
+  to Home and removed only the folder. The ungrouped layout
+  persisted after cold start. This matches the existing
+  ungroup behavior described in PRs #5 and #6.
+- Both original layouts restored. Evidence:
+  `EVI-VESNA-003/parity60-*`. One-action unpin tracked in
+  #132; packed-grid removal was not tested.
