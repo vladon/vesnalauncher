@@ -2392,3 +2392,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   kept the signed v0.4.66 update.
   Evidence: `EVI-VESNA-003/parity99-*`, `release-0.4.66/`.
   [Independent verification in #132](https://github.com/vladon/vesnalauncher/issues/132#issuecomment-7097087961).
+
+## OBS-VESNA-103 — Folder Undo after the original cell is occupied
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.66 (71). Both 4×5 Home
+  grids had Gmail → Photos in a top-right folder and
+  Drive in the second column. Android **Time to take
+  action** was temporarily set to 30 seconds for both.
+- In Vesna, removed the folder and moved Drive into the
+  original cell while Undo was still visible. Tapping
+  Undo showed **Folder not restored. Its original spot is
+  no longer available.** Drive stayed in the new cell;
+  the folder did not reappear elsewhere, and unrelated
+  pins and the dock were unchanged. Restart kept this result.
+- In Nova, the initial no-edit frame still showed Undo
+  3.33 seconds after Remove. In a separate measured run,
+  moving Drive took about 2.0 seconds and the 3.01-second
+  post-move frame no longer showed Undo. Drive occupied
+  the former folder cell and survived restart. An Undo
+  tap with that cell occupied was not observed in Nova.
+- Restored the original timeout, grids, layouts and docks.
+  Evidence: `EVI-VESNA-003/parity100-*`.
+  [Follow-up in #132](https://github.com/vladon/vesnalauncher/issues/132#issuecomment-7097341299).
