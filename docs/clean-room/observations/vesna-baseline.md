@@ -3114,3 +3114,117 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   baseline. Evidence: `EVI-VESNA-003/parity124-*`,
   `release-0.4.72/`.
   [Independent verification in #168](https://github.com/vladon/vesnalauncher/issues/168#issuecomment-7113172553).
+
+## OBS-VESNA-125 — Two-finger gestures and page management
+
+- Android 15 research AVD, `en-US`, gesture
+  navigation, default settings. Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.72 (77). Vesna
+  v0.4.73 was published during this run; its
+  single commit touches only the icon sizes.
+- **Two-finger input:** the AVD image is a
+  userdebug build, so `adb root` allowed writing
+  to the first `virtio_input_multi_touch` device.
+  Each SYN batch was written with one `printf`
+  to the node, as 24-byte input_event records. A
+  kernel event log showed gestures of 0.19 to
+  0.45 s, and the pointer-location overlay showed
+  two fingers at the intended coordinates.
+  `adb root` was undone afterwards.
+- **Nova, one finger:** a swipe down on an empty
+  cell opened the notification shade. A double
+  tap did nothing.
+- **Nova, two fingers:** a swipe up opened Nova
+  Settings. Fingers moving apart, bound to Recent
+  apps, opened the **Enable Accessibility
+  Service** dialog; it was cancelled. Fingers
+  moving together, bound to Desktop previews,
+  opened the same customize screen as a
+  long-press, with the Widgets sheet. No page
+  overview appeared in seven trials, horizontal
+  and diagonal, lasting 0.22 to 0.34 s, with one
+  page and with two. A two-finger tap did
+  nothing.
+- **Vesna:** a swipe down, a double tap, a
+  two-finger swipe up and both pinch directions
+  did nothing. Settings search for `gesture` and
+  `swipe` returned **No settings found**.
+- **Nova, edit mode:** the house button at the
+  top of each page is outlined on ordinary pages
+  and filled on the Home page. After a tap on
+  page 2, Nova started on page 2 after a
+  restart; a tap on page 1 restored the old
+  start page. A swipe past the last page shows a
+  **+** button. Tapping it added a blank page
+  that was still there after a restart. No
+  control to remove a blank page was found in
+  edit mode.
+- **Vesna pages:** **Add home page** creates the
+  next page and selects it. **Go to page…**
+  lists Page 1 to N, and choosing one shows it.
+  **Reorder this page…** offers **Move to
+  position** one step away. Page 1 has no
+  reorder entry, and page 2 cannot move to
+  position 1, so the first page is always the
+  main one.
+- **Helper pitfall:** on Nova's main page a
+  second HOME intent opens Nova Search, as the
+  Home button binding says. A helper that sends
+  it after a restart has to press Back.
+- Restored through the baseline snapshot.
+  Evidence: `EVI-VESNA-003/parity125-*`.
+  [Gestures #183](https://github.com/vladon/vesnalauncher/issues/183),
+  [main page #184](https://github.com/vladon/vesnalauncher/issues/184).
+
+## OBS-VESNA-126 — Signed v0.4.73 separate icon sizes
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.73 (78), tag at PR #182
+  merge `00d7f63075b6594cfe846ae99695fd7355ed6e2a`,
+  APK SHA-256
+  `470a901cb59bf29348e3d211d175a6888fbc9aa2c1d1a5bf4ec1cd0e173d50ed`,
+  with the same verified v2 signer as v0.4.72.
+  Installed in place over the restored original
+  state; both original layouts survived the
+  upgrade. Nova 9.0.1 Prime (90100) was not
+  re-run: its sizes are in 080 and the version is
+  unchanged.
+- **Settings:** Home screen → **Home icon size**
+  ("App and folder artwork on Home. Cells, labels
+  and shortcuts stay where they are.") is a
+  six-step slider from 80% to 130%, 100% by
+  default. App drawer → **Match Home icon size**
+  ("The drawer uses the Home icon size. Turn off
+  to choose its own size.") is on by default, and
+  **Drawer icon size** ("App artwork in the
+  drawer, kept for when it stops matching
+  Home.") is disabled while matching. Settings
+  search for `icon` found all three.
+- Artwork was measured from screenshots as the
+  bounding box inside a cell:
+
+| State | Home artwork | Drawer grid |
+|---|---|---|
+| Default: Home 100%, Match on | 126 px | 126 px in 238 × 214 px tiles |
+| Home 130%, Match on | 164 px | 164 px in 238 × 252 px tiles |
+| Match off, drawer 80% | 164 px | 101 px in 238 × 214 px tiles |
+| Home 110%, Match off | 139 px | 101 px |
+| Match on again | 139 px | 139 px; the disabled slider still showed 80% |
+| Match off again | 139 px | 101 px |
+| After force-stop and relaunch | 139 px | 101 px |
+
+- Home cells kept their 239 × 339 px bounds and
+  the dock its 126 px artwork in every state. The
+  label sits lower under a larger artwork. The
+  drawer tile height follows the artwork above
+  100%; the release note does not mention this.
+- Not exercised: the vertical list and
+  horizontal pages layouts of the drawer, the
+  other slider steps, and Dark or compact RTL.
+- Restored Home 100%, drawer 100% and Match on;
+  the Home frame equals the default frame. Saved
+  `baseline_research_0.4.73`, proved that it
+  loads, and deleted the 0.4.72 baseline.
+  Evidence: `EVI-VESNA-003/parity126-*`,
+  `release-0.4.73/`.
+  [Independent verification in #146](https://github.com/vladon/vesnalauncher/issues/146#issuecomment-7114696573).

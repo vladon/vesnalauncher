@@ -43,7 +43,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
 | HOME-013 | Lock workspace editing without blocking app launch | Verified in Nova 9.0.1, Vesna main and signed v0.4.48 on Android 15 (OBS-VESNA-018/022/023; #103). Signed v0.4.70 also blocks the whole-folder page append. Nova's locked sheet offers a padlock to unlock and an automatic relock switch; the Vesna message has no action (OBS-VESNA-120; #177). |
 | HOME-014 | Orientation/display-size behavior of workspace | discovered (Allow Home screen rotation toggle + overflow) |
-| HOME-015 | Overview / preview of all pages | pending |
+| HOME-015 | Overview / preview of all pages | Nova 9.0.1: pinch-in, bound to Desktop previews, opened the customize screen in seven trials, and no page overview. In edit mode a swipe past the last page shows a + that adds a blank page, and the house button sets the Home page. Signed Vesna v0.4.72: Go to page…, Reorder this page… one step at a time, Add home page and Remove empty page; page 1 stays the main page (OBS-VESNA-125; #184). |
 | HOME-106 | Try launcher from app icon without changing system Home | Vesna 0.4.46 verified with Nova as Home on Android 15; settings links not replayed (OBS-VESNA-020; AT-HOME-106). |
 
 ## DRAWER — App drawer
@@ -110,11 +110,11 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | GESTURE-001 | Swipe up / down on home screen | Nova 8.9.9 and 9.0.1 open the drawer on the 1100 px path at 500–925 ms as well as in fast swipes. Signed Vesna v0.4.68/69 opened the workspace menu instead; v0.4.70 opens the drawer on slow and fast long swipes, opens neither surface on a slow 400 px swipe, and keeps the stationary-hold menu and the tile long-press (OBS-VESNA-003, 006–007, 009, 112, 115, 118; AT-GESTURE-112.5; #170). |
-| GESTURE-002 | Double tap | discovered (Prime-gated) |
+| GESTURE-002 | Double tap | A double tap on an empty Home cell does nothing in Nova 9.0.1, where it is bound to None, or in signed Vesna v0.4.72 (OBS-VESNA-125). |
 | GESTURE-003 | Long press on empty space | observed (opens customize mode) |
-| GESTURE-004 | Pinch in/out | discovered (Prime-gated rows) |
-| GESTURE-005 | Two-finger gestures | discovered (swipe up/down, rotation CCW/CW rows) |
-| GESTURE-006 | Assignable gesture actions catalog | discovered (bindings visible: Swipe up→App drawer, Swipe down→Expand notifications) |
+| GESTURE-004 | Pinch in/out | Nova 9.0.1: fingers apart, bound to Recent apps, asked for the Accessibility permission; fingers together, bound to Desktop previews, opened the customize screen, not a page overview. Signed Vesna v0.4.72 ignores both (OBS-VESNA-125; #183). |
+| GESTURE-005 | Two-finger gestures | Nova 9.0.1: a two-finger swipe up opened Nova Settings, and a two-finger tap did nothing. Signed Vesna v0.4.72 ignores two-finger input (OBS-VESNA-125; #183). |
+| GESTURE-006 | Assignable gesture actions catalog | discovered (bindings visible: Swipe up→App drawer, Swipe down→Expand notifications). All default bindings of Nova 9.0.1 are read in OBS-VESNA-125; signed Vesna v0.4.72 has no gesture settings (#183). |
 | GESTURE-007 | Gesture conflicts with system navigation | pending |
 | GESTURE-008 | Back button behavior in launcher surfaces | partially observed (drawer/settings) |
 
@@ -123,7 +123,7 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | APPPEAR-001 | Themes (light/dark/system) | pending |
-| APPPEAR-002 | Icon size | Nova changes actual desktop/drawer sizes together or independently; no equivalent size controls found in signed Vesna v0.4.59 (OBS-VESNA-080; #146). |
+| APPPEAR-002 | Icon size | Nova changes actual desktop/drawer sizes together or independently; no equivalent size controls were found in signed Vesna v0.4.59 (OBS-VESNA-080; #146). Signed v0.4.73 adds Home icon size and Drawer icon size, with Match Home icon size on by default: artwork of 126 px at 100%, 164 px at 130% and 101 px at 80%, with Home cells unchanged (OBS-VESNA-126). |
 | APPPEAR-003 | Icon shape / adaptive icon handling | Nova changes adaptive masks on Home, dock and the unfiltered app list. The tested Vesna v0.4.59 settings offer no equivalent selector (OBS-VESNA-079; #144). |
 | APPPEAR-004 | Icon packs | Nova applies installed Arcticons Black to Home, dock and drawer and retains the choice after process restart. Uncovered apps keep their own artwork, and Nova returns to system artwork after the pack is removed and the launcher restarts (OBS-VESNA-095/108). No pack selector found in signed Vesna v0.4.63 with the same pack installed (#157). |
 | APPPEAR-005 | Label font size / color / shadow | Nova changes label size (six steps), font, shadow and single-line behaviour from Home screen → Label, and text tone from Style → Home screen → Text (OBS-VESNA-116; #173, #155). Signed Vesna v0.4.69 offers only the show/hide switches; hiding Home labels keeps drawer names (OBS-VESNA-088/093; #152). |
