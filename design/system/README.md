@@ -318,6 +318,11 @@ while Vesna has no widget host.
   focus and search cleanup as a manual close. Back then returns to the
   same Home page. When disabled, keep the drawer and its current position
   available on return. An unsuccessful launch never closes the drawer.
+  **Remember position** is a separate searchable switch, off by default.
+  When enabled, Android Home remembers the first visible app and exact
+  offset of the open, unfiltered vertical list for the next drawer opening.
+  Keep that position only in memory; persist the switch, not the offset.
+  Filtered results and other layouts keep their existing reset behavior.
   The page also offers a searchable **Hide apps** section. List all
   launchable apps, including hidden ones, in drawer order with their
   original artwork and profile labels. Each row is one Material switch

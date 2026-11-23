@@ -45,6 +45,8 @@
     <string name="settings_drawer_layout_paged">Горизонтальные страницы</string>
     <string name="settings_drawer_close_on_launch">Закрывать после запуска</string>
     <string name="settings_drawer_close_on_launch_detail">После запуска приложения «Назад» вернёт на главный экран.</string>
+    <string name="settings_drawer_remember_position">Запоминать позицию</string>
+    <string name="settings_drawer_remember_position_detail">После возврата на главный экран список приложений откроется на прежнем месте.</string>
     <string name="settings_hide_drawer_apps">Скрыть приложения</string>
     <string name="settings_hide_drawer_apps_detail">Ярлыки останутся на главном экране и в доке. Для поиска введите полное название.</string>
     <string name="settings_drawer_app_hidden">Скрыто при просмотре</string>

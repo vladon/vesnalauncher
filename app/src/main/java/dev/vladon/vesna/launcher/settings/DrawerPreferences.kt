@@ -28,6 +28,10 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(CLOSE_ON_LAUNCH, false)
         set(value) = prefs.edit { putBoolean(CLOSE_ON_LAUNCH, value) }
 
+    var rememberPosition: Boolean
+        get() = prefs.getBoolean(REMEMBER_POSITION, false)
+        set(value) = prefs.edit { putBoolean(REMEMBER_POSITION, value) }
+
     var hiddenApps: Set<AppKey>
         get() = prefs.getStringSet(HIDDEN_APPS, null)?.mapNotNullTo(HashSet(), ::parseDrawerKey).orEmpty()
         set(value) = prefs.edit {
@@ -38,6 +42,7 @@ internal class DrawerPreferences(context: Context) {
         private const val CLOSE_ON_LAUNCH = "drawer_close_on_launch"
         private const val HIDDEN_APPS = "drawer_hidden_apps"
         private const val LAYOUT_MODE = "drawer_layout_mode"
+        private const val REMEMBER_POSITION = "drawer_remember_position"
     }
 }
 

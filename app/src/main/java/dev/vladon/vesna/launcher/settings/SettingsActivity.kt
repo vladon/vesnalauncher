@@ -45,6 +45,7 @@ class SettingsActivity : ComponentActivity() {
     private var pinNewApps by mutableStateOf(false)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var closeDrawerOnLaunch by mutableStateOf(false)
+    private var rememberDrawerPosition by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
     private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
@@ -116,6 +117,11 @@ class SettingsActivity : ComponentActivity() {
                             drawerPreferences.closeOnLaunch = enabled
                             closeDrawerOnLaunch = enabled
                         },
+                        rememberDrawerPosition = rememberDrawerPosition,
+                        onRememberDrawerPositionChanged = { enabled ->
+                            drawerPreferences.rememberPosition = enabled
+                            rememberDrawerPosition = enabled
+                        },
                         drawerApps = drawerApps,
                         hiddenDrawerApps = hiddenDrawerApps,
                         onDrawerAppHiddenChanged = ::changeDrawerVisibility,
@@ -156,6 +162,7 @@ class SettingsActivity : ComponentActivity() {
         pinNewApps = workspace.pinNewApps
         drawerLayoutMode = drawerPreferences.layoutMode
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
+        rememberDrawerPosition = drawerPreferences.rememberPosition
         hiddenDrawerApps = drawerPreferences.hiddenApps
     }
 

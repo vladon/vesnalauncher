@@ -393,6 +393,48 @@ class DrawerSearchTest {
     }
 
     @Test
+    fun homeReturnRestoresOnlyAnOptedInUnfilteredListViewport() {
+        val apps = List(64) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
+        val anchor = 9
+        val offset = -24
+        onDrawer { host ->
+            host.layoutMode = DrawerLayoutMode.LIST
+            host.submitApps(apps)
+        }
+        assertVisibleLabels(apps.map { it.label })
+
+        fun scrollAwayFromTop() {
+            onDrawer { host ->
+                val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+                (list.layoutManager as GridLayoutManager).scrollToPositionWithOffset(anchor, offset)
+            }
+            assertFirstVisibleApp(apps[anchor].label, offset)
+        }
+
+        fun reopenFromHome() {
+            onDrawer { host ->
+                host.closeForHome()
+                host.open()
+            }
+        }
+
+        scrollAwayFromTop()
+        reopenFromHome()
+        assertFirstVisibleApp(apps.first().label, 0)
+
+        onDrawer { it.rememberPosition = true }
+        scrollAwayFromTop()
+        reopenFromHome()
+        assertFirstVisibleApp(apps[anchor].label, offset)
+
+        setQuery("tool")
+        assertVisibleLabels(apps.map { it.label })
+        scrollAwayFromTop()
+        reopenFromHome()
+        assertFirstVisibleApp(apps.first().label, 0)
+    }
+
+    @Test
     fun quickDownwardSwipeScrollsBackBeforeItCanCloseTheDrawer() {
         val apps = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
         onDrawer { it.submitApps(apps) }

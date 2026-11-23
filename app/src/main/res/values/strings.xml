@@ -41,6 +41,8 @@
     <string name="settings_drawer_layout_paged">Horizontal pages</string>
     <string name="settings_drawer_close_on_launch">Automatically close drawer</string>
     <string name="settings_drawer_close_on_launch_detail">After opening an app, Back returns to Home instead of the app drawer.</string>
+    <string name="settings_drawer_remember_position">Remember position</string>
+    <string name="settings_drawer_remember_position_detail">After pressing Home, reopen the vertical app list where you left it.</string>
     <string name="settings_hide_drawer_apps">Hide apps</string>
     <string name="settings_hide_drawer_apps_detail">Home and dock shortcuts stay. Search by full name to find a hidden app.</string>
     <string name="settings_drawer_app_hidden">Hidden from browsing</string>

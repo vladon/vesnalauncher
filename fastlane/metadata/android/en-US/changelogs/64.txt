@@ -1,0 +1,1 @@
+Enable Remember position in App drawer settings to reopen the vertical app list where you left it after pressing Home. It is off by default and does not remember searches.

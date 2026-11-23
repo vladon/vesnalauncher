@@ -45,6 +45,11 @@ class DrawerView @JvmOverloads constructor(
 
     var onAppClick: ((LauncherApp) -> Boolean)? = null
     internal var closeOnLaunch: () -> Boolean = { false }
+    internal var rememberPosition = false
+        set(value) {
+            field = value
+            if (!value) homeReturnViewport = null
+        }
     internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
     /** Long-press on a drawer item arms a drag from the drawer (drag layer drives). */
@@ -68,6 +73,7 @@ class DrawerView @JvmOverloads constructor(
             field = value
             adapter.singleColumn = value == DrawerLayoutMode.LIST
             pendingPageViewport = null
+            homeReturnViewport = null
             if (value != DrawerLayoutMode.PAGED) pager.submitApps(emptyList())
             pager.scrollToApp(0)
             applyFilter(resetScroll = true)
@@ -112,6 +118,7 @@ class DrawerView @JvmOverloads constructor(
 
     private var pendingViewport: Viewport? = null
     private var pendingPageViewport: Viewport? = null
+    private var homeReturnViewport: Viewport? = null
 
     internal var isOpen = false
         private set
@@ -288,7 +295,7 @@ class DrawerView @JvmOverloads constructor(
         } else if (search != null && (pendingAppFocus != null || (pendingViewport != null && filtered.isNotEmpty()))) {
             val submission = ++focusSubmission
             adapter.submitList(filtered) {
-                if (resetScrollOnCommit) resetScrollAfterFilter()
+                resetScrollAfterFilter()
                 restoreCommittedViewport()
                 if (pendingAppFocus != null) {
                     // A newer filter can supersede this commit before its holders are laid out.
@@ -321,15 +328,19 @@ class DrawerView @JvmOverloads constructor(
             state.putBundle(PAGE_VIEWPORT, Bundle().apply { saveViewport(viewport) })
         }
         if (pager.isVisible || resetScrollOnCommit) return
+        val viewport = currentListViewport() ?: return
+        state.saveViewport(viewport)
+    }
+
+    private fun currentListViewport(): Viewport? {
         val position = grid.findFirstVisibleItemPosition()
         val tile = grid.findViewByPosition(position)
-        val viewport = if (tile != null) {
+        return if (tile != null) {
             val app = adapter.currentList.getOrNull(list.getChildAdapterPosition(tile))?.key
             Viewport(app, position, grid.getDecoratedTop(tile) - list.paddingTop)
         } else {
             pendingViewport
-        } ?: return
-        state.saveViewport(viewport)
+        }
     }
 
     private fun Bundle.saveViewport(viewport: Viewport) {
@@ -410,6 +421,7 @@ class DrawerView @JvmOverloads constructor(
     }
 
     private fun resetScrollAfterFilter() {
+        if (!resetScrollOnCommit) return
         resetScrollOnCommit = false
         refreshAnchor = null
         list.scrollToPosition(0)
@@ -501,10 +513,25 @@ class DrawerView @JvmOverloads constructor(
         if (visibility != VISIBLE) translationY = height.toFloat()
         visibility = VISIBLE
         updateDrawerFocusability()
+        homeReturnViewport?.let { viewport ->
+            homeReturnViewport = null
+            pendingViewport = viewport
+            resetScrollOnCommit = false
+            applyFilter(resetScroll = false)
+        }
         syncFastScrollViewport()
         if (height > 0) animate().translationY(0f).start()
         onOpenedChanged?.invoke(true)
         closeButton.requestFocus()
+    }
+
+    internal fun closeForHome() {
+        if (!isOpen) return
+        homeReturnViewport = if (
+            rememberPosition && layoutMode == DrawerLayoutMode.LIST &&
+            searchField.text.isNullOrEmpty() && !resetScrollOnCommit
+        ) currentListViewport() else null
+        close()
     }
 
     fun close() {
