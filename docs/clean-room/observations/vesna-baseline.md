@@ -1529,3 +1529,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `EVI-VESNA-003/parity68-*`. Existing-page drag routing is
   tracked in #139, separate from the passing same-page
   exact-cell extraction in #130.
+
+## OBS-VESNA-068 — Back from an active app drawer query
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.55 (60). Each was system Home during its run.
+  With the vertical drawer list selected, focused the search
+  field, typed `Clock`, and verified the keyboard was visible.
+- In both launchers the first Android BACK hid the keyboard
+  while leaving `Clock` in the focused field and keeping its
+  result visible. The second BACK closed the drawer to the
+  same Home page and dock. Neither showed a blank browse
+  list as an intermediate step.
+- Nova behaved the same when opened by a swipe from Home
+  rather than by tapping the Home search icon.
+- Identical behavior in this case; no issue filed. Restored
+  Vesna's original grid, Nova as system Home, and both
+  layouts. Evidence: `EVI-VESNA-003/parity69-*`.
