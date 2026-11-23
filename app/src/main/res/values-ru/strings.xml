@@ -161,6 +161,12 @@
     <string name="drawer_search_hint">Поиск приложений</string>
     <string name="drawer_search_hint_compact">Поиск</string>
     <string name="drawer_clear_search">Очистить поиск</string>
+    <string name="settings_search_actions">Поиск в других приложениях</string>
+    <string name="settings_search_actions_detail">Если поиск не нашёл приложений, предложить передать запрос другим приложениям. Во время набора ничего не отправляется, локальный поиск не меняется.</string>
+    <string name="drawer_search_action_web">Найти в интернете</string>
+    <string name="drawer_search_action_maps">Найти в Картах</string>
+    <string name="drawer_search_action_store">Найти в Play Маркете</string>
+    <string name="drawer_search_action_videos">Найти на YouTube</string>
     <string name="drawer_no_results">Приложения не найдены</string>
     <string name="drawer_fast_scroll">Перейти к букве списка приложений</string>
 

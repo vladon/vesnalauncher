@@ -1,5 +1,7 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.app.SearchManager
+import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Parcelable
@@ -800,6 +802,45 @@ class DrawerSearchTest {
     private fun onDrawer(block: (DrawerView) -> Unit) {
         val host = drawer
         scenario!!.onActivity { block(host!!) }
+    }
+
+    @Test
+    fun searchActionsAppearOnlyWhenEnabledOnAnEmptySearch() {
+        onDrawer { host -> host.externalSearchActions = true }
+        setQuery("zzz")
+        onDrawer { host ->
+            val actions = host.findViewById<ViewGroup>(R.id.drawer_search_actions)
+            assertTrue(actions.isShown)
+            assertTrue("At least the web action resolves on the device", actions.childCount >= 1)
+            assertEquals("Search the web", (actions.getChildAt(0) as TextView).text.toString())
+        }
+
+        // A local match replaces the empty state and hides the actions.
+        setQuery("eLd")
+        onDrawer { host -> assertEquals(View.GONE, host.findViewById<View>(R.id.drawer_search_actions).visibility) }
+
+        // The setting keeps them out even on an empty search.
+        onDrawer { host -> host.externalSearchActions = false }
+        setQuery("zzz")
+        onDrawer { host -> assertEquals(View.GONE, host.findViewById<View>(R.id.drawer_search_actions).visibility) }
+    }
+
+    @Test
+    fun searchActionTapHandsTheQueryToTheCallback() {
+        val handed = mutableListOf<Intent>()
+        onDrawer { host ->
+            host.externalSearchActions = true
+            host.onSearchAction = { handed.add(it) }
+        }
+        setQuery("golden gate bridge")
+        onDrawer { host ->
+            val actions = host.findViewById<ViewGroup>(R.id.drawer_search_actions)
+            val row = actions.getChildAt(0) as TextView
+            assertEquals("Search the web", row.text.toString())
+            row.performClick()
+            assertEquals(1, handed.size)
+            assertEquals("golden gate bridge", handed[0].getStringExtra(SearchManager.QUERY))
+        }
     }
 
     private fun setQuery(text: String) {

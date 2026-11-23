@@ -157,6 +157,12 @@
     <string name="drawer_search_hint">Search apps</string>
     <string name="drawer_search_hint_compact">Search</string>
     <string name="drawer_clear_search">Clear search</string>
+    <string name="settings_search_actions">Search actions</string>
+    <string name="settings_search_actions_detail">When a search matches no apps, offer to hand the query to other apps. Nothing is sent while typing and the local search is unchanged.</string>
+    <string name="drawer_search_action_web">Search the web</string>
+    <string name="drawer_search_action_maps">Search in Maps</string>
+    <string name="drawer_search_action_store">Search in Play Store</string>
+    <string name="drawer_search_action_videos">Search in YouTube</string>
     <string name="drawer_no_results">No matching apps</string>
     <string name="drawer_fast_scroll">Jump to app letter</string>
 

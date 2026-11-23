@@ -39,7 +39,9 @@ The Android package name is `dev.vladon.vesna.launcher`.
   Use **Edit name** to rename a Home pin without changing its drawer name.
 - **App drawer and search.** Swipe up, quickly or as a slow drag across most of
   the screen, or tap the app-grid button. Search by name with or without accents,
-  and press Enter to open a single result.
+  and press Enter to open a single result. When a search matches nothing,
+  optional **Search actions** can hand the query to the web, Maps, Play Store
+  or YouTube on an explicit tap; nothing is sent while typing.
   Enable **Automatically close drawer** in App drawer settings if you want
   Back to return to Home after launching an app.
   Enable **Remember position** to reopen the vertical list at the same place

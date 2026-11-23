@@ -1,8 +1,12 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.app.Activity
+import android.app.SearchManager
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.AttributeSet
@@ -19,6 +23,8 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.StringRes
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -47,6 +53,13 @@ class DrawerView @JvmOverloads constructor(
     var isLayoutLocked: () -> Boolean = { false }
 
     var onAppClick: ((LauncherApp) -> Boolean)? = null
+
+    /** Launched when the user taps a search action; the drawer stays out of network decisions. */
+    var onSearchAction: ((Intent) -> Unit)? = null
+
+    /** With the opt-in setting, an empty search offers actions that pass the query to other apps. */
+    internal var externalSearchActions = false
+
     internal var closeOnLaunch: () -> Boolean = { false }
     internal var rememberPosition = false
         set(value) {
@@ -116,6 +129,7 @@ class DrawerView @JvmOverloads constructor(
     private var showsSearchIcon = true
     private val clearSearchButton: View
     private val noResultsView: TextView
+    private val searchActionsView: LinearLayout
     private val adapter: DrawerAppsAdapter
     private val density = resources.displayMetrics.density
 
@@ -206,6 +220,7 @@ class DrawerView @JvmOverloads constructor(
         installDrawerFlingToClose(pager)
 
         noResultsView = findViewById(R.id.drawer_no_results)
+        searchActionsView = findViewById(R.id.drawer_search_actions)
         searchField = findViewById(R.id.drawer_search)
         searchBar = findViewById(R.id.drawer_search_bar)
         header = findViewById(R.id.drawer_header)
@@ -329,8 +344,57 @@ class DrawerView @JvmOverloads constructor(
         }
         clearSearchButton.isVisible = query.isNotEmpty()
         noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
+        updateSearchActions(query, show = externalSearchActions && query.isNotBlank() && filtered.isEmpty())
         syncFastScrollViewport()
         if (hasFastScrollGutter != query.isEmpty()) requestLayout()
+    }
+
+    /** Providers shown on an empty search; each hands the query to another app on an explicit tap. */
+    private fun searchActionIntents(query: String): List<Pair<Int, Intent>> {
+        val encoded = Uri.encode(query)
+        return listOf(
+            R.string.drawer_search_action_web to
+                Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, query),
+            R.string.drawer_search_action_maps to
+                Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$encoded")),
+            R.string.drawer_search_action_store to
+                Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=$encoded&c=apps")),
+            R.string.drawer_search_action_videos to
+                Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=$encoded")),
+        )
+    }
+
+    private fun updateSearchActions(query: String, show: Boolean) {
+        searchActionsView.removeAllViews()
+        if (show) {
+            val packageManager = context.packageManager
+            for ((label, intent) in searchActionIntents(query)) {
+                if (packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isEmpty()) continue
+                searchActionsView.addView(actionRow(label, intent))
+            }
+        }
+        searchActionsView.isVisible = searchActionsView.childCount > 0
+    }
+
+    private fun actionRow(@StringRes label: Int, intent: Intent): TextView {
+        val row = TextView(context)
+        row.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, (56 * density).toInt())
+        row.gravity = Gravity.CENTER_VERTICAL
+        // The themed borderless ripple gives rows the press, focus and hover state layers.
+        context.theme.obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground)).run {
+            row.background = getDrawable(0)
+            recycle()
+        }
+        row.setPadding((24 * density).toInt(), 0, (24 * density).toInt(), 0)
+        row.setText(label)
+        row.textSize = 16f
+        row.typeface = ResourcesCompat.getFont(context, R.font.inter_regular)
+        row.setTextColor(context.getColor(R.color.vesna_on_surface_variant))
+        row.setOnClickListener {
+            onSearchAction?.invoke(intent)
+            if (closeOnLaunch()) close()
+        }
+        return row
     }
 
     internal fun focusedAppKey(): AppKey? {

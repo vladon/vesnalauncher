@@ -37,6 +37,11 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(KEYBOARD_ON_OPEN, false)
         set(value) = prefs.edit { putBoolean(KEYBOARD_ON_OPEN, value) }
 
+    /** Off by default: search actions for other apps appear only on an explicit tap. */
+    var externalSearchActions: Boolean
+        get() = prefs.getBoolean(EXTERNAL_SEARCH_ACTIONS, false)
+        set(value) = prefs.edit { putBoolean(EXTERNAL_SEARCH_ACTIONS, value) }
+
     /** The drawer's own artwork size, kept for when it stops following Home. */
     var iconScalePercent: Int
         get() = IconScale.coerce(prefs.getInt(ICON_SCALE_PERCENT, IconScale.DEFAULT))
@@ -57,6 +62,7 @@ internal class DrawerPreferences(context: Context) {
         private const val CLOSE_ON_LAUNCH = "drawer_close_on_launch"
         private const val HIDDEN_APPS = "drawer_hidden_apps"
         private const val KEYBOARD_ON_OPEN = "drawer_keyboard_on_open"
+        private const val EXTERNAL_SEARCH_ACTIONS = "drawer_external_search_actions"
         private const val FOLLOWS_HOME_ICON_SCALE = "drawer_icon_follows_home_icon_scale"
         private const val ICON_SCALE_PERCENT = "drawer_icon_scale_percent"
         private const val LAYOUT_MODE = "drawer_layout_mode"
