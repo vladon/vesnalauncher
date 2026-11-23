@@ -240,6 +240,11 @@ while Vesna has no widget host.
 ### Screen composition
 
 - **App names.** When Android changes the launcher's language, refresh app names on Home, in the dock, in folders, and in the drawer, including their accessible names. Keep saved placements, custom folder titles, and the active drawer query unchanged. Search evaluates the query against the updated app names.
+  The separate **Hide app names on Home** switch is off by default. It hides
+  labels on workspace and dock app tiles only. The global **Show app names**
+  switch still applies across the launcher; drawer labels, folder members and
+  folder titles are unaffected by the Home-only setting. Leave tile geometry,
+  artwork, touch targets and accessible names unchanged.
 - **Home.** Put wallpaper behind the workspace and dock. The default workspace has four columns and five rows. Preserve saved cell coordinates until the user changes the grid. Use the Vesna wallpaper label backing where necessary. Holding a folder and dragging it highlights only empty cells on its current page. An invalid or canceled drop retains the original cell; a stationary hold opens the folder menu. The overflow button and long-pressing empty space open the same Home options menu for Settings, wallpaper, and page actions. **Reorder this page…** lists the available positions, keeps the first page fixed, and keeps the moved page selected. The **Move to page…** menu on an app shortcut or folder lists other pages with room in display order and keeps the source page selected.
   When the workspace layout is locked, keep page navigation, folders, app
   launches and App info available. Hide placement and customization actions

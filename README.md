@@ -55,7 +55,9 @@ The Android package name is `dev.vladon.vesna.launcher`.
 - **Work profiles.** Launch work apps from badged icons. Removing a work copy
   leaves its personal counterpart's pins in place.
 - **Appearance and accessibility.** Choose System, Light, or Dark and decide
-  whether to show app names. Keyboard shortcuts open the same menus as touch.
+  whether to show app names. Use **Home screen → Hide app names on Home**
+  to hide labels on Home and in the dock without hiding drawer or folder names.
+  Keyboard shortcuts open the same menus as touch.
 - **Free and private.** Vesna is free of ads, subscriptions, paid features,
   in-app purchases, commercial analytics and tracking SDKs.
 

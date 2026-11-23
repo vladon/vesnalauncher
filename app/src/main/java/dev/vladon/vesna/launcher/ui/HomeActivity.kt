@@ -447,10 +447,11 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun applyAppNameVisibility(visible: Boolean) {
+        val homeVisible = visible && !workspacePreferences.hideHomeAppNames
+        workspace.showAppNames = homeVisible
+        dock.showAppNames = homeVisible
         if (showAppNames == visible) return
         showAppNames = visible
-        workspace.showAppNames = visible
-        dock.showAppNames = visible
         drawer.showAppNames = visible
         folderDialog?.showAppNames = visible
     }

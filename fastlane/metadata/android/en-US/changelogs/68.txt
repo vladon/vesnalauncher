@@ -1,0 +1,1 @@
+In Home screen settings, hide app names on Home and in the dock without hiding names in the app drawer. Accessible app names are unchanged.

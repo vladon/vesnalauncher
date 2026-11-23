@@ -127,6 +127,8 @@ internal fun SettingsScreen(
     onApplyGridResize: suspend (GridCanvas) -> GridResizeResult,
     pinNewApps: Boolean,
     onPinNewAppsChanged: (Boolean) -> Unit,
+    hideHomeAppNames: Boolean,
+    onHideHomeAppNamesChanged: (Boolean) -> Unit,
     drawerLayoutMode: DrawerLayoutMode,
     onDrawerLayoutModeSelected: (DrawerLayoutMode) -> Unit,
     closeDrawerOnLaunch: Boolean,
@@ -251,6 +253,13 @@ internal fun SettingsScreen(
                                     SettingsSwitch(
                                         R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail,
                                         pinNewApps, onPinNewAppsChanged,
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_hide_home_app_names) {
+                                    SettingsSwitch(
+                                        R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail,
+                                        hideHomeAppNames, onHideHomeAppNamesChanged,
                                     )
                                 }
                             }
@@ -380,6 +389,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_workspace_grid, R.string.settings_workspace_grid_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_close_on_launch, R.string.settings_drawer_close_on_launch_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_remember_position, R.string.settings_drawer_remember_position_detail),
