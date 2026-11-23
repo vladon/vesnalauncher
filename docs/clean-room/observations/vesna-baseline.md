@@ -2267,6 +2267,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   (90100) and published signed Vesna v0.4.64 (69).
   Each had just one 4×5 Home page, Gmail alone in the
   top-right cell, and its original dock.
+  Nova's grid was still its default 4×4; see OBS-VESNA-107.
 - Nova offered **Undo** for removal and put Gmail back in
   exactly the same cell. Removing it again without Undo
   left the empty primary page after process restart.
@@ -2288,6 +2289,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   text. Nova 9.0.1 Prime (90100) and signed Vesna used
   matched 4×5 two-page fixtures: Gmail at bottom-left
   and Photos at top-right of page two in `en-US`.
+  Nova's grid stayed at its default 4×4; see OBS-VESNA-107.
 - Nova previewed an empty successor at the physical right
   edge. Cancel kept page two and both pins; a valid drop
   put Gmail in the chosen cell on page three. Photos and
@@ -2322,6 +2324,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   (90100) and signed Vesna v0.4.65 (70). Each had one
   4×5 Home page, a top-right folder ordered Gmail → Photos,
   and a free bottom-right cell.
+  Nova's grid stayed at its default 4×4; see OBS-VESNA-107.
 - Held Gmail, moved out of the folder and dwelt at the
   physical right edge. Cancel preserved the exact source
   folder cell and member order, sole page, and dock in
@@ -2347,6 +2350,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   (90100) and signed Vesna v0.4.65 (70). Each used
   a 4×5 tail page with Clock at top-left and Gmail
   at bottom-right.
+  Nova's grid stayed at its default 4×4; see OBS-VESNA-107.
 - In Vesna, the right edge at **7 of 7** previewed the
   eighth page; release put Gmail in its chosen bottom-right
   cell and left Clock in place on page seven. At **8 of 8**
@@ -2400,6 +2404,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   grids had Gmail → Photos in a top-right folder and
   Drive in the second column. Android **Time to take
   action** was temporarily set to 30 seconds for both.
+  Nova's grid stayed at its default 4×4; see OBS-VESNA-107.
 - In Vesna, removed the folder and moved Drive into the
   original cell while Undo was still visible. Tapping
   Undo showed **Folder not restored. Its original spot is
@@ -2423,6 +2428,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   signed Vesna v0.4.66 (71) and v0.4.67 (72), page one had
   a closed Gmail → Photos folder; page two had Files at
   physical bottom-left and a free cell beside it.
+  Nova's grid stayed at its default 4×4; see OBS-VESNA-107.
 - Holding the whole folder at the physical left edge in Nova
   previewed the existing page with Files. Drop put the folder
   beside the marker; its two members stayed in order.
@@ -2444,6 +2450,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Files → Gmail → Photos folder. Nova used the physical left
   edge to put Files on page two. v0.4.66 stayed on page one
   and extracted it into the same screen cell there.
+  Nova's grid was its default 4×4; see OBS-VESNA-107.
 - Upgraded in place to signed v0.4.67 (72).
   [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.67)
   `4c3ee82a5b08ef2df1c5b1e2a0325c12e1bce67b`; APK SHA-256
@@ -2468,3 +2475,68 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   the page cap were not exercised in this pass.
   Evidence: `EVI-VESNA-003/parity101-*`, `release-0.4.67/`.
   [Independent verification in #160](https://github.com/vladon/vesnalauncher/issues/160#issuecomment-7097791450).
+
+## OBS-VESNA-106 — Signed whole-folder drag to an existing page
+
+- Android 15 research AVD, `en-US`, 1080×2400 px at 420 dpi,
+  100% text. Both launchers used a real 4×5 grid, confirmed
+  on Nova's workspace (353 px rows). Page one held a closed
+  folder named **Work** (Gmail → Photos) at top-right; page
+  two held Files at bottom-left with a free cell beside it.
+- v0.4.67 (71) kept page one visible while the folder was
+  held at the right edge, and the drop landed on page one.
+  Nova 9.0.1 Prime (90100) showed page two while held and
+  placed the folder beside Files with name and order intact.
+  That placement and the dock survived a launcher restart.
+- In-place upgrade to published signed v0.4.68 (73).
+  [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.68)
+  `6bb25b6e86cf91382e554e7d36aa571f7323310b`, APK SHA-256
+  `1e418386bb72aa5f7cfa56ade7616f08529d316e92ecc6047c379e9563be0fa6`,
+  with the same verified v2 signer as v0.4.67.
+- On v0.4.68 the held folder showed page two. Cancel and a
+  release onto Files each kept every page and the dock
+  exactly. A valid drop put **Work** beside Files with
+  Gmail → Photos unchanged, and page one lost the folder.
+  All of this survived process restart. An outward drag from
+  the last page added nothing, and a left-edge drag back
+  returned the folder to its original cell.
+- After switching the system to `ar-EG`, cancel was again
+  exact and the physical left edge moved **Work** beside the
+  mirrored Files cell on page two, with the same order after
+  restart.
+- Nova in the same fixture: a cancelled cross-page drag left
+  Nova on the previewed neighbor while the folder kept its
+  source cell, and dropping the folder onto an occupied cell
+  pushed the occupant (Nova Settings) to the next free cell
+  instead of refusing. A short drag along the top row to
+  x=1058 did not switch pages in Nova; moving lower first did.
+- Reverted the grid and restored every layout through the
+  public UI, checked against the pre-test captures. The
+  original snapshot could not be loaded under the current
+  emulator renderer. Evidence: `EVI-VESNA-003/parity106-*`,
+  `release-0.4.68/`.
+  [Independent verification in #163](https://github.com/vladon/vesnalauncher/issues/163#issuecomment-7101663076).
+
+## OBS-VESNA-107 — Correction: Nova grid in earlier runs
+
+- Several earlier entries describe Nova 9.0.1 Prime (90100)
+  as using a 4×5 grid. The Desktop grid dialog did show 4×5
+  after the step, but the saved captures prove the workspace
+  kept its default four rows: item boxes were 441 px tall, as
+  in the 4×4 layout. A real five-row grid gives 353 px rows,
+  as in OBS-VESNA-087 and 090 and again in OBS-VESNA-106.
+- Affected: OBS-VESNA-098, 099, 100, 101, 103, 104 and 105.
+  OBS-VESNA-087, 090 and 091 used a real 4×5 Nova grid.
+  Vesna was 4×5 throughout. The compared cells were the same
+  screen cells (top-right folder or pin, bottom-left or
+  bottom-right targets, the adjacent cell), so the recorded
+  behaviors are not withdrawn; "matched 4×5" overstated the
+  setup for Nova. Why the dialog change did not reach the
+  workspace was not determined.
+- Correction comments were left in #153, #151, #132, #160
+  and #163. Later runs confirm the grid from the workspace
+  geometry after OK and after a launcher restart.
+- Evidence: box heights in `EVI-VESNA-003/parity95-*`,
+  `parity96-*`, `parity97-*`, `parity98-*`, `parity100-*`
+  and `parity101-*`, versus `parity86-*`, `parity88-*`,
+  `parity89-*` and `parity106-*`.
