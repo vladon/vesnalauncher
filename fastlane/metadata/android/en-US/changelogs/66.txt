@@ -1,0 +1,1 @@
+While dragging a Home shortcut or a shortcut out of a folder, pause at the edge to switch to an existing neighboring Home page. Drop on an empty cell to move the shortcut there.

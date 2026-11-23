@@ -62,9 +62,12 @@ import dev.vladon.vesna.launcher.workspace.PageMoveOptions
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val DRAWER_OPEN_STATE = "drawer_open"
+private const val DRAG_PAGE_EDGE_DP = 32
+private const val DRAG_PAGE_DWELL_MS = 650L
 
 /**
  * The HOME activity: hosts workspace, dock, and drawer, and opens the launcher
@@ -94,6 +97,16 @@ class HomeActivity : ComponentActivity() {
         val fromDrawer: Boolean,
         val dockPinId: Long = 0,
     )
+
+    private class EdgePageDrag(val homePin: DragSource? = null) {
+        var direction = 0
+        var dwell: Job? = null
+        var requestedPage: Long? = null
+        var stablePinId: Long? = null
+        var submitting = false
+    }
+
+    private var edgePageDrag: EdgePageDrag? = null
 
     private var dragSource: DragSource? = null
     private var rootDragMoved = false
@@ -169,6 +182,10 @@ class HomeActivity : ComponentActivity() {
 
     private val backCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
+            if (workspace.isDragging) {
+                workspace.cancelDrag()
+                return
+            }
             cancelDrawerGesture()
             drawer.close()
         }
@@ -241,9 +258,25 @@ class HomeActivity : ComponentActivity() {
         workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
         workspace.onDragStarted = { cell, app, _ ->
-            dragSource = DragSource(app, Container.WORKSPACE, cell, renderedState.activePageId, fromDrawer = false)
+            if (edgePageDrag == null && !renderedState.isDragPagePreview) {
+                val source = DragSource(app, Container.WORKSPACE, cell, renderedState.activePageId, fromDrawer = false)
+                dragSource = source
+                if (renderedState.pageIds.size > 1) {
+                    edgePageDrag = EdgePageDrag(homePin = source)
+                    backCallback.isEnabled = true
+                }
+            }
         }
-        workspace.onDragProgress = { x, y -> updateDragTarget(x + workspace.left, y + workspace.top) }
+        workspace.onDragProgress = { x, y ->
+            val edge = edgePageDrag
+            if (edge?.homePin != null) updateEdgeDwell(edge, x, y)
+            if (edge?.requestedPage == null) {
+                updateDragTarget(x + workspace.left, y + workspace.top)
+            } else {
+                dock.showSlotHighlight(null)
+                workspace.showDropHighlight(previewDropCell(edge, x, y))
+            }
+        }
         workspace.onDragReleased = { x, y, moved, cancelled, app, anchor ->
             onDragReleased(Container.WORKSPACE, x + workspace.left, y + workspace.top, moved, cancelled, app, anchor)
         }
@@ -352,6 +385,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        clearEdgeDrag()
         workspacePreferences.unregisterListener(workspacePreferenceListener)
         super.onDestroy()
     }
@@ -374,6 +408,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        workspace.cancelDrag()
         folderDialog?.cancelMemberDrag()
         snackbarJob?.cancel()
         super.onStop()
@@ -384,6 +419,7 @@ class HomeActivity : ComponentActivity() {
         super.onNewIntent(intent)
         val fromSystemHome = intent.hasCategory(Intent.CATEGORY_HOME)
         if (fromSystemHome || intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
+            workspace.cancelDrag()
             snackbarJob?.cancel()
             pendingPageMenu?.cancel()
             pendingPageMenu = null
@@ -420,15 +456,22 @@ class HomeActivity : ComponentActivity() {
         val previous = renderedState
         val gridChanged = state.grid != previous.grid
         if (state.activePageId != previous.activePageId) {
-            workspace.cancelDrag()
-            onRootDragCancelled()
-            if (renameHost != null) dismissHomeRename()
-            folderDialog?.dismiss()
+            if (state.isDragPagePreview && state.activePageId == edgePageDrag?.requestedPage) {
+                // Keep the stream but release the old tile's dim before its cell is rebound.
+                workspace.clearDragAnchorHighlight()
+                workspace.showDropHighlight(null)
+            } else {
+                workspace.cancelDrag()
+                onRootDragCancelled()
+                if (renameHost != null) dismissHomeRename()
+                if (!state.isDragPagePreview && !previous.isDragPagePreview) folderDialog?.dismiss()
+            }
         }
         if (gridChanged) {
             // Resizing invalidates every coordinate a live drag aims at, and
             // moves anything a popup or draft is anchored to.
             workspace.cancelDrag()
+            folderDialog?.cancelMemberDrag()
             onRootDragCancelled()
             activePopup?.dismiss()
             pendingPageMenu?.cancel()
@@ -521,7 +564,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun openDrawer() {
-        if (dragSource == null && !workspace.isDragging) drawer.open()
+        if (dragSource == null && !workspace.isDragging && edgePageDrag == null && !renderedState.isDragPagePreview) {
+            drawer.open()
+        }
     }
 
     private fun onDrawerOpenedChanged(opened: Boolean) {
@@ -554,7 +599,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun stepPage(forward: Boolean) {
-        if (dragSource != null || workspace.isDragging || backCallback.isEnabled) return
+        if (dragSource != null || workspace.isDragging || backCallback.isEnabled || edgePageDrag != null) return
         val state = renderedState
         val current = state.pageIds.indexOf(state.activePageId)
         if (current < 0) return
@@ -563,7 +608,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showPagePicker(anchor: View) {
-        if (dragSource != null || workspace.isDragging || backCallback.isEnabled || !anchor.isShown) return
+        if (dragSource != null || workspace.isDragging || backCallback.isEnabled || edgePageDrag != null ||
+            !anchor.isShown
+        ) return
         val state = renderedState
         val activeIndex = state.pageIds.indexOf(state.activePageId)
         if (state.pageIds.size < 2 || activeIndex < 0) return
@@ -580,6 +627,90 @@ class HomeActivity : ComponentActivity() {
             }
         }
         showPopup(popup)
+    }
+
+    /** One adjacent turn per edge entry; moving into the interior rearms the dwell. */
+    private fun updateEdgeDwell(drag: EdgePageDrag, x: Float, y: Float) {
+        val width = workspace.width
+        val band = (DRAG_PAGE_EDGE_DP * resources.displayMetrics.density).coerceAtMost(width / 4f)
+        val direction = when {
+            y < workspace.paddingTop || y >= workspace.height - workspace.paddingBottom -> 0
+            x >= 0f && x < band -> -1
+            x >= width - band && x < width -> 1
+            else -> 0
+        }
+        if (drag.direction == direction) return
+        drag.direction = direction
+        drag.dwell?.cancel()
+        if (direction == 0 || layoutLocked || drag.submitting) return
+        val state = renderedState
+        val current = state.pageIds.indexOf(state.activePageId)
+        if (current < 0 || !isRenderedDragPage(drag)) return
+        val step = if (workspace.layoutDirection == View.LAYOUT_DIRECTION_RTL) -direction else direction
+        val destination = state.pageIds.getOrNull(current + step) ?: return
+        drag.dwell = lifecycleScope.launch {
+            delay(DRAG_PAGE_DWELL_MS)
+            val pin = drag.homePin
+            if (pin != null && drag.stablePinId == null) {
+                drag.stablePinId = controller.workspacePinId(pin.app, pin.fromCell, pin.pageId) ?: return@launch
+            }
+            if (edgePageDrag !== drag || drag.direction != direction || layoutLocked ||
+                renderedState.activePageId != state.activePageId || renderedState.pageIds != state.pageIds
+            ) return@launch
+            drag.requestedPage = destination
+            workspace.showDropHighlight(null)
+            controller.previewWorkspacePageForDrag(destination)
+        }
+    }
+
+    private fun isRenderedDragPage(drag: EdgePageDrag): Boolean =
+        drag.requestedPage?.let { renderedState.isDragPagePreview && renderedState.activePageId == it }
+            ?: !renderedState.isDragPagePreview
+
+    private fun previewDropCell(drag: EdgePageDrag, localX: Float, localY: Float): Int? =
+        if (!layoutLocked && isRenderedDragPage(drag)) workspace.folderDropTarget(localX, localY) else null
+
+    private fun clearEdgeDrag() {
+        val drag = edgePageDrag ?: return
+        edgePageDrag = null
+        drag.dwell?.cancel()
+        if (drag.requestedPage != null) controller.cancelWorkspacePagePreview()
+        backCallback.isEnabled = drawer.isOpen || rootDragMoved
+    }
+
+    private fun submitEdgeDrop(
+        drag: EdgePageDrag,
+        destination: Long,
+        move: suspend () -> Boolean,
+        finish: (Boolean) -> Unit = {},
+    ) {
+        drag.dwell?.cancel()
+        drag.submitting = true
+        lifecycleScope.launch {
+            val placed = move()
+            if (edgePageDrag !== drag) return@launch
+            if (placed) controller.finishWorkspacePagePreview(destination)
+            clearEdgeDrag()
+            finish(placed)
+        }
+    }
+
+    private fun dropHomePinOnPreview(
+        drag: EdgePageDrag,
+        source: DragSource,
+        x: Float,
+        y: Float,
+    ) {
+        val destination = drag.requestedPage ?: return
+        val cell = previewDropCell(drag, x - workspace.left, y - workspace.top)
+        val pinId = drag.stablePinId
+        if (pinId == null || cell == null) {
+            clearEdgeDrag()
+        } else {
+            submitEdgeDrop(drag, destination, move = {
+                controller.moveWorkspacePinToCell(pinId, source.pageId, source.fromCell, destination, cell)
+            })
+        }
     }
 
     /**
@@ -612,6 +743,12 @@ class HomeActivity : ComponentActivity() {
         workspace.showDropHighlight(null)
         dock.showSlotHighlight(null)
         dragSource = null
+        val edge = edgePageDrag?.takeIf { it.homePin != null && it.homePin === source }
+        if (edge?.requestedPage != null && !cancelled && moved && source != null) {
+            dropHomePinOnPreview(edge, source, x, y)
+            return
+        }
+        if (edge != null) clearEdgeDrag()
         if (source == null || cancelled) return
 
         if (!moved) {
@@ -639,6 +776,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun onRootDragCancelled() {
+        if (edgePageDrag?.homePin != null && edgePageDrag?.submitting == false) clearEdgeDrag()
         dragSource = null
         workspace.showDropHighlight(null)
         dock.showSlotHighlight(null)
@@ -691,40 +829,62 @@ class HomeActivity : ComponentActivity() {
 
     private fun startFolderMemberDrag(folder: Folder, pinId: Long): Boolean {
         val state = renderedState
-        if (layoutLocked || dragSource != null || folderMemberDrag != null ||
+        if (layoutLocked || dragSource != null || folderMemberDrag != null || edgePageDrag != null ||
+            state.isDragPagePreview ||
             state.activePageId != folder.pageId ||
             state.folderContents[folder.id].orEmpty().none { it.id == pinId }
         ) return false
         folderMemberDrag = FolderMemberDrag(folder.id, pinId, folder.pageId)
+        if (state.pageIds.size > 1) edgePageDrag = EdgePageDrag()
         return true
     }
 
-    private fun folderMemberDropCell(source: FolderMemberDrag, rawX: Float, rawY: Float): Int? {
-        if (layoutLocked || renderedState.activePageId != source.pageId) return null
-        workspace.getLocationOnScreen(workspaceScreenLocation)
-        return workspace.folderDropTarget(rawX - workspaceScreenLocation[0], rawY - workspaceScreenLocation[1])
+    private fun folderMemberDropCell(source: FolderMemberDrag, localX: Float, localY: Float): Int? {
+        if (layoutLocked) return null
+        val drag = edgePageDrag
+        if (drag != null && !isRenderedDragPage(drag)) return null
+        if (drag?.requestedPage == null && renderedState.activePageId != source.pageId) return null
+        return workspace.folderDropTarget(localX, localY)
     }
 
     private fun updateFolderMemberDrag(rawX: Float, rawY: Float) {
         val source = folderMemberDrag ?: return
-        workspace.showDropHighlight(folderMemberDropCell(source, rawX, rawY))
+        workspace.getLocationOnScreen(workspaceScreenLocation)
+        val x = rawX - workspaceScreenLocation[0]
+        val y = rawY - workspaceScreenLocation[1]
+        edgePageDrag?.let { updateEdgeDwell(it, x, y) }
+        workspace.showDropHighlight(folderMemberDropCell(source, x, y))
     }
 
-    private fun clearFolderMemberDrag() {
+    private fun clearFolderMemberDrag(keepPreview: Boolean = false) {
         if (folderMemberDrag == null) return
         folderMemberDrag = null
+        if (!keepPreview) clearEdgeDrag()
         workspace.showDropHighlight(null)
     }
 
     private fun finishFolderMemberDrag(rawX: Float, rawY: Float, cancelled: Boolean): Boolean {
         val source = folderMemberDrag ?: return false
-        clearFolderMemberDrag()
-        val dialog = folderDialog ?: return false
-        val cell = if (cancelled) null else folderMemberDropCell(source, rawX, rawY)
-        if (cell == null) return false
-        lifecycleScope.launch {
-            val placed = controller.moveFolderMemberToCell(source.pinId, source.folderId, source.pageId, cell)
-            if (dialog === folderDialog) dialog.finishMemberDrop(placed)
+        val dialog = folderDialog
+        workspace.getLocationOnScreen(workspaceScreenLocation)
+        val cell = if (cancelled || dialog == null) null else {
+            folderMemberDropCell(source, rawX - workspaceScreenLocation[0], rawY - workspaceScreenLocation[1])
+        }
+        val drag = edgePageDrag
+        val destination = drag?.requestedPage
+        clearFolderMemberDrag(keepPreview = cell != null && destination != null)
+        if (cell == null || dialog == null) return false
+        if (drag != null && destination != null) {
+            submitEdgeDrop(
+                drag, destination,
+                move = { controller.moveFolderMemberToCell(source.pinId, source.folderId, source.pageId, cell, destination) },
+                finish = { placed -> if (dialog === folderDialog) dialog.finishMemberDrop(placed) },
+            )
+        } else {
+            lifecycleScope.launch {
+                val placed = controller.moveFolderMemberToCell(source.pinId, source.folderId, source.pageId, cell)
+                if (dialog === folderDialog) dialog.finishMemberDrop(placed)
+            }
         }
         return true
     }
@@ -830,7 +990,9 @@ class HomeActivity : ComponentActivity() {
         homeUiState.openFolderId?.let { id ->
             val folder = state.folders[id]
             when {
-                folder == null || folder.pageId != state.activePageId -> dismissFolderDialog()
+                folder == null -> dismissFolderDialog()
+                folder.pageId != state.activePageId && (!state.isDragPagePreview || folderDialog == null) ->
+                    dismissFolderDialog()
                 folderDialog == null -> showFolderDialog(folder, homeUiState.focusedMemberId)
                 else -> folderDialog?.update(state)
             }

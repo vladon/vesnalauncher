@@ -29,7 +29,10 @@ import kotlin.math.max
  *   fling opens the drawer and a horizontal swipe selects an adjacent page;
  * - long-pressing an icon starts a drag session: the view dims the icon, reports
  *   progress in workspace-local coordinates and lets [HomeActivity] decide the drop
- *   target (grid cell or dock); highlights are drawn via [showDropHighlight].
+ *   target (grid cell or dock); highlights are drawn via [showDropHighlight];
+ * - once an app drag passes the touch slop its pointer stream is promoted to this
+ *   view, so page rebinds (edge dwell previews) cannot cancel the gesture; folder
+ *   tiles and stationary holds keep the child-owned stream.
  */
 class WorkspaceView @JvmOverloads constructor(
     context: Context,
@@ -94,6 +97,10 @@ class WorkspaceView @JvmOverloads constructor(
     private var dragAnchor: View? = null
     private var dragTargetCell: Int? = null
     private var dragMoved = false
+
+    /** True once an app drag's pointer stream was promoted to this view. */
+    private var dragPromoted = false
+
     internal val isDragging: Boolean get() = dragAnchor != null
     internal var reservedCellsMask = 0
         set(value) {
@@ -153,6 +160,7 @@ class WorkspaceView @JvmOverloads constructor(
             pageSwipe = false
             pageSwipeInterrupted = false
             longPressed = false
+            dragPromoted = false
         } else if (action == MotionEvent.ACTION_POINTER_DOWN) {
             // A different finger may occupy index zero later in this stream.
             pageSwipeInterrupted = true
@@ -168,6 +176,20 @@ class WorkspaceView @JvmOverloads constructor(
                 cancel.recycle()
             }
         }
+        if (dragPromoted) {
+            // The stream belongs to this view: children may be rebound or removed
+            // mid-drag, so the remaining MOVE/UP/CANCEL must never reach one.
+            when (action) {
+                MotionEvent.ACTION_MOVE -> if (dragAnchor != null) onDragProgress?.invoke(ev.x, ev.y)
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
+                    dragAnchor?.let { endDrag(ev.x, ev.y, cancelled = action == MotionEvent.ACTION_CANCEL, anchor = it) }
+                // A second finger cancels the session; the stream is still swallowed
+                // until it fully terminates so no residual event finds a new child.
+                MotionEvent.ACTION_POINTER_DOWN -> cancelDrag()
+            }
+            if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) dragPromoted = false
+            return true
+        }
         if (pageSwipe) {
             // Once intercepted, consume the rest of the stream even if it cannot page.
             if (action == MotionEvent.ACTION_UP && !pageSwipeInterrupted) {
@@ -178,12 +200,23 @@ class WorkspaceView @JvmOverloads constructor(
             return true
         }
         if (!longPressed) gestureDetector.onTouchEvent(ev)
-        return super.dispatchTouchEvent(ev)
+        val alreadyPromoted = dragPromoted
+        val handled = super.dispatchTouchEvent(ev)
+        if (!alreadyPromoted && dragPromoted) {
+            // The child listener promoted an app drag during that move: cancel the
+            // old target now that its dispatch has unwound. Its listener is gone, so
+            // this cancel cannot end the active session.
+            val cancel = MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0)
+            super.dispatchTouchEvent(cancel)
+            cancel.recycle()
+        }
+        return handled
     }
 
-    // The dragged icon keeps the touch stream, so the drag itself is observed by an
-    // OnTouchListener installed on the anchor for the duration of the session.
-    // Intercepting on UP would swallow the event (the parent never receives it).
+    // Until promotion the dragged icon keeps the touch stream, observed by an
+    // OnTouchListener installed on the anchor: folder tiles and stationary holds
+    // stay here (intercepting on UP would swallow the event). At the first move
+    // past the slop an app drag is handed to the view via [promoteDragStream].
     private val dragTouchListener =
         View.OnTouchListener { view, event ->
             val content = dragContent ?: return@OnTouchListener false
@@ -193,10 +226,12 @@ class WorkspaceView @JvmOverloads constructor(
                 MotionEvent.ACTION_MOVE -> {
                     dragMoved = dragMoved || max(abs(workspaceX - downX), abs(workspaceY - downY)) > dragSlop
                     if (dragMoved) {
-                        if (content is CellContent.FolderCell) {
-                            showDropHighlight(folderDropTarget(workspaceX, workspaceY))
-                        } else {
-                            onDragProgress?.invoke(workspaceX, workspaceY)
+                        when (content) {
+                            is CellContent.FolderCell -> showDropHighlight(folderDropTarget(workspaceX, workspaceY))
+                            is CellContent.App -> {
+                                promoteDragStream(view)
+                                onDragProgress?.invoke(workspaceX, workspaceY)
+                            }
                         }
                     }
                 }
@@ -205,6 +240,19 @@ class WorkspaceView @JvmOverloads constructor(
             }
             true
         }
+
+    /**
+     * Promotes an app drag to a workspace-owned pointer stream: the anchor listener
+     * stops so the synthetic cancel that [dispatchTouchEvent] sends after the move
+     * has unwound clears the old child target without ending the session. [bind] can
+     * then replace children mid-drag; the anchor reference stays as the drag identity
+     * and its alpha is restored at release.
+     */
+    private fun promoteDragStream(anchor: View) {
+        if (dragPromoted) return
+        dragPromoted = true
+        anchor.setOnTouchListener(null)
+    }
 
     /** Starts a drag for the icon at [cell]; the item dims until it is dropped. */
     private fun beginDrag(cell: Int, content: CellContent, anchor: View) {
@@ -261,6 +309,17 @@ class WorkspaceView @JvmOverloads constructor(
     internal fun cancelDrag() {
         val anchor = dragAnchor ?: return
         endDrag(0f, 0f, cancelled = true, anchor)
+    }
+
+    /**
+     * Restores the dragged icon's full alpha before a rebind may reuse its view for
+     * another pin; Home calls this just before rendering an authorized preview page.
+     * The session keeps the anchor as its drag identity, so a release still restores
+     * the alpha and reports the old view without opening its menu ([dragMoved] latched
+     * true at promotion).
+     */
+    internal fun clearDragAnchorHighlight() {
+        dragAnchor?.alpha = 1f
     }
 
     /** Shows (cell != null) or hides the drop-target highlight for drag sessions. */

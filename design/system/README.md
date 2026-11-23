@@ -208,11 +208,20 @@ shift without leaving the folder. An overflowing folder scrolls when the
 drag approaches the top or bottom of its member grid.
 
 Leaving the panel reveals Home for the rest of the gesture and highlights
-only empty cells on the current page. A drop on a highlighted Home cell
-moves the member there; when one member remains, it takes the folder's cell.
-Canceling or dropping without a target preserves the layout and open folder.
+only empty cells. A drop on a highlighted Home cell moves the member there;
+when one member remains, it takes the folder's cell on the source page.
+Canceling or dropping without a target restores that page and open folder.
 The unlocked menu keeps **Remove from folder** available to keyboard and
 accessibility users. Locking the layout cancels the drag and hides edits.
+
+**Drag to a neighboring Home page.** While dragging a Home shortcut or a
+shortcut out of a folder, dwell briefly at either workspace edge to reveal
+the next existing page in that direction. Mirror the physical edge mapping
+in RTL. Turn once per edge entry; moving back into the workspace rearms it.
+Reuse the existing dragged state layer for empty destination cells. Persist
+the new page and exact cell only after a valid drop; cancel or an occupied
+target restores the source page and placements. Keep regular navigation and
+the keyboard-accessible **Move to page…** menu available outside the drag.
 
 **Home shortcut actions.** In the anchored tile menu, list publisher action
 names only when Android makes enabled actions available from that app and

@@ -47,6 +47,7 @@ data class LauncherUiState(
     val pageIds: List<Long> = emptyList(),
     val activePageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     val canRemoveActivePage: Boolean = false,
+    internal val isDragPagePreview: Boolean = false,
 ) {
     val isWorkspaceEmpty: Boolean get() = workspaceCells.isEmpty()
 }
@@ -89,8 +90,9 @@ class LauncherController(
 
     private val appCatalogue = MutableStateFlow(AppCatalogue(emptyList()))
 
-    /** The selected page ID; stale IDs on startup resolve to the primary page. */
-    private val _activePageId = MutableStateFlow(workspaceRepository.savedActivePageId())
+    private data class PageSelection(val saved: Long, val dragPreview: Long? = null)
+
+    private val pageSelection = MutableStateFlow(PageSelection(workspaceRepository.savedActivePageId()))
 
     private val _messages = MutableSharedFlow<LauncherMessage>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
@@ -141,16 +143,14 @@ class LauncherController(
     }
 
     val state: StateFlow<LauncherUiState> =
-        combine(layout, _activePageId) { layout, activePageId ->
+        combine(layout, pageSelection) { layout, pages ->
             val saved = layout.saved
             val orderedIds = saved.pageIds
             // The stored ID can outlive a deleted page if the process stopped
             // between the Room write and the preference update.
-            val selection = if (activePageId in orderedIds) {
-                activePageId
-            } else {
-                orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
-            }
+            val preview = pages.dragPreview?.takeIf { it in orderedIds }
+            val selection = preview ?: pages.saved.takeIf { it in orderedIds }
+                ?: orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
             val workspace = WorkspaceResolver.workspaceLayout(
                 saved.items, layout.renderedApps, saved.folders, selection, saved.grid,
             )
@@ -166,6 +166,7 @@ class LauncherController(
                 activePageId = selection,
                 canRemoveActivePage = selection != DEFAULT_WORKSPACE_PAGE_ID &&
                     saved.items.none { it.pageId == selection } && saved.folders.none { it.pageId == selection },
+                isDragPagePreview = preview != null,
             )
         }.stateIn(scope, SharingStarted.Eagerly, LauncherUiState())
 
@@ -208,7 +209,7 @@ class LauncherController(
             pageActionMutex.withLock {
                 val pageId = workspaceRepository.createPage() ?: return@withLock
                 state.first { pageId in it.pageIds }
-                if (workspaceRepository.selectPage(pageId)) _activePageId.value = pageId
+                if (workspaceRepository.selectPage(pageId)) pageSelection.value = PageSelection(pageId)
             }
         }
     }
@@ -217,8 +218,24 @@ class LauncherController(
     fun selectWorkspacePage(pageId: Long) {
         scope.launch {
             pageActionMutex.withLock {
-                if (workspaceRepository.selectPage(pageId)) _activePageId.value = pageId
+                if (workspaceRepository.selectPage(pageId)) pageSelection.value = PageSelection(pageId)
             }
+        }
+    }
+
+    /** Drag hover changes what Home renders, not the page restored on a cold start. */
+    internal fun previewWorkspacePageForDrag(pageId: Long) {
+        pageSelection.update { it.copy(dragPreview = pageId) }
+    }
+
+    internal fun cancelWorkspacePagePreview() {
+        pageSelection.update { if (it.dragPreview == null) it else it.copy(dragPreview = null) }
+    }
+
+    /** Commit the preview's page only after the exact drop has succeeded. */
+    internal suspend fun finishWorkspacePagePreview(pageId: Long) = pageActionMutex.withLock {
+        if (pageSelection.value.dragPreview == pageId && workspaceRepository.selectPage(pageId)) {
+            pageSelection.value = PageSelection(pageId)
         }
     }
 
@@ -226,9 +243,9 @@ class LauncherController(
     fun removeEmptyWorkspacePage(pageId: Long) {
         scope.launch {
             pageActionMutex.withLock {
-                if (pageId == DEFAULT_WORKSPACE_PAGE_ID || _activePageId.value != pageId) return@withLock
+                if (pageId == DEFAULT_WORKSPACE_PAGE_ID || pageSelection.value.saved != pageId) return@withLock
                 if (workspaceRepository.removeEmptyPage(pageId)) {
-                    _activePageId.value = DEFAULT_WORKSPACE_PAGE_ID
+                    pageSelection.value = PageSelection(DEFAULT_WORKSPACE_PAGE_ID)
                 } else {
                     _messages.tryEmit(LauncherMessage.WORKSPACE_PAGE_NOT_EMPTY)
                 }
@@ -240,7 +257,7 @@ class LauncherController(
     internal fun reorderWorkspacePage(pageId: Long, destinationIndex: Int, displayedOrder: List<Long>) {
         scope.launch {
             pageActionMutex.withLock {
-                val moved = _activePageId.value == pageId &&
+                val moved = pageSelection.value.saved == pageId &&
                     workspaceRepository.reorderPage(pageId, destinationIndex, displayedOrder)
                 _messages.tryEmit(
                     if (moved) LauncherMessage.WORKSPACE_PAGE_REORDERED else LauncherMessage.WORKSPACE_PAGE_ORDER_CHANGED,
@@ -299,8 +316,22 @@ class LauncherController(
         scope.launch { workspaceRepository.sortFolderMembers(folder.id, folder.pageId, labels, locale) }
     }
 
-    internal suspend fun moveFolderMemberToCell(pinId: Long, folderId: Long, pageId: Long, cell: Int): Boolean =
-        workspaceRepository.moveFolderMemberToCell(pinId, folderId, pageId, cell)
+    internal suspend fun moveFolderMemberToCell(
+        pinId: Long,
+        folderId: Long,
+        pageId: Long,
+        cell: Int,
+        destinationPageId: Long = pageId,
+    ): Boolean = workspaceRepository.moveFolderMemberToCell(pinId, folderId, pageId, cell, destinationPageId)
+
+    internal suspend fun moveWorkspacePinToCell(
+        pinId: Long,
+        sourcePageId: Long,
+        sourceCell: Int,
+        destinationPageId: Long,
+        destinationCell: Int,
+    ): Boolean =
+        workspaceRepository.moveWorkspacePinToCell(pinId, sourcePageId, sourceCell, destinationPageId, destinationCell)
 
     /** Returns a member of [folderId] to the first free grid cell (dissolves sparse folders). */
     internal suspend fun removeFromFolder(pinId: Long, folderId: Long): FolderRemovalResult =
