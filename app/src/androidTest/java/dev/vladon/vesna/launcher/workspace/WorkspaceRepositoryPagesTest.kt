@@ -840,7 +840,7 @@ class WorkspaceRepositoryPagesTest {
             assertTrue(repository.insertWorkspaceAt(one, 0, page))
             assertTrue(repository.insertWorkspaceAt(two, 1, page))
             assertTrue(repository.createFolderFromDrop(
-                two, 0, "Tools", WorkspaceRepository.FolderDropSource.Workspace(1), page,
+                two, 0, "Tools", WorkspaceRepository.FolderDropSource.Workspace(1, page), page,
             ))
             val source = folders.getAll().single()
             val folder = Folder(source.id, source.title, source.cellIndex, page)

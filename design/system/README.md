@@ -225,9 +225,11 @@ that now occupies the cell. Hide both editing actions while locked.
 member, or a closed folder, dwell briefly at either workspace edge to reveal
 the next existing page. Mirror the edge mapping in RTL. Turn once per edge
 entry; moving into the workspace rearms it. Reuse the dragged state layer
-for empty cells. Only a valid drop saves the destination and exact cell.
-Moving a closed folder keeps its name and member order. Cancellation or an
-occupied target restores the source layout.
+for empty cells and, for a Home shortcut, for an app or folder on the
+previewed page that it can join. Only a valid drop saves the destination and
+exact cell. Moving a closed folder keeps its name and member order; an
+occupied target for a closed folder, like cancellation, restores the source
+layout.
 Keep the keyboard-accessible **Move to page…** menu available outside a drag.
 
 **Home shortcut actions.** In the anchored tile menu, list publisher action

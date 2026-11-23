@@ -1,0 +1,1 @@
+Drag a Home shortcut to the edge to preview a neighboring page, then drop it on an app to create a folder there or on a folder to add it to that folder. Canceling leaves the layout unchanged.
