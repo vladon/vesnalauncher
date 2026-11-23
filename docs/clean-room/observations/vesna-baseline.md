@@ -1169,3 +1169,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   requirement to restart. Restored both layouts and the prior
   Nova row, and removed the fixture. Evidence:
   `EVI-VESNA-003/parity51-*`; follow-up for #112.
+
+## OBS-VESNA-051 — Signed Vesna opens and pins a native Clock action
+
+- On the owned Android 15 AVD, placed an ordinary Google Clock pin
+  on each workspace. Nova 9.0.1 Prime (90100) exposed **Create new
+  timer** on long-press. Tapping the action opened Timer's keypad.
+  Dragging the action made a separate pin; after a cold Nova restart
+  that pin opened the keypad even with Clock last left on Alarm.
+- Signed Vesna v0.4.53 (58) had no timer action in the matched menu.
+  After finishing that baseline, installed signed v0.4.54 (59)
+  over v0.4.53. The release digest and signer continuity checked;
+  the tag resolves to PR #129's merge
+  `c6b34cad27ad3c41cf17d92eaa72b72d5d85ec58`. The workspace and dock
+  positions survived the update.
+- With Nova still Android Home, v0.4.54 offered **Edit name** but
+  did not list Clock's actions. Selecting Vesna as Home on this AVD
+  exposed **New timer → Open / Add to Home**. Open reached the real
+  Timer keypad. Add to Home created a separate pin; re-adding it
+  did not duplicate it. No alarm or timer was started.
+- **Cancel** discarded a draft name. **Save** renamed the pin
+  `Timer QA` in place, and it still opened the same Timer keypad
+  after a cold Vesna restart. With layout lock on, the menu retained
+  **Open**, but not **Add to Home** or **Edit name**.
+- Removed the temporary pins, restored the unlocked layout and Nova
+  as Android Home, and kept signed v0.4.54. Widgets, action
+  discovery from the drawer, and launcher-role loss after pinning
+  were not replayed. Evidence: `EVI-VESNA-003/parity52-*`;
+  independent device verification for #114.
