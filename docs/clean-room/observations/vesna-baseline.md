@@ -2202,3 +2202,33 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   the pack. Evidence: `EVI-VESNA-003/parity92-*`,
   `arcticons-15.4.7/`.
   [Issue #157](https://github.com/vladon/vesnalauncher/issues/157).
+
+## OBS-VESNA-096 — Signed last-pin page cleanup
+
+- Android 15 research AVD, `en-US`, 1080×2400 px at 420 dpi
+  and 100% text. Prepared and verified four ordered pages
+  under signed Vesna v0.4.63 (68), then upgraded in place to
+  the published signed v0.4.64 (69).
+  [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.64):
+  `a3a59464b65dc57eb2a686200caf7c7d10e97a21`; APK SHA-256
+  `4aa1732f05b0f143432477685d20664da506934ba29a2065eaf16d88865717e1`;
+  same verified v2 signer as v0.4.63.
+- Setup: original Home, Drive + Files, a manually added
+  never-populated blank page, then Camera. Removing Files
+  left page **2 of 4** and Drive in the same bounds.
+  Removing Drive immediately pruned the second page and
+  returned to **1 of 3**, with identical first-page pins
+  and dock bounds. No Undo was offered. Nova's delayed
+  cleanup and offered Undo are recorded in OBS-VESNA-091.
+- After process termination and relaunch, the manual
+  blank page was still reachable as page 2. Camera
+  retained its exact cell on page 3. Removing Camera
+  also pruned that now-empty last page immediately.
+  The never-populated page remained and could separately
+  be removed via **Remove empty page**. The test did not
+  empty the primary page.
+- Restored the original single-page layout, both docks and
+  Nova's 4×4 grid; retained the verified v0.4.64 upgrade.
+  Evidence: `EVI-VESNA-003/parity93-*first*`,
+  `parity93-63-page-*`, `parity93-64-*`, `release-0.4.64/`.
+  [Independent verification in #153](https://github.com/vladon/vesnalauncher/issues/153#issuecomment-7095711817).

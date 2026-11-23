@@ -29,7 +29,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| HOME-001 | Home screen page management (add/remove/reorder pages) | pending |
+| HOME-001 | Home screen page management (add/remove/reorder pages) | Signed Vesna v0.4.64 immediately removes a secondary page after its last regular pin is removed, preserving manually added blank pages and other pins. Nova removes the emptied page by next cold launch and offers Undo (OBS-VESNA-091/096; #153). |
 | HOME-002 | Grid sizing (rows/columns) | Matched five-item geometry: Nova 9.0.1 overflowed a shortcut and restored its original layout on re-expansion; signed Vesna v0.4.53 overflowed the folder and kept both pages without losing members (OBS-VESNA-043/045; #106). |
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | Nova and signed Vesna v0.4.61 carry both an ordinary pin and a folder member across an existing Home page, with exact-cell drop observed (OBS-VESNA-067/085; #139). |
