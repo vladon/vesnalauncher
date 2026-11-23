@@ -904,3 +904,29 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Signed Vesna v0.4.51 (56) had no dock gesture in Settings search.
   Follow-up for #115. Evidence: `EVI-VESNA-003/parity38-*` on the
   owned AVD; no physical device or other gesture route exercised.
+
+## OBS-VESNA-038 — Signed Vesna release adds opt-in Home placement
+
+- On an owned Android 15 AVD, installed the same disposable,
+  launchable APK while Vesna Home was visible and unlocked.
+  Signed Vesna v0.4.51 (56) and the default-off v0.4.52 (57)
+  both exposed it in the drawer without placing a Home shortcut.
+- In v0.4.52, Settings search `new apps` found **Add new apps to
+  Home**, off by default. With it on, a fresh install added exactly
+  one Home shortcut, which stayed in the same cell after an
+  `adb install -r` replacement and a cold launcher restart. It
+  also appeared in the drawer.
+- Fresh installs with the setting on but the workspace locked, or
+  with the Vesna process stopped, were still discoverable in the
+  drawer and did not add a Home shortcut. Reset both preferences,
+  removed the fixture, and matched the original Home layout.
+- [PR #127](https://github.com/vladon/vesnalauncher/pull/127)
+  merged at `f1f785c3478280300c91dd9a6fbeb7e3881695bd`, the
+  commit of the published v0.4.52 tag. Verified the GitHub release
+  asset digest and installed it as an update over signed v0.4.51.
+  Evidence: `EVI-VESNA-003/parity39-*`; independent verification
+  for #107.
+- Nova 9.0.1 Prime (90100) did not pin an ADB install in the
+  earlier run (OBS-VESNA-019). A positive store/installer path in
+  Nova, and full or secondary selected pages in this Vesna
+  release, were not tested here.
