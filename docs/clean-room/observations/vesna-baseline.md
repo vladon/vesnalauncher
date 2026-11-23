@@ -1574,3 +1574,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `parity65-cycle70-*`, and `parity69-cycle70-*`.
   Grid/pager launch cases and launch failure were outside
   this independent replay. [Result in #137](https://github.com/vladon/vesnalauncher/issues/137#issuecomment-7091328895).
+
+## OBS-VESNA-070 — Signed v0.4.56 auto-close in the grid and pager
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.56 (61). Each was system Home for
+  its runs. Expanded OBS-VESNA-069 to ordinary browse
+  launches in the vertical grid and the first page of
+  the horizontal drawer, with no query and IME hidden.
+- In both layouts and launchers, tapped the normal Clock
+  tile, not the dock or predictions. With auto-close off,
+  BACK from Clock returned to the drawer and the same
+  Clock tile. With it on, BACK returned directly to the
+  original Home with the drawer closed.
+- Restored Nova List, Vesna Vertical grid, both auto-close
+  switches off, the original Home role, and both layouts.
+  Evidence: `EVI-VESNA-003/parity71-*`, `parity65-cycle71-*`,
+  and `parity70-cycle71-*`. No second drawer page or failed
+  launch was exercised.
+  [Additional result in #137](https://github.com/vladon/vesnalauncher/issues/137#issuecomment-7091492246).
