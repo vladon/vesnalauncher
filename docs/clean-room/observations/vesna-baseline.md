@@ -1091,3 +1091,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   label. Restored the original binding and layouts. Evidence:
   `EVI-VESNA-003/parity47-*`; follow-up for #114. Swipe down and
   custom icon selection were not exercised.
+
+## OBS-VESNA-047 — Dock pages swipe vertically in Nova landscape
+
+- On the owned Android 15 AVD, Nova 9.0.1 Prime (90100) had five
+  pins on dock page one and one identifiable test pin on page two.
+  In portrait, horizontal swipes reached page two and returned.
+- Enabled **Allow Home screen rotation**. In both landscape
+  orientations, a downward swipe along the side dock opened page
+  two, and an upward swipe over its pin returned to page one.
+  The visible workspace icons kept their bounds throughout.
+  Horizontal strokes from the left-side dock on page two did not
+  switch the dock page.
+- Signed Vesna v0.4.53 (58) kept four pins in the bottom row in
+  landscape. Swiping left or right along that row left it and the
+  workspace unchanged. Settings search for `dock` found other
+  settings that mention the dock, but no dock paging control.
+- Restored the rotation setting, portrait orientation and both
+  layouts; removed the disposable pin and verified the second
+  Nova dock page was empty again. Evidence:
+  `EVI-VESNA-003/parity48-*`; follow-up for #115.
