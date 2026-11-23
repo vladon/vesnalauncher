@@ -25,8 +25,8 @@ class SeedPlannerTest {
     fun `workspace gets the next page worth of apps`() {
         val items = SeedPlanner.plan((0 until 30).map(::app))
         val workspace = items.filter { it.container == Container.WORKSPACE }
-        assertEquals(GridCanvas.CAPACITY, workspace.size)
-        assertEquals((0 until GridCanvas.CAPACITY).toList(), workspace.map { it.cellIndex })
+        assertEquals(GridCanvas.DEFAULT.capacity, workspace.size)
+        assertEquals((0 until GridCanvas.DEFAULT.capacity).toList(), workspace.map { it.cellIndex })
         // Workspace starts after the dock apps.
         assertEquals(GridCanvas.DOCK_CAPACITY, workspace.first().key.packageName.removePrefix("pkg").toInt())
     }
@@ -40,7 +40,7 @@ class SeedPlannerTest {
 
     @Test
     fun `dock plus one page exactly fits the grid`() {
-        val total = GridCanvas.DOCK_CAPACITY + GridCanvas.CAPACITY
+        val total = GridCanvas.DOCK_CAPACITY + GridCanvas.DEFAULT.capacity
         val items = SeedPlanner.plan((0 until total).map(::app))
         assertEquals(total, items.size)
     }

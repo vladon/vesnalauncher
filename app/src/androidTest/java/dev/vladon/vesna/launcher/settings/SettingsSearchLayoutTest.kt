@@ -1,5 +1,7 @@
 package dev.vladon.vesna.launcher.settings
 
+import android.app.UiAutomation
+import android.content.Context
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.saveable.SaveableStateRegistry
@@ -20,9 +23,13 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.workspace.GridCanvas
+import dev.vladon.vesna.launcher.workspace.GridResizeResult
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
@@ -58,6 +65,8 @@ class SettingsSearchLayoutTest {
                                 onShowAppNamesChanged = {},
                                 layoutLocked = false,
                                 onLayoutLockedChanged = {},
+                                grid = GridCanvas.DEFAULT,
+                                onApplyGridResize = { GridResizeResult.APPLIED },
                                 pinNewApps = false,
                                 onPinNewAppsChanged = {},
                                 drawerLayoutMode = DrawerLayoutMode.GRID,
@@ -210,6 +219,147 @@ class SettingsSearchLayoutTest {
         verifyRestoredScroll(SettingsPage.APPEARANCE, target = R.string.settings_theme, anchor = R.string.settings_show_app_names_detail)
     }
 
+    @Test
+    fun workspaceGridRowHidesUntilThePersistedGridLoads() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val context = instrumentation.targetContext
+        val title = context.getString(R.string.settings_workspace_grid)
+        val lock = context.getString(R.string.settings_lock_layout)
+        val grid = mutableStateOf<GridCanvas?>(null)
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            composeGridFixture(scenario, grid) { GridResizeResult.APPLIED }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            assertTrue(until { find { it.text?.toString() == lock } != null })
+            assertTrue("The row must wait for the persisted grid instead of flashing the default", until {
+                find { it.text?.toString() == title } == null
+            })
+            scenario.onActivity { grid.value = GridCanvas.DEFAULT }
+            assertTrue("The loaded grid should appear with its localized dimensions", until {
+                find { it.text?.toString() == title } != null &&
+                    find { it.text?.toString() == gridSummary(context, 4, 5) } != null
+            })
+        }
+    }
+
+    @Test
+    fun workspaceGridEditorCancelKeepsTheCurrentGridWithoutResizing() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val context = instrumentation.targetContext
+        val title = context.getString(R.string.settings_workspace_grid)
+        val hint = context.getString(R.string.settings_workspace_grid_editor_hint)
+        val apply = context.getString(R.string.settings_workspace_grid_apply)
+        val cancel = context.getString(R.string.settings_workspace_grid_cancel)
+        val summary = gridSummary(context, 4, 5)
+        val grid = mutableStateOf<GridCanvas?>(GridCanvas.DEFAULT)
+        val submissions = AtomicInteger(0)
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            composeGridFixture(scenario, grid) { submissions.incrementAndGet(); GridResizeResult.APPLIED }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun clickable(text: String) = find { it.text?.toString() == text }
+                ?.let { node -> generateSequence(node) { it.parent }.firstOrNull { it.isClickable } }
+
+            assertTrue(until { clickable(title) != null })
+            assertTrue(clickable(title)!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("Choosing the row should open the choice editor", until {
+                find { it.text?.toString() == hint } != null
+            })
+            val column = reveal(automation) { clickable("2") }
+            assertTrue("The column choices should include 2", column != null)
+            assertTrue(column!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            val discard = reveal(automation) { clickable(cancel) }
+            assertTrue("Cancel should stay reachable while scrolled", discard != null)
+            assertTrue(discard!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("Cancel should close the editor", until { clickable(apply) == null })
+            assertTrue("Cancel must not submit a resize", submissions.get() == 0)
+            assertTrue("Cancel should keep the current dimensions", until {
+                find { it.text?.toString() == summary } != null
+            })
+        }
+    }
+
+    @Test
+    fun workspaceGridEditorKeyboardApplyReportsRejectionInPlace() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val context = instrumentation.targetContext
+        val title = context.getString(R.string.settings_workspace_grid)
+        val hint = context.getString(R.string.settings_workspace_grid_editor_hint)
+        val apply = context.getString(R.string.settings_workspace_grid_apply)
+        val failure = context.getString(R.string.settings_workspace_grid_too_many_items)
+        val summary = gridSummary(context, 4, 5)
+        val grid = mutableStateOf<GridCanvas?>(GridCanvas.DEFAULT)
+        val submissions = AtomicInteger(0)
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            composeGridFixture(scenario, grid) { submissions.incrementAndGet(); GridResizeResult.TOO_MANY_ITEMS }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun clickable(text: String) = find { it.text?.toString() == text }
+                ?.let { node -> generateSequence(node) { it.parent }.firstOrNull { it.isClickable } }
+
+            assertTrue(until { clickable(title) != null })
+            assertTrue(clickable(title)!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue(until { find { it.text?.toString() == hint } != null })
+            val button = reveal(automation) { clickable(apply) }
+            assertTrue("Apply should stay reachable in a short viewport", button != null)
+            assertTrue(button!!.performAction(AccessibilityNodeInfo.ACTION_FOCUS))
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_ENTER)
+            assertTrue("Enter on the focused Apply should submit the draft", until { submissions.get() == 1 })
+            assertTrue("A rejected grid should report in place and leave the editor open", reveal(automation) {
+                find { it.text?.toString() == failure }
+            } != null)
+            assertTrue("A rejection must not change the current dimensions",
+                reveal(automation, forward = false) {
+                    find { it.text?.toString() == summary }
+                } != null)
+        }
+    }
+
+    @Test
+    fun workspaceGridApplyGuardsAgainstDuplicateSubmits() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        val context = instrumentation.targetContext
+        val title = context.getString(R.string.settings_workspace_grid)
+        val hint = context.getString(R.string.settings_workspace_grid_editor_hint)
+        val apply = context.getString(R.string.settings_workspace_grid_apply)
+        val summary = gridSummary(context, 4, 5)
+        val grid = mutableStateOf<GridCanvas?>(GridCanvas.DEFAULT)
+        val submissions = AtomicInteger(0)
+        // The fake suspends (never blocks) on the gate, so the window keeps
+        // answering accessibility queries while one resize is in flight.
+        val gate = CompletableDeferred<Unit>()
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            composeGridFixture(scenario, grid) {
+                submissions.incrementAndGet()
+                gate.await()
+                GridResizeResult.APPLIED
+            }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun clickable(text: String) = find { it.text?.toString() == text }
+                ?.let { node -> generateSequence(node) { it.parent }.firstOrNull { it.isClickable } }
+
+            assertTrue(until { clickable(title) != null })
+            assertTrue(clickable(title)!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue(until { find { it.text?.toString() == hint } != null })
+            val button = reveal(automation) { clickable(apply) }
+            assertTrue(button != null)
+            assertTrue(button!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("The resize should start exactly once", until { submissions.get() == 1 })
+            assertTrue("Apply should disable while a resize is pending", until {
+                clickable(apply)?.isEnabled == false
+            })
+            gate.complete(Unit)
+            assertTrue("A successful resize should close the editor", until { clickable(apply) == null })
+            assertTrue("A disabled Apply must not submit again", submissions.get() == 1)
+            assertTrue(until { find { it.text?.toString() == summary } != null })
+        }
+    }
+
     private fun verifyRestoredScroll(page: SettingsPage, target: Int?, anchor: Int) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.uiAutomation
@@ -240,6 +390,8 @@ class SettingsSearchLayoutTest {
                                         onShowAppNamesChanged = {},
                                         layoutLocked = false,
                                         onLayoutLockedChanged = {},
+                                        grid = GridCanvas.DEFAULT,
+                                        onApplyGridResize = { GridResizeResult.APPLIED },
                                         pinNewApps = false,
                                         onPinNewAppsChanged = {},
                                         drawerLayoutMode = DrawerLayoutMode.GRID,
@@ -307,5 +459,81 @@ class SettingsSearchLayoutTest {
             SystemClock.sleep(50)
         } while (SystemClock.uptimeMillis() < deadline)
         return false
+    }
+
+    /** Composes only the Home screen page with a caller-controlled grid and resize callback. */
+    private fun composeGridFixture(
+        scenario: ActivityScenario<SettingsActivity>,
+        grid: MutableState<GridCanvas?>,
+        resize: suspend (GridCanvas) -> GridResizeResult,
+    ) {
+        scenario.onActivity { activity ->
+            activity.setContent {
+                VesnaTheme(dark = false) {
+                    Box(Modifier.fillMaxWidth().height(480.dp)) {
+                        SettingsScreen(
+                            page = SettingsPage.HOME_SCREEN,
+                            query = "",
+                            onQueryChange = {},
+                            searchTarget = null,
+                            onNavigate = { _, _ -> },
+                            onResetInputFocus = {},
+                            versionName = "",
+                            defaultHome = DefaultHomeState.AVAILABLE,
+                            onSetDefaultHome = {},
+                            themeMode = ThemeMode.SYSTEM,
+                            onThemeSelected = {},
+                            showAppNames = true,
+                            onShowAppNamesChanged = {},
+                            layoutLocked = false,
+                            onLayoutLockedChanged = {},
+                            grid = grid.value,
+                            onApplyGridResize = resize,
+                            pinNewApps = false,
+                            onPinNewAppsChanged = {},
+                            drawerLayoutMode = DrawerLayoutMode.GRID,
+                            onDrawerLayoutModeSelected = {},
+                            drawerApps = emptyList(),
+                            hiddenDrawerApps = emptySet(),
+                            onDrawerAppHiddenChanged = { _, _ -> },
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun gridSummary(context: Context, columns: Int, rows: Int): String {
+        val resources = context.resources
+        return resources.getString(
+            R.string.settings_workspace_grid_summary_fmt,
+            resources.getQuantityString(R.plurals.workspace_grid_columns, columns, columns),
+            resources.getQuantityString(R.plurals.workspace_grid_rows, rows, rows),
+        )
+    }
+
+    /** Scrolls the page until the node appears, or gives up after several steps. */
+    private fun reveal(
+        automation: UiAutomation,
+        forward: Boolean = true,
+        find: () -> AccessibilityNodeInfo?,
+    ): AccessibilityNodeInfo? {
+        var attempts = 0
+        while (true) {
+            find()?.let { return it }
+            val scrollArea = automation.rootInActiveWindow?.findVisible { it.isScrollable } ?: return null
+            if (attempts++ >= 8) return null
+            val bounds = Rect().also(scrollArea::getBoundsInScreen)
+            val x = bounds.centerX()
+            val margin = bounds.height() / 5
+            val lower = bounds.bottom - margin
+            val upper = bounds.top + margin
+            val start = if (forward) lower else upper
+            val end = if (forward) upper else lower
+            ParcelFileDescriptor.AutoCloseInputStream(
+                automation.executeShellCommand("input swipe $x $start $x $end 300"),
+            ).use { it.readBytes() }
+            automation.waitForIdle(250, 4_000)
+        }
     }
 }

@@ -49,7 +49,7 @@ class WorkspaceResolverFolderTest {
 
     @Test
     fun `folder at invalid cell is skipped`() {
-        val folder = Folder(id = 7L, title = "Work", cellIndex = GridCanvas.CAPACITY)
+        val folder = Folder(id = 7L, title = "Work", cellIndex = GridCanvas.DEFAULT.capacity)
         val cells = WorkspaceResolver.workspaceLayout(emptyList(), emptyMap(), listOf(folder)).cells
         assertTrue(cells.isEmpty())
     }

@@ -189,7 +189,7 @@ Keep the draft, selection, and any visible validation message when Android recre
 ### Screen composition
 
 - **App names.** When Android changes the launcher's language, refresh app names on Home, in the dock, in folders, and in the drawer, including their accessible names. Keep saved placements, custom folder titles, and the active drawer query unchanged. Search evaluates the query against the updated app names.
-- **Home.** Put wallpaper behind the workspace and dock. Preserve saved cell coordinates and spans in the current 4 × 5 layout. Use the Vesna wallpaper label backing where necessary. Holding a folder and dragging it highlights only empty cells on its current page. An invalid or canceled drop retains the original cell; a stationary hold opens the folder menu. The overflow button and long-pressing empty space open the same Home options menu for Settings, wallpaper, and page actions. **Reorder this page…** lists the available positions, keeps the first page fixed, and keeps the moved page selected. The **Move to page…** menu on an app shortcut or folder lists other pages with room in display order and keeps the source page selected.
+- **Home.** Put wallpaper behind the workspace and dock. The default workspace has four columns and five rows. Preserve saved cell coordinates until the user changes the grid. Use the Vesna wallpaper label backing where necessary. Holding a folder and dragging it highlights only empty cells on its current page. An invalid or canceled drop retains the original cell; a stationary hold opens the folder menu. The overflow button and long-pressing empty space open the same Home options menu for Settings, wallpaper, and page actions. **Reorder this page…** lists the available positions, keeps the first page fixed, and keeps the moved page selected. The **Move to page…** menu on an app shortcut or folder lists other pages with room in display order and keeps the source page selected.
   When the workspace layout is locked, keep page navigation, folders, app
   launches and App info available. Hide placement and customization actions
   in Home options and shortcut menus. Cancel active drags and pending folder
@@ -272,6 +272,13 @@ Keep the draft, selection, and any visible validation message when Android recre
   and is off by default. Its supporting text explains that Vesna adds a
   shortcut only for a new install it sees while running, when the current
   page has room and the layout is unlocked.
+  The searchable **Workspace grid** row shows the current column and row
+  counts. An explicit Apply saves the size and placements together; Cancel
+  leaves them unchanged. Keep valid positions where possible and move overflow
+  to free workspace cells, adding pages as needed without exceeding the
+  workspace page limit. If all items cannot fit, keep the previous grid and
+  explain why in the editor. The dock keeps its own fixed size. Disable grid
+  resizing when the workspace is locked.
   **App drawer** offers a searchable **Drawer layout** radio group for
   Vertical grid, Vertical list, and Horizontal pages. It also offers a
   searchable **Hide apps** section. List all

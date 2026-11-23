@@ -47,7 +47,7 @@ class NewAppPlacementTest {
     fun fullSelectedPageDoesNotSpillToAnotherPageOrAlterLayout() = withLayout { db, repo, prefs ->
         val page = requireNotNull(repo.createPage())
         assertTrue(repo.selectPage(page))
-        for (cell in 0 until GridCanvas.CAPACITY) {
+        for (cell in 0 until GridCanvas.DEFAULT.capacity) {
             assertTrue(repo.insertWorkspaceAt(app("filled$cell"), cell = cell, pageId = page))
         }
         val before = db.workspaceItemDao().getAll().sortedBy { it.id }

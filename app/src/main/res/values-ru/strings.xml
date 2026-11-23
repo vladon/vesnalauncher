@@ -14,6 +14,27 @@
     <string name="settings_lock_layout_detail">Запретить изменение ярлыков, папок, панели избранного и страниц.</string>
     <string name="settings_pin_new_apps">Добавлять новые приложения на главный экран</string>
     <string name="settings_pin_new_apps_detail">Пока Vesna запущена, добавлять ярлык нового приложения, если на текущей странице есть место и расположение не заблокировано.</string>
+    <string name="settings_workspace_grid">Сетка рабочего стола</string>
+    <string name="settings_workspace_grid_detail">Столбцы и строки на страницах рабочего стола</string>
+    <string name="settings_workspace_grid_summary_fmt">%1$s × %2$s</string>
+    <string name="settings_workspace_grid_columns">Столбцы</string>
+    <string name="settings_workspace_grid_rows">Строки</string>
+    <string name="settings_workspace_grid_editor_hint">Ярлыки и папки могут переместиться на другие страницы. Избранное в доке останется на месте.</string>
+    <string name="settings_workspace_grid_apply">Применить</string>
+    <string name="settings_workspace_grid_cancel">Отмена</string>
+    <string name="settings_workspace_grid_too_many_items">В этой сетке не поместятся все элементы. Выберите больше столбцов или строк.</string>
+    <plurals name="workspace_grid_columns">
+        <item quantity="one">%1$d столбец</item>
+        <item quantity="few">%1$d столбца</item>
+        <item quantity="many">%1$d столбцов</item>
+        <item quantity="other">%1$d столбца</item>
+    </plurals>
+    <plurals name="workspace_grid_rows">
+        <item quantity="one">%1$d строка</item>
+        <item quantity="few">%1$d строки</item>
+        <item quantity="many">%1$d строк</item>
+        <item quantity="other">%1$d строки</item>
+    </plurals>
     <string name="workspace_layout_locked">Расположение заблокировано</string>
     <string name="settings_app_drawer">Список приложений</string>
     <string name="settings_app_drawer_detail">Какие приложения видны при просмотре</string>

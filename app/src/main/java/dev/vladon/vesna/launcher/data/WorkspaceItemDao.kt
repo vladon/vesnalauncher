@@ -22,6 +22,9 @@ interface WorkspaceItemDao {
     @Query("UPDATE workspace_items SET cellIndex = :cellIndex WHERE id = :id")
     suspend fun updateCellIndex(id: Long, cellIndex: Int)
 
+    @Query("UPDATE workspace_items SET cellIndex = :cell, pageId = :pageId WHERE id = :id")
+    suspend fun updateWorkspacePosition(id: Long, cell: Int, pageId: Long)
+
     /**
      * Places the entry at top level atomically: container, grid/dock cell and
      * page are written in a single statement, and folder membership is cleared

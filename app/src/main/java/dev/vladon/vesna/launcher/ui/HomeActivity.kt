@@ -53,7 +53,6 @@ import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.FolderRemovalResult
-import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
 import dev.vladon.vesna.launcher.workspace.MAX_WORKSPACE_PAGES
@@ -384,15 +383,29 @@ class HomeActivity : ComponentActivity() {
 
     private fun render(state: LauncherUiState) {
         val previous = renderedState
+        val gridChanged = state.grid != previous.grid
         if (state.activePageId != previous.activePageId) {
             workspace.cancelDrag()
             onRootDragCancelled()
             if (folderRenameHost != null) dismissFolderRename()
             folderDialog?.dismiss()
         }
+        if (gridChanged) {
+            // Resizing invalidates every coordinate a live drag aims at, and
+            // moves anything a popup or draft is anchored to.
+            workspace.cancelDrag()
+            onRootDragCancelled()
+            activePopup?.dismiss()
+            pendingPageMenu?.cancel()
+            dismissFolderRename()
+            folderDialog?.dismiss()
+        }
         renderedState = state
         workspace.reservedCellsMask = state.reservedWorkspaceCellsMask
-        if (state.workspaceCells != previous.workspaceCells) workspace.bind(state.workspaceCells)
+        // A geometry-only change rebinds the same cells so the grid still resizes.
+        if (gridChanged || state.workspaceCells != previous.workspaceCells) {
+            workspace.bind(state.grid, state.workspaceCells)
+        }
         if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
         if (state.apps != previous.apps) updateAppCatalogue(state.apps)
         emptyHint.isVisible = state.isWorkspaceEmpty

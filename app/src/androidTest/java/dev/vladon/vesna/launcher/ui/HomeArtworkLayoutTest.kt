@@ -14,6 +14,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.DockPin
 import dev.vladon.vesna.launcher.workspace.Folder
+import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -26,7 +27,7 @@ class HomeArtworkLayoutTest {
     @Test
     fun narrowWorkspaceFitsAppAndFolderArtAndRestoresFullSize() = checkLayout { context ->
         val workspace = WorkspaceView(context)
-        workspace.bind(mapOf(
+        workspace.bind(GridCanvas.DEFAULT, mapOf(
             0 to CellContent.App(app(context, 0)),
             3 to CellContent.FolderCell(Folder(1L, "Folder", cellIndex = 3), memberCount = 2),
         ))

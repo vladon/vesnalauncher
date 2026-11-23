@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.workspace.GridCanvas
 
 /** Entry point for Vesna's settings directory and named pages. */
 class SettingsActivity : ComponentActivity() {
@@ -39,6 +40,8 @@ class SettingsActivity : ComponentActivity() {
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var layoutLocked by mutableStateOf(false)
+    /** Null until the persisted grid arrives; the row must not flash the default. */
+    private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var showAppNames by mutableStateOf(true)
@@ -56,7 +59,13 @@ class SettingsActivity : ComponentActivity() {
         readPreferences()
         enableEdgeToEdge()
         val version = readVersionName()
+        val workspaceRepository = VesnaApplication.graph(this).workspaceRepository
         setContent {
+            LaunchedEffect(workspaceRepository) {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    workspaceRepository.grid.collect { grid = it }
+                }
+            }
             if (navigation.page == SettingsPage.APP_DRAWER) {
                 LaunchedEffect(Unit) {
                     repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -92,6 +101,8 @@ class SettingsActivity : ComponentActivity() {
                             workspace.layoutLocked = locked
                             layoutLocked = locked
                         },
+                        grid = grid,
+                        onApplyGridResize = { target -> workspaceRepository.resizeGrid(target) },
                         pinNewApps = pinNewApps,
                         onPinNewAppsChanged = { enabled ->
                             workspace.pinNewApps = enabled

@@ -48,6 +48,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -57,8 +60,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -77,6 +82,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
@@ -97,6 +103,9 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.search.searchKey
+import dev.vladon.vesna.launcher.workspace.GridCanvas
+import dev.vladon.vesna.launcher.workspace.GridResizeResult
+import kotlinx.coroutines.launch
 
 internal enum class DefaultHomeState { ACTIVE, AVAILABLE, UNAVAILABLE }
 
@@ -118,6 +127,8 @@ internal fun SettingsScreen(
     onShowAppNamesChanged: (Boolean) -> Unit,
     layoutLocked: Boolean,
     onLayoutLockedChanged: (Boolean) -> Unit,
+    grid: GridCanvas?,
+    onApplyGridResize: suspend (GridCanvas) -> GridResizeResult,
     pinNewApps: Boolean,
     onPinNewAppsChanged: (Boolean) -> Unit,
     drawerLayoutMode: DrawerLayoutMode,
@@ -221,6 +232,14 @@ internal fun SettingsScreen(
                                 DefaultLauncherSetup(defaultHome, onSetDefaultHome)
                             }
                             SettingsPage.HOME_SCREEN -> {
+                                if (grid != null) {
+                                    // The row waits for the persisted grid instead of
+                                    // flashing the default dimensions while loading.
+                                    SearchTarget(searchTarget == R.string.settings_workspace_grid) {
+                                        WorkspaceGridSettings(grid, layoutLocked, onApplyGridResize)
+                                    }
+                                    Spacer(Modifier.height(8.dp))
+                                }
                                 SearchTarget(searchTarget == R.string.settings_lock_layout) {
                                     SettingsSwitch(
                                         R.string.settings_lock_layout, R.string.settings_lock_layout_detail,
@@ -354,6 +373,7 @@ private fun SettingsDirectory(
                         else R.string.settings_default_launcher,
                         defaultHome.summary,
                     ),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_workspace_grid, R.string.settings_workspace_grid_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),
@@ -589,6 +609,182 @@ private fun DrawerLayoutSettings(mode: DrawerLayoutMode, onSelect: (DrawerLayout
         }
     }
 }
+
+@Composable
+private fun WorkspaceGridSettings(
+    grid: GridCanvas,
+    locked: Boolean,
+    onResize: suspend (GridCanvas) -> GridResizeResult,
+) {
+    // The draft survives recreation; navigating away keys the page content and
+    // starts a new session, matching the rest of Settings.
+    var editing by rememberSaveable { mutableStateOf(false) }
+    var draftColumns by rememberSaveable { mutableIntStateOf(grid.columns) }
+    var draftRows by rememberSaveable { mutableIntStateOf(grid.rows) }
+    var rejection by rememberSaveable { mutableIntStateOf(GRID_REJECTION_NONE) }
+    // Not saveable: a recreation cancels the in-flight submit with its scope and
+    // re-enables Apply on the restored editor instead of leaving it stuck.
+    var submitting by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    ListItem(
+        headlineContent = { Text(stringResource(R.string.settings_workspace_grid)) },
+        supportingContent = {
+            Column {
+                Text(workspaceGridSummary(grid))
+                if (locked) Text(stringResource(R.string.workspace_layout_locked))
+            }
+        },
+        trailingContent = if (locked || editing) null else {
+            { Icon(painterResource(R.drawable.ic_settings_forward), contentDescription = null) }
+        },
+        modifier = Modifier.settingsFocusRing(radius = 12.dp).then(
+            // Locked layouts disable the row; the supporting text names the reason.
+            // While the editor is open, the row stays inert so a stray tap cannot
+            // discard the draft.
+            if (locked || editing) Modifier else Modifier.clickable(role = Role.Button) {
+                draftColumns = grid.columns
+                draftRows = grid.rows
+                rejection = GRID_REJECTION_NONE
+                editing = true
+            },
+        ),
+    )
+    if (!editing) return
+
+    Spacer(Modifier.height(8.dp))
+    Column {
+        Text(
+            stringResource(R.string.settings_workspace_grid),
+            Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.settings_workspace_grid_editor_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        WorkspaceGridDimensionChoice(
+            label = stringResource(R.string.settings_workspace_grid_columns),
+            selected = draftColumns,
+            range = GridCanvas.MIN_COLUMNS..GridCanvas.MAX_COLUMNS,
+            enabled = !submitting,
+        ) {
+            draftColumns = it
+            rejection = GRID_REJECTION_NONE
+        }
+        Spacer(Modifier.height(8.dp))
+        WorkspaceGridDimensionChoice(
+            label = stringResource(R.string.settings_workspace_grid_rows),
+            selected = draftRows,
+            range = GridCanvas.MIN_ROWS..GridCanvas.MAX_ROWS,
+            enabled = !submitting,
+        ) {
+            draftRows = it
+            rejection = GRID_REJECTION_NONE
+        }
+        val notice = when {
+            locked -> stringResource(R.string.workspace_layout_locked) to true
+            rejection == GRID_REJECTION_TOO_MANY_ITEMS ->
+                stringResource(R.string.settings_workspace_grid_too_many_items) to false
+            rejection == GRID_REJECTION_LOCKED -> stringResource(R.string.workspace_layout_locked) to false
+            else -> null
+        }
+        if (notice != null) {
+            Spacer(Modifier.height(8.dp))
+            WorkspaceGridNotice(notice.first, informational = notice.second)
+        }
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = {
+                if (!submitting) {
+                    scope.launch {
+                        submitting = true
+                        val result = onResize(GridCanvas(columns = draftColumns, rows = draftRows))
+                        submitting = false
+                        when (result) {
+                            GridResizeResult.APPLIED -> {
+                                rejection = GRID_REJECTION_NONE
+                                editing = false
+                            }
+                            GridResizeResult.TOO_MANY_ITEMS -> rejection = GRID_REJECTION_TOO_MANY_ITEMS
+                            GridResizeResult.LOCKED -> rejection = GRID_REJECTION_LOCKED
+                        }
+                    }
+                }
+            },
+            enabled = !submitting && !locked,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).settingsFocusRing(),
+        ) {
+            Text(stringResource(R.string.settings_workspace_grid_apply), textAlign = TextAlign.Center)
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = {
+                editing = false
+                rejection = GRID_REJECTION_NONE
+            },
+            enabled = !submitting,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).settingsFocusRing(),
+        ) {
+            Text(stringResource(R.string.settings_workspace_grid_cancel), textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+private fun WorkspaceGridDimensionChoice(
+    label: String,
+    selected: Int,
+    range: IntRange,
+    enabled: Boolean,
+    onSelect: (Int) -> Unit,
+) {
+    Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
+    Spacer(Modifier.height(4.dp))
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        val count = range.count()
+        range.forEachIndexed { index, value ->
+            SegmentedButton(
+                selected = value == selected,
+                onClick = { onSelect(value) },
+                enabled = enabled,
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = count),
+                modifier = Modifier.settingsFocusRing(),
+            ) {
+                Text(value.toString())
+            }
+        }
+    }
+}
+
+@Composable
+private fun WorkspaceGridNotice(text: String, informational: Boolean) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
+        shape = MaterialTheme.shapes.medium,
+        color = if (informational) MaterialTheme.colorScheme.tertiaryContainer
+        else MaterialTheme.colorScheme.errorContainer,
+        contentColor = if (informational) MaterialTheme.colorScheme.onTertiaryContainer
+        else MaterialTheme.colorScheme.onErrorContainer,
+    ) {
+        Text(text, Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun workspaceGridSummary(grid: GridCanvas): String = stringResource(
+    R.string.settings_workspace_grid_summary_fmt,
+    pluralStringResource(R.plurals.workspace_grid_columns, grid.columns, grid.columns),
+    pluralStringResource(R.plurals.workspace_grid_rows, grid.rows, grid.rows),
+)
+
+private const val GRID_REJECTION_NONE = 0
+private const val GRID_REJECTION_TOO_MANY_ITEMS = 1
+private const val GRID_REJECTION_LOCKED = 2
 
 @Composable
 private fun DefaultLauncherSetup(state: DefaultHomeState, onSetDefaultHome: () -> Unit) {
