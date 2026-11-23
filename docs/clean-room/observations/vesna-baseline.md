@@ -3241,3 +3241,46 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity126-*`,
   `release-0.4.73/`.
   [Independent verification in #146](https://github.com/vladon/vesnalauncher/issues/146#issuecomment-7114696573).
+
+## OBS-VESNA-127 — Persistent search bar on Home
+
+- Android 15 research AVD, `en-US`, gesture
+  navigation, default settings. Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.73 (78) on a
+  single Home page each.
+- **Nova:** the workspace shows a persistent
+  search bar below the dock: **Nova Search** at
+  the left and the Assistant at the right. Tapping
+  it opens a full-height search overlay with a
+  search field, a predicted shortcuts row, an app
+  grid and category rows. Typing `cal` filtered
+  the apps to Calendar and offered Calendar
+  actions and integration, a calculator
+  microresult, and web suggestions with Google,
+  Play Store, Wikipedia, Google Maps and YouTube.
+  The first typed query was intercepted by the
+  system stylus-handwriting dialog; the retype
+  after tapping the field is the recorded result.
+- **Nova, settings:** Settings → Search has
+  **Desktop search bar**, **Drawer search bar**
+  and **Nova Now search bar** toggles. The Desktop
+  search bar page offers Placement (**Dock
+  (Below icons)**, the default; also None, Widget,
+  Dock (Above icons) and Persistent), Colors,
+  Transparency, Shadow, Corner radius, Logo,
+  Additional Actions, Weather and the Assistant
+  icon. Further rows cover Contact card view, API
+  integrations, Web suggestions (Google), Search
+  More providers (Google, Play Store, Wikipedia,
+  Google Maps, Spotify, YouTube), Nova AI in
+  search and folder and shortcut search. Nothing
+  was changed.
+- **Vesna:** no persistent search bar on the
+  workspace: the bottom controls are **Home
+  options**, the page controls and **Open app
+  drawer**. Search lives only inside the drawer.
+  Settings search for `bar` returned **No settings
+  found**; `search` offered only drawer rows.
+- Restored through the baseline snapshot.
+  Evidence: `EVI-VESNA-003/parity128-*`.
+  [Issue #186](https://github.com/vladon/vesnalauncher/issues/186).
