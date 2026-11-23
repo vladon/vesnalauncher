@@ -1379,3 +1379,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   original Horizontal setting. Evidence: `EVI-VESNA-003/parity61-*`.
   Optional direction parity: #133. Compact vertical overflow
   worked on this release, consistent with PRs #55 and #71.
+
+## OBS-VESNA-061 — Batch addition to an existing folder
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). Each started with Gmail and Photos in a
+  Home folder and no top-level Home pins for Contacts and Drive.
+- In Nova, long-pressed the closed folder and opened **Select
+  apps**. Staged two selections. BACK kept both original members
+  and added neither app. Repeated the selection and tapped
+  **Save**: both apps joined the folder and survived cold start.
+- Vesna's closed-folder menu and open-folder actions showed
+  rename and removal, not a batch selector. Dragging Contacts
+  from the drawer directly onto the closed folder committed it
+  immediately. Reopening the drawer and dragging Drive added
+  the second app. Both persisted after cold start.
+- Restored both layouts. Evidence: `EVI-VESNA-003/parity62-*`.
+  Batch addition and cancellation tracked in #134. This did not
+  test duplicate members, removing apps with the selector, or
+  sorting.
