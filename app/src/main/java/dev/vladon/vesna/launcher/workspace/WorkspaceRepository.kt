@@ -183,13 +183,18 @@ class WorkspaceRepository(
 
     /** Removes an empty extra page without changing any other page or placement. */
     internal suspend fun removeEmptyPage(pageId: Long): Boolean = mutationMutex.withLock {
-        if (pageId == DEFAULT_WORKSPACE_PAGE_ID || db.workspacePageDao().deleteIfEmpty(pageId) == 0) {
-            return@withLock false
-        }
+        if (!deleteEmptyExtraPage(pageId)) return@withLock false
+        clearRemovedPageSelection(pageId)
+        true
+    }
+
+    private suspend fun deleteEmptyExtraPage(pageId: Long): Boolean =
+        pageId != DEFAULT_WORKSPACE_PAGE_ID && db.workspacePageDao().deleteIfEmpty(pageId) != 0
+
+    private fun clearRemovedPageSelection(pageId: Long) {
         if (savedActivePageId() == pageId) {
             prefs.edit { remove(KEY_ACTIVE_PAGE) }
         }
-        true
     }
 
     /** Moves a page to its new display index, shifting the pages in between. */
@@ -415,11 +420,17 @@ class WorkspaceRepository(
         true
     }
 
-    suspend fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long = DEFAULT_WORKSPACE_PAGE_ID) =
+    /** Unpins the exact shortcut; returns true only if this also removed its page. */
+    internal suspend fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long = DEFAULT_WORKSPACE_PAGE_ID): Boolean =
         mutationMutex.withLock {
-            dao.deleteWorkspacePin(
-                app.key.packageName, app.key.className, app.key.userSerial, app.key.shortcutId, pageId, cell,
-            )
+            val key = app.key
+            val pageRemoved = db.withTransaction {
+                if (workspacePreferences.layoutLocked) return@withTransaction false
+                val deleted = dao.deleteWorkspacePin(key.packageName, key.className, key.userSerial, key.shortcutId, pageId, cell)
+                deleted != 0 && key.shortcutId == null && deleteEmptyExtraPage(pageId)
+            }
+            if (pageRemoved) clearRemovedPageSelection(pageId)
+            pageRemoved
         }
 
     suspend fun removeFromDock(pinId: Long) = mutationMutex.withLock { dao.deleteDockPin(pinId) }

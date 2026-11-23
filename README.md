@@ -29,6 +29,9 @@ The Android package name is `dev.vladon.vesna.launcher`.
 - **Home and dock.** Add, switch, and reorder Home pages. Move shortcuts and
   folders between pages and keep up to four favorites in the dock. Vesna saves
   your layout locally and restores it after a restart.
+  Removing the last app shortcut from a secondary page also removes that page
+  if it has no other saved content. Empty pages you add manually stay until
+  you remove them or populate and empty them this way.
 - **App shortcuts.** With Vesna set as the default Home app, hold a Home icon
   and choose an action offered by the app to open it or add it to Home.
   Use **Edit name** to rename a Home pin without changing its drawer name.

@@ -63,7 +63,7 @@ interface WorkspaceItemDao {
         shortcutId: String?,
         pageId: Long,
         cell: Int,
-    )
+    ): Int
 
     @Query("DELETE FROM workspace_items WHERE id = :id AND container = 'DOCK' AND folderId IS NULL")
     suspend fun deleteDockPin(id: Long)

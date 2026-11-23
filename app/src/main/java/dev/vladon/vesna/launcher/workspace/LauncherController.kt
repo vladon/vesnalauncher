@@ -459,7 +459,11 @@ class LauncherController(
     fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long) {
         scope.launch(Dispatchers.IO) {
             if (app.key.shortcutId == null) {
-                workspaceRepository.removeFromWorkspace(app, cell, pageId)
+                pageActionMutex.withLock {
+                    if (workspaceRepository.removeFromWorkspace(app, cell, pageId) && pageSelection.value.saved == pageId) {
+                        pageSelection.value = PageSelection(DEFAULT_WORKSPACE_PAGE_ID)
+                    }
+                }
             } else {
                 shortcutMutationMutex.withLock {
                     workspaceRepository.removeFromWorkspace(app, cell, pageId)

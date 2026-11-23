@@ -13,6 +13,7 @@ import dev.vladon.vesna.launcher.data.toDomain
 import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
+import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -232,6 +233,80 @@ class WorkspaceRepositoryPagesTest {
     }
 
     @Test
+    fun removingLastRegularPinPrunesOnlyItsPageAndClearsItsSelection() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_prune_home_after_unpin"
+        context.deleteSharedPreferences(prefsName)
+        try {
+            val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            val dao = db.workspaceItemDao()
+            val repo = WorkspaceRepository(dao, db, db.folderDao(), prefs)
+            val first = DEFAULT_WORKSPACE_PAGE_ID
+            val target = requireNotNull(repo.createPage())
+            val untouched = requireNotNull(repo.createPage())
+            val app = LauncherApp(AppKey("qa.app", "Main"), "App", null)
+            assertTrue(repo.insertWorkspaceAt(app, cell = 4, pageId = first))
+            assertTrue(repo.insertWorkspaceAt(app, cell = 4, pageId = target))
+            assertTrue(repo.insertIntoDock(app, 0))
+            assertTrue(repo.selectPage(target))
+            val originalPages = db.workspacePageDao().getAll()
+            val originalPins = dao.getAll()
+
+            WorkspacePreferences(prefs).layoutLocked = true
+            repo.removeFromWorkspace(app, cell = 4, pageId = target)
+            assertEquals(originalPins, dao.getAll())
+            assertEquals(originalPages, db.workspacePageDao().getAll())
+            assertEquals(target, repo.savedActivePageId())
+            WorkspacePreferences(prefs).layoutLocked = false
+
+            // A stale menu action on a manually created blank page is not a removal.
+            repo.removeFromWorkspace(app, cell = 4, pageId = untouched)
+            assertEquals(originalPages, db.workspacePageDao().getAll())
+
+            repo.removeFromWorkspace(app, cell = 4, pageId = target)
+            val reopened = WorkspaceRepository(dao, db, db.folderDao(), prefs)
+            assertEquals(originalPages.filterNot { it.id == target }, db.workspacePageDao().getAll())
+            assertEquals(originalPins.filterNot { it.pageId == target }, dao.getAll())
+            assertEquals(first, reopened.savedActivePageId())
+
+            // A regular pin can leave the first page empty without deleting it.
+            reopened.removeFromWorkspace(app, cell = 4, pageId = first)
+            assertEquals(listOf(first, untouched), reopened.savedLayout.first().pageIds)
+            assertEquals(originalPins.filter { it.container == Container.DOCK.name }, dao.getAll())
+        } finally {
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
+    @Test
+    fun removingAnAppActionDoesNotPruneItsPageOrResetItsSelection() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_keep_home_after_action_unpin"
+        context.deleteSharedPreferences(prefsName)
+        try {
+            val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            val dao = db.workspaceItemDao()
+            val repo = WorkspaceRepository(dao, db, db.folderDao(), prefs)
+            val page = requireNotNull(repo.createPage())
+            val action = LauncherApp(AppKey("qa.app", "Main", shortcutId = "compose"), "Compose", null)
+            assertTrue(repo.insertWorkspaceAt(action, cell = 4, pageId = page))
+            assertTrue(repo.selectPage(page))
+            repo.removeFromWorkspace(action, cell = 4, pageId = page)
+            assertEquals(emptyList<WorkspaceItem>(), repo.savedLayout.first().items)
+            assertEquals(listOf(DEFAULT_WORKSPACE_PAGE_ID, page), repo.savedLayout.first().pageIds)
+            assertEquals(page, repo.savedActivePageId())
+        } finally {
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
+    @Test
     fun selectionUsesItsOwnPreferenceKeyAndSurvivesRepositoryRecreation() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
@@ -374,23 +449,25 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(CellContent.App(apps[4]), backOnDefault.workspaceCells.getValue(0))
             assertEquals(1, discovery.calls)
 
-            // Removal is scoped to the page passed to the controller.
+            // Removal is scoped to the supplied page and does not discard a hidden pin.
+            val unavailable = LauncherApp(AppKey("qa.unavailable", "Main"), "Unavailable", null)
+            assertTrue(repository.insertWorkspaceAt(unavailable, cell = 1, pageId = secondPageId))
             controller.removeFromWorkspace(apps[5], cell = 0, pageId = secondPageId)
-            repository.savedLayout.first { saved -> saved.items.none { it.pageId == secondPageId } }
+            repository.savedLayout.first { saved ->
+                saved.items.none { it.pageId == secondPageId && it.cellIndex == 0 }
+            }
             assertEquals(CellContent.App(apps[5]), controller.state.value.workspaceCells.getValue(1))
             assertEquals(CellContent.App(apps[4]), controller.state.value.workspaceCells.getValue(0))
 
-            // A disabled or undiscovered app still has a saved pin on its page.
-            val unavailable = LauncherApp(AppKey("qa.unavailable", "Main"), "Unavailable", null)
-            assertTrue(repository.insertWorkspaceAt(unavailable, cell = 0, pageId = secondPageId))
+            // A disabled or undiscovered app still reserves its saved cell.
             controller.selectWorkspacePage(secondPageId)
             val hidden = controller.state.first {
                 it.activePageId == secondPageId && it.isWorkspaceEmpty && !it.canRemoveActivePage
             }
-            assertEquals(1, hidden.reservedWorkspaceCellsMask)
-            assertFalse(repository.insertWorkspaceAt(apps[5], cell = 0, pageId = secondPageId))
+            assertEquals(1 shl 1, hidden.reservedWorkspaceCellsMask)
+            assertFalse(repository.insertWorkspaceAt(apps[5], cell = 1, pageId = secondPageId))
 
-            repository.removeFromWorkspace(unavailable, cell = 0, pageId = secondPageId)
+            repository.removeAllForPackage(unavailable.key.packageName, unavailable.key.userSerial)
             val freed = controller.state.first { it.activePageId == secondPageId && it.canRemoveActivePage }
             assertEquals(0, freed.reservedWorkspaceCellsMask)
             controller.removeEmptyWorkspacePage(secondPageId)

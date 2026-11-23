@@ -1,0 +1,1 @@
+Removing the last app shortcut from a secondary Home page now removes that page if nothing else is saved there. The first page, dock, and manually added blank pages stay in place.
