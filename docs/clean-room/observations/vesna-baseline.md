@@ -1788,3 +1788,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored the original labels, workspace and docks in both
   launchers. This trial did not establish accent ordering or RTL.
   Evidence: `EVI-VESNA-003/parity79-*`.
+
+## OBS-VESNA-079 — Global adaptive icon shape
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.59 (64). Compared standard Home pins and the
+  unfiltered single-column app list with Calendar visible.
+- Nova **Look & feel → Icon style → Rounded square** changed
+  the actual Photos and Gmail masks on Home, Chrome in the
+  dock, and Calendar in the list. Rounded-square Home and dock
+  icons survived a launcher restart. Returning to **Round
+  (Default)** restored the previous appearance without moving
+  Home or dock items.
+- Vesna **Appearance** exposed theme and app names. Settings
+  searches for `icon`, `shape`, and `icon style` returned no
+  results. No equivalent global shape control surfaced on the
+  tested public settings paths. This is not a per-pin artwork
+  override (OBS-VESNA-049) or an icon pack comparison.
+- Restored the original Nova shape and Vesna drawer grid;
+  both layouts and docks were unchanged. Evidence:
+  `EVI-VESNA-003/parity80-*` and `parity70-cycle80-*`.
+  [Issue #144](https://github.com/vladon/vesnalauncher/issues/144).

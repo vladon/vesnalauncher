@@ -124,7 +124,7 @@ behavior, an ID is never reassigned to a different behavior.
 |---|---|---|
 | APPPEAR-001 | Themes (light/dark/system) | pending |
 | APPPEAR-002 | Icon size | pending |
-| APPPEAR-003 | Icon shape / adaptive icon handling | pending |
+| APPPEAR-003 | Icon shape / adaptive icon handling | Nova changes adaptive masks on Home, dock and the unfiltered app list. The tested Vesna v0.4.59 settings offer no equivalent selector (OBS-VESNA-079; #144). |
 | APPPEAR-004 | Icon packs | pending |
 | APPPEAR-005 | Label font size / color / shadow | pending |
 | APPPEAR-006 | Accent colors / dynamic colors | pending |
