@@ -777,6 +777,13 @@ class HomeActivity : ComponentActivity() {
         }
         val popup = VesnaPopupMenu(anchor)
         popup.add(R.string.folder_rename) { promptFolderRename(folder.id) }
+        if (renderedState.folderContents[folder.id].orEmpty().size >= 2) {
+            popup.add(R.string.folder_sort_alphabetically) {
+                if (!layoutLocked && renderedState.activePageId == folder.pageId) {
+                    controller.sortFolderMembers(folder, resources.configuration.locales[0])
+                }
+            }
+        }
         if (renderedState.pageIds.size > 1) {
             popup.add(R.string.menu_move_to_page) {
                 showMovePageMenu(anchor, folder.pageId, { controller.folderPageMoveOptions(folder) }) {

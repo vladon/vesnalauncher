@@ -15,6 +15,8 @@ import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.data.toDomain
 import dev.vladon.vesna.launcher.data.toEntity
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
+import java.text.Collator
+import java.util.Locale
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -774,20 +776,54 @@ class WorkspaceRepository(
         val from = members.indexOfFirst { it.id == pinId }
         val to = members.indexOfFirst { it.id == targetId }
         if (from < 0 || to < 0) return@withLock false
+        writeFolderRanks(members.size) { index ->
+            val previousIndex = when {
+                index == to -> from
+                from < to && index in from until to -> index + 1
+                to < from && index > to && index <= from -> index - 1
+                else -> index
+            }
+            members[previousIndex]
+        }
+        true
+    }
+
+    /** Sorts the currently visible labels; unavailable members keep their ordinal slots. */
+    internal suspend fun sortFolderMembers(
+        folderId: Long,
+        pageId: Long,
+        labels: Map<Long, String>,
+        locale: Locale,
+    ): Boolean = mutationMutex.withLock {
+        if (workspacePreferences.layoutLocked || labels.size < 2) return@withLock false
+        if (folderDao.getById(folderId)?.pageId != pageId) return@withLock false
+        val members = dao.folderMembersInOrder(folderId)
+        val visible = ArrayList<WorkspaceItemEntity>(labels.size)
+        for (member in members) if (member.id in labels) visible.add(member)
+        if (visible.size < 2) return@withLock false
+        val collation = Collator.getInstance(locale).apply { strength = Collator.SECONDARY }
+        visible.sortWith { left, right ->
+            collation.compare(labels.getValue(left.id), labels.getValue(right.id))
+        }
+        var visibleIndex = 0
+        writeFolderRanks(members.size) { index ->
+            val member = members[index]
+            if (member.id in labels) visible[visibleIndex++] else member
+        }
+        true
+    }
+
+    private suspend inline fun writeFolderRanks(
+        size: Int,
+        crossinline memberAt: (Int) -> WorkspaceItemEntity,
+    ) {
         db.withTransaction {
             // Older membership moves retained the previous cell, so ranks may be sparse or equal.
-            for (index in members.indices) {
-                val previousIndex = when {
-                    index == to -> from
-                    from < to && index in from until to -> index + 1
-                    to < from && index > to && index <= from -> index - 1
-                    else -> index
-                }
-                val member = members[previousIndex]
+            for (index in 0 until size) {
+                val member = memberAt(index)
                 if (member.cellIndex != index) dao.updateCellIndex(member.id, index)
             }
         }
-        true
     }
 
     /**

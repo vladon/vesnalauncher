@@ -184,6 +184,12 @@ Use Material component motion defaults. For the custom drawer, track the finger 
 **Folder rename.** Use the same dialog from the Home folder menu and from an open folder. Focus and select the current name in the outlined field. **Save** and the keyboard's **Done** action trim surrounding whitespace; a blank name shows an inline error and leaves the editor open. **Cancel** discards the draft. Return to the invoking surface, keeping the folder open if renaming started there.
 Keep the draft, selection, and any visible validation message when Android recreates Home during a configuration change. Clear the validation message when the name is corrected. Do not save the draft as the folder name until the user confirms it.
 
+**Sort a Home folder.** Put **Sort alphabetically** in the unlocked Home
+folder menu when the folder has at least two visible shortcuts. Sort on
+explicit selection by the displayed names in the launcher's current
+language. Keep the folder's position and its members, save the order, and
+never sort on open. Let a user change the order manually afterward.
+
 **Drag a shortcut in or out of a Home folder.** A stationary hold opens the
 member menu. Moving beyond touch slop inside the open panel highlights the
 target member with the same primary dragged state layer used on Home. On

@@ -21,6 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.Locale
 import java.util.UUID
 
 /**
@@ -416,6 +417,55 @@ class WorkspaceRepositoryFolderRemovalTest {
         assertFalse(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, first, first))
         WorkspacePreferences(prefs).layoutLocked = true
         assertFalse(repo.reorderFolderMember(folder, DEFAULT_WORKSPACE_PAGE_ID, first, second))
+
+        assertEquals(before, dao.getAll().associateBy { it.id })
+        assertEquals(originalFolders, folders.getAll())
+    }
+
+    @Test
+    fun sortingUsesTheVisibleLabelsAndKeepsUnavailableAndEqualLabelsInOrder() = runBlocking {
+        val folders = db.folderDao()
+        val folder = folders.insert(FolderEntity(title = "Sort", cellIndex = 8))
+        val other = folders.insert(FolderEntity(title = "Other", cellIndex = 9))
+        seedMember("qa.same", other, cellIndex = 3)
+        seedMember("qa.other", other, cellIndex = 4)
+        val aRing = dao.insert(WorkspaceItemEntity(
+            packageName = "qa.same", className = "Main", container = "WORKSPACE", cellIndex = 0,
+            userSerial = 7, folderId = folder, shortcutId = "open", customLabel = "Åland", shortcutLabel = "Action",
+        ))
+        val unavailable = seedMember("qa.unavailable", folder, cellIndex = 1)
+        val zulu = seedMember("qa.earlier.package", folder, cellIndex = 2)
+        val alpha = seedMember("qa.later.package", folder, cellIndex = 3)
+        val duplicate = seedMember("qa.later.package", folder, cellIndex = 4)
+        val before = dao.getAll().associateBy { it.id }
+        val originalFolders = folders.getAll()
+        val labels = mapOf(aRing to "Åland", zulu to "Zulu", alpha to "alpha", duplicate to "ALPHA")
+
+        assertTrue(repo.sortFolderMembers(folder, DEFAULT_WORKSPACE_PAGE_ID, labels, Locale.forLanguageTag("sv-SE")))
+
+        val expected = before + listOf(alpha, unavailable, duplicate, zulu, aRing)
+            .mapIndexed { rank, id -> id to before.getValue(id).copy(cellIndex = rank) }
+        assertEquals(expected, dao.getAll().associateBy { it.id })
+        assertEquals(originalFolders, folders.getAll())
+    }
+
+    @Test
+    fun staleOrLockedFolderSortDoesNotChangeMembershipOrRanks() = runBlocking {
+        val folders = db.folderDao()
+        val folder = folders.insert(FolderEntity(title = "Selected", cellIndex = 8))
+        val other = folders.insert(FolderEntity(title = "Other", cellIndex = 9))
+        val first = seedMember("qa.first", folder, cellIndex = 5)
+        val second = seedMember("qa.second", folder, cellIndex = 8)
+        val foreign = seedMember("qa.foreign", other, cellIndex = 0)
+        val page = requireNotNull(repo.createPage())
+        val before = dao.getAll().associateBy { it.id }
+        val originalFolders = folders.getAll()
+        val labels = mapOf(first to "Zulu", second to "Alpha")
+
+        assertFalse(repo.sortFolderMembers(folder, page, labels, Locale.US))
+        assertFalse(repo.sortFolderMembers(folder, DEFAULT_WORKSPACE_PAGE_ID, mapOf(first to "Zulu", foreign to "Alpha"), Locale.US))
+        WorkspacePreferences(prefs).layoutLocked = true
+        assertFalse(repo.sortFolderMembers(folder, DEFAULT_WORKSPACE_PAGE_ID, labels, Locale.US))
 
         assertEquals(before, dao.getAll().associateBy { it.id })
         assertEquals(originalFolders, folders.getAll())
