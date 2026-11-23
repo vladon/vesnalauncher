@@ -2750,3 +2750,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   [#170](https://github.com/vladon/vesnalauncher/issues/170#issuecomment-7108816589),
   [#168](https://github.com/vladon/vesnalauncher/issues/168#issuecomment-7108817240)
   and [#116](https://github.com/vladon/vesnalauncher/issues/116#issuecomment-7108817872).
+
+## OBS-VESNA-116 — Home label typography in Nova
+
+- Android 15 research AVD, `en-US`, dark wallpaper, 1080×2400
+  px at 420 dpi. Nova 9.0.1 Prime (90100) and signed Vesna
+  v0.4.69 (73). The measured label was Nova Settings; its ink
+  was 184 px wide before any change.
+- **Nova, Home screen → Label:** **Size** is a six-step slider
+  (158 px at the smallest step). **Font** offers Normal,
+  Medium, Condensed (the default) and Light; Normal measured
+  176 px at the smallest size. At the largest size with
+  Normal the label was 216 px and was cut to "Nova Setti…",
+  because **Single line** was on. **Shadow** and
+  **Single line** are separate checkboxes. Icons did not
+  change.
+- **Nova, Style → Home screen → Text:** five tone swatches, a
+  custom color option and a **Minimum contrast** slider
+  (40Δ by default). The fifth tone turned the label ink from
+  white to gray (255,255,255 → 145,145,145).
+- **Vesna:** Settings search for `font`, `shadow`, `text size`
+  and `text color` returned **No settings found**. Searching
+  for `label` or `name` finds only the show/hide switches.
+- Every Nova change was restored. The check returned to the
+  first tone, Minimum contrast stayed 40Δ, and the Home
+  screen was pixel-identical to the pre-test capture.
+  Evidence: `EVI-VESNA-003/parity117-*`.
+  [Issue #173](https://github.com/vladon/vesnalauncher/issues/173)
+  and [text tones in #155](https://github.com/vladon/vesnalauncher/issues/155#issuecomment-7109519114).
