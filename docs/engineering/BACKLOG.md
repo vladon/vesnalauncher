@@ -233,6 +233,33 @@ and an explicit approval before becoming engineering work:
 
 ---
 
+## Product decisions for open issues
+
+These are decisions on scope, not a request to start implementation. The
+approvals apply only to the named issues, not to the rest of CAND-201,
+CAND-203, or CAND-204. They do not override documented dependencies, design
+checks, or ADR gates.
+
+| Issue | Decision |
+|---|---|
+| [#112](https://github.com/vladon/vesnalauncher/issues/112) — Keyboard on drawer open and frequent apps | Split the scope. Approve a separate, off-by-default option that focuses search and opens the keyboard when the drawer opens. Do not collect launch history or build frequency suggestions as part of that work; defer them. |
+| [#146](https://github.com/vladon/vesnalauncher/issues/146) — Home and drawer icon sizes | Approve separate size controls with **Follow Home** as the drawer default. Preserve the current default appearance and remember the independent drawer size while linked. Resize artwork only; leave cells, touch targets and placements unchanged. |
+| [#116](https://github.com/vladon/vesnalauncher/issues/116) — Layout export and restore | Approve an explicit export to a user-selected file and restore from it, without launcher-managed cloud backup. This is separate from Android-managed transfer. Show what will be restored and which shortcuts are unavailable before asking for confirmation. Replace the layout atomically only after validation and explicit confirmation. Cancel, invalid input, or failure must leave the current layout unchanged. Update and review ADR-BACKUP-1 for this scope before implementation. |
+| [#144](https://github.com/vladon/vesnalauncher/issues/144) — Adaptive icon shape | Approve two choices: the current default shape and a rounded square. Apply the choice only to supported adaptive icons on Home, in the dock, and in the drawer; leave legacy artwork and profile badges unchanged. |
+| [#155](https://github.com/vladon/vesnalauncher/issues/155) — Launcher palette | Approve curated palettes, not arbitrary color input. Each palette needs contrast-checked Light and Dark variants; the existing Vesna palette remains the default, and the palette choice is independent of System, Light, or Dark mode. |
+| [#158](https://github.com/vladon/vesnalauncher/issues/158) — Drawer background color | Defer until #155 provides color and contrast rules. Keep a separate drawer setting with **Follow theme** and a small set of contrast-checked backgrounds. Do not change Home, the dock, or the global theme. |
+| [#157](https://github.com/vladon/vesnalauncher/issues/157) — Installed icon packs | Approve after #144 and #146, initially for one documented format verified with Arcticons. Use system artwork for unmatched icons or if the pack is removed, retain profile badges, and do not apply the #144 mask to pack artwork. |
+| [#115](https://github.com/vladon/vesnalauncher/issues/115) — Independent dock settings and pages | Approve in stages: visibility and icon size first, then capacity and paging. On reduction, carry overflow to subsequent pages in order; reject the change if the new total capacity cannot hold every pin. Do not move or remove Home placements. |
+| [#113](https://github.com/vladon/vesnalauncher/issues/113) — External search and suggestions | Split the scope. Approve optional, off-by-default actions that pass a query to the selected app only on an explicit tap. Do not add network suggestions during typing or change the offline local search. |
+| [#149](https://github.com/vladon/vesnalauncher/issues/149) — Searchable widget catalog | Do not ship a browse-only entry. Revisit as part of a working add-widget flow after accepting ADR-WIDGET-1 and verifying placement, cancellation, and restart recovery under ENG-102. |
+| [#133](https://github.com/vladon/vesnalauncher/issues/133) — Horizontal folder paging | Keep vertical scrolling under ENG-103. Defer horizontal paging until there is evidence that vertical navigation prevents or materially hinders access to members or folder actions. |
+
+The first suggested implementation, once work resumes, is the keyboard-only
+scope from #112. Independent icon sizes (#146) and local layout export/restore
+(#116, after its ADR review) are the next priorities.
+
+---
+
 ## ADR candidates
 
 Architecture decisions and proposals for the work above. Each linked ADR
