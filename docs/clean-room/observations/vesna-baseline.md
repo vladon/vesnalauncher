@@ -1051,3 +1051,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   #106. The eight-page cap was not replayed. Widget migration was
   not tested: the stock Nova widget drop reached Android's
   widget-data consent, which was declined.
+
+## OBS-VESNA-045 — Matched grid geometry still yields different overflow
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100, OBS-VESNA-043)
+  and signed Vesna v0.4.53 (58, PR #128). Matched the 4×4 starting
+  geometry: four ordinary shortcuts across row one, a two-app
+  folder at row four/column four, and no other workspace pages.
+  The app names and original dock contents differed.
+- On 2×2, Nova kept the folder on page one and put one ordinary
+  shortcut on page two. Vesna kept all four ordinary shortcuts
+  on page one and put the folder on page two. Vesna's five
+  top-level items and page assignments survived a cold restart;
+  the folder reopened to Files and Gmail and the dock was unchanged.
+- Returning to 4×4 restored the original five cells in Nova.
+  Vesna retained both pages, with the folder at the top left of
+  page two and both members intact. No items disappeared.
+- Restored the original layout. Vesna evidence:
+  `EVI-VESNA-003/parity46-*` and `parity45-cycle46-*`; Nova
+  reference: `parity44-*`. Follow-up for #106. This case does
+  not cover widgets or the eight-page limit.

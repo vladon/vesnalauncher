@@ -30,7 +30,7 @@ behavior, an ID is never reassigned to a different behavior.
 | ID | Feature | Discovery status |
 |---|---|---|
 | HOME-001 | Home screen page management (add/remove/reorder pages) | pending |
-| HOME-002 | Grid sizing (rows/columns) | Nova 9.0.1 restored original cells on re-expansion. Signed Vesna v0.4.53 preserves pins, folder members and dock through shrink/restart; re-expansion kept the tested overflow pages (OBS-VESNA-032/043/044; #106). |
+| HOME-002 | Grid sizing (rows/columns) | Matched five-item geometry: Nova 9.0.1 overflowed a shortcut and restored its original layout on re-expansion; signed Vesna v0.4.53 overflowed the folder and kept both pages without losing members (OBS-VESNA-043/045; #106). |
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
