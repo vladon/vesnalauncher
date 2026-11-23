@@ -2232,3 +2232,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity93-*first*`,
   `parity93-63-page-*`, `parity93-64-*`, `release-0.4.64/`.
   [Independent verification in #153](https://github.com/vladon/vesnalauncher/issues/153#issuecomment-7095711817).
+
+## OBS-VESNA-097 — Drawer-only background color
+
+- Android 15 research AVD, `en-US`, system light, Nova
+  9.0.1 Prime (90100) and signed Vesna v0.4.64 (69).
+  Both used their unfiltered vertical app list for this
+  comparison.
+- Nova Settings → **Style → App drawer → Colors → Surface**
+  allowed choosing a pale pink swatch while the global
+  **Palette** remained **System** and **Mode** remained
+  **Follow system**. Three points in the real drawer
+  changed from `#fefbff` to `#fdd7fa`; Home and dock
+  sample points and item positions were unchanged.
+- The selected swatch and drawer color survived process
+  restart. Choosing the original swatch exactly restored
+  the sampled pixels.
+- In Vesna, the App drawer settings exposed no background
+  choice and Settings search for `drawer background`
+  returned **No settings found**. Restored Vesna's original
+  vertical grid and kept both Home and dock layouts.
+- Text/accent colors, other surfaces, and opacity were
+  not tested. Evidence: `EVI-VESNA-003/parity94-*`.
+  [Issue #158](https://github.com/vladon/vesnalauncher/issues/158).
