@@ -1,0 +1,1 @@
+When both Remember position and Automatically close drawer are enabled, pressing Android Home after launching an app now preserves your place in the vertical app list.
