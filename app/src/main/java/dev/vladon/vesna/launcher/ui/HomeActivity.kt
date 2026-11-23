@@ -364,6 +364,7 @@ class HomeActivity : ComponentActivity() {
         hiddenDrawerApps = drawerPreferences.hiddenApps
         drawer.layoutMode = drawerPreferences.layoutMode
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
+        applyDockVisibility()
         applyIconScales()
 
         // Open before hierarchy restoration so Android can restore the search text and focus.
@@ -412,6 +413,7 @@ class HomeActivity : ComponentActivity() {
         drawer.layoutMode = drawerPreferences.layoutMode
         drawer.rememberPosition = drawerPreferences.rememberPosition
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
+        applyDockVisibility()
         applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {
@@ -421,6 +423,12 @@ class HomeActivity : ComponentActivity() {
         // The Home role can change while Home is on the back stack; reconcile
         // the saved action pins with what Android still reports.
         controller.recheckAppActions()
+    }
+
+    /** Shows or hides the dock strip; hidden docks keep their pins. */
+    private fun applyDockVisibility() {
+        dock.visibility = if (dockPreferences.visible) View.VISIBLE else View.GONE
+        updateWorkspaceBottom()
     }
 
     /** Artwork only: the grid, dock, labels and saved placements are not resized. */
@@ -908,8 +916,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     // The dock background extends behind navigation, but the drop area does not.
+    // A hidden dock is not a drop target.
     private fun withinDockDropBounds(x: Float, y: Float): Boolean =
-        x >= dock.left && x < dock.right && y < dock.bottom - dockBottomInset
+        dock.isVisible && x >= dock.left && x < dock.right && y < dock.bottom - dockBottomInset
 
     private fun dockDropColumn(source: DragSource, x: Float): Int? =
         renderedState.dock.dropColumn(dock.slotAtLocalX(x - dock.left), reordering = source.container == Container.DOCK)
@@ -1478,12 +1487,14 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun updateWorkspaceBottom() {
+        // A hidden dock gives its space back; its stale height must not reserve anything.
+        val dockHeight = if (dock.isVisible) dock.height else 0
         val params = homeControls.layoutParams as FrameLayout.LayoutParams
-        if (params.bottomMargin != dock.height) {
-            params.bottomMargin = dock.height
+        if (params.bottomMargin != dockHeight) {
+            params.bottomMargin = dockHeight
             homeControls.layoutParams = params
         }
-        val bottom = dock.height + params.height
+        val bottom = dockHeight + params.height
         if (workspace.paddingBottom != bottom) {
             workspace.setPadding(0, workspace.paddingTop, 0, bottom)
         }
@@ -1507,7 +1518,7 @@ class HomeActivity : ComponentActivity() {
             }
             val popup = VesnaPopupMenu(anchor)
             if (!layoutLocked) {
-                popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
+                if (dock.isVisible) popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
                 if (renderedState.pageIds.size > 1) {
                     popup.add(R.string.menu_move_to_page) {
                         showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
@@ -1586,7 +1597,7 @@ class HomeActivity : ComponentActivity() {
         val popup = VesnaPopupMenu(anchor)
         if (!layoutLocked) {
             popup.add(R.string.menu_add_to_workspace) { controller.addToWorkspace(app, pageId) }
-            popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
+            if (dock.isVisible) popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
         }
         popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
         showPopup(popup)

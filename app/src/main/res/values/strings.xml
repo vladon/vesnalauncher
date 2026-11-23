@@ -18,6 +18,8 @@
     <string name="settings_hide_home_app_names_detail">Also hides dock labels. The app drawer is unchanged.</string>
     <string name="settings_home_icon_size">Home icon size</string>
     <string name="settings_home_icon_size_detail">App and folder artwork on Home. Cells, labels and shortcuts stay where they are.</string>
+    <string name="settings_show_dock">Show dock</string>
+    <string name="settings_show_dock_detail">Favorite apps at the bottom of Home. A hidden dock keeps its pins and returns with them.</string>
     <string name="settings_dock_icon_size">Dock icon size</string>
     <string name="settings_dock_icon_size_detail">Favorite app artwork in the dock. Pins keep their order; Home cells adjust so the dock stays below them.</string>
     <string name="settings_icon_size_value">%1$d%%</string>

@@ -1,0 +1,1 @@
+Hide the dock from Home without losing its pins: a new Show dock switch in Vesna settings. Turn it back on and the dock returns with the same pins in the same order.

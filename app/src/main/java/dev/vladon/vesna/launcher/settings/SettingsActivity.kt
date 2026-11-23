@@ -46,6 +46,7 @@ class SettingsActivity : ComponentActivity() {
     private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
     private var hideHomeAppNames by mutableStateOf(false)
+    private var showDock by mutableStateOf(true)
     private var homeIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var dockIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
@@ -126,6 +127,11 @@ class SettingsActivity : ComponentActivity() {
                             workspace.hideHomeAppNames = hidden
                             hideHomeAppNames = hidden
                         },
+                        showDock = showDock,
+                        onShowDockChanged = { visible ->
+                            dockPreferences.visible = visible
+                            showDock = visible
+                        },
                         homeIconPercent = homeIconPercent,
                         onHomeIconPercentChanged = { percent ->
                             workspace.iconScalePercent = percent
@@ -203,6 +209,7 @@ class SettingsActivity : ComponentActivity() {
         layoutLocked = workspace.layoutLocked
         pinNewApps = workspace.pinNewApps
         hideHomeAppNames = workspace.hideHomeAppNames
+        showDock = dockPreferences.visible
         drawerLayoutMode = drawerPreferences.layoutMode
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         rememberDrawerPosition = drawerPreferences.rememberPosition
