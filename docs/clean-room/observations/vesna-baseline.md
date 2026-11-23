@@ -2315,3 +2315,28 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Nova's 4×4 grid; kept the signed v0.4.65 update.
   Evidence: `EVI-VESNA-003/parity96-*`, `release-0.4.65/`.
   [Independent verification in #151](https://github.com/vladon/vesnalauncher/issues/151#issuecomment-7096324896).
+
+## OBS-VESNA-100 — Folder member at the last workspace edge
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.65 (70). Each had one
+  4×5 Home page, a top-right folder ordered Gmail → Photos,
+  and a free bottom-right cell.
+- Held Gmail, moved out of the folder and dwelt at the
+  physical right edge. Cancel preserved the exact source
+  folder cell and member order, sole page, and dock in
+  both launchers.
+- Nova showed its add-page preview while Gmail was held.
+  Releasing in the bottom-right cell put Gmail on a new
+  page two. Photos became a regular pin in the original
+  folder cell on page one. Both placements survived a
+  process restart.
+- Vesna stayed on the source page while held, then
+  extracted Gmail into the same bottom-right cell on
+  **page one**. Photos occupied the original folder cell.
+  There was still only one page after process restart;
+  the dock and other pins were unchanged. This is distinct
+  from a regular pin (#151) or an existing neighbor (#139).
+- Restored both original layouts and Nova's 4×4 grid.
+  Evidence: `EVI-VESNA-003/parity97-*`.
+  [Issue #160](https://github.com/vladon/vesnalauncher/issues/160).
