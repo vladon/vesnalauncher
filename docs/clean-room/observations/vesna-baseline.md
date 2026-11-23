@@ -1884,3 +1884,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Vesna v0.4.60 remained installed.
 - Evidence: `EVI-VESNA-003/parity82-combo-*` and
   `parity78-combo-*`. [Issue #147](https://github.com/vladon/vesnalauncher/issues/147).
+
+## OBS-VESNA-083 — Accent ordering in an English Home folder
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.60 (65; APK identity in OBS-VESNA-081).
+  Used three labels: Gmail → `eclair`, Photos → `éclair`
+  (precomposed U+00E9), and unchanged `Files`.
+- Tested two matching inputs in each launcher: `Files`,
+  `éclair`, `eclair`; then `Files`, `eclair`, `éclair`.
+  Nova **Sort** and Vesna **Sort alphabetically** returned
+  `eclair`, `éclair`, `Files` from both inputs. In this case
+  the accent pair did not behave as an exact tie. The folder
+  cell and unrelated Home pins were unchanged.
+- Restored both workspaces, docks and original labels. Other
+  locales, combining-mark normalization and RTL were not
+  covered by this trial. Evidence: `EVI-VESNA-003/parity83-*`.
+  [Follow-up in #135](https://github.com/vladon/vesnalauncher/issues/135#issuecomment-7093413844).

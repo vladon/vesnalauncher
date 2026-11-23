@@ -88,7 +88,7 @@ behavior, an ID is never reassigned to a different behavior.
 | FOLDER-003 | Folder open/close behavior | observed (window mode; BACK closes) |
 | FOLDER-004 | Folder icon appearance (preview grid) | observed (mini previews) |
 | FOLDER-005 | Add/remove apps inside folder | Signed Vesna v0.4.60 supports a single batch add and discards Cancel/Back drafts, alongside ordinary drag and layout lock (OBS-VESNA-061/081; #134). Signed v0.4.55 supports exact-cell drag-out and dissolution (OBS-VESNA-057/065; #130). |
-| FOLDER-006 | Reorder and sort inside folder | Both insert at the chosen rank, including an offscreen compact target, and retain order after restart (signed Vesna v0.4.57, OBS-VESNA-072/073; #131). Signed v0.4.58 matches Nova's explicit sort by custom labels with stable exact ties; signed v0.4.59 also matches for mixed-case English labels (074/075/078; #135). |
+| FOLDER-006 | Reorder and sort inside folder | Both insert at the chosen rank, including an offscreen compact target, and retain order after restart (signed Vesna v0.4.57, OBS-VESNA-072/073; #131). Signed Vesna matches Nova on custom labels, stable exact ties, English mixed-case ordering and the `eclair`/`éclair` pair (074/075/078/083; #135). |
 | FOLDER-007 | Folder deletion and last-item behavior | Both dissolve to the last member. On a full 2×2 page Nova unpins the entire folder with Undo; signed Vesna v0.4.58 preserves it and warns until there are enough cells to ungroup (OBS-VESNA-057/059/076; #132). |
 | FOLDER-008 | Folder layout (grid size inside folder) | Nova overflow pages along the selected axis; Vesna v0.4.54 scrolls its member grid vertically with stationary actions. All 12 members reachable in both at about 198×339 dp and 200% text (OBS-VESNA-060; #133). |
 
