@@ -260,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| Remember the vertical drawer list after Android Home ([#141](https://github.com/vladon/vesnalauncher/issues/141)) | 0.4.59 — [Android 15 QA](verification/VESNA-QA-DRAWER-REMEMBER-POSITION.md) verified both switch states, exact row bounds, navigation modes and preference persistence. |
 | One-action alphabetical Home folder sorting ([#135](https://github.com/vladon/vesnalauncher/issues/135)) | 0.4.58 — [Android 15 QA](verification/VESNA-QA-FOLDER-SORT.md) verified the explicit command, localized and custom labels, unchanged membership and cell, lock, and restart. |
 | Reorder shortcuts inside an open Home folder ([#131](https://github.com/vladon/vesnalauncher/issues/131)) | 0.4.57 — [Android 15 QA](verification/VESNA-QA-FOLDER-REORDER.md) verified insertion, edge scroll, cancellation, lock and restart without regressing drag-out. |
 | Optional app drawer auto-close ([#137](https://github.com/vladon/vesnalauncher/issues/137)) | 0.4.56 — [Android 15 QA](verification/VESNA-QA-DRAWER-AUTO-CLOSE.md) verified Back to the same Home page when on and the unchanged scrolled list when off. |

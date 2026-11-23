@@ -36,6 +36,8 @@ The Android package name is `dev.vladon.vesna.launcher`.
   with or without accents, and press Enter to open a single result.
   Enable **Automatically close drawer** in App drawer settings if you want
   Back to return to Home after launching an app.
+  Enable **Remember position** to reopen the vertical list at the same place
+  after pressing Android Home instead of going back to the drawer.
 - **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
   pins between the workspace and dock. Drop an app on another in the workspace
   to create a folder. In the open folder, hold and drag a shortcut onto another
