@@ -2967,3 +2967,149 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity122-*`,
   `release-0.4.71/`.
   [Independent verification in #112](https://github.com/vladon/vesnalauncher/issues/112#issuecomment-7111954487).
+
+## OBS-VESNA-122 — Transition effect, wallpaper scrolling and a v0.4.71 regression check
+
+- Android 15 research AVD, `en-US`, signed Vesna
+  v0.4.71 (76) and Nova 9.0.1 Prime (90100)
+  on its default 4×4 grid. Two Home pages in
+  each launcher; the second one was blank in
+  Vesna, which shows **Open Home options to
+  customize this page** on it. Screen recordings
+  were taken with `screenrecord` during the
+  swipe.
+- **Regression of #170 on v0.4.71,** whose only
+  change touched the code that opens the drawer:
+  1100 px swipes in 925 ms and in 665 ms, from
+  both empty bottom-row cells, opened the drawer
+  in 4 of 4 trials. 400 px in 800 ms opened
+  neither surface, and a stationary hold opened
+  the workspace menu.
+- **Nova, page turn:** with the default effect
+  the pages slide for about half a second. In a
+  held 700 px drag the neighbouring page had
+  already slid in by about 610 px. Settings →
+  Home screen → **Transition effect** offers
+  None, Simple (the default), Cube, Card stack,
+  Tablet, Revolving door, Flip, Flip vertical and
+  In and out. In recordings Cube turned the
+  pages in perspective, and None gave a short
+  slide with a still wallpaper. Returned to
+  Simple and checked the radio button.
+- **Vesna, page turn:** the page content does
+  not follow the finger. After the same 700 px
+  drag, still held, the page was unshifted and
+  only the page indicator had moved. On release
+  the next page appeared in a single frame; two
+  recordings show no frame in between. Settings
+  search for `transition`, `animation` and
+  `effect` returned **No settings found**.
+- **Nova, wallpaper:** with **Wallpaper
+  scrolling** on, the default, the wallpaper on
+  page 2 is shifted by **593 px** against page 1;
+  two bands without icons match exactly at that
+  shift. The options are On, Off and Reverse;
+  with Off both pages show it at the same
+  position. Returned to On; the row is
+  pixel-identical to its pre-test frame.
+- **Vesna, wallpaper:** the same position on
+  both pages. The side margins, the band above
+  the page controls and the dock area are
+  pixel-identical. Settings search for
+  `wallpaper` and `scroll` returned **No settings
+  found**.
+- Evidence: `EVI-VESNA-003/parity123-*`.
+  [Transition effect #180](https://github.com/vladon/vesnalauncher/issues/180),
+  [wallpaper scrolling #181](https://github.com/vladon/vesnalauncher/issues/181),
+  [regression note in #170](https://github.com/vladon/vesnalauncher/issues/170#issuecomment-7112897485).
+
+## OBS-VESNA-123 — Outward swipe on the first page opens Nova's drawer
+
+- Same AVD, versions and settings as 122.
+  Swipes started on empty cells or on a
+  shortcut and ran for 600 to 700 px in 460 ms
+  or 150 ms.
+- **Nova:** on the first page a rightward swipe
+  opens the app drawer, which slides in from the
+  left while the page stays in place: 5 of 5
+  trials with two pages and 2 of 2 with one
+  page, including the trajectory used in 119. On
+  the last page a leftward swipe did nothing, in
+  2 of 2 trials. A leftward swipe inside the open
+  drawer closed it.
+- **Vesna:** on the first page a rightward swipe
+  did nothing in 5 of 5 trials, with two pages
+  and with one page, from empty cells and from
+  the Settings shortcut. On the last page a
+  leftward swipe did nothing, in 2 of 2 trials.
+- **Errata for 119:** that pass read only the
+  workspace nodes, which the dump also lists
+  behind an open drawer. Its first-page result
+  for Nova is therefore incomplete: the page did
+  not wrap, but the drawer had opened. The
+  looping and indicator results stand, and the
+  fact was added to #174.
+- Nova's gesture bindings on this AVD, read in
+  Settings → Gestures & inputs: Home button →
+  Nova Search, Swipe up → App drawer, Swipe down
+  → Expand notifications, Two finger swipe up →
+  Nova Settings, Two finger swipe down → Nova
+  Search, Pinch in → Desktop previews, Pinch out
+  → Recent apps; the rest is None, including
+  Swipe left and Swipe right.
+- The HOME intent returns Nova to its first
+  page, so a helper that expects to stay on
+  another page has to move there again.
+- Restored both layouts through the baseline
+  snapshot. Evidence: `EVI-VESNA-003/parity123-*`.
+  [Issue #179](https://github.com/vladon/vesnalauncher/issues/179),
+  [comment in #174](https://github.com/vladon/vesnalauncher/issues/174#issuecomment-7112896874).
+
+## OBS-VESNA-124 — Signed v0.4.72 cross-page folder drops
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.72 (77), tag at PR #178
+  merge `23caa4ee9d351730b718b203434ecae3675edcd3`,
+  APK SHA-256
+  `d872d81164f5a7792b3f9416721fa97c65f0d6c4547d07019364072ba28a3866`,
+  with the same verified v2 signer as v0.4.71.
+  Installed in place over the restored original
+  state; both original layouts survived the
+  upgrade. Nova 9.0.1 Prime (90100) was not
+  re-run: its results are in 110/111 and the
+  version is unchanged.
+- **Empty-cell control:** Files dragged from
+  page 1 through the right edge landed in the
+  chosen top-left cell of page 2.
+- **App onto an app:** Drive from page 1 was
+  held at the right edge until **Home page 2 of
+  2** appeared, then released on **Files**. A
+  folder was created in the Files cell with
+  Files, Drive in that order, and page 1 lost
+  Drive.
+- **App onto a folder:** Photos from page 1 was
+  released on that closed folder and became the
+  third member after Files and Drive.
+- **Cancel and invalid release:** Android
+  CANCEL and a release over the dock on the
+  previewed page each returned to page 1 with
+  Contacts in its cell and both pages unchanged.
+- **Restart:** after a force-stop and relaunch
+  the folder still held Files, Drive, Photos.
+  The other pins and the dock were unchanged.
+- **Regressions on the same build:** a closed
+  folder dragged from page 2 onto an occupied
+  cell of page 1 is still refused, and the
+  folder stays on page 2 (#169 path). A closed
+  folder dragged past the outer edge of the
+  last page still created page 3 with the folder
+  in the same cell (#167).
+- **Remaining difference:** after the cross-page
+  drop onto a folder Nova opens the folder;
+  Vesna leaves it closed.
+- Restored and installed again on the original
+  state. Saved `baseline_research_0.4.72`,
+  proved that it loads, and deleted the 0.4.71
+  baseline. Evidence: `EVI-VESNA-003/parity124-*`,
+  `release-0.4.72/`.
+  [Independent verification in #168](https://github.com/vladon/vesnalauncher/issues/168#issuecomment-7113172553).
