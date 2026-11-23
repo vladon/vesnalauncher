@@ -3367,3 +3367,47 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   recorded in 113.
 - Restored through the baseline snapshot.
   Evidence: `EVI-VESNA-003/parity129-*`.
+
+## OBS-VESNA-130 — Dock icon size on v0.4.75
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.75 (80), tag at PR #187
+  merge `cdfefd3f3e5d4717cbf7b3565870a8514aad0027`,
+  APK SHA-256
+  `4bee6637332506276a01cc99571d244687bcb7ec1a5cb6b6130b595a7522df97`,
+  with the same verified v2 signer as v0.4.74.
+  Installed in place over the restored original
+  state; both original layouts survived the
+  upgrade. Nova 9.0.1 Prime (90100) was not
+  re-run: its dock icon size control is
+  inventoried below and the version is unchanged.
+- **Settings:** Home screen → **Dock icon size**
+  ("Favorite app artwork in the dock. Pins keep
+  their order; Home cells adjust so the dock
+  stays below them."), a six-step slider from
+  80% to 130% with 100% the default. Settings
+  search for `icon` offered it together with the
+  three icon-size settings of 126-era #146.
+- **Default:** dock artwork 126 px in 265 × 214 px
+  tiles.
+- **130%:** dock artwork 164 px, the dock band
+  grew and the workspace cells adjusted (a Home
+  cell 332 px tall vs 339 px) so the dock stays
+  below them. The Home artwork stayed 126 px and
+  the pins kept their order.
+- **80%:** dock artwork 101 px.
+- **Restart:** after a force-stop and relaunch
+  the 80% size was still applied; restoring 100%
+  returned the 126 px artwork and the original
+  339 px cell height.
+- **Nova:** Settings → Home screen → Dock has a
+  dock **Icon size** (125%) with **Match desktop
+  size**, the same concept as Vesna's separate
+  dock slider.
+- Not exercised: the other slider steps, Dark and
+  compact RTL.
+- Restored 100%. Saved `baseline_research_0.4.75`,
+  proved that it loads, and deleted the 0.4.74
+  baseline. Evidence: `EVI-VESNA-003/parity129-*`,
+  `release-0.4.75/`.
+  [Stage 1 verification in #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7116536290).
