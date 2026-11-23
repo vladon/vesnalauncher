@@ -921,6 +921,73 @@ class WorkspaceRepositoryPagesTest {
         }
     }
 
+    @Test
+    fun edgeAppendMovesTheExactClosedFolderAndNeverLeavesAnEmptyPageOnRefusal() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_folder_edge_append"
+        context.deleteSharedPreferences(prefsName)
+        try {
+            val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            val items = db.workspaceItemDao()
+            val folders = db.folderDao()
+            val pages = db.workspacePageDao()
+            val repository = WorkspaceRepository(items, db, folders, prefs)
+            val source = DEFAULT_WORKSPACE_PAGE_ID
+            val grid = GridCanvas.DEFAULT
+            val first = LauncherApp(AppKey("qa.folder.first", "Main"), "First")
+            val second = LauncherApp(AppKey("qa.folder.second", "Main"), "Second")
+            assertTrue(repository.insertWorkspaceAt(first, 0, source))
+            assertTrue(repository.insertWorkspaceAt(second, 1, source))
+            assertTrue(repository.createFolderFromDrop(
+                second, 0, "Pinned tools", WorkspaceRepository.FolderDropSource.Workspace(1), source,
+            ))
+            val row = folders.getAll().single()
+            assertTrue(repository.insertWorkspaceAt(second, 5, source))
+            assertTrue(repository.insertIntoDock(first, 0))
+            val originalItems = items.getAll().sortedBy { it.id }
+            val originalFolders = folders.getAll().sortedBy { it.id }
+            val originalPages = pages.getAll()
+            val settings = WorkspacePreferences(prefs)
+
+            assertNull(repository.appendPageWithFolder(row.id, source, 1, source, 7, grid))
+            assertNull(repository.appendPageWithFolder(row.id + 500, source, 0, source, 7, grid))
+            assertNull(repository.appendPageWithFolder(row.id, source, 0, source, grid.capacity, grid))
+            assertNull(repository.appendPageWithFolder(row.id, source, 0, source, 7, grid.copy(columns = 3)))
+            settings.layoutLocked = true
+            assertNull(repository.appendPageWithFolder(row.id, source, 0, source, 7, grid))
+            settings.layoutLocked = false
+            // Only the trailing page can be extended.
+            val later = requireNotNull(repository.createPage())
+            assertNull(repository.appendPageWithFolder(row.id, source, 0, source, 7, grid))
+            assertNull(repository.appendPageWithFolder(row.id, later, 0, later, 7, grid))
+            assertTrue(repository.removeEmptyPage(later))
+            assertEquals(originalPages, pages.getAll())
+            assertEquals(originalFolders, folders.getAll().sortedBy { it.id })
+            assertEquals(originalItems, items.getAll().sortedBy { it.id })
+
+            val target = requireNotNull(repository.appendPageWithFolder(row.id, source, 0, source, 7, grid))
+            assertEquals(
+                originalPages + WorkspacePageEntity(id = target, rank = originalPages.last().rank + 1),
+                pages.getAll(),
+            )
+            assertEquals(
+                originalFolders.map { if (it.id == row.id) it.copy(pageId = target, cellIndex = 7) else it },
+                folders.getAll().sortedBy { it.id },
+            )
+            assertEquals(originalItems, items.getAll().sortedBy { it.id })
+
+            repeat(MAX_WORKSPACE_PAGES - 2) { requireNotNull(repository.createPage()) }
+            val capped = pages.getAll()
+            assertNull(repository.appendPageWithFolder(row.id, target, 7, capped.last().id, 8, grid))
+            assertEquals(capped, pages.getAll())
+        } finally {
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
     private class CountingDiscovery(@Volatile var apps: List<LauncherApp>) : AppDiscovery {
         var calls = 0
             private set

@@ -1,0 +1,1 @@
+Hold a closed Home folder at the outer edge of the last page to preview a new page, then drop it in an empty cell. The folder keeps its name and shortcuts; canceling leaves your layout unchanged.
