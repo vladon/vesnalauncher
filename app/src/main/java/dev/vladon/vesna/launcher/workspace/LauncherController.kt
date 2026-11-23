@@ -273,6 +273,9 @@ class LauncherController(
         scope.launch { workspaceRepository.addToFolder(app, folderId, source) }
     }
 
+    internal suspend fun reorderFolderMember(folderId: Long, pageId: Long, pinId: Long, targetId: Long): Boolean =
+        workspaceRepository.reorderFolderMember(folderId, pageId, pinId, targetId)
+
     internal suspend fun moveFolderMemberToCell(pinId: Long, folderId: Long, pageId: Long, cell: Int): Boolean =
         workspaceRepository.moveFolderMemberToCell(pinId, folderId, pageId, cell)
 

@@ -79,6 +79,8 @@ internal object WorkspaceResolver {
         return WorkspaceLayout(cells, reservedCellsMask)
     }
 
+    private val folderMemberOrder = compareBy<WorkspaceItem> { it.cellIndex }.thenBy { it.id }
+
     /** Visible pins inside each folder, ordered by their saved positions. */
     fun folderContents(
         items: List<WorkspaceItem>,
@@ -88,7 +90,7 @@ internal object WorkspaceResolver {
             .filter { it.folderId != null }
             .groupBy { it.folderId!! }
             .mapValues { (_, members) ->
-                members.sortedBy { it.cellIndex }.mapNotNull { item ->
+                members.sortedWith(folderMemberOrder).mapNotNull { item ->
                     appsByKey[item.key]?.let { FolderPin(item.id, it.withVisibleLabel(item.customLabel)) }
                 }
             }

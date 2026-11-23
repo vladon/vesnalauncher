@@ -62,12 +62,8 @@ import dev.vladon.vesna.launcher.workspace.LauncherUiState
  * long-press offers removal back to the workspace. The folder can be renamed or
  * removed entirely. [update] is called by the owner whenever launcher state emits.
  *
- * A member hold that leaves the touch slop starts a member drag: [onMemberDragStarted]
- * arms the session with the owner, [onMemberDragMoved] reports the pointer in raw
- * screen coordinates, and [onMemberDragFinished] reports the release. While the
- * pointer really moves, the dialog surface hides itself (transparent decor, no
- * dim) so the owner can show its own drop target underneath; [finishMemberDrop]
- * resolves a queued drop and [cancelMemberDrag] cancels an active drag.
+ * A drag stays in the folder while pointing at the panel. Leaving the panel
+ * reveals Home for the rest of that gesture, using the same attached window.
  */
 internal class FolderDialog(
     context: Context,
@@ -83,6 +79,7 @@ internal class FolderDialog(
     private val onMemberDragStarted: (FolderPin) -> Boolean,
     private val onMemberDragMoved: (Float, Float) -> Unit,
     private val onMemberDragFinished: (Float, Float, Boolean) -> Boolean,
+    private val onMemberReordered: (Long) -> Boolean,
 ) {
 
     private val host = ComposeView(context)
@@ -99,6 +96,7 @@ internal class FolderDialog(
 
     /** The Compose dialog's own window, found lazily from the grid's parents. */
     private var memberWindow: Window? = null
+    private val panelLocation = IntArray(2)
     private var memberSurfaceDim = 0f
     private var memberSurfaceHidden = false
     private var awaitingMemberDrop = false
@@ -122,15 +120,28 @@ internal class FolderDialog(
         list.onMemberHoldOptions = ::showItemMenu
         list.onMemberDragStarted = onMemberDragStarted
         list.onMemberDragMoved = { x, y ->
-            hideMemberSurface()
-            onMemberDragMoved(x, y)
+            if (!memberSurfaceHidden && isOverFolder(x, y)) {
+                list.previewReorder(x, y)
+            } else {
+                list.clearReorderPreview()
+                hideMemberSurface()
+                onMemberDragMoved(x, y)
+            }
         }
         list.onMemberDragFinished = { x, y, cancelled ->
-            awaitingMemberDrop = onMemberDragFinished(x, y, cancelled)
-            if (awaitingMemberDrop) {
-                memberWindow?.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            list.clearReorderPreview()
+            if (!cancelled && !memberSurfaceHidden && isOverFolder(x, y)) {
+                val targetId = list.reorderTargetAt(x, y)
+                awaitingMemberDrop = if (targetId != null) onMemberReordered(targetId)
+                    else onMemberDragFinished(x, y, true)
             } else {
-                restoreMemberSurface()
+                awaitingMemberDrop = onMemberDragFinished(x, y, cancelled)
+                if (awaitingMemberDrop) {
+                    hideMemberSurface()
+                    memberWindow?.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                } else {
+                    restoreMemberSurface()
+                }
             }
         }
     }
@@ -188,6 +199,10 @@ internal class FolderDialog(
         restoreMemberSurface()
     }
 
+    fun finishMemberReorder() {
+        awaitingMemberDrop = false
+    }
+
     /** Cancels an armed or active member drag (for example the owner's onStop). */
     fun cancelMemberDrag() {
         list.cancelMemberDrag()
@@ -238,6 +253,15 @@ internal class FolderDialog(
         if (!layoutLocked) popup.add(R.string.folder_remove_from_folder) { onRemoveFromFolder(pin.id) }
         popup.add(R.string.menu_app_info) { onAppInfo(pin.app) }
         onShowPopup(popup)
+    }
+
+    private fun isOverFolder(rawX: Float, rawY: Float): Boolean {
+        val window = memberWindow ?: findMemberWindow(list)?.also { memberWindow = it } ?: return false
+        val decor = window.decorView
+        decor.getLocationOnScreen(panelLocation)
+        val x = rawX - panelLocation[0]
+        val y = rawY - panelLocation[1]
+        return x >= 0 && x < decor.width && y >= 0 && y < decor.height
     }
 
     /**

@@ -13,6 +13,9 @@ interface WorkspaceItemDao {
     @Query("SELECT * FROM workspace_items WHERE folderId = :folderId LIMIT 2")
     suspend fun firstTwoFolderMembers(folderId: Long): List<WorkspaceItemEntity>
 
+    @Query("SELECT * FROM workspace_items WHERE folderId = :folderId ORDER BY cellIndex, id")
+    suspend fun folderMembersInOrder(folderId: Long): List<WorkspaceItemEntity>
+
     @Insert
     suspend fun insert(item: WorkspaceItemEntity): Long
 
