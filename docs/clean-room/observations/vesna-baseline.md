@@ -1901,3 +1901,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   locales, combining-mark normalization and RTL were not
   covered by this trial. Evidence: `EVI-VESNA-003/parity83-*`.
   [Follow-up in #135](https://github.com/vladon/vesnalauncher/issues/135#issuecomment-7093413844).
+
+## OBS-VESNA-084 — Folder rank and sort under RTL
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.60 (65). In `en-US`, both had a
+  two-member Home folder with custom labels `Zulu` on
+  the left and `Alpha` on the right. Switched Android
+  to Arabic (Egypt), verified `ar-EG` and RTL, and
+  reopened the same folders.
+- Both now showed `Zulu` to the right of `Alpha`, retaining
+  the original rank in RTL reading order. Dragging `Alpha`
+  onto `Zulu` put `Alpha` first (right); the opposing drag
+  restored the original rank.
+- From that unsorted order, Nova's localized sort and
+  Vesna **Sort alphabetically** put `Alpha` first (right)
+  without moving the folder cell. Both retained the sorted
+  order after a cold launcher restart in `ar-EG`.
+- Restored Android to `en-US` with no Arabic entry, and
+  both original workspaces and docks. RTL overflow,
+  cross-page dragging and TalkBack were not covered.
+  Evidence: `EVI-VESNA-003/parity84-*`.
+  [Follow-up in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7093561635).
