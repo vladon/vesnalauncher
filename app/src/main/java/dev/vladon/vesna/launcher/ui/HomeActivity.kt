@@ -27,6 +27,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -100,10 +101,19 @@ class HomeActivity : ComponentActivity() {
     private var activePopup: VesnaPopupMenu? = null
     private var pendingPageMenu: Job? = null
     private var folderDialog: FolderDialog? = null
-    private data class FolderRename(
-        val folderId: Long,
-        val editor: FolderRenameEditorState,
-    )
+    /** The open rename editor: a folder title, or a per-pin label override on Home. */
+    private sealed interface HomeRename {
+        data class Folder(val folderId: Long, val editor: RenameEditorState) : HomeRename
+
+        data class Pin(
+            val pinId: Long,
+            val cell: Int,
+            val pageId: Long,
+            val key: AppKey,
+            val savedLabel: String,
+            val editor: RenameEditorState,
+        ) : HomeRename
+    }
 
     private sealed interface ShortcutFocus {
         data class WorkspaceApp(val pageId: Long, val cell: Int, val key: AppKey) : ShortcutFocus
@@ -116,14 +126,14 @@ class HomeActivity : ComponentActivity() {
         var drawerAppFocus: AppKey? = null
         var openFolderId: Long? = null
         var focusedMemberId: Long? = null
-        var rename: FolderRename? = null
+        var rename: HomeRename? = null
     }
 
     private val homeUiState: HomeUiState by viewModels {
         viewModelFactory { initializer { HomeUiState() } }
     }
     private var pendingShortcutFocus: ShortcutFocus? = null
-    private var folderRenameHost: ComposeView? = null
+    private var renameHost: ComposeView? = null
     private var snackbarJob: Job? = null
     private val homeSnackbar by lazy { createHomeSnackbar() }
     private var renderedState = LauncherUiState()
@@ -318,6 +328,9 @@ class HomeActivity : ComponentActivity() {
             hiddenDrawerApps = hiddenApps
             drawer.submitApps(renderedState.apps, hiddenDrawerApps)
         }
+        // The Home role can change while Home is on the back stack; reconcile
+        // the saved action pins with what Android still reports.
+        controller.recheckAppActions()
     }
 
     override fun onDestroy() {
@@ -335,7 +348,7 @@ class HomeActivity : ComponentActivity() {
             workspace.cancelDrag()
             dock.cancelDrag()
             cancelDrawerGesture()
-            dismissFolderRename()
+            dismissHomeRename()
         }
         folderDialog?.layoutLocked = locked
         emptyHint.setText(if (locked) R.string.workspace_layout_locked else R.string.workspace_empty_hint)
@@ -354,7 +367,7 @@ class HomeActivity : ComponentActivity() {
             pendingPageMenu?.cancel()
             pendingPageMenu = null
             activePopup?.dismiss()
-            dismissFolderRename()
+            dismissHomeRename()
             dismissFolderDialog()
         }
         drawer.close()
@@ -387,7 +400,7 @@ class HomeActivity : ComponentActivity() {
         if (state.activePageId != previous.activePageId) {
             workspace.cancelDrag()
             onRootDragCancelled()
-            if (folderRenameHost != null) dismissFolderRename()
+            if (renameHost != null) dismissHomeRename()
             folderDialog?.dismiss()
         }
         if (gridChanged) {
@@ -397,7 +410,7 @@ class HomeActivity : ComponentActivity() {
             onRootDragCancelled()
             activePopup?.dismiss()
             pendingPageMenu?.cancel()
-            dismissFolderRename()
+            dismissHomeRename()
             folderDialog?.dismiss()
         }
         renderedState = state
@@ -442,7 +455,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun focusedHomeShortcut(): ShortcutFocus? {
-        if (drawer.isOpen || folderDialog != null || folderRenameHost != null) return null
+        if (drawer.isOpen || folderDialog != null || renameHost != null) return null
         val state = renderedState
         val cell = workspace.focusedChild?.tag as? Int
         if (cell != null) {
@@ -466,7 +479,7 @@ class HomeActivity : ComponentActivity() {
     private fun requestHomeShortcutFocus(focus: ShortcutFocus) {
         // On recreation or dialog dismissal, wait for the underlying Home layout.
         homeContent.doOnPreDraw {
-            if (drawer.isOpen || folderDialog != null || folderRenameHost != null) return@doOnPreDraw
+            if (drawer.isOpen || folderDialog != null || renameHost != null) return@doOnPreDraw
             val current = renderedState
             val tile = when (focus) {
                 is ShortcutFocus.WorkspaceApp -> workspace.findChildForCell(focus.cell).takeIf {
@@ -716,13 +729,10 @@ class HomeActivity : ComponentActivity() {
     private fun promptFolderRename(folderId: Long) {
         if (layoutLocked) return
         val folder = renderedState.folders[folderId] ?: return
-        dismissFolderRename()
-        val rename = FolderRename(
-            folderId = folderId,
-            editor = FolderRenameEditorState(folder.title),
-        )
+        dismissHomeRename()
+        val rename = HomeRename.Folder(folderId, RenameEditorState(folder.title))
         homeUiState.rename = rename
-        showFolderRename(folder, rename)
+        showHomeRename(rename)
     }
 
     private fun renderFolderUi(state: LauncherUiState) {
@@ -736,39 +746,113 @@ class HomeActivity : ComponentActivity() {
                 else -> folderDialog?.update(state)
             }
         }
-        val rename = homeUiState.rename ?: return
-        val folder = state.folders[rename.folderId]
-        if (layoutLocked || folder == null || folder.pageId != state.activePageId) {
-            dismissFolderRename()
-        } else if (folderRenameHost == null) {
-            showFolderRename(folder, rename)
+        when (val rename = homeUiState.rename) {
+            null -> Unit
+            is HomeRename.Folder -> {
+                val folder = state.folders[rename.folderId]
+                if (layoutLocked || folder == null || folder.pageId != state.activePageId) {
+                    dismissHomeRename()
+                } else if (renameHost == null) {
+                    showHomeRename(rename)
+                }
+            }
+            is HomeRename.Pin -> {
+                // The editor only stays while the captured cell still holds the pin.
+                val present = !layoutLocked && state.activePageId == rename.pageId &&
+                    (state.workspaceCells[rename.cell] as? CellContent.App)?.app?.key == rename.key
+                if (!present) dismissHomeRename() else if (renameHost == null) showHomeRename(rename)
+            }
         }
     }
 
-    private fun showFolderRename(folder: Folder, rename: FolderRename) {
+    private fun showHomeRename(rename: HomeRename) {
         val host = ComposeView(this)
-        folderRenameHost = host
+        renameHost = host
         host.setContent {
             VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
-                FolderRenameDialog(
-                    editor = rename.editor,
-                    onDismiss = ::dismissFolderRename,
-                    onSave = { title ->
-                        if (title != folder.title) controller.renameFolder(folder.id, title)
-                        dismissFolderRename()
-                    },
-                )
+                when (rename) {
+                    is HomeRename.Folder -> VesnaRenameDialog(
+                        editor = rename.editor,
+                        title = stringResource(R.string.folder_rename),
+                        fieldLabel = stringResource(R.string.folder_name),
+                        errorMessage = stringResource(R.string.name_required),
+                        onDismiss = ::dismissHomeRename,
+                        onSave = { title ->
+                            val folder = renderedState.folders[rename.folderId]
+                            if (folder != null && title != folder.title) {
+                                controller.renameFolder(folder.id, title)
+                            }
+                            dismissHomeRename()
+                        },
+                    )
+                    is HomeRename.Pin -> VesnaRenameDialog(
+                        editor = rename.editor,
+                        title = stringResource(R.string.menu_edit_name),
+                        fieldLabel = stringResource(R.string.pin_name),
+                        errorMessage = stringResource(R.string.name_required),
+                        onDismiss = {
+                            dismissHomeRename()
+                            focusRenamedPin(rename)
+                        },
+                        onSave = { title -> commitPinRename(rename, title) },
+                        onReset = { commitPinRename(rename, null) },
+                    )
+                }
             }
         }
         // Compose supplies a separate dialog window; Home needs only a composition host.
         homeContent.addView(host, 0, 0)
     }
 
-    private fun dismissFolderRename() {
+    private fun dismissHomeRename() {
         homeUiState.rename = null
-        val host = folderRenameHost ?: return
-        folderRenameHost = null
+        val host = renameHost ?: return
+        renameHost = null
         homeContent.removeView(host)
+    }
+
+    /**
+     * Opens the label editor of a Home pin (an ordinary app pin or a saved
+     * action pin). The stable pin ID is resolved first; the captured page and
+     * cell are re-checked by [LauncherController.renameWorkspacePin] at save
+     * time, so a pin that moved or vanished cannot be renamed wrongly.
+     */
+    private fun promptPinRename(app: LauncherApp, cell: Int, pageId: Long) {
+        if (layoutLocked) return
+        schedulePageMenu {
+            if (layoutLocked || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                renderedState.activePageId != pageId
+            ) {
+                return@schedulePageMenu
+            }
+            val pinId = controller.workspacePinId(app, cell, pageId) ?: return@schedulePageMenu
+            if (layoutLocked || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                renderedState.activePageId != pageId ||
+                (renderedState.workspaceCells[cell] as? CellContent.App)?.app?.key != app.key
+            ) return@schedulePageMenu
+            dismissHomeRename()
+            val rename = HomeRename.Pin(pinId, cell, pageId, app.key, app.label, RenameEditorState(app.label))
+            homeUiState.rename = rename
+            showHomeRename(rename)
+        }
+    }
+
+    /** Saves a pin label; [label] null restores the default name (Reset). */
+    private fun commitPinRename(rename: HomeRename.Pin, label: String?) {
+        dismissHomeRename()
+        if (label == null || label != rename.savedLabel) {
+            lifecycleScope.launch {
+                val renamed = controller.renameWorkspacePin(rename.pinId, rename.cell, rename.pageId, label)
+                if (!renamed && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                    announce(R.string.toast_shortcut_unavailable)
+                }
+            }
+        }
+        focusRenamedPin(rename)
+    }
+
+    private fun focusRenamedPin(rename: HomeRename.Pin) {
+        requestHomeShortcutFocus(ShortcutFocus.WorkspaceApp(rename.pageId, rename.cell, rename.key))
     }
 
     /**
@@ -868,8 +952,15 @@ class HomeActivity : ComponentActivity() {
             LauncherMessage.WORKSPACE_PAGE_REORDERED -> getString(R.string.toast_workspace_page_reordered)
             LauncherMessage.WORKSPACE_PAGE_ORDER_CHANGED -> getString(R.string.toast_workspace_page_order_changed)
             LauncherMessage.APP_INFO_UNAVAILABLE -> getString(R.string.toast_app_info_unavailable)
+            LauncherMessage.SHORTCUT_UNAVAILABLE -> getString(R.string.toast_shortcut_unavailable)
+            LauncherMessage.SHORTCUT_ALREADY_PINNED -> getString(R.string.toast_shortcut_already_pinned)
         }
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+    }
+
+    /** Feedback for a UI-initiated action that carries no [LauncherMessage]. */
+    private fun announce(messageId: Int) {
+        Toast.makeText(this, messageId, Toast.LENGTH_SHORT).show()
     }
 
     private fun applySystemBarInsets() {
@@ -908,21 +999,63 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * The Home context menu of a pinned app: the usual options plus the
+     * publisher's enabled actions, queried asynchronously. The query result can
+     * arrive after the anchor went stale, so every guard is re-checked before
+     * the menu opens.
+     */
     private fun showWorkspaceItemMenu(anchor: View, app: LauncherApp, cell: Int, pageId: Long) {
-        val popup = VesnaPopupMenu(anchor)
-        if (!layoutLocked) {
-            popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
-            if (renderedState.pageIds.size > 1) {
-                popup.add(R.string.menu_move_to_page) {
-                    showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
-                        pinId, destinationId -> controller.movePinToPage(pinId, cell, pageId, destinationId)
+        schedulePageMenu {
+            val actions = controller.appActions(app)
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                dragSource != null || workspace.isDragging ||
+                renderedState.activePageId != pageId ||
+                !anchor.isAttachedToWindow || !anchor.isShown
+            ) {
+                return@schedulePageMenu
+            }
+            val popup = VesnaPopupMenu(anchor)
+            if (!layoutLocked) {
+                popup.add(R.string.menu_add_to_dock) { controller.addToDock(app) }
+                if (renderedState.pageIds.size > 1) {
+                    popup.add(R.string.menu_move_to_page) {
+                        showMovePageMenu(anchor, pageId, { controller.pageMoveOptions(app, cell, pageId) }) {
+                            pinId, destinationId -> controller.movePinToPage(pinId, cell, pageId, destinationId)
+                        }
                     }
                 }
+                popup.add(R.string.menu_remove_from_workspace) { controller.removeFromWorkspace(app, cell, pageId) }
+                popup.add(R.string.menu_edit_name) { promptPinRename(app, cell, pageId) }
             }
-            popup.add(R.string.menu_remove_from_workspace) { controller.removeFromWorkspace(app, cell, pageId) }
+            for (action in actions) {
+                popup.add(action.label, description = action.accessibilityLabel.takeUnless { it == action.label }) {
+                    showActionMenu(anchor, action, pageId)
+                }
+            }
+            popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
+            showPopup(popup)
         }
-        popup.add(R.string.menu_app_info) { controller.openAppInfo(app) }
-        showPopup(popup)
+    }
+
+    /**
+     * The follow-up anchored menu of one published action: launch it now, or
+     * pin it to the captured page. Pinning is a layout mutation, so it is
+     * offered only while the layout is unlocked.
+     */
+    private fun showActionMenu(anchor: View, action: LauncherApp, pageId: Long) {
+        schedulePageMenu {
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                dragSource != null || workspace.isDragging || renderedState.activePageId != pageId ||
+                !anchor.isAttachedToWindow || !anchor.isShown
+            ) {
+                return@schedulePageMenu
+            }
+            val popup = VesnaPopupMenu(anchor)
+            popup.add(R.string.menu_action_open) { launchApp(action) }
+            if (!layoutLocked) popup.add(R.string.menu_add_to_home) { controller.pinAppAction(action, pageId) }
+            showPopup(popup)
+        }
     }
 
     private fun showMovePageMenu(

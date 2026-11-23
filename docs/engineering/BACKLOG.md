@@ -260,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| NT-HOME-05: App actions and shortcut names on Home ([#114](https://github.com/vladon/vesnalauncher/issues/114)) | 0.4.54 — [Android 15 QA](verification/VESNA-QA-WORKSPACE-APP-ACTIONS.md) verified real published actions, pin/rename, layout lock, and Room v5 → v6. Widgets remain gated on ENG-102. |
 | NT-HOME-03: Resize the workspace grid without losing shortcuts ([#106](https://github.com/vladon/vesnalauncher/issues/106)) | 0.4.53 — verified the Room v4 → v5 upgrade, edge-cell reflow and overflow, restart, and unchanged dock in [Android 15 QA](verification/VESNA-QA-WORKSPACE-GRID.md). |
 | NT-HOME-04: Opt-in placement of newly installed apps ([#107](https://github.com/vladon/vesnalauncher/issues/107)) | 0.4.52 — verified first install with the setting off and on, updates, locked layout, and no changes while Vesna is stopped in [Android 15 QA](verification/VESNA-QA-NEW-APP-PLACEMENT.md). |
 | NT-DRAWER-05: Selectable drawer layouts ([#108](https://github.com/vladon/vesnalauncher/issues/108)) | 0.4.51 — verified vertical grid, list, horizontal paging, global search, and persisted layout selection in [Android 15 QA](verification/VESNA-QA-DRAWER-LAYOUTS.md). |

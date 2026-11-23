@@ -64,6 +64,9 @@
     <!-- Workspace / dock context menus -->
     <string name="menu_add_to_workspace">Add to workspace</string>
     <string name="menu_remove_from_workspace">Remove from workspace</string>
+    <string name="menu_edit_name">Edit name</string>
+    <string name="menu_action_open">Open</string>
+    <string name="menu_add_to_home">Add to Home</string>
     <string name="menu_add_to_dock">Add to dock</string>
     <string name="menu_move_to_page">Move to page…</string>
     <string name="menu_remove_from_dock">Remove from dock</string>
@@ -95,6 +98,8 @@
     <string name="toast_no_move_destination">Free a space on another home page first</string>
     <string name="toast_move_destination_full">That home page is full</string>
     <string name="toast_move_unavailable">This move is no longer available</string>
+    <string name="toast_shortcut_unavailable">This shortcut is no longer available</string>
+    <string name="toast_shortcut_already_pinned">This shortcut is already on your home screen</string>
     <string name="app_launch_failed">Could not open the app</string>
     <string name="toast_app_info_unavailable">App info is unavailable</string>
     <string name="toast_dock_full">The dock is full</string>
@@ -103,8 +108,10 @@
     <string name="folder_default_title">Folder</string>
     <string name="folder_rename">Rename folder</string>
     <string name="folder_name">Folder name</string>
-    <string name="folder_name_required">Enter a folder name.</string>
-    <string name="folder_rename_save">Save</string>
+    <string name="pin_name">Name</string>
+    <string name="name_required">Enter a name.</string>
+    <string name="rename_save">Save</string>
+    <string name="rename_reset">Reset</string>
     <string name="folder_remove_from_folder">Remove from folder</string>
     <string name="folder_removal_no_room">Not enough room on this page. Move or remove shortcuts to make room.</string>
     <string name="folder_open_hint">Folder with %1$d apps</string>

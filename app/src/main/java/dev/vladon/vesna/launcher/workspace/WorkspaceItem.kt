@@ -14,6 +14,13 @@ internal const val DEFAULT_WORKSPACE_PAGE_ID = 1L
  * [folderId] means the entry lives inside that folder ([cellIndex] is then its
  * position within the folder). [pageId] identifies the page for top-level
  * workspace items only; it is null for dock items and folder members.
+ *
+ * [customLabel] is a per-pin rename by the user: it overrides the visible label
+ * of this one pin without changing the app's catalogue entry or any position.
+ * [shortcutLabel] caches the publisher's action label at pin time so saved
+ * app-published action pins ([AppKey.shortcutId] set) can still be rendered and
+ * launched if the launcher later loses the role and the live action query. Both
+ * stay null for ordinary app pins.
  */
 data class WorkspaceItem(
     val id: Long,
@@ -23,4 +30,6 @@ data class WorkspaceItem(
     val userSerial: Long = 0,
     val folderId: Long? = null,
     val pageId: Long? = if (container == Container.WORKSPACE && folderId == null) DEFAULT_WORKSPACE_PAGE_ID else null,
+    val customLabel: String? = null,
+    val shortcutLabel: String? = null,
 )

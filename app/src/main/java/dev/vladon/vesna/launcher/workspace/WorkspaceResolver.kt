@@ -31,6 +31,13 @@ internal data class WorkspaceLayout(val cells: Map<Int, CellContent>, val reserv
  * Pure projection of persisted layout items onto live apps. Unavailable apps
  * are hidden without changing their stored positions. Items inside folders
  * (non-null folderId) are excluded from the grid and dock views.
+ *
+ * A pin's [WorkspaceItem.customLabel] rename is projected onto the rendered
+ * [LauncherApp] of every surface (grid, dock, folders) while the catalogue entry
+ * itself stays untouched; keys with an [AppKey.shortcutId] resolve against the
+ * combined app map the caller passes in, exactly like ordinary apps.
+ * [WorkspaceItem.shortcutLabel] is a storage-level fallback consumed when the
+ * platform re-synthesizes saved actions, not projected here.
  */
 internal object WorkspaceResolver {
 
@@ -57,7 +64,7 @@ internal object WorkspaceResolver {
             if (app == null) {
                 reservedCellsMask = reservedCellsMask or bit
             } else {
-                cells[cell] = CellContent.App(app)
+                cells[cell] = CellContent.App(app.withVisibleLabel(item.customLabel))
                 reservedCellsMask = reservedCellsMask and bit.inv()
             }
         }
@@ -82,7 +89,7 @@ internal object WorkspaceResolver {
             .groupBy { it.folderId!! }
             .mapValues { (_, members) ->
                 members.sortedBy { it.cellIndex }.mapNotNull { item ->
-                    appsByKey[item.key]?.let { FolderPin(item.id, it) }
+                    appsByKey[item.key]?.let { FolderPin(item.id, it.withVisibleLabel(item.customLabel)) }
                 }
             }
     }
@@ -93,7 +100,9 @@ internal object WorkspaceResolver {
             .sortedBy { it.cellIndex }
         return DockLayout(
             savedOrder = saved.map { it.id },
-            pins = saved.mapNotNull { item -> appsByKey[item.key]?.let { DockPin(item.id, it) } },
+            pins = saved.mapNotNull { item ->
+                appsByKey[item.key]?.let { DockPin(item.id, it.withVisibleLabel(item.customLabel)) }
+            },
         )
     }
 }

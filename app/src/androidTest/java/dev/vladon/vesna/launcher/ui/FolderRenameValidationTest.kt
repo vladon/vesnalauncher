@@ -23,10 +23,11 @@ class FolderRenameValidationTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         val automation = instrumentation.uiAutomation
-        val error = context.getString(R.string.folder_name_required)
-        val save = context.getString(R.string.folder_rename_save)
+        val error = context.getString(R.string.name_required)
+        val save = context.getString(R.string.rename_save)
         val dialogTitle = context.getString(R.string.folder_rename)
-        val editor = FolderRenameEditorState("Folder")
+        val nameLabel = context.getString(R.string.folder_name)
+        val editor = RenameEditorState("Folder")
         val savedTitle = AtomicReference<String>()
 
         fun find(predicate: (AccessibilityNodeInfo) -> Boolean): AccessibilityNodeInfo? {
@@ -45,10 +46,17 @@ class FolderRenameValidationTest {
             fun show(dark: Boolean) = scenario.onActivity { activity ->
                 activity.setContent {
                     VesnaTheme(dark = dark) {
-                        FolderRenameDialog(editor, onDismiss = activity::finish, onSave = {
-                            savedTitle.set(it)
-                            activity.finish()
-                        })
+                        VesnaRenameDialog(
+                            editor,
+                            title = dialogTitle,
+                            fieldLabel = nameLabel,
+                            errorMessage = error,
+                            onDismiss = activity::finish,
+                            onSave = {
+                                savedTitle.set(it)
+                                activity.finish()
+                            },
+                        )
                     }
                 }
             }

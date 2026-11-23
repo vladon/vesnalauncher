@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher.platform
 
 import android.content.Context
 import android.content.pm.LauncherApps
+import android.content.pm.ShortcutInfo
 import android.os.Handler
 import android.os.Looper
 import android.os.UserHandle
@@ -14,6 +15,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 sealed interface PackageEvent {
     /** Refresh the launchable app list without treating the change as an uninstall. */
     data object CatalogueChanged : PackageEvent
+
+    /** Publisher actions can change without a package update. */
+    data object ShortcutsChanged : PackageEvent
 
     /** A fresh install in one Android profile, not a replacing update. */
     data class Added(val packageName: String, val userSerial: Long) : PackageEvent
@@ -63,6 +67,10 @@ class PackageChangeMonitor(private val appContext: Context) {
             user: UserHandle,
             replacing: Boolean,
         ) = onAvailabilityChanged(packageNames)
+
+        override fun onShortcutsChanged(packageName: String, shortcuts: MutableList<ShortcutInfo>, user: UserHandle) {
+            _events.tryEmit(PackageEvent.ShortcutsChanged)
+        }
     }
 
     private fun onAvailabilityChanged(packageNames: Array<out String?>) {

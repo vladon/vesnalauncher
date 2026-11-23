@@ -58,37 +58,44 @@ import androidx.compose.ui.window.DialogWindowProvider
 import dev.vladon.vesna.launcher.R
 import kotlinx.coroutines.flow.first
 
-internal class FolderRenameEditorState(initialTitle: String) {
-    val draft = TextFieldState(initialTitle, TextRange(0, initialTitle.length))
-    var showNameError by mutableStateOf(false)
+internal class RenameEditorState(initialValue: String) {
+    val draft = TextFieldState(initialValue, TextRange(0, initialValue.length))
+    var showValueError by mutableStateOf(false)
 }
 
+/**
+ * The shared Material rename editor: a folder title on Home, or a per-pin label
+ * (an ordinary app pin or a saved action pin). The draft must not be blank.
+ * [onReset], when provided, restores the default name — clearing a label
+ * override — instead of saving the draft.
+ */
 @Composable
-internal fun FolderRenameDialog(
-    editor: FolderRenameEditorState,
+internal fun VesnaRenameDialog(
+    editor: RenameEditorState,
+    title: String,
+    fieldLabel: String,
+    errorMessage: String,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
+    onReset: (() -> Unit)? = null,
 ) {
     val draft = editor.draft
-    val showNameError = editor.showNameError
-    val errorMessage = stringResource(R.string.folder_name_required)
-    val nameLabel = stringResource(R.string.folder_name)
+    val showValueError = editor.showValueError
     val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(showNameError) {
-        if (showNameError) {
+    LaunchedEffect(showValueError) {
+        if (showValueError) {
             snapshotFlow { draft.text.isNotBlank() }.first { it }
-            editor.showNameError = false
+            editor.showValueError = false
         }
     }
 
-    val dialogTitle = stringResource(R.string.folder_rename)
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
             dismissOnClickOutside = false,
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false,
-            windowTitle = dialogTitle,
+            windowTitle = title,
         ),
     ) {
         val window = (LocalView.current.parent as DialogWindowProvider).window
@@ -111,14 +118,14 @@ internal fun FolderRenameDialog(
                 }
                 val compactField = availableHeight < standardFieldHeight
                 val submit: () -> Unit = {
-                    val title = draft.text.toString().trim()
-                    if (title.isEmpty()) {
-                        editor.showNameError = true
+                    val value = draft.text.toString().trim()
+                    if (value.isEmpty()) {
+                        editor.showValueError = true
                         focusRequester.requestFocus()
                         // In this space the keyboard leaves room for the field, not its error.
                         if (compactField) keyboard?.hide()
                     } else {
-                        onSave(title)
+                        onSave(value)
                     }
                 }
                 Surface(
@@ -130,7 +137,7 @@ internal fun FolderRenameDialog(
                     // can be taller than the entire space available for the editor.
                     Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
                         Text(
-                            text = dialogTitle,
+                            text = title,
                             modifier = Modifier.semantics { heading() },
                             style = MaterialTheme.typography.headlineSmall,
                         )
@@ -142,11 +149,11 @@ internal fun FolderRenameDialog(
                                 .focusRequester(focusRequester)
                                 .then(if (compactField) Modifier.heightIn(max = availableHeight) else Modifier)
                                 .semantics {
-                                    if (compactField) contentDescription = nameLabel
-                                    if (showNameError) error(errorMessage)
+                                    if (compactField) contentDescription = fieldLabel
+                                    if (showValueError) error(errorMessage)
                                 },
-                            label = if (compactField) null else ({ Text(nameLabel) }),
-                            isError = showNameError,
+                            label = if (compactField) null else ({ Text(fieldLabel) }),
+                            isError = showValueError,
                             contentPadding = if (compactField) {
                                 PaddingValues(horizontal = 16.dp)
                             } else {
@@ -159,7 +166,7 @@ internal fun FolderRenameDialog(
                             ),
                             onKeyboardAction = { submit() },
                         )
-                        if (showNameError) {
+                        if (showValueError) {
                             Text(
                                 text = errorMessage,
                                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp),
@@ -173,11 +180,16 @@ internal fun FolderRenameDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            if (onReset != null) {
+                                TextButton(onClick = onReset) {
+                                    Text(stringResource(R.string.rename_reset))
+                                }
+                            }
                             TextButton(onClick = onDismiss) {
                                 Text(stringResource(android.R.string.cancel))
                             }
                             TextButton(onClick = submit) {
-                                Text(stringResource(R.string.folder_rename_save))
+                                Text(stringResource(R.string.rename_save))
                             }
                         }
                     }

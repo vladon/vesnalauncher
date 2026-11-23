@@ -13,7 +13,7 @@ import dev.vladon.vesna.launcher.workspace.WorkspaceItem
 
 @Database(
     entities = [WorkspaceItemEntity::class, FolderEntity::class, WorkspacePageEntity::class, WorkspaceGridEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -112,9 +112,25 @@ abstract class LauncherDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * 5 → 6: app-published shortcut (action) support. Three additive,
+         * nullable TEXT columns with no SQL default: `shortcutId` marks a saved
+         * action row, `shortcutLabel` caches the publisher's action label at
+         * pin time, `customLabel` stores a per-pin rename. No index, no backfill
+         * and no rewrite: row IDs, placements and every existing value are
+         * preserved verbatim, and ordinary app pins keep all three NULL.
+         */
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workspace_items ADD COLUMN shortcutId TEXT")
+                db.execSQL("ALTER TABLE workspace_items ADD COLUMN customLabel TEXT")
+                db.execSQL("ALTER TABLE workspace_items ADD COLUMN shortcutLabel TEXT")
+            }
+        }
+
         fun build(appContext: Context): LauncherDatabase =
             Room.databaseBuilder(appContext, LauncherDatabase::class.java, "vesna-launcher.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .addCallback(DEFAULT_PAGE_SEED_CALLBACK)
                 .build()
     }
@@ -124,12 +140,14 @@ abstract class LauncherDatabase : RoomDatabase() {
 fun WorkspaceItemEntity.toDomain(): WorkspaceItem =
     WorkspaceItem(
         id = id,
-        key = AppKey(packageName, className, userSerial),
+        key = AppKey(packageName, className, userSerial, shortcutId),
         container = Container.entries.firstOrNull { it.name == container } ?: Container.WORKSPACE,
         cellIndex = cellIndex,
         userSerial = userSerial,
         folderId = folderId,
         pageId = pageId,
+        customLabel = customLabel,
+        shortcutLabel = shortcutLabel,
     )
 
 /** Domain to entity mapping (used for inserts; `id = 0` lets Room autogenerate). */
@@ -143,4 +161,7 @@ fun WorkspaceItem.toEntity(): WorkspaceItemEntity =
         userSerial = key.userSerial,
         folderId = folderId,
         pageId = pageId,
+        shortcutId = key.shortcutId,
+        customLabel = customLabel,
+        shortcutLabel = shortcutLabel,
     )
