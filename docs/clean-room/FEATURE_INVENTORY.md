@@ -75,7 +75,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DOCK-002 | Dock icon count / paging | Nova 9.0.1: independent paging, optional wrap, and a fifth pin hidden at four slots but restored when capacity increased again (OBS-VESNA-021/022/029; #115). |
 | DOCK-003 | Dock background styles | discovered (Dock subpage: background setting) |
 | DOCK-004 | Add/remove/reorder dock items | pending |
-| DOCK-005 | Folders in dock | pending |
+| DOCK-005 | Folders in dock | Nova forms a persistent folder on pin overlap. Vesna v0.4.52 swaps pins and the tested workspace-folder drop did not move it into the empty dock slot (OBS-VESNA-041; #115). |
 | DOCK-006 | Dock across pages (persistent vs per-page) | pending |
 | DOCK-007 | Dock in landscape | Nova 9.0.1 moves the dock and attached search bar to a side when rotation is allowed; Vesna v0.4.52 keeps the dock at the bottom in both orientations (OBS-VESNA-040; #115). |
 

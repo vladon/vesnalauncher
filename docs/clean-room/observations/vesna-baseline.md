@@ -970,3 +970,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Nova store-install auto-placement remains untested: neither a
   Play Store launcher activity nor the market details link
   resolved on this AVD.
+
+## OBS-VESNA-041 — Dropping one dock pin onto another
+
+- Owned Android 15 AVD, Nova 9.0.1 Prime (90100) and signed Vesna
+  v0.4.52 (57). With the dock visible in portrait, long-pressed
+  Camera, dragged it onto the adjacent Chrome dock pin, paused
+  over the target, and released. Both shortcuts were regular app
+  pins, not folders.
+- Nova used Chrome's slot for a two-item folder containing Chrome
+  and Camera. A cold launcher restart kept the folder in that
+  slot and both app entries were still present on reopen.
+- In Vesna the same drop exchanged Camera and Chrome's dock slots;
+  no folder was created, and the new pin order survived a cold
+  restart. The same gesture on the workspace (Files onto Gmail)
+  did create a folder. After moving Camera to the workspace and
+  verifying the compacted dock's last slot was empty, dragging
+  that workspace folder to the empty slot left it on the
+  workspace with both entries still present.
+- Restored both original layouts. Evidence: `EVI-VESNA-003/parity42-*`;
+  follow-up for #115. Only the tested drag paths were exercised.
