@@ -1699,3 +1699,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   and `parity66-cycle75-*`. Ties, locale-specific collation,
   RTL, and keyboard operation were outside this replay.
   [Result in #135](https://github.com/vladon/vesnalauncher/issues/135#issuecomment-7092040787).
+
+## OBS-VESNA-075 — Stable sort for equal folder labels
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.58 (63). Renamed separate Gmail and
+  Photos pins to the identical visible label `Twin QA`,
+  then put them in a Home folder with Files. Verified the
+  identities from the distinct app icons, not the label.
+- In both, sorting Photos → Gmail → Files yielded
+  Files → Photos → Gmail. Sorting the opposite input
+  Gmail → Photos → Files yielded Files → Gmail → Photos.
+  Sort preserved the pre-existing relative order of the
+  equal labels rather than using the native app names.
+- Both custom labels, member identities, the folder cell,
+  and the second sorted order survived cold starts.
+  Restored both original layouts and labels. Evidence:
+  `EVI-VESNA-003/parity76-*`.
+  [Follow-up in #135](https://github.com/vladon/vesnalauncher/issues/135#issuecomment-7092156729).
+  Case and accent collation and RTL were not exercised.
