@@ -1485,3 +1485,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Restored both layouts and the original lock state, leaving
   v0.4.55 installed. Evidence: `EVI-VESNA-003/parity66-*`.
   [Independent result in #130](https://github.com/vladon/vesnalauncher/issues/130#issuecomment-7090925697).
+
+## OBS-VESNA-066 — Internal folder drop after the drag-out fix
+
+- With the signed v0.4.55 (60) APK on the Android 15 research
+  AVD, replayed the internal drag from OBS-VESNA-058 because
+  PR #136 changed how a folder member enters drag mode.
+- Started with Files, Gmail, Photos in that reading order.
+  Held Photos, moved horizontally over Files, and released
+  within the original open folder's bounds. The new release
+  briefly revealed Home during the gesture, then reopened
+  the folder. It did not open the old member menu on this
+  gesture, and it did not reorder or extract Photos.
+- Both the original Home layout and the three members in
+  their original order were present after a cold restart.
+  Nova's insertion in OBS-VESNA-058 remains unmatched on
+  this path. Exact-cell drag-out remains a separate passing
+  case in OBS-VESNA-065.
+- Restored original layouts and kept v0.4.55 installed.
+  Evidence: `EVI-VESNA-003/parity67-*`.
+  [Follow-up in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7090974852).
