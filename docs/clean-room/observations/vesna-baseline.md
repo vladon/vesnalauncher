@@ -1456,3 +1456,32 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `EVI-VESNA-003/parity65-*`. Optional drawer auto-close is
   tracked in #137, separate from dock auto-close (#115).
   Search-result launches and other drawer layouts were not tested.
+
+## OBS-VESNA-065 — Signed v0.4.55 folder drag regression
+
+- [PR #136](https://github.com/vladon/vesnalauncher/pull/136)
+  merged at `c3d466f65fafe456737fe81f6bc7c565d92a1f73`. The
+  [v0.4.55 release tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.55)
+  points to that commit. Independently downloaded the public
+  APK, matched SHA-256
+  `9a0406dc85c25dcbe5565371922308f2ea71d1ea1ddac1e6cee4fc9f14aae60b`
+  and the v0.4.54 signer, installed on the Android 15 research
+  AVD, and checked installed version 0.4.55 (60).
+- Recreated the unlocked Files/Gmail/Photos folder of
+  OBS-VESNA-057. Dropping Files on the occupied Contacts
+  cell or cancelling a visible preview over an empty cell
+  left the folder open without changes to membership or
+  Home. Stationary long-press still showed member removal
+  and App info; layout lock blocked extraction, leaving only
+  App info in the member menu.
+- Unlocked, Files landed in the chosen cell centred at
+  (927,1772), leaving Gmail/Photos in the folder. Photos
+  then landed at (409,1772); Gmail occupied the former
+  folder cell (927,336). Other pins did not move. The final
+  layout survived a cold launcher start.
+- This closes the tested signed-release gap against Nova
+  9.0.1 Prime from OBS-VESNA-057. It does not verify
+  in-folder reorder, cross-page drag, or other window sizes.
+  Restored both layouts and the original lock state, leaving
+  v0.4.55 installed. Evidence: `EVI-VESNA-003/parity66-*`.
+  [Independent result in #130](https://github.com/vladon/vesnalauncher/issues/130#issuecomment-7090925697).
