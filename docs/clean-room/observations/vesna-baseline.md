@@ -2260,3 +2260,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Text/accent colors, other surfaces, and opacity were
   not tested. Evidence: `EVI-VESNA-003/parity94-*`.
   [Issue #158](https://github.com/vladon/vesnalauncher/issues/158).
+
+## OBS-VESNA-098 — Last pin on the only Home page
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime
+  (90100) and published signed Vesna v0.4.64 (69).
+  Each had just one 4×5 Home page, Gmail alone in the
+  top-right cell, and its original dock.
+- Nova offered **Undo** for removal and put Gmail back in
+  exactly the same cell. Removing it again without Undo
+  left the empty primary page after process restart.
+- Vesna kept the empty primary page immediately and after
+  process restart. Its menu offered **Add home page** but
+  not **Remove empty page**. No Undo was offered.
+- In both, all dock placements stayed fixed, an outward
+  swipe after restart did not expose another workspace page,
+  and opening and closing the drawer returned to that
+  empty Home. This covers the primary-page guard not
+  exercised in OBS-VESNA-096.
+- Restored both original sets of pins, both docks, and
+  Nova's original 4×4 grid. Evidence: `EVI-VESNA-003/parity95-*`.
+  [Follow-up in #153](https://github.com/vladon/vesnalauncher/issues/153#issuecomment-7096093071).
