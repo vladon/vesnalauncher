@@ -132,6 +132,8 @@ internal fun SettingsScreen(
     onPinNewAppsChanged: (Boolean) -> Unit,
     hideHomeAppNames: Boolean,
     onHideHomeAppNamesChanged: (Boolean) -> Unit,
+    showDock: Boolean,
+    onShowDockChanged: (Boolean) -> Unit,
     homeIconPercent: Int,
     onHomeIconPercentChanged: (Int) -> Unit,
     dockIconPercent: Int,
@@ -273,6 +275,13 @@ internal fun SettingsScreen(
                                     SettingsSwitch(
                                         R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail,
                                         hideHomeAppNames, onHideHomeAppNamesChanged,
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_show_dock) {
+                                    SettingsSwitch(
+                                        R.string.settings_show_dock, R.string.settings_show_dock_detail,
+                                        showDock, onShowDockChanged,
                                     )
                                 }
                                 Spacer(Modifier.height(8.dp))
@@ -426,6 +435,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_workspace_grid, R.string.settings_workspace_grid_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_show_dock, R.string.settings_show_dock_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_icon_size, R.string.settings_home_icon_size_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_icon_size, R.string.settings_dock_icon_size_detail),
