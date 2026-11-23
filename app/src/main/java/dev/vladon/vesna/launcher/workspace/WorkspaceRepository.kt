@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
 internal enum class PageMoveResult { MOVED, FULL, UNAVAILABLE }
 internal enum class FolderRemovalResult { REMOVED, NO_ROOM, UNAVAILABLE }
+internal enum class FolderRestoreResult { RESTORED, NO_ROOM, UNAVAILABLE, LOCKED }
 internal enum class GridResizeResult { APPLIED, TOO_MANY_ITEMS, LOCKED }
 
 /** Outcome of pinning an app-published action to a workspace page. */
@@ -47,6 +48,8 @@ enum class AppActionPinResult {
 
 internal data class PageMoveTarget(val id: Long, val number: Int)
 internal data class PageMoveOptions(val sourceId: Long, val pages: List<PageMoveTarget>)
+
+internal class RemovedFolder(val folder: FolderEntity, val members: List<WorkspaceItemEntity>)
 
 internal class SavedLayout(
     val items: List<WorkspaceItem>,
@@ -1010,6 +1013,46 @@ class WorkspaceRepository(
             }
         }
         FolderRemovalResult.REMOVED
+    }
+
+    /** Unpins the captured folder and its members; keeps an exact snapshot for Undo. */
+    internal suspend fun unpinFolder(folder: Folder): RemovedFolder? = mutationMutex.withLock {
+        db.withTransaction {
+            if (workspacePreferences.layoutLocked) return@withTransaction null
+            val saved = folderDao.getById(folder.id)?.takeIf {
+                it.pageId == folder.pageId && it.cellIndex == folder.cellIndex
+            } ?: return@withTransaction null
+            val members = dao.folderMembersInOrder(saved.id)
+            if (workspacePreferences.layoutLocked) return@withTransaction null
+            dao.deleteFolderMembers(saved.id)
+            folderDao.deleteById(saved.id)
+            RemovedFolder(saved, members)
+        }
+    }
+
+    /** Restores only the original placement and rows; never displaces a new pin. */
+    internal suspend fun restoreFolder(removed: RemovedFolder): FolderRestoreResult = mutationMutex.withLock {
+        db.withTransaction {
+            if (workspacePreferences.layoutLocked) return@withTransaction FolderRestoreResult.LOCKED
+            val folder = removed.folder
+            val pageId = folder.pageId ?: return@withTransaction FolderRestoreResult.UNAVAILABLE
+            if (db.workspacePageDao().getById(pageId) == null) return@withTransaction FolderRestoreResult.UNAVAILABLE
+            val items = dao.getAll()
+            if (!readGrid().isValidCell(folder.cellIndex) || cellIsOccupied(items, pageId, folder.cellIndex)) {
+                return@withTransaction FolderRestoreResult.NO_ROOM
+            }
+            val actionAlreadyPinned = removed.members.any { member ->
+                member.shortcutId != null && items.any {
+                    it.packageName == member.packageName && it.userSerial == member.userSerial &&
+                        it.shortcutId == member.shortcutId
+                }
+            }
+            if (actionAlreadyPinned) return@withTransaction FolderRestoreResult.UNAVAILABLE
+            if (workspacePreferences.layoutLocked) return@withTransaction FolderRestoreResult.LOCKED
+            folderDao.insert(folder)
+            dao.insertAll(removed.members)
+            FolderRestoreResult.RESTORED
+        }
     }
 
     /**

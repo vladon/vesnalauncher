@@ -126,7 +126,12 @@
     <string name="folder_remove_from_folder">Remove from folder</string>
     <string name="folder_removal_no_room">Not enough room on this page. Move or remove shortcuts to make room.</string>
     <string name="folder_open_hint">Folder with %1$d apps</string>
-    <string name="folder_remove">Remove folder</string>
+    <string name="folder_ungroup">Ungroup folder</string>
+    <string name="folder_unpin">Remove folder and shortcuts</string>
+    <string name="folder_unpinned">Folder and shortcuts removed</string>
+    <string name="folder_unpin_undo">Undo</string>
+    <string name="folder_restore_no_room">Folder not restored. Its original spot is no longer available.</string>
+    <string name="folder_restore_unavailable">This folder can no longer be restored.</string>
 
     <!-- Drawer accessibility -->
     <string name="drawer_open">Open app drawer</string>

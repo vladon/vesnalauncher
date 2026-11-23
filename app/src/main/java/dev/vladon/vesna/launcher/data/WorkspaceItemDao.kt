@@ -54,6 +54,9 @@ interface WorkspaceItemDao {
     @Query("DELETE FROM workspace_items WHERE id = :id")
     suspend fun deleteById(id: Long)
 
+    @Query("DELETE FROM workspace_items WHERE folderId = :folderId")
+    suspend fun deleteFolderMembers(folderId: Long)
+
     /** Deletes the selected workspace pin without touching copies in other cells. */
     @Query(
         "DELETE FROM workspace_items WHERE id = (" +

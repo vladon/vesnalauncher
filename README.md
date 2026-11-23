@@ -58,6 +58,10 @@ The Android package name is `dev.vladon.vesna.launcher`.
   discards the selection. Unlock the Home layout to make changes.
 - **Folder sorting.** Hold a closed Home folder and choose **Sort alphabetically**
   to save an order based on the shortcut names. Opening a folder never sorts it.
+- **Remove a folder.** Hold a closed folder and choose **Ungroup folder** to
+  put its shortcuts back on that page, or **Remove folder and shortcuts** to
+  unpin them without uninstalling any apps. Use **Undo** while it's offered
+  to bring the folder back to its original cell.
 - **Work profiles.** Launch work apps from badged icons. Removing a work copy
   leaves its personal counterpart's pins in place.
 - **Appearance and accessibility.** Choose System, Light, or Dark and decide

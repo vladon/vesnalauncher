@@ -75,6 +75,9 @@ class LauncherController(
     private val refreshMutex = Mutex()
     private val pageActionMutex = Mutex()
     private val shortcutMutationMutex = Mutex()
+    // Keep Android action pins alive across the Undo window even while their Room rows are absent.
+    // A genuine package removal invalidates its snapshots, but completion still releases their pins.
+    private val pendingFolderUnpins = mutableMapOf<RemovedFolder, Boolean>()
     private val shortcutRevision = MutableStateFlow(0)
     private var hadShortcutHostPermission = false
     // The ordered drawer list and the placement index come from the same discovery.
@@ -193,7 +196,15 @@ class LauncherController(
                     return@collect
                 }
                 if (event is PackageEvent.Removed) {
-                    workspaceRepository.removeAllForPackage(event.packageName, event.userSerial)
+                    shortcutMutationMutex.withLock {
+                        for (entry in pendingFolderUnpins.entries) {
+                            if (entry.key.members.any {
+                                    it.packageName == event.packageName && it.userSerial == event.userSerial
+                                }
+                            ) entry.setValue(false)
+                        }
+                        workspaceRepository.removeAllForPackage(event.packageName, event.userSerial)
+                    }
                 }
                 refresh(event as? PackageEvent.Added)
             }
@@ -380,6 +391,35 @@ class LauncherController(
     internal suspend fun removeFolder(folderId: Long): FolderRemovalResult =
         workspaceRepository.removeFolder(folderId)
 
+    internal suspend fun unpinFolderWithUndo(folder: Folder): RemovedFolder? = withContext(Dispatchers.IO) {
+        shortcutMutationMutex.withLock {
+            val removed = workspaceRepository.unpinFolder(folder) ?: return@withLock null
+            pendingFolderUnpins[removed] = true
+            removed
+        }
+    }
+
+    internal suspend fun finishFolderUnpin(removed: RemovedFolder, undo: Boolean): FolderRestoreResult? =
+        withContext(Dispatchers.IO) {
+            shortcutMutationMutex.withLock {
+                val restorable = pendingFolderUnpins.remove(removed) ?: return@withLock null
+                try {
+                    when {
+                        !undo -> null
+                        restorable -> workspaceRepository.restoreFolder(removed)
+                        else -> FolderRestoreResult.UNAVAILABLE
+                    }
+                } finally {
+                    val publishers = buildSet {
+                        for (member in removed.members) {
+                            if (member.shortcutId != null) add(ShortcutPublisher(member.packageName, member.userSerial))
+                        }
+                    }
+                    for (publisher in publishers) syncAndroidPins(publisher)
+                }
+            }
+        }
+
     /** Workspace → dock drag at [slot] from [pageId]; emits [LauncherMessage.DOCK_FULL] when full. */
     fun moveWorkspaceToDock(app: LauncherApp, fromCell: Int, slot: Int, pageId: Long) {
         scope.launch {
@@ -450,7 +490,7 @@ class LauncherController(
         scope.launch(Dispatchers.IO) {
             val result = shortcutMutationMutex.withLock {
                 workspaceRepository.pinAppAction(action, pageId) { ids ->
-                    appLauncher.shortcuts.replacePins(publisher, ids, shortcutId.takeIf { it in ids })
+                    appLauncher.shortcuts.replacePins(publisher, retainUndoPins(publisher, ids), shortcutId.takeIf { it in ids })
                 }
             }
             when (result) {
@@ -487,7 +527,21 @@ class LauncherController(
 
     private suspend fun syncAndroidPins(publisher: ShortcutPublisher) {
         val ids = workspaceRepository.shortcutIds(publisher.packageName, publisher.userSerial)
-        appLauncher.shortcuts.replacePins(publisher, ids)
+        appLauncher.shortcuts.replacePins(publisher, retainUndoPins(publisher, ids))
+    }
+
+    /** Called under [shortcutMutationMutex] for every Android publisher replacement. */
+    private fun retainUndoPins(publisher: ShortcutPublisher, ids: Set<String>): Set<String> {
+        var retained: MutableSet<String>? = null
+        for (snapshot in pendingFolderUnpins.keys) {
+            for (member in snapshot.members) {
+                val id = member.shortcutId ?: continue
+                if (member.packageName == publisher.packageName && member.userSerial == publisher.userSerial && id !in ids) {
+                    (retained ?: ids.toMutableSet().also { retained = it }).add(id)
+                }
+            }
+        }
+        return retained ?: ids
     }
 
     fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long) {
