@@ -470,4 +470,123 @@ class WorkspaceRepositoryFolderRemovalTest {
         assertEquals(before, dao.getAll().associateBy { it.id })
         assertEquals(originalFolders, folders.getAll())
     }
+
+    /**
+     * A member dropped at an exact cell of an adjacent page (edge preview)
+     * takes over that cell with its stable row ID and membership cleared while
+     * the folder — left with one member — dissolves in the same transaction:
+     * the remaining member keeps its exact row ID, profile and both labels and
+     * returns to the folder cell on the folder's own (source) page, not on the
+     * destination page. Nothing else moves.
+     */
+    @Test
+    fun crossPageMemberDropLandsOnExactDestinationAndDissolvesSparseFolderOnItsOwnPage() = runBlocking {
+        val folderCell = 11
+        val folderId = db.folderDao().insert(FolderEntity(title = "Beta", cellIndex = folderCell))
+        val leaving = dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.leaving", className = "qa.leaving.Activity", container = "WORKSPACE",
+                cellIndex = 0, folderId = folderId,
+            ),
+        )
+        val remaining = dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.remaining", className = "qa.remaining.Activity", container = "WORKSPACE",
+                cellIndex = 1, folderId = folderId, userSerial = 7,
+                customLabel = "Kept", shortcutLabel = "Publisher",
+            ),
+        )
+        val second = requireNotNull(repo.createPage())
+        dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.resident", className = "qa.resident.Activity", container = "WORKSPACE",
+                cellIndex = 0, pageId = second,
+            ),
+        )
+        val before = dao.getAll().associateBy { it.id }
+        val foldersBefore = db.folderDao().getAll()
+
+        assertTrue(
+            repo.moveFolderMemberToCell(leaving, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 7, destinationPageId = second),
+        )
+
+        assertNull("the folder dissolves once one member is left", db.folderDao().getById(folderId))
+        val after = dao.getAll().associateBy { it.id }
+        assertEquals(
+            "the dropped member sits at the exact destination cell on the destination page, ID and labels kept",
+            before.getValue(leaving).copy(cellIndex = 7, folderId = null, pageId = second),
+            after.getValue(leaving),
+        )
+        assertEquals(
+            "the remaining member returns to the folder cell on the folder's own source page",
+            before.getValue(remaining).copy(cellIndex = folderCell, folderId = null, pageId = DEFAULT_WORKSPACE_PAGE_ID),
+            after.getValue(remaining),
+        )
+        assertEquals(
+            "every other row is untouched",
+            before - leaving - remaining + mapOf(
+                leaving to after.getValue(leaving),
+                remaining to after.getValue(remaining),
+            ),
+            after,
+        )
+        assertEquals("only the folder row disappears", emptyList<FolderEntity>(), db.folderDao().getAll())
+    }
+
+    /**
+     * Every refused cross-page member drop — a pin that is not a member, a
+     * call naming a page the folder no longer sits on, a missing destination
+     * page, an occupied or out-of-range destination cell, and a locked layout
+     * — changes nothing at all: no placement, no membership, no folder row.
+     */
+    @Test
+    fun crossPageMemberDropRejectsStaleSourcesOccupiedCellsAndLockWithoutChanges() = runBlocking {
+        val folderId = db.folderDao().insert(FolderEntity(title = "Apps", cellIndex = 10))
+        val member = seedMember("qa.member", folderId, cellIndex = 0)
+        seedMember("qa.other", folderId, cellIndex = 1)
+        val second = requireNotNull(repo.createPage())
+        dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.resident", className = "Main", container = "WORKSPACE",
+                cellIndex = 0, pageId = second,
+            ),
+        )
+        val foreign = dao.insert(
+            WorkspaceItemEntity(packageName = "qa.top", className = "Main", container = "WORKSPACE", cellIndex = 3),
+        )
+        val before = dao.getAll().associateBy { it.id }
+        val foldersBefore = db.folderDao().getAll()
+
+        assertFalse(
+            "a pin that is not a member of the folder is rejected",
+            repo.moveFolderMemberToCell(foreign, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 7, destinationPageId = second),
+        )
+        assertFalse(
+            "a call naming a page the folder is not on is rejected",
+            repo.moveFolderMemberToCell(member, folderId, second, cell = 7, destinationPageId = second),
+        )
+        assertFalse(
+            "a missing destination page is rejected",
+            repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 7, destinationPageId = 424242L),
+        )
+        assertFalse(
+            "an occupied destination cell is rejected",
+            repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 0, destinationPageId = second),
+        )
+        assertFalse(
+            "an out-of-range destination cell is rejected",
+            repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = GridCanvas.DEFAULT.capacity, destinationPageId = second),
+        )
+
+        assertEquals("every rejected drop keeps the layout exactly", before, dao.getAll().associateBy { it.id })
+        assertEquals(foldersBefore, db.folderDao().getAll())
+
+        WorkspacePreferences(prefs).layoutLocked = true
+        assertFalse(
+            "a locked layout rejects the drop",
+            repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 7, destinationPageId = second),
+        )
+        assertEquals("the lock changed nothing either", before, dao.getAll().associateBy { it.id })
+        assertEquals(foldersBefore, db.folderDao().getAll())
+    }
 }

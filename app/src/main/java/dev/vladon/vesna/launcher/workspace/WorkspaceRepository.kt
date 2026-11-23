@@ -320,6 +320,36 @@ class WorkspaceRepository(
             PageMoveResult.MOVED
         }
 
+    /**
+     * Move the same pin from its exact source placement to an empty cell on an
+     * existing page after an edge preview. Never substitute another cell or
+     * another copy of the pin. This also accepts a preview back on the origin.
+     */
+    internal suspend fun moveWorkspacePinToCell(
+        pinId: Long,
+        sourcePageId: Long,
+        sourceCell: Int,
+        destinationPageId: Long,
+        destinationCell: Int,
+    ): Boolean = mutationMutex.withLock {
+        if (workspacePreferences.layoutLocked) return@withLock false
+        val items = dao.getAll()
+        val source = items.firstOrNull { it.id == pinId && it.isOnPage(sourcePageId) && it.cellIndex == sourceCell }
+            ?: return@withLock false
+        if (destinationPageId != sourcePageId && db.workspacePageDao().getById(destinationPageId) == null) {
+            return@withLock false
+        }
+        if (!readGrid().isValidCell(destinationCell) ||
+            cellIsOccupied(items, destinationPageId, destinationCell)
+        ) {
+            return@withLock false
+        }
+        // Settings can change while the reads above are suspended.
+        if (workspacePreferences.layoutLocked) return@withLock false
+        dao.updatePlacement(source.id, Container.WORKSPACE.name, destinationCell, destinationPageId)
+        true
+    }
+
     /** Reads eligible destinations only if the selected folder is still in its source cell. */
     internal suspend fun folderPageMoveOptions(folder: Folder): PageMoveOptions? = mutationMutex.withLock {
         val folders = folderDao.getAll()
@@ -871,32 +901,42 @@ class WorkspaceRepository(
     }
 
     /**
-     * Drops the folder member [pinId] onto the exact Home [cell] the user chose
-     * on the folder's own [pageId]. Revalidated under [mutationMutex]: the
-     * layout must be unlocked, the member must still belong to [folderId], the
-     * folder must still sit on [pageId], the cell must be valid for the current
-     * grid and free of any top-level row or folder. A rejected drop never
-     * substitutes another cell. On success only container, cell and page change
-     * via [promoteMemberToWorkspace], so the row keeps its stable ID, profile
-     * and labels, and a folder left sparse dissolves in the same transaction.
+     * Promote the same folder member into the exact empty destination cell.
+     * The destination defaults to the source page for ordinary same-page drops.
+     * Sparse-folder dissolution still returns the other member to the source
+     * folder's cell in the same transaction.
      */
-    internal suspend fun moveFolderMemberToCell(pinId: Long, folderId: Long, pageId: Long, cell: Int): Boolean =
-        mutationMutex.withLock {
-            if (workspacePreferences.layoutLocked) return@withLock false
-            val items = dao.getAll()
-            if (items.none { it.id == pinId && it.folderId == folderId }) return@withLock false
-            val folder = folderDao.getById(folderId) ?: return@withLock false
-            if (folder.pageId != pageId) return@withLock false
-            if (!readGrid().isValidCell(cell) || cellIsOccupied(items, pageId, cell)) return@withLock false
-            promoteMemberToWorkspace(pinId, cell, pageId, folderId)
-            true
+    internal suspend fun moveFolderMemberToCell(
+        pinId: Long,
+        folderId: Long,
+        pageId: Long,
+        cell: Int,
+        destinationPageId: Long = pageId,
+    ): Boolean = mutationMutex.withLock {
+        if (workspacePreferences.layoutLocked) return@withLock false
+        val items = dao.getAll()
+        if (items.none { it.id == pinId && it.folderId == folderId }) return@withLock false
+        val folder = folderDao.getById(folderId) ?: return@withLock false
+        if (folder.pageId != pageId) return@withLock false
+        if (destinationPageId != pageId && db.workspacePageDao().getById(destinationPageId) == null) {
+            return@withLock false
         }
+        if (!readGrid().isValidCell(cell) || cellIsOccupied(items, destinationPageId, cell)) {
+            return@withLock false
+        }
+        // Settings can change while the reads above are suspended.
+        if (workspacePreferences.layoutLocked) return@withLock false
+        promoteMemberToWorkspace(pinId, cell, destinationPageId, folderId)
+        true
+    }
 
     /**
      * The shared write behind "remove from folder" and an exact member drop:
-     * moves [pinId] to the top-level workspace [cell] on [pageId] and resolves
-     * the folder in one Room transaction, so a folder left with fewer than two
-     * members dissolves with its remaining member returning to the folder cell.
+     * moves [pinId] to the top-level workspace [cell] on the placement page
+     * [pageId] — the destination page for a cross-page drop — and resolves the
+     * folder in one Room transaction, so a folder left with fewer than two
+     * members dissolves with its remaining member returning to the folder cell
+     * on the folder's own page.
      */
     private suspend fun promoteMemberToWorkspace(pinId: Long, cell: Int, pageId: Long, folderId: Long) {
         db.withTransaction {
