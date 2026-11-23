@@ -1435,3 +1435,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   keyboard-visible dismissal were not compared in this run.
   Restored Vesna's original grid setting and both layouts.
   Evidence: `EVI-VESNA-003/parity64-*`.
+
+## OBS-VESNA-064 — Drawer return after launching an app
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). Each was the system Home during its own
+  run. Used the single-column list with a blank query and
+  hidden keyboard, scrolled it, opened Clock from its normal
+  row, and pressed Android BACK from Clock's main screen.
+- With Nova's **Automatically close** off, BACK returned to
+  the same visible drawer rows. Enabling the option under
+  App drawer → Advanced made BACK return directly to Home.
+  **Remember position** stayed off in both Nova trials.
+- Vesna returned to the drawer with the same visible rows
+  and their original bounds. The tested App drawer settings
+  and `automatically close` settings search did not offer the
+  optional Home-return mode.
+- Restored the original Home role, both layouts, Nova's
+  disabled auto-close, and Vesna's grid. Evidence:
+  `EVI-VESNA-003/parity65-*`. Optional drawer auto-close is
+  tracked in #137, separate from dock auto-close (#115).
+  Search-result launches and other drawer layouts were not tested.
