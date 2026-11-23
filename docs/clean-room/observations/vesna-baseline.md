@@ -2281,3 +2281,37 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored both original sets of pins, both docks, and
   Nova's original 4×4 grid. Evidence: `EVI-VESNA-003/parity95-*`.
   [Follow-up in #153](https://github.com/vladon/vesnalauncher/issues/153#issuecomment-7096093071).
+
+## OBS-VESNA-099 — Signed Home page creation at the outer edge
+
+- Android 15 research AVD, 1080×2400 px at 420 dpi, 100%
+  text. Nova 9.0.1 Prime (90100) and signed Vesna used
+  matched 4×5 two-page fixtures: Gmail at bottom-left
+  and Photos at top-right of page two in `en-US`.
+- Nova previewed an empty successor at the physical right
+  edge. Cancel kept page two and both pins; a valid drop
+  put Gmail in the chosen cell on page three. Photos and
+  the dock stayed put, including after process restart.
+  Vesna v0.4.64 (69) retained the occupied page while held.
+- In-place upgrade to signed Vesna v0.4.65 (70):
+  [release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.65)
+  `82e7981d8b71ba2438d39ca49d7cc330a4d35a7a`, APK SHA-256
+  `ea39f6c771209c4b1805f72dc9941d73e7ca74f50bc2fed01300e23d23386f57`,
+  with the same verified v2 signer as v0.4.64.
+- On v0.4.65 in LTR a held Gmail showed the blank
+  successor. Cancel and release over the dock kept both
+  pages, pins and dock unchanged. Releasing in the chosen
+  cell created page three; all three layouts remained
+  exact after process restart. The previous existing
+  page was still previewable and accepted an exact drop.
+- In Android system `ar-EG`, physical right previewed the
+  previous page; physical left previewed a blank successor.
+  Cancel was exact; a valid release put Gmail in the mirrored
+  bottom-right cell of page three. Photos and the dock
+  stayed fixed after process restart. This matches Nova's
+  RTL direction from OBS-VESNA-087. Page cap, layout lock
+  and action/folder sources were not exercised.
+- Restored `en-US`, the original Home/dock layouts and
+  Nova's 4×4 grid; kept the signed v0.4.65 update.
+  Evidence: `EVI-VESNA-003/parity96-*`, `release-0.4.65/`.
+  [Independent verification in #151](https://github.com/vladon/vesnalauncher/issues/151#issuecomment-7096324896).
