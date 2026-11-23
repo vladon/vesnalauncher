@@ -1197,3 +1197,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   discovery from the drawer, and launcher-role loss after pinning
   were not replayed. Evidence: `EVI-VESNA-003/parity52-*`;
   independent device verification for #114.
+
+## OBS-VESNA-052 — Drawer action discovery and launch after Home-role loss
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59), each tested as Android Home for discovery.
+  Long-pressing Clock in Nova's drawer search results offered
+  **Create new timer** and opened the native Timer keypad.
+- In Vesna, Clock's menu offered Add to workspace, Add to dock and
+  App info, but no publisher actions. The same was true in the
+  unfiltered drawer. Adding the ordinary Clock pin to Home and
+  long-pressing it exposed **New timer**, so the publisher and
+  Home-role prerequisite were both present.
+- Pinned **New timer** from Vesna's Home menu, left Clock on Alarm,
+  and returned the Android Home role to Nova. Cold-starting Vesna
+  from its app entry retained the pin; the ordinary Clock menu
+  stopped listing **New timer**. Tapping the existing action pin
+  still switched Clock from Alarm to the Timer keypad.
+- No timer was started. Restored the original layouts and Nova
+  as Android Home. Evidence: `EVI-VESNA-003/parity53-*` and the
+  Nova search setup `parity50-cycle53-*`; follow-up for #114.
