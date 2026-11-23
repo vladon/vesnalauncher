@@ -1147,3 +1147,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   from workspace and App info, with no per-shortcut icon editor.
   No gallery import or installable icon pack was tested.
 - Evidence: `EVI-VESNA-003/parity50-*`; follow-up for #114.
+
+## OBS-VESNA-050 — A fresh app appeared in predictions after restart
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.53 (58). Pinned the same disposable app, **Nova
+  Install Fixture**, to each launcher's Home. Used a fresh package
+  rather than Gmail, which had been dismissed in an earlier
+  prediction-menu test (OBS-VESNA-022).
+- Opened each drawer by swiping up from Home with no query.
+  In Nova, the fresh app was absent before launch; the five-app
+  row remained unchanged after one and six verified launches
+  from Home. After a cold Nova restart, the next drawer opening
+  showed the fixture first in that row, replacing Chrome in the
+  five visible entries.
+- In Vesna, the drawer still began with the same alphabetical
+  app grid after one and six verified Home launches and after
+  a cold restart. No suggestion row appeared, and exact search
+  still found the fixture.
+- This run shows a delayed change, not a ranking formula or a
+  requirement to restart. Restored both layouts and the prior
+  Nova row, and removed the fixture. Evidence:
+  `EVI-VESNA-003/parity51-*`; follow-up for #112.
