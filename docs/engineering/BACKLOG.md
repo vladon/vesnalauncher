@@ -280,6 +280,11 @@ cleanup on removal, and restart recovery. It gates ENG-102.
 [ADR 0002 — Backup and privacy](../adr/0002-backup-and-privacy.md) drafts scoped
 Android device-to-device transfer only. No cloud backup, analytics, tracking,
 or in-app export. Implementation remains gated on review and transport tests.
+The [#116](https://github.com/vladon/vesnalauncher/issues/116) decision above
+approves export to a user-selected file and restore from it, which this draft
+excludes. Revise and review ADR 0002 for that scope before any #116 work; its
+other exclusions, including cloud backup, analytics, and tracking, are
+unchanged.
 
 ---
 
