@@ -184,6 +184,77 @@ class WorkspaceRepositoryFolderCreationTest {
         assertEquals(before.getValue(9).copy(folderId = folder.id, pageId = null), afterExtension.getValue(9))
     }
 
+    /** An edge-preview drop may move a pin from another page into a folder on the target page. */
+    @Test
+    fun dropsFromAnotherPageCreateOrExtendFoldersOnTheTargetPage() = runBlocking {
+        val source = requireNotNull(repo.createPage())
+        val target = requireNotNull(repo.createPage())
+        val dragged = app("com.example.calendar")
+        val occupant = app("com.example.contacts")
+        val joiner = app("com.example.maps")
+        val bystander = app("com.example.photos")
+        assertTrue(repo.insertWorkspaceAt(dragged, 3, source))
+        assertTrue(repo.insertWorkspaceAt(joiner, 5, source))
+        assertTrue(repo.insertWorkspaceAt(bystander, 9, source))
+        assertTrue(repo.insertWorkspaceAt(occupant, 7, target))
+        assertTrue(repo.insertIntoDock(bystander, 0))
+        val original = dao.getAll().sortedBy { it.id }
+        fun pinId(pkg: String) = original.single { it.packageName == pkg && it.pageId != null }.id
+        val draggedId = pinId(dragged.packageName)
+        val occupantId = pinId(occupant.packageName)
+        val joinerId = pinId(joiner.packageName)
+        fun inFolder(rows: List<WorkspaceItemEntity>, ids: Set<Long>, folderId: Long) =
+            rows.map { if (it.id in ids) it.copy(folderId = folderId, pageId = null) else it }
+        val originalPages = db.workspacePageDao().getAll()
+
+        // The moved pin must still be at the stated cell of the stated page, and the target cell is occupied.
+        assertFalse(
+            repo.createFolderFromDrop(
+                dragged, 7, "Folder", WorkspaceRepository.FolderDropSource.Workspace(4, source), target,
+            ),
+        )
+        assertFalse(
+            repo.createFolderFromDrop(
+                dragged, 7, "Folder", WorkspaceRepository.FolderDropSource.Workspace(3, target), target,
+            ),
+        )
+        assertFalse(
+            repo.createFolderFromDrop(
+                dragged, 8, "Folder", WorkspaceRepository.FolderDropSource.Workspace(3, source), target,
+            ),
+        )
+        assertEquals(original, dao.getAll().sortedBy { it.id })
+        assertTrue(db.folderDao().getAll().isEmpty())
+
+        assertTrue(
+            repo.createFolderFromDrop(
+                dragged, 7, "Folder", WorkspaceRepository.FolderDropSource.Workspace(3, source), target,
+            ),
+        )
+        val folder = db.folderDao().getAll().single()
+        assertEquals(7, folder.cellIndex)
+        assertEquals(target, folder.pageId)
+        assertEquals(
+            inFolder(original, setOf(draggedId, occupantId), folder.id),
+            dao.getAll().sortedBy { it.id },
+        )
+
+        val beforeJoin = dao.getAll().sortedBy { it.id }
+        assertFalse(
+            repo.addToFolder(joiner, folder.id, WorkspaceRepository.FolderDropSource.Workspace(3, source)),
+        )
+        assertEquals(beforeJoin, dao.getAll().sortedBy { it.id })
+        assertTrue(
+            repo.addToFolder(joiner, folder.id, WorkspaceRepository.FolderDropSource.Workspace(5, source)),
+        )
+        assertEquals(inFolder(beforeJoin, setOf(joinerId), folder.id), dao.getAll().sortedBy { it.id })
+        assertEquals(
+            setOf(draggedId, occupantId, joinerId),
+            dao.folderMembersInOrder(folder.id).map { it.id }.toSet(),
+        )
+        assertEquals(originalPages, db.workspacePageDao().getAll())
+    }
+
     @Test
     fun drawerDropsCreateNewMembersWithoutRemovingPinsOrDuplicatingAFolderMember() = runBlocking {
         val drawer = WorkspaceRepository.FolderDropSource.Drawer

@@ -779,7 +779,8 @@ class WorkspaceRepository(
     // Folders -------------------------------------------------------------------
 
     internal sealed interface FolderDropSource {
-        data class Workspace(val cell: Int) : FolderDropSource
+        /** The moved pin's own placement, which may be on another page than the drop target. */
+        data class Workspace(val cell: Int, val pageId: Long = DEFAULT_WORKSPACE_PAGE_ID) : FolderDropSource
         data class Dock(val pinId: Long) : FolderDropSource
         data object Drawer : FolderDropSource
     }
@@ -806,7 +807,7 @@ class WorkspaceRepository(
             if (target.hasKey(key)) return@withLock false
             null
         } else {
-            folderDropPin(items, key, pageId, source) ?: return@withLock false
+            folderDropPin(items, key, source) ?: return@withLock false
         }
         if (draggedItem?.id == target.id || folderAtCell(pageId, targetCell) != null) return@withLock false
         // Roll back the folder row if either membership update fails.
@@ -834,7 +835,7 @@ class WorkspaceRepository(
                 }
                 insertFolderMember(key, folderId, lastPosition + 1, actionPinLabel(app))
             } else {
-                val entry = folderDropPin(items, key, pageId, source) ?: return@withLock false
+                val entry = folderDropPin(items, key, source) ?: return@withLock false
                 dao.updateFolder(entry.id, folderId)
             }
             true
@@ -891,10 +892,9 @@ class WorkspaceRepository(
     private fun folderDropPin(
         items: List<WorkspaceItemEntity>,
         key: AppKey,
-        pageId: Long,
         source: FolderDropSource,
     ): WorkspaceItemEntity? = when (source) {
-        is FolderDropSource.Workspace -> workspacePinAt(items, key, pageId, source.cell)
+        is FolderDropSource.Workspace -> workspacePinAt(items, key, source.pageId, source.cell)
         is FolderDropSource.Dock -> items.firstOrNull { it.isDockPin(source.pinId) && it.hasKey(key) }
         FolderDropSource.Drawer -> null
     }

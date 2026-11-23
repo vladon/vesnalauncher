@@ -361,6 +361,21 @@ class LauncherController(
         scope.launch { workspaceRepository.addToFolder(app, folderId, source) }
     }
 
+    /** Awaits an edge-preview drop so Home keeps the preview until the folder change is saved. */
+    internal suspend fun groupWithCell(
+        dragged: LauncherApp,
+        targetCell: Int,
+        defaultTitle: String,
+        source: WorkspaceRepository.FolderDropSource,
+        pageId: Long,
+    ): Boolean = workspaceRepository.createFolderFromDrop(dragged, targetCell, defaultTitle, source, pageId)
+
+    internal suspend fun joinFolder(
+        app: LauncherApp,
+        folderId: Long,
+        source: WorkspaceRepository.FolderDropSource,
+    ): Boolean = workspaceRepository.addToFolder(app, folderId, source)
+
     internal fun addAppsToFolder(folder: Folder, keys: List<AppKey>) {
         scope.launch {
             val catalogue = appCatalogue.value.byKey

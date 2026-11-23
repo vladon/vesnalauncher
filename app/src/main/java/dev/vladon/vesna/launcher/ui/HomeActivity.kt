@@ -299,7 +299,7 @@ class HomeActivity : ComponentActivity() {
                 updateDragTarget(x + workspace.left, y + workspace.top)
             } else {
                 dock.showSlotHighlight(null)
-                workspace.showDropHighlight(previewDropCell(edge, x, y))
+                workspace.showDropHighlight(edge.homePin?.let { previewDropCell(it, edge, x, y) })
             }
         }
         workspace.onDragReleased = { x, y, moved, cancelled, app, anchor ->
@@ -717,8 +717,14 @@ class HomeActivity : ComponentActivity() {
         drag.requestedPage?.let { renderedState.isDragPagePreview && renderedState.activePageId == it }
             ?: !renderedState.isDragPagePreview
 
-    private fun previewDropCell(drag: EdgePageDrag, localX: Float, localY: Float): Int? =
-        if (!layoutLocked && isRenderedDragPage(drag)) workspace.folderDropTarget(localX, localY) else null
+    /** A cell of the previewed page that accepts the pin: empty, an app to group with, or a folder to join. */
+    private fun previewDropCell(source: DragSource, drag: EdgePageDrag, localX: Float, localY: Float): Int? {
+        if (layoutLocked || !isRenderedDragPage(drag)) return null
+        val cell = workspace.cellAtLocal(localX, localY) ?: return null
+        // The preview can return to the source page, where the dragged pin's own cell is no target.
+        val ownCell = drag.requestedPage == source.pageId && cell == source.fromCell
+        return if (ownCell || workspace.isCellReserved(cell)) null else cell
+    }
 
     private fun clearEdgeDrag() {
         val drag = edgePageDrag ?: return
@@ -752,20 +758,29 @@ class HomeActivity : ComponentActivity() {
         y: Float,
     ) {
         val destination = drag.requestedPage ?: return
-        val cell = previewDropCell(drag, x - workspace.left, y - workspace.top)
+        val cell = previewDropCell(source, drag, x - workspace.left, y - workspace.top)
         val pinId = drag.stablePinId
         if (pinId == null || cell == null) {
             clearEdgeDrag()
-        } else {
-            val grid = renderedState.grid
-            submitEdgeDrop(drag, destination, move = {
-                if (destination == NEW_WORKSPACE_PAGE_PREVIEW_ID) {
+            return
+        }
+        // The bound page is still the preview, so its occupant tells which change to save.
+        val occupant = workspace.contentAt(cell)
+        val grid = renderedState.grid
+        val folderSource = source.folderDropSource()
+        val defaultTitle = getString(R.string.folder_default_title)
+        submitEdgeDrop(drag, destination, move = {
+            when (occupant) {
+                is CellContent.App -> controller.groupWithCell(source.app, cell, defaultTitle, folderSource, destination)
+                is CellContent.FolderCell -> controller.joinFolder(source.app, occupant.folder.id, folderSource)
+                // A blank page only has empty cells, so a new page is always a plain move.
+                null -> if (destination == NEW_WORKSPACE_PAGE_PREVIEW_ID) {
                     controller.finishNewWorkspacePagePreview(pinId, source.pageId, source.fromCell, cell, grid)
                 } else {
                     controller.moveWorkspacePinToCell(pinId, source.pageId, source.fromCell, destination, cell)
                 }
-            })
-        }
+            }
+        })
     }
 
     private fun updateWholeFolderDrag(x: Float, y: Float): Boolean {
@@ -1296,7 +1311,7 @@ class HomeActivity : ComponentActivity() {
 
     private fun DragSource.folderDropSource(): FolderDropSource = when {
         fromDrawer -> FolderDropSource.Drawer
-        container == Container.WORKSPACE -> FolderDropSource.Workspace(fromCell)
+        container == Container.WORKSPACE -> FolderDropSource.Workspace(fromCell, pageId)
         else -> FolderDropSource.Dock(dockPinId)
     }
 

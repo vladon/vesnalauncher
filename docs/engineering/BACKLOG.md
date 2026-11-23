@@ -292,6 +292,7 @@ unchanged.
 
 | Item | Evidence |
 |---|---|
+| Cross-page drops onto an occupied cell create or extend a folder ([#168](https://github.com/vladon/vesnalauncher/issues/168)) | 0.4.72 — [Android 15 QA](verification/VESNA-QA-CROSS-PAGE-FOLDER-DROPS.md) verified an app onto an app and onto a folder from another page, unchanged other rows and dock, cancellation, an invalid release, the pin's own cell, restart, and compact RTL. |
 | Optional keyboard when the app drawer opens ([#112](https://github.com/vladon/vesnalauncher/issues/112), approved scope only) | 0.4.71 — [Android 15 QA](verification/VESNA-QA-DRAWER-KEYBOARD-ON-OPEN.md) verified the off-by-default switch, both entry points, Back, restart, recreation, Settings search, Dark, and compact RTL. Frequency suggestions stay deferred. |
 | Slow upward swipe opens the drawer instead of the workspace menu ([#170](https://github.com/vladon/vesnalauncher/issues/170)) | 0.4.70 — [Android 15 QA](verification/VESNA-QA-SLOW-SWIPE-DRAWER.md) verified 1100 px swipes from 300 to 925 ms opening the drawer once, a slow 400 px swipe opening neither surface, the stationary-hold menu, and an unchanged tile hold. |
 | Create a Home page by dropping a closed folder past the last page ([#167](https://github.com/vladon/vesnalauncher/issues/167)) | 0.4.69 — [Android 15 QA](verification/VESNA-QA-WHOLE-FOLDER-EDGE-APPEND.md) verified the blank preview, cancellation and invalid release, exact placement with unchanged name and member order, restart, the page cap, and compact RTL. |
