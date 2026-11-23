@@ -1923,3 +1923,56 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   cross-page dragging and TalkBack were not covered.
   Evidence: `EVI-VESNA-003/parity84-*`.
   [Follow-up in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7093561635).
+
+## OBS-VESNA-085 — Signed v0.4.61 reaches an existing Home page during drag
+
+- [PR #148](https://github.com/vladon/vesnalauncher/pull/148)
+  and the [v0.4.61 tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.61)
+  resolve to `005106deb1a9332ed9f471b5e2d549102c3ed6f0`.
+  Tested the public signed APK (66), not a local `main` build:
+  SHA-256 `76f8be4206665ad9ac072dcb723810780b92fb78d81d884a8af528a99a06ec1f`,
+  with the same v2 signer as v0.4.60.
+- Android 15 research AVD, Nova 9.0.1 Prime (90100). An
+  ordinary Contacts pin in Nova previewed the pre-existing
+  next page with Drive while the drag was held. Cancel left
+  the original pin in its source cell even though the
+  destination stayed visible. Releasing over a free cell
+  moved Contacts. The earlier folder comparator is OBS-VESNA-067.
+- On signed v0.4.60, the ordinary Contacts edge-hold stayed
+  on page one. Upgrading the same fixture in place preserved
+  both pages and the Files/Gmail/Photos folder. On v0.4.61 the
+  visible Drive marker confirmed page-two preview before
+  release for both Contacts and Files. They landed in the
+  third and fourth cells of page two's bottom row respectively.
+  Drive and the original folder cell did not move; Gmail and
+  Photos retained order. Both exact pages survived a cold start.
+- Android CANCEL and dropping on the occupied Drive cell each
+  preserved both pages for both sources. The failed folder
+  drops returned to the open folder with unchanged members.
+  Workspace lock blocked folder-member page preview and movement.
+  An unlocked same-page drop still placed Gmail exactly and
+  dissolved the two-member folder to Photos in its former cell.
+- Restored both original one-page layouts, docks and unlocked
+  fixture. Kept v0.4.61 installed. RTL and nonexistent-page
+  edge behavior were not independently tested on this release.
+  Evidence: `EVI-VESNA-003/parity85-*` and `release-0.4.61`.
+  [Independent result in #139](https://github.com/vladon/vesnalauncher/issues/139#issuecomment-7093817077).
+
+## OBS-VESNA-086 — Widget catalog search and empty state
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.60 (65) / v0.4.61 (66), unlocked Home.
+- In Nova, long-press empty Home and expand **Widgets**.
+  `Clock` filtered to the Clock provider; expanding it
+  showed named previews and size labels (e.g. **Analog**,
+  **3 × 2**). `zzOneNoWidgetQA` showed “No widgets or
+  shortcuts found.” Clearing restored the unfiltered catalog.
+- Neither tested Vesna release exposed a catalog via **Home
+  options** or Settings search for `widget`. On v0.4.60 the
+  empty-space menu and Clock dock menu offered no widget entry.
+  This is a gap in browsing and discovery, not a placement
+  or permission test.
+- Browsing and dismissal left both layouts and docks unchanged.
+  No widget was selected for binding. Evidence:
+  `EVI-VESNA-003/parity85-widget-*`.
+  [Issue #149](https://github.com/vladon/vesnalauncher/issues/149).

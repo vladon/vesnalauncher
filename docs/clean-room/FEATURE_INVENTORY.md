@@ -32,7 +32,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-001 | Home screen page management (add/remove/reorder pages) | pending |
 | HOME-002 | Grid sizing (rows/columns) | Matched five-item geometry: Nova 9.0.1 overflowed a shortcut and restored its original layout on re-expansion; signed Vesna v0.4.53 overflowed the folder and kept both pages without losing members (OBS-VESNA-043/045; #106). |
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
-| HOME-004 | Drag-and-drop rearrangement on workspace | Drag requires hold-then-move. Nova 9.0.1 can carry a folder member across to an adjacent Home page; Vesna v0.4.55 kept both tested drag types on the current page (OBS-VESNA-067; #139). |
+| HOME-004 | Drag-and-drop rearrangement on workspace | Nova and signed Vesna v0.4.61 carry both an ordinary pin and a folder member across an existing Home page, with exact-cell drop observed (OBS-VESNA-067/085; #139). |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
 | HOME-006 | Long-press context menu on workspace items | Nova 9.0.1 and signed Vesna v0.4.54 open and pin the native Clock timer action. Vesna can rename it without losing its launch target; layout lock retains Open but blocks edits and pinning. Nova additionally exposes widgets, artwork and per-pin swipe editing (OBS-VESNA-021/046/049/051; #114). |
 | HOME-007 | Wallpaper interactions (pick, scroll behavior) | discovered (Wallpapers button; wallpaper scrolling setting) |
@@ -96,7 +96,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| WIDGET-001 | Widget picker / list | observed (full-screen grouped searchable picker) |
+| WIDGET-001 | Widget picker / list | Nova offers grouped search, named previews and dimensions, and an explicit no-results state; no equivalent entry found in the tested Vesna v0.4.60/61 paths (OBS-VESNA-086; #149). |
 | WIDGET-002 | Widget placement | pending |
 | WIDGET-003 | Widget resizing | discovered (Widget overlap setting; resize behavior pending) |
 | WIDGET-004 | Widget configuration activity | pending |
