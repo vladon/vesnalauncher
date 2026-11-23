@@ -2003,3 +2003,54 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   independently tested here.
 - Restored `en-US`, both original one-page layouts and docks.
   Evidence: `EVI-VESNA-003/parity86-*`.
+
+## OBS-VESNA-088 — Home label visibility with a readable drawer list
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.61 (66), both in single-column app-list
+  mode and initially showing names.
+- Disabling Nova's **Home screen → Label** removed the
+  visual Gmail and Photos labels on Home while retaining
+  visible names such as Calendar in the unfiltered list.
+- Disabling Vesna's **Appearance → Show app names** removed
+  visible Home, dock and unfiltered list labels. Icon tiles
+  and their accessible app names remained; the single-column
+  list was a column of icons without visible names. The
+  tested settings did not allow labels on the list while
+  hiding them on Home.
+- Restored both label switches, checked the original Home
+  and dock items, and completed this run before installing
+  v0.4.62. Evidence: `EVI-VESNA-003/parity87-*labels-*`.
+  [Issue #152](https://github.com/vladon/vesnalauncher/issues/152).
+
+## OBS-VESNA-089 — Signed v0.4.62 remembers the list with auto-close enabled
+
+- [PR #150](https://github.com/vladon/vesnalauncher/pull/150)
+  and the [v0.4.62 tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.62)
+  point to `e7681cdbdb751a99f5b53170d204d14cdf813ac0`.
+  Independently checked the signed release (67), not a
+  local build. APK SHA-256:
+  `84335769d268932385b4fb42e01299ea50d4b9b94551620fec10a6b38c01e2ed`;
+  same v2 signer as v0.4.61.
+- Android 15 research AVD, gesture navigation, Vesna as
+  Android Home. With both switches on, signed v0.4.61 (66)
+  still went back to the top in the unfiltered vertical list.
+  Completed that run first; upgrading in place kept the
+  switches, layout and dock.
+- On v0.4.62, scrolling, tapping Clock's normal row, pressing
+  Android Home and explicitly reopening restored all 12
+  visible rows at their original bounds (Clock:
+  `[0,489][954,657]`). This matches the plain Nova 9.0.1 Prime
+  list in OBS-VESNA-082.
+- Back from Clock left the drawer closed; its next opening was
+  at the top. Launch from the filtered `Clock` query also
+  reopened at the top with no query. Turning Remember position
+  off returned to the top; enabling only Remember position
+  retained exact bounds as before.
+- Force-stopping after Clock → Home with a pending offset
+  discarded it; both switches persisted in the new process.
+  Restored the original viewport settings, labels, Home role
+  and both layouts; v0.4.62 remained installed.
+- Evidence: `EVI-VESNA-003/parity87-vesna-061-*`,
+  `parity87-vesna-062-*`, `parity70-cycle87-*` and `release-0.4.62`.
+  [Independent result in #147](https://github.com/vladon/vesnalauncher/issues/147#issuecomment-7094304067).

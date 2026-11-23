@@ -55,7 +55,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-003 | Drawer layout modes | Nova 9.0.1 and signed Vesna 0.4.51 have vertical list and horizontal pages. Both retain the horizontal page on search clear; Vesna resets vertical list scroll on clear (OBS-VESNA-027/035; #108). |
 | DRAWER-004 | Sorting (alphabetical, custom, etc.) | discovered (alphabetical default) |
 | DRAWER-005 | Drawer search | Both launch local apps offline. Nova separates provider buttons from web suggestions and passes the query to Maps even offline; Vesna v0.4.54 opens the installed Maps app by name only on the tested paths (OBS-VESNA-028/031/056; #113). |
-| DRAWER-006 | Scrolling and fast-scroll behavior | Both jump by letter outside search (#109). Since signed v0.4.59 Vesna restores the vertical-list position after Android Home with auto-close off (#141, OBS-VESNA-077). With both switches on, v0.4.60 resets while Nova restores the plain list (#147, OBS-VESNA-082). |
+| DRAWER-006 | Scrolling and fast-scroll behavior | Both jump by letter (#109). Signed v0.4.62 restores the plain vertical-list position after Android Home with auto-close on or off, matching Nova on that path (#141/#147, OBS-VESNA-077/082/089). |
 | DRAWER-007 | Drawer grid configuration (columns/rows) | discovered (Drawer App Grid 6×5) |
 | DRAWER-008 | Hide apps from alphabetical browsing | Nova 9.0.1 and signed Vesna 0.4.50 retain pins and exact-name search after hiding. Nova also matches a hidden app by prefix; Vesna requires its full name (OBS-VESNA-023/030; #119). |
 | DRAWER-009 | App categories/tabs/folders in drawer | discovered (Tab bar placement: None; Drawer groups: Prime) |
@@ -126,7 +126,7 @@ behavior, an ID is never reassigned to a different behavior.
 | APPPEAR-002 | Icon size | Nova changes actual desktop/drawer sizes together or independently; no equivalent size controls found in signed Vesna v0.4.59 (OBS-VESNA-080; #146). |
 | APPPEAR-003 | Icon shape / adaptive icon handling | Nova changes adaptive masks on Home, dock and the unfiltered app list. The tested Vesna v0.4.59 settings offer no equivalent selector (OBS-VESNA-079; #144). |
 | APPPEAR-004 | Icon packs | pending |
-| APPPEAR-005 | Label font size / color / shadow | pending |
+| APPPEAR-005 | Label font size / color / shadow | Typography not tested. For visibility, Nova can hide Home labels while keeping the app-list labels; Vesna v0.4.61's switch controls both (OBS-VESNA-088; #152). |
 | APPPEAR-006 | Accent colors / dynamic colors | pending |
 | APPPEAR-007 | Transparency of backgrounds (drawer/dock/search) | pending |
 | APPPEAR-008 | Wallpaper-dependent behaviors | pending |
