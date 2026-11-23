@@ -72,3 +72,26 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
   stale "Blocked" badge-rendering entry was superseded by OBS-SYS-112/113
   (root cause: test button posts a GROUP_SUMMARY — unbadged by design) and
   OBS-SYS-114 (third-party badge matrix inconclusive).
+
+- **Product decisions (2026-11-23)**: the maintainer recorded scope
+  for the open research issues in
+  [PR #165](https://github.com/vladon/vesnalauncher/pull/165).
+  Implementation is paused; later verification follows the decided
+  scope rather than the original acceptance text.
+  - #144: two shapes only, the current default and a rounded
+    square, for supported adaptive icons on Home, in the dock and
+    in the drawer.
+  - #146: separate Home and drawer sizes with **Follow Home** as
+    the drawer default; artwork only, without cell or placement
+    changes.
+  - #155: curated palettes only, each with contrast-checked Light
+    and Dark variants, independent of theme mode.
+  - #157: after #144 and #146; one format verified with Arcticons;
+    system artwork for unmatched icons or a removed pack; no shape
+    mask on pack artwork.
+  - #158: deferred until #155; a separate drawer setting with
+    **Follow theme**.
+  - #149: no browse-only picker; revisit with a working
+    add-widget flow.
+  - #133: vertical scrolling stays; horizontal paging is deferred
+    until vertical navigation is shown to hinder access.
