@@ -1071,3 +1071,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `EVI-VESNA-003/parity46-*` and `parity45-cycle46-*`; Nova
   reference: `parity44-*`. Follow-up for #106. This case does
   not cover widgets or the eight-page limit.
+
+## OBS-VESNA-046 — Per-icon swipe and tap use separate actions
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.53 (58), each with an ordinary Gmail pin on Home.
+- In Nova, long-press Gmail → **Edit → Swipe up → Apps → Clock**
+  → **Done**. A tap still opened Gmail. After a cold launcher
+  restart the editor still showed the Clock binding, and a short
+  upward swipe from the rendered Gmail icon opened Clock.
+  The same swipe from a blank cell did not open Clock.
+- Cleared the binding to **None**, restarted Nova, and verified
+  that the same upward swipe on Gmail no longer opened Clock.
+- In Vesna, the same short swipe left Home unchanged and tapping
+  Gmail opened Gmail. The matching long-press menu had no icon
+  editor or per-icon swipe entry.
+- Gesture used for the paired positive/control trials: about
+  130 px in 110 ms at 1080×2400, starting on the glyph, not the
+  label. Restored the original binding and layouts. Evidence:
+  `EVI-VESNA-003/parity47-*`; follow-up for #114. Swipe down and
+  custom icon selection were not exercised.

@@ -34,7 +34,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-003 | Icon placement: add app/shortcut to workspace | pending |
 | HOME-004 | Drag-and-drop rearrangement on workspace | discovered (drag requires hold-then-move) |
 | HOME-005 | Drag side-by-side push/placement behavior on occupied cells | pending |
-| HOME-006 | Long-press context menu on workspace items | Nova 9.0.1 opens app actions and app-scoped widgets; Home label edits persist without renaming the drawer entry. Vesna v0.4.52 offers no editor in the matched menu (OBS-VESNA-021/042; #114). |
+| HOME-006 | Long-press context menu on workspace items | Nova 9.0.1 opens app actions and app-scoped widgets; Home label edits leave drawer names intact, and a per-icon swipe can launch a second app without changing tap. Vesna v0.4.53 had no editor in the matched menu (OBS-VESNA-021/042/046; #114). |
 | HOME-007 | Wallpaper interactions (pick, scroll behavior) | discovered (Wallpapers button; wallpaper scrolling setting) |
 | HOME-008 | Icon labels (show/hide/edit) | discovered (Label toggle + sub-options) |
 | HOME-009 | Page transition effects and scrolling behavior | discovered (Transition effect, Infinite scroll, Page indicator settings) |
