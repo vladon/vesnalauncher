@@ -1415,3 +1415,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored both layouts. Evidence: `EVI-VESNA-003/parity63-*`.
   The one-action sort is tracked in #135, separate from manual
   in-folder drag reorder (#131).
+
+## OBS-VESNA-063 — Swipe-down arbitration in the app drawer list
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59), single-column vertical list in both,
+  blank query and keyboard hidden. Nova had its existing drawer
+  groups/predictions; the comparison used each list's own top
+  and a visibly scrolled position.
+- In both, a mid-list downward swipe from (530,1120) to
+  (530,1850) over 440 ms moved back toward earlier rows without
+  dismissing the drawer. Starting at the top, the same gesture
+  left the drawer open with the same rows.
+- Starting at the top, a downward swipe from (530,810) to
+  (530,1710) over 280 ms closed both drawers and restored the
+  same Home and dock layouts. Two gesture samples do not
+  establish a velocity or distance threshold.
+- No difference in these cases. Grid, horizontal pages, and
+  keyboard-visible dismissal were not compared in this run.
+  Restored Vesna's original grid setting and both layouts.
+  Evidence: `EVI-VESNA-003/parity64-*`.
