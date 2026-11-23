@@ -1809,3 +1809,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   both layouts and docks were unchanged. Evidence:
   `EVI-VESNA-003/parity80-*` and `parity70-cycle80-*`.
   [Issue #144](https://github.com/vladon/vesnalauncher/issues/144).
+
+## OBS-VESNA-080 — Desktop and drawer icon sizes
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.59 (64). Compared an ordinary Gmail
+  Home pin and Calendar in the unfiltered vertical app list.
+- Nova started with **Match desktop size** on and both sizes
+  at 125%. Changing only **Home screen → Icon size** to 100%
+  changed both surfaces: the sampled Gmail white mask went
+  from 144 to 114 px wide and Calendar's colored artwork from
+  88 to 70 px in 1080×2400 captures.
+- Disabling **Match desktop size** revealed the separately
+  saved 125% drawer setting. Calendar returned to 88 px,
+  while Gmail stayed at 114 px. Relinking and restoring 125%
+  returned both measurements and Home/dock geometry to baseline.
+- The Vesna **Home screen** and **App drawer** settings had
+  no equivalent size control. Searches for `icon size` and
+  `scale` returned no results. Dock sizing and adaptive icon
+  shape are separate. No layout changes were made to Vesna.
+- Evidence: `EVI-VESNA-003/parity81-*`, `parity70-cycle81-*`,
+  and the matched Vesna list from `parity80-vesna-vertical-list-calendar`.
+  [Issue #146](https://github.com/vladon/vesnalauncher/issues/146).
