@@ -2120,3 +2120,57 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   grid in its picker after rollback.
   Evidence: `EVI-VESNA-003/parity90-*`.
   [Follow-up in #133](https://github.com/vladon/vesnalauncher/issues/133#issuecomment-7094935713).
+
+## OBS-VESNA-093 — Signed Home label control
+
+- Android 15 research AVD, `en-US`, 1080×2400 px at 420 dpi,
+  100% text. Finished the signed v0.4.62 (67) control before
+  upgrading in place to published v0.4.63 (68).
+  [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.63):
+  `ccf3d926978de877b3799aa83c87b58edbfcfecb`; APK SHA-256
+  `08593de60aff3ca944eeed4f9987a18efd7e422277bf4431fb05efddcc13aa32`,
+  with the same verified v2 signer as v0.4.62.
+- The old global **Show app names** switch hid the Home,
+  dock, unfiltered vertical list and folder labels on v0.4.62.
+  The in-place upgrade preserved visible names and the layout
+  with the new **Hide app names on Home** switch off.
+- Turning on the new switch hid Files on Home and Calendar
+  in the dock. Calendar still had visible text in the
+  vertical list, as did Gmail and Photos inside the folder.
+  Checked identical accessible names and clickable/focusable
+  bounds, unchanged Home and dock positions, pixel-identical
+  Files and Calendar artwork, and successful launches of
+  Files from Home and Clock from the dock.
+- The switch survived process termination and reopening.
+  Global off still hid all four types of labels. Global on
+  restored drawer and folder names without overriding the
+  scoped choice; scoped off restored Home and dock names.
+  This matches Nova's Home/list independence in OBS-VESNA-088.
+- Removed the temporary folder and restored the original
+  layouts and settings by snapshot rollback, then installed
+  the verified v0.4.63 APK over the original state. Checked
+  the saved layouts, both label settings and the Nova Home
+  role. Evidence: `EVI-VESNA-003/parity91-62-*`,
+  `parity91-63-*`, `release-0.4.63/`.
+  [Independent verification in #152](https://github.com/vladon/vesnalauncher/issues/152#issuecomment-7095227180).
+
+## OBS-VESNA-094 — Palette source independent of theme mode
+
+- Same Android 15 AVD in system light mode. Nova 9.0.1 Prime
+  (90100) offered **System**, **Local Wallpaper**, and
+  **Custom** in Settings → Style → Palette. Opening the
+  custom picker and canceling left **System** selected.
+- Confirming the upper-left magenta swatch changed solid
+  Settings title pixels from `#152e60` to `#581932` and
+  nearby background pixels from `#fefbff` to `#fffbfa`,
+  without changing **Mode → Follow system**. Switching
+  back to **System** returned the sampled region exactly.
+- In signed Vesna v0.4.62 (67) and v0.4.63 (68), Appearance
+  showed **System / Light / Dark** and the global names
+  switch, but no separate palette control. Searching
+  settings for `palette` returned **No settings found**.
+- Verified the original Nova palette after rollback.
+  Wallpaper-derived colors, per-surface overrides, and
+  icon packs were not exercised. Evidence:
+  `EVI-VESNA-003/parity91-*color*`, `parity91-*palette*`.
+  [Issue #155](https://github.com/vladon/vesnalauncher/issues/155).
