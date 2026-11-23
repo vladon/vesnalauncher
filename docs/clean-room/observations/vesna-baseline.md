@@ -2616,3 +2616,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity110-*`.
   [Issue #168](https://github.com/vladon/vesnalauncher/issues/168)
   and [#169](https://github.com/vladon/vesnalauncher/issues/169).
+
+## OBS-VESNA-111 — Shortcut dropped onto a folder on another page
+
+- Same Android 15 research AVD, real 4×5 grids, Nova 9.0.1
+  Prime (90100) and signed Vesna v0.4.68 (73). Page two held
+  a closed folder with Drive and Files at top-left; page one
+  held Photos.
+- Photos was dragged from page one to the right edge and
+  released on the folder.
+- Nova added Photos as the third member and opened the folder
+  with Files, Drive and Photos in that order; page one lost
+  Photos and the dock was unchanged.
+- Vesna showed page two while Photos was held, then refused:
+  it returned to page one, Photos stayed in its cell, and the
+  folder kept its two members.
+- On the same page Vesna does add a dropped app to a folder
+  (OBS-VESNA-097). Restored through the loadable baseline
+  snapshot and re-checked both layouts, both docks and the
+  4×4 Nova grid. Evidence: `EVI-VESNA-003/parity111-*`.
+  [New fact in #168](https://github.com/vladon/vesnalauncher/issues/168#issuecomment-7106555120).
