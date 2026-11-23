@@ -3355,10 +3355,10 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   four pins.
 - **Add:** Vesna's drawer item menu offers Add to
   workspace, **Add to dock** and App info; Add to
-  dock put Calendar in the dock's first slot (the
-  dock had three pins after the removal). Nova's
-  fifth slot, freed by the removal, took a Home
-  shortcut dropped onto it.
+  dock appended Drive to the dock's free last
+  slot (the dock had three pins after the
+  removal). Nova's fifth slot, freed by the
+  removal, took a Home shortcut dropped onto it.
 - A dock long-press in Nova opens its menu while
   the finger is still down; Vesna's menu appears
   only after release.
