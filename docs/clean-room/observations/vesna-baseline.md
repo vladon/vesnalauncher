@@ -2834,3 +2834,30 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   saved as the new loadable baseline.
   Evidence: `EVI-VESNA-003/parity119-*`, `release-0.4.70/`.
   [Independent verification in #170](https://github.com/vladon/vesnalauncher/issues/170#issuecomment-7110009227).
+
+## OBS-VESNA-119 — Page looping and page indicator
+
+- Android 15 research AVD, `en-US`, two Home pages in each
+  launcher with a single marker shortcut on the second page.
+  Nova 9.0.1 Prime (90100) and signed Vesna v0.4.70 (75).
+- **Outward swipes by default:** in both launchers a swipe
+  away from the other page stayed on the same page, from the
+  first page and from the last.
+- **Nova, Home screen → Infinite scroll:** after switching it
+  on, the outward swipe from the first page went to the last,
+  and the outward swipe from the last page returned to the
+  first. After switching it off again, the swipe stayed put.
+- **Nova, Home screen → Page indicator:** the options are
+  None, CIRCLE, DOT and LINE, with LINE selected by default.
+  Right after a page swipe, LINE showed a thin line above the
+  dock and None showed nothing.
+- **Vesna:** the counter **Home page 1 of 2** or **Home page
+  2 of 2**, with Previous and Next buttons, is always shown.
+  Settings search for `infinite`, `indicator` and `loop`
+  returned **No settings found**.
+- Nova's transition and animation rows were only seen, not
+  exercised. Restored through the loadable baseline snapshot:
+  one page per launcher, Infinite scroll off, Page indicator
+  LINE, both original layouts.
+  Evidence: `EVI-VESNA-003/parity120-*`.
+  [Issue #174](https://github.com/vladon/vesnalauncher/issues/174).

@@ -37,7 +37,7 @@ behavior, an ID is never reassigned to a different behavior.
 | HOME-006 | Long-press context menu on workspace items | Nova 9.0.1 and signed Vesna v0.4.54 open and pin the native Clock timer action. Vesna can rename it without losing its launch target; layout lock retains Open but blocks edits and pinning. Nova additionally exposes widgets, artwork and per-pin swipe editing (OBS-VESNA-021/046/049/051; #114). |
 | HOME-007 | Wallpaper interactions (pick, scroll behavior) | discovered (Wallpapers button; wallpaper scrolling setting) |
 | HOME-008 | Icon labels (show/hide/edit) | Nova 9.0.1 and signed Vesna v0.4.54 can rename a Home pin without changing its drawer app. Vesna discards a draft on Back and offers immediate Reset; Nova kept the edit on the equivalent Back path (OBS-VESNA-042/053; #114). |
-| HOME-009 | Page transition effects and scrolling behavior | discovered (Transition effect, Infinite scroll, Page indicator settings) |
+| HOME-009 | Page transition effects and scrolling behavior | Nova loops pages only with Infinite scroll on and offers None, CIRCLE, DOT and LINE page indicators (default LINE). Signed Vesna v0.4.70 never loops and always shows a Home page counter with Previous and Next buttons (OBS-VESNA-119; #174). Transition effects only inventoried. |
 | HOME-010 | Workspace search bar / persistent search | discovered (Search bar placement: Dock Below icons) |
 | HOME-011 | Empty cell behavior and drop targeting | pending |
 | HOME-012 | Widget placement on workspace (see WIDGET area) | pending |
