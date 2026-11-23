@@ -8,6 +8,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.data.FolderDao
 import dev.vladon.vesna.launcher.data.FolderEntity
 import dev.vladon.vesna.launcher.data.LauncherDatabase
+import dev.vladon.vesna.launcher.data.WorkspaceGridEntity
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
 import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
 import dev.vladon.vesna.launcher.data.WorkspacePageEntity
@@ -15,6 +16,7 @@ import dev.vladon.vesna.launcher.data.toDomain
 import dev.vladon.vesna.launcher.data.toEntity
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -22,11 +24,17 @@ import kotlinx.coroutines.sync.withLock
 internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
 internal enum class PageMoveResult { MOVED, FULL, UNAVAILABLE }
 internal enum class FolderRemovalResult { REMOVED, NO_ROOM, UNAVAILABLE }
+internal enum class GridResizeResult { APPLIED, TOO_MANY_ITEMS, LOCKED }
 
 internal data class PageMoveTarget(val id: Long, val number: Int)
 internal data class PageMoveOptions(val sourceId: Long, val pages: List<PageMoveTarget>)
 
-internal class SavedLayout(val items: List<WorkspaceItem>, val folders: List<Folder>)
+internal class SavedLayout(
+    val items: List<WorkspaceItem>,
+    val folders: List<Folder>,
+    val pageIds: List<Long>,
+    val grid: GridCanvas,
+)
 
 /** Hard cap on workspace pages; removing an empty extra page frees a slot. */
 internal const val MAX_WORKSPACE_PAGES = 8
@@ -42,14 +50,15 @@ class WorkspaceRepository(
     private val prefs: SharedPreferences,
 ) {
     private val workspacePreferences = WorkspacePreferences(prefs)
+    private val gridDao = db.workspaceGridDao()
 
     // Serializes read-modify-write operations so two quick actions (for example two
     // "add to dock" taps) cannot both compute placements from the same snapshot.
     private val mutationMutex = Mutex()
 
-    /** A folder and its membership must describe the same committed layout. */
+    /** Geometry, ordered page IDs and content describe the same transaction. */
     internal val savedLayout: Flow<SavedLayout> = db.invalidationTracker
-        .createFlow("workspace_items", "folders")
+        .createFlow("workspace_items", "folders", "workspace_pages", "workspace_grid")
         .map {
             db.withTransaction {
                 SavedLayout(
@@ -57,12 +66,58 @@ class WorkspaceRepository(
                     folders = folderDao.getAll().mapNotNull { row ->
                         row.pageId?.let { Folder(row.id, row.title, row.cellIndex, it) }
                     },
+                    pageIds = db.workspacePageDao().getAll().map { it.id },
+                    grid = readGrid(),
                 )
             }
         }
 
-    /** All pages in display order (rank, then id). */
-    val pages: Flow<List<WorkspacePageEntity>> = db.workspacePageDao().observeAll()
+    internal val grid: Flow<GridCanvas> = gridDao.observe().map { it.toGrid() }.distinctUntilChanged()
+
+    private suspend fun readGrid(): GridCanvas = gridDao.get().toGrid()
+
+    private fun WorkspaceGridEntity?.toGrid(): GridCanvas =
+        if (this == null) GridCanvas.DEFAULT else GridCanvas(columnCount, rowCount)
+
+    /** Reflows top-level workspace cells only. Geometry and all writes commit together. */
+    internal suspend fun resizeGrid(target: GridCanvas): GridResizeResult = mutationMutex.withLock {
+        db.withTransaction {
+            if (workspacePreferences.layoutLocked) return@withTransaction GridResizeResult.LOCKED
+            val previous = readGrid()
+            if (previous == target) return@withTransaction GridResizeResult.APPLIED
+            val pageDao = db.workspacePageDao()
+            val pages = pageDao.getAll()
+            val pageIndices = pages.withIndex().associate { (index, page) -> page.id to index }
+            fun pageIndex(id: Long?): Int = if (id == null) -1 else pageIndices[id] ?: -1
+            val placements = mutableListOf<GridPlacement>()
+            for (item in dao.getAll()) {
+                if (item.folderId == null && item.container != Container.DOCK.name) {
+                    placements.add(GridPlacement(item.id, false, pageIndex(item.pageId), item.cellIndex))
+                }
+            }
+            for (folder in folderDao.getAll()) {
+                placements.add(GridPlacement(folder.id, true, pageIndex(folder.pageId), folder.cellIndex))
+            }
+            val neededPages = reflowWorkspaceGrid(previous, target, pages.size, placements)
+                ?: return@withTransaction GridResizeResult.TOO_MANY_ITEMS
+            if (workspacePreferences.layoutLocked) return@withTransaction GridResizeResult.LOCKED
+            val pageIds = LongArray(neededPages)
+            val lastRank = pages.lastOrNull()?.rank ?: -1
+            for (index in pageIds.indices) {
+                pageIds[index] = if (index < pages.size) pages[index].id else {
+                    pageDao.insert(WorkspacePageEntity(rank = lastRank + index - pages.lastIndex))
+                }
+            }
+            for (placement in placements) {
+                if (placement.page == placement.oldPage && placement.cell == placement.oldCell) continue
+                val pageId = pageIds[placement.page]
+                if (placement.folder) folderDao.updateWorkspacePosition(placement.id, placement.cell, pageId)
+                else dao.updateWorkspacePosition(placement.id, placement.cell, pageId)
+            }
+            gridDao.set(WorkspaceGridEntity(columnCount = target.columns, rowCount = target.rows))
+            GridResizeResult.APPLIED
+        }
+    }
 
     /**
      * Whether the initial seeding already happened. Deliberately not derived from
@@ -80,13 +135,13 @@ class WorkspaceRepository(
      * creates is kept and marked as seeded. Returns true when the layout was
      * seeded, false when an existing layout was adopted.
      */
-    suspend fun seedOrAdopt(items: List<WorkspaceItem>): Boolean = mutationMutex.withLock {
+    suspend fun seedOrAdopt(apps: List<LauncherApp>): Boolean = mutationMutex.withLock {
         if (dao.getAll().isNotEmpty() || folderDao.getAll().isNotEmpty()) {
             prefs.edit { putBoolean(KEY_SEEDED, true) }
             return@withLock false
         }
         db.withTransaction {
-            dao.insertAll(items.map { it.toEntity() })
+            dao.insertAll(SeedPlanner.plan(apps, readGrid()).map { it.toEntity() })
         }
         prefs.edit { putBoolean(KEY_SEEDED, true) }
         true
@@ -166,7 +221,7 @@ class WorkspaceRepository(
     ): Boolean = mutationMutex.withLock {
         if (db.workspacePageDao().getById(pageId) == null) return@withLock false
         val occupied = occupiedCells(dao.getAll(), folderDao.getAll(), pageId)
-        val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock false
+        val cell = readGrid().firstFreeCell(occupied) ?: return@withLock false
         insertWorkspaceApp(app, cell, pageId)
         true
     }
@@ -178,7 +233,7 @@ class WorkspaceRepository(
         if (db.workspacePageDao().getById(pageId) == null) return@withLock
         val items = dao.getAll()
         if (items.any { it.packageName == app.key.packageName && it.userSerial == app.key.userSerial }) return@withLock
-        val cell = GridCanvas.firstFreeCell(occupiedCells(items, folderDao.getAll(), pageId)) ?: return@withLock
+        val cell = readGrid().firstFreeCell(occupiedCells(items, folderDao.getAll(), pageId)) ?: return@withLock
         // Settings can change while Room reads are suspended.
         if (allowsAutomaticPlacement()) insertWorkspaceApp(app, cell, pageId)
     }
@@ -210,7 +265,7 @@ class WorkspaceRepository(
             val items = dao.getAll()
             val source = items.firstOrNull { it.id == pinId && it.isOnPage(pageId) && it.cellIndex == cell }
                 ?: return@withLock PageMoveResult.UNAVAILABLE
-            val destinationCell = GridCanvas.firstFreeCell(occupiedCells(items, folderDao.getAll(), destinationId))
+            val destinationCell = readGrid().firstFreeCell(occupiedCells(items, folderDao.getAll(), destinationId))
                 ?: return@withLock PageMoveResult.FULL
             dao.updatePlacement(source.id, Container.WORKSPACE.name, destinationCell, destinationId)
             PageMoveResult.MOVED
@@ -231,7 +286,7 @@ class WorkspaceRepository(
             }
             val folders = folderDao.getAll()
             val source = folders.atPlacement(folder) ?: return@withLock PageMoveResult.UNAVAILABLE
-            val destinationCell = GridCanvas.firstFreeCell(occupiedCells(dao.getAll(), folders, destinationId))
+            val destinationCell = readGrid().firstFreeCell(occupiedCells(dao.getAll(), folders, destinationId))
                 ?: return@withLock PageMoveResult.FULL
             folderDao.update(source.copy(pageId = destinationId, cellIndex = destinationCell))
             PageMoveResult.MOVED
@@ -239,7 +294,7 @@ class WorkspaceRepository(
 
     /** Moves a folder to an empty cell on its current page without touching its members. */
     internal suspend fun moveFolderWithinPage(folder: Folder, toCell: Int): Boolean = mutationMutex.withLock {
-        if (!GridCanvas.isValidCell(toCell) || toCell == folder.cellIndex) return@withLock false
+        if (!readGrid().isValidCell(toCell) || toCell == folder.cellIndex) return@withLock false
         val folders = folderDao.getAll()
         val source = folders.atPlacement(folder) ?: return@withLock false
         if (folders.any { it.pageId == folder.pageId && it.cellIndex == toCell } ||
@@ -258,8 +313,9 @@ class WorkspaceRepository(
         items: List<WorkspaceItemEntity>,
         folders: List<FolderEntity>,
     ): List<PageMoveTarget> = buildList {
+        val grid = readGrid()
         db.workspacePageDao().getAll().forEachIndexed { index, page ->
-            if (page.id != pageId && GridCanvas.firstFreeCell(occupiedCells(items, folders, page.id)) != null) {
+            if (page.id != pageId && grid.firstFreeCell(occupiedCells(items, folders, page.id)) != null) {
                 add(PageMoveTarget(page.id, index + 1))
             }
         }
@@ -333,7 +389,7 @@ class WorkspaceRepository(
         toCell: Int,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
-        if (!GridCanvas.isValidCell(toCell)) return@withLock false
+        if (!readGrid().isValidCell(toCell)) return@withLock false
         val items = dao.getAll()
         val source = workspacePinAt(items, app.key, pageId, fromCell) ?: return@withLock false
         if (source.cellIndex == toCell) return@withLock true
@@ -380,7 +436,7 @@ class WorkspaceRepository(
         cell: Int,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
-        if (!GridCanvas.isValidCell(cell) || db.workspacePageDao().getById(pageId) == null) return@withLock false
+        if (!readGrid().isValidCell(cell) || db.workspacePageDao().getById(pageId) == null) return@withLock false
         if (cellIsOccupied(dao.getAll(), pageId, cell)) return@withLock false
         insertWorkspaceApp(app, cell, pageId)
         true
@@ -448,7 +504,7 @@ class WorkspaceRepository(
         cell: Int,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
-        if (!GridCanvas.isValidCell(cell) || db.workspacePageDao().getById(pageId) == null) return@withLock false
+        if (!readGrid().isValidCell(cell) || db.workspacePageDao().getById(pageId) == null) return@withLock false
         val items = dao.getAll()
         val source = items.firstOrNull { it.isDockPin(pinId) } ?: return@withLock false
         if (cellIsOccupied(items, pageId, cell)) return@withLock false
@@ -491,7 +547,7 @@ class WorkspaceRepository(
         source: FolderDropSource,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     ): Boolean = mutationMutex.withLock {
-        if (!GridCanvas.isValidCell(targetCell)) return@withLock false
+        if (!readGrid().isValidCell(targetCell)) return@withLock false
         val items = dao.getAll()
         val target = items.firstOrNull {
             it.isOnPage(pageId) && it.cellIndex == targetCell
@@ -568,7 +624,7 @@ class WorkspaceRepository(
         val folder = folderDao.getById(folderId) ?: return@withLock FolderRemovalResult.UNAVAILABLE
         val pageId = folder.pageId ?: return@withLock FolderRemovalResult.UNAVAILABLE
         val occupied = occupiedCells(items, folderDao.getAll(), pageId)
-        val cell = GridCanvas.firstFreeCell(occupied) ?: return@withLock FolderRemovalResult.NO_ROOM
+        val cell = readGrid().firstFreeCell(occupied) ?: return@withLock FolderRemovalResult.NO_ROOM
         db.withTransaction {
             dao.updatePlacement(pinId, Container.WORKSPACE.name, cell, pageId)
             dissolveIfSparse(folder.id)
@@ -593,7 +649,7 @@ class WorkspaceRepository(
         val items = dao.getAll()
         val members = items.filter { it.folderId == folderId }.sortedBy { it.cellIndex }
         val occupied = occupiedCells(items, folderDao.getAll(), pageId, excludedFolderId = folder.id)
-        val freeCells = (0 until GridCanvas.CAPACITY).filter { it !in occupied }
+        val freeCells = (0 until readGrid().capacity).filter { it !in occupied }
         if (members.size > freeCells.size) return@withLock FolderRemovalResult.NO_ROOM
         db.withTransaction {
             folderDao.deleteById(folderId)

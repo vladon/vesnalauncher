@@ -19,6 +19,7 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Folder
+import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertSame
@@ -383,7 +384,7 @@ class ShortcutActionsTest {
                 val root = activity.findViewById<LauncherDragLayer>(R.id.launcher_root)
                 val workspace = activity.findViewById<WorkspaceView>(R.id.workspace)
                 val folder = Folder(1L, "Fixture folder", 0)
-                workspace.bind(mapOf(0 to CellContent.FolderCell(folder, memberCount = 2)))
+                workspace.bind(GridCanvas.DEFAULT, mapOf(0 to CellContent.FolderCell(folder, memberCount = 2)))
                 workspace.measure(
                     View.MeasureSpec.makeMeasureSpec(workspace.width, View.MeasureSpec.EXACTLY),
                     View.MeasureSpec.makeMeasureSpec(workspace.height, View.MeasureSpec.EXACTLY),

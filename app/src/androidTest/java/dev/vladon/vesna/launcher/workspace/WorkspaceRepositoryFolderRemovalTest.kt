@@ -170,7 +170,7 @@ class WorkspaceRepositoryFolderRemovalTest {
         val first = seedMember("qa.first", folderId, cellIndex = 0)
         val second = seedMember("qa.second", folderId, cellIndex = 1)
         val third = seedMember("qa.third", folderId, cellIndex = 2)
-        for (cell in 0 until GridCanvas.CAPACITY) {
+        for (cell in 0 until GridCanvas.DEFAULT.capacity) {
             if (cell == folder.cellIndex) continue
             dao.insert(
                 WorkspaceItemEntity(

@@ -12,8 +12,8 @@ import dev.vladon.vesna.launcher.workspace.DEFAULT_WORKSPACE_PAGE_ID
 import dev.vladon.vesna.launcher.workspace.WorkspaceItem
 
 @Database(
-    entities = [WorkspaceItemEntity::class, FolderEntity::class, WorkspacePageEntity::class],
-    version = 4,
+    entities = [WorkspaceItemEntity::class, FolderEntity::class, WorkspacePageEntity::class, WorkspaceGridEntity::class],
+    version = 5,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -23,6 +23,8 @@ abstract class LauncherDatabase : RoomDatabase() {
     abstract fun folderDao(): FolderDao
 
     abstract fun workspacePageDao(): WorkspacePageDao
+
+    internal abstract fun workspaceGridDao(): WorkspaceGridDao
 
     companion object {
         /** Room DDL for `workspace_pages` (fresh installs get it from the entity). */
@@ -100,9 +102,19 @@ abstract class LauncherDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // An absent preference keeps the original grid and every saved cell unchanged.
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `workspace_grid` (" +
+                        "`id` INTEGER NOT NULL PRIMARY KEY, `columnCount` INTEGER NOT NULL, `rowCount` INTEGER NOT NULL)",
+                )
+            }
+        }
+
         fun build(appContext: Context): LauncherDatabase =
             Room.databaseBuilder(appContext, LauncherDatabase::class.java, "vesna-launcher.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .addCallback(DEFAULT_PAGE_SEED_CALLBACK)
                 .build()
     }

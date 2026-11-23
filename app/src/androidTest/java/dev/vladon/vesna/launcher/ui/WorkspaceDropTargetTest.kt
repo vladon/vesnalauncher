@@ -15,6 +15,7 @@ import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -25,8 +26,9 @@ import org.junit.runner.RunWith
 class WorkspaceDropTargetTest {
     @Test
     fun tilesAndHitTestingFollowTheStartEdgeInBothDirections() = withWorkspace { grid, rtl ->
-        val cells = listOf(0, GridCanvas.COLUMNS - 1, GridCanvas.COLUMNS)
-        grid.bind(cells.associateWith { CellContent.App(LauncherApp(AppKey("qa.cell$it", "Main"), "Tile $it")) })
+        val columns = GridCanvas.DEFAULT.columns
+        val cells = listOf(0, columns - 1, columns)
+        grid.bind(GridCanvas.DEFAULT, cells.associateWith { CellContent.App(LauncherApp(AppKey("qa.cell$it", "Main"), "Tile $it")) })
         layOut(grid)
         val start = requireNotNull(grid.findChildForCell(cells[0]))
         val end = requireNotNull(grid.findChildForCell(cells[1]))
@@ -71,7 +73,10 @@ class WorkspaceDropTargetTest {
                 val drawer = activity.findViewById<DrawerView>(R.id.drawer)
                 val workspace = activity.findViewById<WorkspaceView>(R.id.workspace)
                 activity.updateAppCatalogue(listOf(personal, work))
-                workspace.bind(mapOf(0 to CellContent.App(personal), 1 to CellContent.App(work)))
+                workspace.bind(
+                    GridCanvas.DEFAULT,
+                    mapOf(0 to CellContent.App(personal), 1 to CellContent.App(work)),
+                )
                 workspace.measure(
                     View.MeasureSpec.makeMeasureSpec(workspace.width, View.MeasureSpec.EXACTLY),
                     View.MeasureSpec.makeMeasureSpec(workspace.height, View.MeasureSpec.EXACTLY),
@@ -123,7 +128,7 @@ class WorkspaceDropTargetTest {
     @Test
     fun folderDragSkipsTheHiddenPinAndStillDropsInAnEmptyCell() = withWorkspace { grid, rtl ->
         val folder = Folder(1L, "Fixture folder", 0)
-        grid.bind(mapOf(0 to CellContent.FolderCell(folder, memberCount = 2)))
+        grid.bind(GridCanvas.DEFAULT, mapOf(0 to CellContent.FolderCell(folder, memberCount = 2)))
         grid.reservedCellsMask = 1 shl 1
         layOut(grid)
 
@@ -131,7 +136,7 @@ class WorkspaceDropTargetTest {
         val x = (tile.left + tile.right) / 2
         val y = (tile.top + tile.bottom) / 2
         val cellWidth = (grid.width - grid.paddingLeft - grid.paddingRight -
-            2 * (8 * grid.resources.displayMetrics.density).toInt()) / GridCanvas.COLUMNS
+            2 * (8 * grid.resources.displayMetrics.density).toInt()) / GridCanvas.DEFAULT.columns
         val step = if (rtl) -cellWidth else cellWidth
         val reservedX = x + step
         val emptyX = x + 2 * step
@@ -173,6 +178,122 @@ class WorkspaceDropTargetTest {
         assertEquals(listOf(2), drops)
     }
 
+    @Test
+    fun nonDefaultGeometryMirrorsTilesAndHitTargetsAcrossAResize() = withWorkspace { grid, rtl ->
+        fun tile(cell: Int) = CellContent.App(LauncherApp(AppKey("qa.resize.cell$cell", "Main"), "Tile $cell"))
+        val narrow = GridCanvas(columns = 3, rows = 4)
+        val grown = GridCanvas(columns = 4, rows = 6)
+        val cells = mapOf(
+            0 to tile(0),
+            narrow.columns - 1 to tile(narrow.columns - 1),
+            narrow.columns to tile(narrow.columns),
+            narrow.capacity - 1 to tile(narrow.capacity - 1),
+        )
+        grid.bind(narrow, cells)
+        layOut(grid)
+        assertFalse("Laying out consumes the scheduled resize", grid.isLayoutRequested)
+
+        val first = requireNotNull(grid.findChildForCell(0))
+        val rowEnd = requireNotNull(grid.findChildForCell(narrow.columns - 1))
+        val nextRow = requireNotNull(grid.findChildForCell(narrow.columns))
+        val last = requireNotNull(grid.findChildForCell(narrow.capacity - 1))
+        assertTrue(
+            "Cell zero belongs at the reading start edge",
+            if (rtl) first.left > rowEnd.left else first.left < rowEnd.left,
+        )
+        assertEquals("A new row starts in the same column", first.left, nextRow.left)
+        assertTrue(nextRow.top > first.top)
+        assertTrue("The final cell sits on the final row", last.top > nextRow.top)
+        for (cell in cells.keys) {
+            val tileView = requireNotNull(grid.findChildForCell(cell))
+            val y = (tileView.top + tileView.bottom) / 2f
+            assertEquals(cell, grid.cellAtLocal(tileView.left + 0.25f, y))
+            assertEquals(cell, grid.cellAtLocal(tileView.right - 0.25f, y))
+        }
+        assertNull(grid.cellAtLocal(0f, (first.top + first.bottom) / 2f))
+
+        // Hit testing resolves the second row's first cell from its center.
+        val previousLeft = nextRow.left
+        val previousTop = nextRow.top
+        val probeX = (nextRow.left + nextRow.right) / 2f
+        val probeY = (nextRow.top + nextRow.bottom) / 2f
+        assertEquals(narrow.columns, grid.cellAtLocal(probeX, probeY))
+
+        // The same cells with only different geometry must still resize.
+        grid.bind(grown, cells)
+        assertTrue("A geometry-only change reschedules layout", grid.isLayoutRequested)
+        layOut(grid)
+        val moved = requireNotNull(grid.findChildForCell(narrow.columns))
+        assertTrue(
+            "The second row's first cell reflows into the wider grid",
+            moved.top != previousTop || moved.left != previousLeft,
+        )
+        assertTrue(
+            "Cell zero keeps the reading start edge after the resize",
+            if (rtl) first.left > moved.left else first.left < moved.left,
+        )
+        assertEquals("Hit testing mirrors the new geometry", narrow.columns, grid.cellAtLocal((moved.left + moved.right) / 2f, (moved.top + moved.bottom) / 2f))
+        assertEquals("Old coordinates resolve against the new grid", 2 * grown.columns, grid.cellAtLocal(probeX, probeY))
+        assertTrue("The final cell stays on the final row", last.top > moved.top)
+    }
+
+    @Test
+    fun unchangedGeometryKeepsDragsAndHighlightsWhileAResizeEndsThem() = withWorkspace { grid, rtl ->
+        val cells = mapOf(0 to CellContent.App(LauncherApp(AppKey("qa.hold.cell", "Main"), "Tile")))
+        grid.bind(GridCanvas.DEFAULT, cells)
+        layOut(grid)
+        val columns = GridCanvas.DEFAULT.columns
+        val rows = GridCanvas.DEFAULT.rows
+        val gutter = (8 * grid.resources.displayMetrics.density).toInt()
+        val cellWidth = (grid.width - grid.paddingLeft - grid.paddingRight - 2 * gutter) / columns
+        val cellHeight = (grid.height - grid.paddingTop - grid.paddingBottom - 2 * gutter) / rows
+        // The far end of the bottom row is empty under both geometries below.
+        val farColumn = if (rtl) 0 else columns - 1
+        val farX = grid.paddingLeft + gutter + farColumn * cellWidth + cellWidth / 2
+        val farY = grid.paddingTop + gutter + (rows - 1) * cellHeight + cellHeight / 2
+        assertEquals(GridCanvas.DEFAULT.capacity - 1, grid.cellAtLocal(farX.toFloat(), farY.toFloat()))
+
+        grid.showDropHighlight(GridCanvas.DEFAULT.capacity - 1)
+        val highlighted = grid.pixel(farX, farY)
+        grid.bind(GridCanvas.DEFAULT, cells)
+        assertEquals("An unchanged grid keeps the current highlight", highlighted, grid.pixel(farX, farY))
+        val resized = GridCanvas(columns = 2, rows = 2)
+        grid.bind(resized, cells)
+        assertTrue("A geometry-only change reschedules layout", grid.isLayoutRequested)
+        layOut(grid)
+        assertNotEquals("Stale highlights do not survive the resize", highlighted, grid.pixel(farX, farY))
+
+        val released = mutableListOf<Boolean>()
+        grid.onDragReleased = { _, _, _, cancelled, _, _ -> released += cancelled }
+        val tile = requireNotNull(grid.findChildForCell(0))
+        val x = (tile.left + tile.right) / 2
+        val y = (tile.top + tile.bottom) / 2
+        val down = SystemClock.uptimeMillis()
+
+        fun send(action: Int) {
+            val event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, x.toFloat(), y.toFloat(), 0)
+            try {
+                grid.dispatchTouchEvent(event)
+            } finally {
+                event.recycle()
+            }
+        }
+
+        send(MotionEvent.ACTION_DOWN)
+        try {
+            assertTrue(tile.performLongClick())
+            assertTrue(grid.isDragging)
+            grid.bind(resized, cells)
+            assertTrue("An unchanged grid does not end an eligible drag", grid.isDragging)
+            assertTrue(released.isEmpty())
+            grid.bind(GridCanvas.DEFAULT, cells)
+            assertFalse("A geometry change ends the active drag", grid.isDragging)
+            assertEquals(listOf(true), released)
+        } finally {
+            if (grid.isDragging) send(MotionEvent.ACTION_CANCEL)
+        }
+    }
+
     private fun withWorkspace(check: (WorkspaceView, Boolean) -> Unit) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         var result: Result<Unit>? = null
@@ -203,6 +324,16 @@ class WorkspaceDropTargetTest {
         return try {
             draw(Canvas(bitmap))
             bitmap.getPixel(x, y) to bitmap.getPixel(otherX, y)
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    private fun WorkspaceView.pixel(x: Int, y: Int): Int {
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        return try {
+            draw(Canvas(bitmap))
+            bitmap.getPixel(x, y)
         } finally {
             bitmap.recycle()
         }

@@ -37,7 +37,7 @@ class WorkspaceResolverTest {
             WorkspaceItem(4, keyC, Container.WORKSPACE, cellIndex = 5, folderId = 7),
             WorkspaceItem(5, keyC, Container.DOCK, cellIndex = 1),
             WorkspaceItem(6, keyC, Container.WORKSPACE, cellIndex = -1),
-            WorkspaceItem(7, keyC, Container.WORKSPACE, cellIndex = GridCanvas.CAPACITY),
+            WorkspaceItem(7, keyC, Container.WORKSPACE, cellIndex = GridCanvas.DEFAULT.capacity),
         )
         val available = mapOf(keyA to app(keyA))
         val first = WorkspaceResolver.workspaceLayout(items, available, emptyList())
@@ -93,7 +93,7 @@ class WorkspaceResolverTest {
 
     @Test
     fun `invalid cells are never rendered`() {
-        val items = listOf(WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = GridCanvas.CAPACITY))
+        val items = listOf(WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = GridCanvas.DEFAULT.capacity))
         assertTrue(WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA)), emptyList()).cells.isEmpty())
     }
 }

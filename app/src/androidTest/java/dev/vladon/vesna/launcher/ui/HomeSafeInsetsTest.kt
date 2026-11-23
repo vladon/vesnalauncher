@@ -13,6 +13,7 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.DockPin
+import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,7 +35,7 @@ class HomeSafeInsetsTest {
                 val left = dp(54)
                 val right = dp(48)
                 val pins = List(4) { DockPin(it + 1L, LauncherApp(AppKey("qa.side$it", "Main"), "App $it")) }
-                workspace.bind(mapOf(0 to CellContent.App(pins.first().app), 3 to CellContent.App(pins.last().app)))
+                workspace.bind(GridCanvas.DEFAULT, mapOf(0 to CellContent.App(pins.first().app), 3 to CellContent.App(pins.last().app)))
                 dock.bind(pins)
                 ViewCompat.dispatchApplyWindowInsets(root, WindowInsetsCompat.Builder()
                     .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(left, 0, right, 0))

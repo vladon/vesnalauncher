@@ -20,6 +20,9 @@ interface FolderDao {
     @Update
     suspend fun update(folder: FolderEntity)
 
+    @Query("UPDATE folders SET cellIndex = :cell, pageId = :pageId WHERE id = :id")
+    suspend fun updateWorkspacePosition(id: Long, cell: Int, pageId: Long)
+
     @Query("DELETE FROM folders WHERE id = :id")
     suspend fun deleteById(id: Long)
 }

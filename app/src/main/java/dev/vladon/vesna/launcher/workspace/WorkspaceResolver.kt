@@ -43,6 +43,7 @@ internal object WorkspaceResolver {
         appsByKey: Map<AppKey, LauncherApp>,
         folders: List<Folder>,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
+        grid: GridCanvas = GridCanvas.DEFAULT,
     ): WorkspaceLayout {
         val cells = LinkedHashMap<Int, CellContent>()
         var reservedCellsMask = 0
@@ -50,7 +51,7 @@ internal object WorkspaceResolver {
             if (item.container != Container.WORKSPACE) continue
             if (item.folderId != null || item.pageId != pageId) continue
             val cell = item.cellIndex
-            if (!GridCanvas.isValidCell(cell) || cells.containsKey(cell)) continue
+            if (!grid.isValidCell(cell) || cells.containsKey(cell)) continue
             val app = appsByKey[item.key]
             val bit = 1 shl cell
             if (app == null) {
@@ -62,7 +63,7 @@ internal object WorkspaceResolver {
         }
         for (folder in folders) {
             if (folder.pageId != pageId) continue
-            if (!GridCanvas.isValidCell(folder.cellIndex)) continue
+            if (!grid.isValidCell(folder.cellIndex)) continue
             if (cells.containsKey(folder.cellIndex)) continue
             val members = items.count { it.folderId == folder.id }
             cells[folder.cellIndex] = CellContent.FolderCell(folder, members)

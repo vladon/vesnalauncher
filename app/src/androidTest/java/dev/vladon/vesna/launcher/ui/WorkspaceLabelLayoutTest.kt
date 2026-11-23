@@ -15,6 +15,7 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Folder
+import dev.vladon.vesna.launcher.workspace.GridCanvas
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -41,6 +42,7 @@ class WorkspaceLabelLayoutTest {
         val folderName = "Семейные фотографии"
         val workspace = WorkspaceView(context)
         workspace.bind(
+            GridCanvas.DEFAULT,
             mapOf(
                 0 to CellContent.App(LauncherApp(AppKey("qa.calendar", "Main"), appName, ColorDrawable(Color.BLUE))),
                 1 to CellContent.FolderCell(Folder(1L, folderName, cellIndex = 1), memberCount = 2),

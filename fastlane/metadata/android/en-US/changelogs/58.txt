@@ -1,0 +1,1 @@
+Choose the number of columns and rows in Settings > Home screen > Workspace grid. Shortcuts and folders that no longer fit move to other pages. If the layout cannot fit, Vesna keeps the current grid. Dock favorites stay in place.

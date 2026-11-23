@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -35,6 +34,7 @@ data class LauncherUiState(
     val apps: List<LauncherApp> = emptyList(),
     val workspaceCells: Map<Int, CellContent> = emptyMap(),
     val reservedWorkspaceCellsMask: Int = 0,
+    val grid: GridCanvas = GridCanvas.DEFAULT,
     val dock: DockLayout = DockLayout(emptyList(), emptyList()),
     val folders: Map<Long, Folder> = emptyMap(),
     val folderContents: Map<Long, List<FolderPin>> = emptyMap(),
@@ -71,12 +71,11 @@ class LauncherController(
 
     private class LayoutProjection(
         val catalogue: AppCatalogue,
-        val items: List<WorkspaceItem>,
-        val folders: List<Folder>,
+        val saved: SavedLayout,
     ) {
-        val dock = WorkspaceResolver.dockLayout(items, catalogue.byKey)
-        val foldersById = folders.associateBy { it.id }
-        val folderContents = WorkspaceResolver.folderContents(items, catalogue.byKey)
+        val dock = WorkspaceResolver.dockLayout(saved.items, catalogue.byKey)
+        val foldersById = saved.folders.associateBy { it.id }
+        val folderContents = WorkspaceResolver.folderContents(saved.items, catalogue.byKey)
     }
 
     private val appCatalogue = MutableStateFlow(AppCatalogue(emptyList()))
@@ -84,21 +83,18 @@ class LauncherController(
     /** The selected page ID; stale IDs on startup resolve to the primary page. */
     private val _activePageId = MutableStateFlow(workspaceRepository.savedActivePageId())
 
-    /** Shared page order so [state] and [createWorkspacePage] observe the same IDs. */
-    private val pageIds = workspaceRepository.pages
-        .map { pages -> pages.map { it.id } }
-        .stateIn(scope, SharingStarted.Eagerly, emptyList())
-
     private val _messages = MutableSharedFlow<LauncherMessage>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
 
     // Page navigation changes the grid, not the global dock or saved folder contents.
     private val layout = combine(appCatalogue, workspaceRepository.savedLayout) { catalogue, saved ->
-        LayoutProjection(catalogue, saved.items, saved.folders)
+        LayoutProjection(catalogue, saved)
     }
 
     val state: StateFlow<LauncherUiState> =
-        combine(layout, pageIds, _activePageId) { layout, orderedIds, activePageId ->
+        combine(layout, _activePageId) { layout, activePageId ->
+            val saved = layout.saved
+            val orderedIds = saved.pageIds
             // The stored ID can outlive a deleted page if the process stopped
             // between the Room write and the preference update.
             val selection = if (activePageId in orderedIds) {
@@ -107,19 +103,20 @@ class LauncherController(
                 orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
             }
             val workspace = WorkspaceResolver.workspaceLayout(
-                layout.items, layout.catalogue.byKey, layout.folders, selection,
+                saved.items, layout.catalogue.byKey, saved.folders, selection, saved.grid,
             )
             LauncherUiState(
                 apps = layout.catalogue.apps,
                 workspaceCells = workspace.cells,
                 reservedWorkspaceCellsMask = workspace.reservedCellsMask,
+                grid = saved.grid,
                 dock = layout.dock,
                 folders = layout.foldersById,
                 folderContents = layout.folderContents,
                 pageIds = orderedIds,
                 activePageId = selection,
                 canRemoveActivePage = selection != DEFAULT_WORKSPACE_PAGE_ID &&
-                    layout.items.none { it.pageId == selection } && layout.folders.none { it.pageId == selection },
+                    saved.items.none { it.pageId == selection } && saved.folders.none { it.pageId == selection },
             )
         }.stateIn(scope, SharingStarted.Eagerly, LauncherUiState())
 
@@ -151,7 +148,7 @@ class LauncherController(
         scope.launch {
             pageActionMutex.withLock {
                 val pageId = workspaceRepository.createPage() ?: return@withLock
-                pageIds.first { pageId in it }
+                state.first { pageId in it.pageIds }
                 if (workspaceRepository.selectPage(pageId)) _activePageId.value = pageId
             }
         }
@@ -328,7 +325,7 @@ class LauncherController(
         val catalogue = discoverApps()
         appCatalogue.value = catalogue
         if (!workspaceRepository.isSeeded() && catalogue.apps.isNotEmpty()) {
-            workspaceRepository.seedOrAdopt(SeedPlanner.plan(catalogue.apps))
+            workspaceRepository.seedOrAdopt(catalogue.apps)
         }
         withContext(Dispatchers.IO) {
             workspaceRepository.pruneUninstalled(catalogue.byKey.keys, discovery::isPackageInstalled)

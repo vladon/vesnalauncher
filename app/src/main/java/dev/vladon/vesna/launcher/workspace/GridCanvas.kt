@@ -2,30 +2,26 @@ package dev.vladon.vesna.launcher.workspace
 
 import kotlin.math.floor
 
-/**
- * Geometry rules of the workspace grid and dock. Pure Kotlin, free of Android
- * dependencies, so placement logic is unit testable on the JVM.
- */
-object GridCanvas {
-    const val COLUMNS = 4
-    const val ROWS = 5
-    const val CAPACITY = COLUMNS * ROWS
+/** Workspace geometry, indexed row by row from the reading start edge. */
+data class GridCanvas(val columns: Int, val rows: Int) {
+    init {
+        require(columns in MIN_COLUMNS..MAX_COLUMNS && rows in MIN_ROWS..MAX_ROWS)
+    }
 
-    /** The dock aligns with the workspace columns. */
-    const val DOCK_CAPACITY = COLUMNS
+    val capacity: Int = columns * rows
 
-    fun isValidCell(cellIndex: Int): Boolean = cellIndex in 0 until CAPACITY
+    fun isValidCell(cellIndex: Int): Boolean = cellIndex in 0 until capacity
 
-    fun rowOf(cellIndex: Int): Int = cellIndex / COLUMNS
+    fun rowOf(cellIndex: Int): Int = cellIndex / columns
 
-    fun columnOf(cellIndex: Int): Int = cellIndex % COLUMNS
+    fun columnOf(cellIndex: Int): Int = cellIndex % columns
 
     /**
      * The first unoccupied cell scanning row by row, or null when the grid is full.
      * Out-of-range indexes in the input are ignored.
      */
     fun firstFreeCell(occupiedCells: Set<Int>): Int? =
-        (0 until CAPACITY).firstOrNull { it !in occupiedCells }
+        (0 until capacity).firstOrNull { it !in occupiedCells }
 
     /**
      * The grid cell containing the point, given the grid origin and cell size used
@@ -45,7 +41,17 @@ object GridCanvas {
         // "outside", not to the first cell.
         val column = floor((x - gridLeft) / cellWidth).toInt()
         val row = floor((y - gridTop) / cellHeight).toInt()
-        if (column < 0 || column >= COLUMNS || row < 0 || row >= ROWS) return null
-        return row * COLUMNS + column
+        return if (column in 0 until columns && row in 0 until rows) row * columns + column else null
+    }
+
+    companion object {
+        const val MIN_COLUMNS = 2
+        const val MAX_COLUMNS = 5
+        const val MIN_ROWS = 2
+        const val MAX_ROWS = 6
+        val DEFAULT = GridCanvas(columns = 4, rows = 5)
+
+        /** Favorites use a separate fixed capacity, regardless of workspace size. */
+        const val DOCK_CAPACITY = 4
     }
 }

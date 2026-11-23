@@ -67,7 +67,7 @@ class WorkspaceRepositoryPagesTest {
             val reordered = listOf(first, third, fourth, second)
             assertTrue(repository.reorderPage(second, destinationIndex = 3, displayedOrder = initial))
             val recreated = WorkspaceRepository(db.workspaceItemDao(), db, db.folderDao(), prefs)
-            assertEquals(reordered, recreated.pages.first().map { it.id })
+            assertEquals(reordered, recreated.savedLayout.first().pageIds)
             assertEquals(second, recreated.savedActivePageId())
             assertEquals(savedFolders, db.folderDao().getAll())
             assertEquals(before, repository.savedLayout.first().items.sortedBy { it.id })
@@ -80,7 +80,7 @@ class WorkspaceRepositoryPagesTest {
             repository.removeFromWorkspace(app, cell = 1, pageId = second)
             assertEquals(before.filterNot { it.pageId == second }, repository.savedLayout.first().items.sortedBy { it.id })
             assertTrue(repository.reorderPage(second, destinationIndex = 1, displayedOrder = reordered))
-            assertEquals(initial, recreated.pages.first().map { it.id })
+            assertEquals(initial, recreated.savedLayout.first().pageIds)
         } finally {
             db.close()
             context.deleteSharedPreferences(prefsName)
@@ -103,16 +103,16 @@ class WorkspaceRepositoryPagesTest {
             val initial = listOf(first, second, third)
             assertFalse(repository.reorderPage(first, destinationIndex = 1, displayedOrder = initial))
             assertFalse(repository.reorderPage(second, destinationIndex = 0, displayedOrder = initial))
-            assertEquals(initial, repository.pages.first().map { it.id })
+            assertEquals(initial, repository.savedLayout.first().pageIds)
 
             assertTrue(repository.reorderPage(third, destinationIndex = 1, displayedOrder = initial))
             val reordered = listOf(first, third, second)
             assertFalse(repository.reorderPage(second, destinationIndex = 2, displayedOrder = initial))
-            assertEquals(reordered, repository.pages.first().map { it.id })
+            assertEquals(reordered, repository.savedLayout.first().pageIds)
 
             assertTrue(repository.removeEmptyPage(second))
             assertFalse(repository.reorderPage(third, destinationIndex = 2, displayedOrder = reordered))
-            assertEquals(listOf(first, third), repository.pages.first().map { it.id })
+            assertEquals(listOf(first, third), repository.savedLayout.first().pageIds)
         } finally {
             db.close()
         }
@@ -178,15 +178,14 @@ class WorkspaceRepositoryPagesTest {
             val defaultId = db.workspacePageDao().getAll().single().id
             val created = List(MAX_WORKSPACE_PAGES - 1) { checkNotNull(repository.createPage()) }
 
-            val pages = repository.pages.first()
+            val pages = db.workspacePageDao().getAll()
             // Display order: the default page (rank 0) first, then creations in order.
             assertEquals(listOf(defaultId) + created, pages.map { it.id })
             assertEquals(List(MAX_WORKSPACE_PAGES) { it }, pages.map { it.rank })
 
             // The cap refuses without side effects: count and ranks stay untouched.
             assertNull(repository.createPage())
-            assertEquals(MAX_WORKSPACE_PAGES, repository.pages.first().size)
-            assertEquals(List(MAX_WORKSPACE_PAGES) { it }, repository.pages.first().map { it.rank })
+            assertEquals(pages, db.workspacePageDao().getAll())
         } finally {
             db.close()
         }
@@ -212,18 +211,18 @@ class WorkspaceRepositoryPagesTest {
             folders.insert(FolderEntity(title = "Saved folder", cellIndex = 0, pageId = folderPage))
             val savedItems = dao.getAll()
             val savedFolders = folders.getAll()
-            val initialPages = repository.pages.first()
+            val initialPages = db.workspacePageDao().getAll()
 
             assertFalse(repository.removeEmptyPage(DEFAULT_WORKSPACE_PAGE_ID))
             assertFalse(repository.removeEmptyPage(occupied))
             assertFalse(repository.removeEmptyPage(folderPage))
-            assertEquals(initialPages, repository.pages.first())
+            assertEquals(initialPages, db.workspacePageDao().getAll())
 
             assertTrue(repository.selectPage(empty))
             assertTrue(repository.removeEmptyPage(empty))
             assertEquals(DEFAULT_WORKSPACE_PAGE_ID, repository.savedActivePageId())
             // Removing a middle page must not reassign any ID, rank, or saved content.
-            assertEquals(initialPages.filterNot { it.id == empty }, repository.pages.first())
+            assertEquals(initialPages.filterNot { it.id == empty }, db.workspacePageDao().getAll())
             assertEquals(savedItems, dao.getAll())
             assertEquals(savedFolders, folders.getAll())
         } finally {
@@ -255,7 +254,7 @@ class WorkspaceRepositoryPagesTest {
 
             // Seeding and the seeded flag must not touch the selection key.
             val apps = List(6) { n -> LauncherApp(AppKey("qa.sel$n", "Main"), "Sel $n", null) }
-            assertTrue(repository.seedOrAdopt(SeedPlanner.plan(apps)))
+            assertTrue(repository.seedOrAdopt(apps))
             assertTrue(repository.isSeeded())
             assertEquals(second, repository.savedActivePageId())
         } finally {
@@ -277,7 +276,7 @@ class WorkspaceRepositoryPagesTest {
             val earlyPage = repository.createPage()!!
             val apps = List(6) { n -> LauncherApp(AppKey("qa.seed$n", "Main"), "Seed $n", null) }
 
-            assertTrue(repository.seedOrAdopt(SeedPlanner.plan(apps)))
+            assertTrue(repository.seedOrAdopt(apps))
             assertTrue(repository.isSeeded())
             // The seed targeted the default page; the early page survived untouched.
             assertEquals(listOf(DEFAULT_WORKSPACE_PAGE_ID, earlyPage), db.workspacePageDao().getAll().map { it.id })
@@ -310,10 +309,10 @@ class WorkspaceRepositoryPagesTest {
             val pageId = repository.createPage()!!
             val app = LauncherApp(AppKey("qa.early", "Main"), "Early", null)
             assertTrue(repository.insertWorkspaceAt(app, cell = 2, pageId = pageId))
-            val plan = SeedPlanner.plan(List(6) { n -> LauncherApp(AppKey("qa.n$n", "Main"), "N$n", null) })
+            val apps = List(6) { n -> LauncherApp(AppKey("qa.n$n", "Main"), "N$n", null) }
 
             // A pin landed before the first seed finished: adopt it, never wipe it.
-            assertFalse(repository.seedOrAdopt(plan))
+            assertFalse(repository.seedOrAdopt(apps))
             assertTrue(repository.isSeeded())
             val items = db.workspaceItemDao().getAll().map { it.toDomain() }
             assertEquals(listOf(app.key), items.map { it.key })
@@ -553,7 +552,7 @@ class WorkspaceRepositoryPagesTest {
             assertTrue(repository.insertWorkspaceAt(app, 0, destination))
             assertTrue(repository.addToDock(app))
             folders.insert(FolderEntity(title = "Reserved", pageId = destination, cellIndex = 1))
-            for (cell in 0 until GridCanvas.CAPACITY) {
+            for (cell in 0 until GridCanvas.DEFAULT.capacity) {
                 assertTrue(repository.insertWorkspaceAt(app, cell, full))
             }
             val before = dao.getAll().sortedBy { it.id }
@@ -589,12 +588,12 @@ class WorkspaceRepositoryPagesTest {
             val retiredTarget = requireNotNull(repository.createPage())
             val app = LauncherApp(AppKey("qa.move", "Main"), "Move", null)
             assertTrue(repository.insertWorkspaceAt(app, 0, origin))
-            for (cell in 0 until GridCanvas.CAPACITY - 1) {
+            for (cell in 0 until GridCanvas.DEFAULT.capacity - 1) {
                 assertTrue(repository.insertWorkspaceAt(app, cell, target))
             }
             val choice = requireNotNull(repository.pageMoveOptions(app.key, 0, origin))
             assertTrue(choice.pages.any { it.id == target })
-            assertTrue(repository.insertWorkspaceAt(app, GridCanvas.CAPACITY - 1, target))
+            assertTrue(repository.insertWorkspaceAt(app, GridCanvas.DEFAULT.capacity - 1, target))
             assertTrue(repository.removeEmptyPage(retiredTarget))
             val fullLayout = dao.getAll().sortedBy { it.id }
 
@@ -636,7 +635,7 @@ class WorkspaceRepositoryPagesTest {
             ))
             val selected = folders.getAll().single()
             val folder = Folder(selected.id, selected.title, selected.cellIndex, source)
-            for (cell in 0 until GridCanvas.CAPACITY) {
+            for (cell in 0 until GridCanvas.DEFAULT.capacity) {
                 assertTrue(repository.insertWorkspaceAt(one, cell, full))
             }
             assertTrue(repository.insertWorkspaceAt(two, 0, destination))
@@ -675,7 +674,7 @@ class WorkspaceRepositoryPagesTest {
             val choices = requireNotNull(repository.folderPageMoveOptions(folder))
             assertEquals(listOf(target, retired), choices.pages.map { it.id })
             assertTrue(repository.removeEmptyPage(retired))
-            for (cell in 0 until GridCanvas.CAPACITY) {
+            for (cell in 0 until GridCanvas.DEFAULT.capacity) {
                 assertTrue(repository.insertWorkspaceAt(pin, cell, target))
             }
             val snapshot = folders.getAll()
@@ -722,7 +721,7 @@ class WorkspaceRepositoryPagesTest {
             val beforeItems = items.getAll().sortedBy { it.id }
             val beforeFolders = folders.getAll().sortedBy { it.id }
 
-            for (invalid in listOf(-1, 0, 4, 5, GridCanvas.CAPACITY)) {
+            for (invalid in listOf(-1, 0, 4, 5, GridCanvas.DEFAULT.capacity)) {
                 assertFalse(repository.moveFolderWithinPage(folder, invalid))
             }
             assertEquals(beforeFolders, folders.getAll().sortedBy { it.id })

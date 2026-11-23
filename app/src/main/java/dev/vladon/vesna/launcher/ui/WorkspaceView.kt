@@ -21,8 +21,8 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * The workspace: a fixed 4x5 grid of [AppIconView] children, one per occupied cell.
- * Cell geometry comes from [GridCanvas].
+ * The workspace: one [AppIconView] child per occupied cell of the [GridCanvas]
+ * geometry adopted by [bind] ([GridCanvas.DEFAULT] until then).
  *
  * Touch model:
  * - tap launches an app or opens a folder; a long press on empty space opens the launcher menu; an upward
@@ -71,6 +71,10 @@ class WorkspaceView @JvmOverloads constructor(
     private val dragSlop = ViewConfiguration.get(context).scaledTouchSlop
 
     private var boundContent: Map<Int, CellContent> = emptyMap()
+
+    /** Geometry every measure, draw and hit test resolves against. */
+    private var grid: GridCanvas = GridCanvas.DEFAULT
+
     internal var showAppNames = true
         set(value) {
             if (field == value) return
@@ -269,7 +273,7 @@ class WorkspaceView @JvmOverloads constructor(
 
     /** The saved cell containing the point, or null when outside the grid. */
     fun cellAtLocal(x: Float, y: Float): Int? {
-        val visualCell = GridCanvas.cellAtPoint(
+        val visualCell = grid.cellAtPoint(
             x,
             y,
             paddingLeft + gutterPx.toFloat(),
@@ -277,7 +281,7 @@ class WorkspaceView @JvmOverloads constructor(
             lastCellW.toFloat(),
             lastCellH.toFloat(),
         ) ?: return null
-        return GridCanvas.rowOf(visualCell) * GridCanvas.COLUMNS + orientedColumn(visualCell)
+        return grid.rowOf(visualCell) * grid.columns + orientedColumn(visualCell)
     }
 
     /** Whether a valid grid cell is held by a saved shortcut that is not drawn. */
@@ -290,7 +294,7 @@ class WorkspaceView @JvmOverloads constructor(
         val inset = (HIGHLIGHT_INSET_DP * density).toInt()
         val radius = HIGHLIGHT_RADIUS_DP * density
         val x = cellLeft(cell, lastCellW) + inset
-        val y = paddingTop + gutterPx + GridCanvas.rowOf(cell) * lastCellH + inset
+        val y = paddingTop + gutterPx + grid.rowOf(cell) * lastCellH + inset
         canvas.drawRoundRect(
             x.toFloat(),
             y.toFloat(),
@@ -302,12 +306,23 @@ class WorkspaceView @JvmOverloads constructor(
         )
     }
 
-    /** Reconciles children with the current cell contents. */
-    fun bind(cells: Map<Int, CellContent>) {
+    /**
+     * Adopts [grid], then reconciles children with the current cell contents. A
+     * geometry change ends the active drag, drops the stale highlight and
+     * reschedules layout; an unchanged grid leaves a live drag alone.
+     */
+    fun bind(grid: GridCanvas, cells: Map<Int, CellContent>) {
         val draggingFolder = (dragContent as? CellContent.FolderCell)?.folder
         if (draggingFolder != null &&
             (cells[draggingFolder.cellIndex] as? CellContent.FolderCell)?.folder?.id != draggingFolder.id
         ) cancelDrag()
+        if (grid != this.grid) {
+            cancelDrag()
+            showDropHighlight(null)
+            this.grid = grid
+            invalidate()
+            requestLayout()
+        }
         boundContent = cells
         for (i in childCount - 1 downTo 0) {
             val child = getChildAt(i)
@@ -394,25 +409,25 @@ class WorkspaceView @JvmOverloads constructor(
             val child = getChildAt(i)
             val cell = child.tag as? Int ?: continue
             val x = cellLeft(cell, cellW) + cellHPadPx
-            val y = paddingTop + gutterPx + GridCanvas.rowOf(cell) * cellH + cellVPadPx
+            val y = paddingTop + gutterPx + grid.rowOf(cell) * cellH + cellVPadPx
             child.layout(x, y, x + child.measuredWidth, y + child.measuredHeight)
         }
     }
 
     // Column reflection is its own inverse: both rendering and hit testing use it.
     private fun orientedColumn(cell: Int): Int {
-        val column = GridCanvas.columnOf(cell)
-        return if (layoutDirection == LAYOUT_DIRECTION_RTL) GridCanvas.COLUMNS - 1 - column else column
+        val column = grid.columnOf(cell)
+        return if (layoutDirection == LAYOUT_DIRECTION_RTL) grid.columns - 1 - column else column
     }
 
     private fun cellLeft(cell: Int, cellWidth: Int): Int =
         paddingLeft + gutterPx + orientedColumn(cell) * cellWidth
 
     private fun cellWidth(totalWidth: Int): Int =
-        (totalWidth - paddingLeft - paddingRight - 2 * gutterPx) / GridCanvas.COLUMNS
+        (totalWidth - paddingLeft - paddingRight - 2 * gutterPx) / grid.columns
 
     private fun cellHeight(totalHeight: Int): Int =
-        (totalHeight - paddingTop - paddingBottom - 2 * gutterPx) / GridCanvas.ROWS
+        (totalHeight - paddingTop - paddingBottom - 2 * gutterPx) / grid.rows
 
     override fun generateDefaultLayoutParams(): LayoutParams =
         LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)

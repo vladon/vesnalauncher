@@ -40,7 +40,7 @@ import java.util.UUID
  *
  * Kept checks (not duplicated by Room): isolation fails fast before Room opens
  * (seeded file absent, production path/dir distinct, opened file IS the seeded
- * one), `PRAGMA user_version` = 4, surviving `(packageName, className)` index
+ * one), `PRAGMA user_version` = 5, surviving `(packageName, className)` index
  * columns plus the 3→4 `pageId` indices, row identity/container/cell/
  * userSerial/folderId, derived `pageId` (default page for top-level non-DOCK
  * rows, null for dock rows and folder members), folders on the default page,
@@ -175,7 +175,7 @@ class RoomMigrationQaTest {
 
         withOpenedDatabase { db ->
             assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
-            assertEquals(4, pragmaUserVersion(db))
+            assertEquals(5, pragmaUserVersion(db))
             assertEquals(emptyList<WorkspaceItemEntity>(), readItems(db))
             assertEquals(emptyList<FolderEntity>(), readFolders(db))
             assertEquals(listOf(WorkspacePageEntity(id = 1, rank = 0)), readPages(db))
@@ -312,7 +312,7 @@ class RoomMigrationQaTest {
 
         withOpenedDatabase { db ->
             assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
-            assertEquals(4, pragmaUserVersion(db))
+            assertEquals(5, pragmaUserVersion(db))
             assertEquals(listOf("packageName", "className"), pragmaIndexColumns(db, INDEX_ITEMS_LEGACY))
             assertEquals(listOf("pageId"), pragmaIndexColumns(db, INDEX_ITEMS_PAGE))
             assertEquals(listOf("pageId"), pragmaIndexColumns(db, INDEX_FOLDERS_PAGE))
