@@ -1237,3 +1237,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   layout and label; no changes to Nova were needed.
 - Evidence: `EVI-VESNA-003/parity54-*` and draft-entry captures
   under `parity52-cycle54-*`. Follow-up for #114.
+
+## OBS-VESNA-054 — The 2×2 resize boundary is 32 workspace items
+
+- On the owned Android 15 AVD, signed Vesna v0.4.54 (59) used a
+  4×5 grid. From the original 17 workspace pins, added ordinary
+  Clock pins through the drawer and created a second page.
+  Before shrinking, verified 33 items: 20 on page one and 13
+  on page two. The four dock pins were not part of the count.
+- Selecting 2×2 and pressing **Apply** showed “This grid is too
+  small for your layout. Choose more columns or rows.” The
+  applied size stayed 4×5. After closing the dialog and cold
+  restarting Vesna, both pages and all 33 original cells from
+  the staged layout matched their pre-attempt state.
+- Removed only one of the added Clock pins and retried 2×2.
+  Vesna accepted it. Browsed all eight pages: four distinct
+  cells per page, all 32 expected pins including the deliberate
+  repeated Clock pins, and the same four dock pins. After
+  restarting, the eight-page count and the visible page held.
+- Restored the original 17-pin layout. This verifies Vesna's
+  capacity and atomic rejection for #106 / PR #128 on the
+  signed build, not a Nova capacity limit. Evidence:
+  `EVI-VESNA-003/parity55-*` and `parity45-cycle55-*`.
