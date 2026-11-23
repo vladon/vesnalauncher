@@ -851,16 +851,71 @@ class WorkspaceRepositoryPagesTest {
             val beforeFolders = folders.getAll().sortedBy { it.id }
 
             for (invalid in listOf(-1, 0, 4, 5, GridCanvas.DEFAULT.capacity)) {
-                assertFalse(repository.moveFolderWithinPage(folder, invalid))
+                assertFalse(repository.moveFolderToCell(folder, page, invalid, GridCanvas.DEFAULT))
             }
             assertEquals(beforeFolders, folders.getAll().sortedBy { it.id })
-            assertTrue(repository.moveFolderWithinPage(folder, 7))
-            assertFalse(repository.moveFolderWithinPage(folder, 6))
+            assertTrue(repository.moveFolderToCell(folder, page, 7, GridCanvas.DEFAULT))
+            assertFalse(repository.moveFolderToCell(folder, page, 6, GridCanvas.DEFAULT))
             assertEquals(
                 beforeFolders.map { if (it.id == folder.id) it.copy(cellIndex = 7) else it },
                 folders.getAll().sortedBy { it.id },
             )
             assertEquals(beforeItems, items.getAll().sortedBy { it.id })
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun exactFolderDropAcrossPagesPreservesNameMemberRowsAndOtherPlacements() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        try {
+            val items = db.workspaceItemDao()
+            val folders = db.folderDao()
+            val pages = db.workspacePageDao()
+            val prefs = context.getSharedPreferences("qa_folder_edge_exact", Context.MODE_PRIVATE)
+            val repository = WorkspaceRepository(items, db, folders, prefs)
+            val source = DEFAULT_WORKSPACE_PAGE_ID
+            val destination = requireNotNull(repository.createPage())
+            val grid = GridCanvas.DEFAULT
+            val first = LauncherApp(AppKey("qa.folder.first", "Main"), "First")
+            val second = LauncherApp(AppKey("qa.folder.second", "Main"), "Second")
+            assertTrue(repository.insertWorkspaceAt(first, 0, source))
+            assertTrue(repository.insertWorkspaceAt(second, 1, source))
+            assertTrue(repository.createFolderFromDrop(
+                second, 0, "Pinned tools", WorkspaceRepository.FolderDropSource.Workspace(1), source,
+            ))
+            val row = folders.getAll().single()
+            val folder = Folder(row.id, row.title, row.cellIndex, source)
+            assertTrue(repository.insertWorkspaceAt(first, 4, destination))
+            folders.insert(FolderEntity(title = "Other folder", cellIndex = 5, pageId = destination))
+            assertTrue(repository.insertIntoDock(second, 0))
+            val originalItems = items.getAll().sortedBy { it.id }
+            val originalFolders = folders.getAll().sortedBy { it.id }
+            val originalPages = pages.getAll()
+
+            assertFalse(repository.moveFolderToCell(folder, destination, 4, grid))
+            assertFalse(repository.moveFolderToCell(folder, destination, 5, grid))
+            assertFalse(repository.moveFolderToCell(folder, destination, 19, grid.copy(columns = 5)))
+            assertFalse(repository.moveFolderToCell(folder.copy(cellIndex = 1), destination, 19, grid))
+            assertFalse(repository.moveFolderToCell(folder, destination + 500, 19, grid))
+            val settings = WorkspacePreferences(prefs)
+            settings.layoutLocked = true
+            assertFalse(repository.moveFolderToCell(folder, destination, 19, grid))
+            assertEquals(originalFolders, folders.getAll().sortedBy { it.id })
+            assertEquals(originalItems, items.getAll().sortedBy { it.id })
+            assertEquals(originalPages, pages.getAll())
+
+            settings.layoutLocked = false
+            assertTrue(repository.moveFolderToCell(folder, destination, 19, grid))
+            assertEquals(
+                originalFolders.map { if (it.id == folder.id) it.copy(pageId = destination, cellIndex = 19) else it },
+                folders.getAll().sortedBy { it.id },
+            )
+            assertEquals(originalItems, items.getAll().sortedBy { it.id })
+            assertEquals(originalPages, pages.getAll())
         } finally {
             db.close()
         }

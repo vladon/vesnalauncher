@@ -1,0 +1,1 @@
+Move a whole Home folder by holding it at the edge to preview an existing neighboring page, then dropping it in an empty cell. The folder keeps its name and shortcut order.

@@ -51,7 +51,10 @@ class WorkspaceView @JvmOverloads constructor(
 
     /** Opens folder options after a hold without drag, or from keyboard/accessibility. */
     var onFolderLongClick: ((Folder, View) -> Unit)? = null
-    internal var onFolderDrop: ((Folder, Int) -> Unit)? = null
+    /** Reports movement and returns whether the currently bound page accepts folder drops. */
+    internal var onFolderDragProgress: ((Float, Float) -> Boolean)? = null
+    /** A null cell cancels the drop, including a release outside a valid target. */
+    internal var onFolderDragReleased: ((Folder, Int?) -> Unit)? = null
 
     /** The user lifted an icon by long-pressing it; a drag session has begun. */
     var onDragStarted: ((cell: Int, app: LauncherApp, anchor: View) -> Unit)? = null
@@ -98,7 +101,7 @@ class WorkspaceView @JvmOverloads constructor(
     private var dragTargetCell: Int? = null
     private var dragMoved = false
 
-    /** True once an app drag's pointer stream was promoted to this view. */
+    /** True once a lifted tile's pointer stream was promoted to this view. */
     private var dragPromoted = false
 
     internal val isDragging: Boolean get() = dragAnchor != null
@@ -180,7 +183,7 @@ class WorkspaceView @JvmOverloads constructor(
             // The stream belongs to this view: children may be rebound or removed
             // mid-drag, so the remaining MOVE/UP/CANCEL must never reach one.
             when (action) {
-                MotionEvent.ACTION_MOVE -> if (dragAnchor != null) onDragProgress?.invoke(ev.x, ev.y)
+                MotionEvent.ACTION_MOVE -> reportDragProgress(ev.x, ev.y)
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
                     dragAnchor?.let { endDrag(ev.x, ev.y, cancelled = action == MotionEvent.ACTION_CANCEL, anchor = it) }
                 // A second finger cancels the session; the stream is still swallowed
@@ -203,7 +206,7 @@ class WorkspaceView @JvmOverloads constructor(
         val alreadyPromoted = dragPromoted
         val handled = super.dispatchTouchEvent(ev)
         if (!alreadyPromoted && dragPromoted) {
-            // The child listener promoted an app drag during that move: cancel the
+            // The child listener promoted a drag during that move: cancel the
             // old target now that its dispatch has unwound. Its listener is gone, so
             // this cancel cannot end the active session.
             val cancel = MotionEvent.obtain(0L, 0L, MotionEvent.ACTION_CANCEL, 0f, 0f, 0)
@@ -213,26 +216,19 @@ class WorkspaceView @JvmOverloads constructor(
         return handled
     }
 
-    // Until promotion the dragged icon keeps the touch stream, observed by an
-    // OnTouchListener installed on the anchor: folder tiles and stationary holds
-    // stay here (intercepting on UP would swallow the event). At the first move
-    // past the slop an app drag is handed to the view via [promoteDragStream].
+    // Until promotion the dragged tile keeps the stream, so a stationary hold
+    // can still open its menu on UP. Moving beyond slop promotes either tile type.
     private val dragTouchListener =
         View.OnTouchListener { view, event ->
-            val content = dragContent ?: return@OnTouchListener false
+            if (dragContent == null) return@OnTouchListener false
             val workspaceX = view.left + event.x
             val workspaceY = view.top + event.y
             when (event.actionMasked) {
                 MotionEvent.ACTION_MOVE -> {
                     dragMoved = dragMoved || max(abs(workspaceX - downX), abs(workspaceY - downY)) > dragSlop
                     if (dragMoved) {
-                        when (content) {
-                            is CellContent.FolderCell -> showDropHighlight(folderDropTarget(workspaceX, workspaceY))
-                            is CellContent.App -> {
-                                promoteDragStream(view)
-                                onDragProgress?.invoke(workspaceX, workspaceY)
-                            }
-                        }
+                        promoteDragStream(view)
+                        reportDragProgress(workspaceX, workspaceY)
                     }
                 }
                 MotionEvent.ACTION_UP -> endDrag(workspaceX, workspaceY, cancelled = false, anchor = view)
@@ -241,8 +237,19 @@ class WorkspaceView @JvmOverloads constructor(
             true
         }
 
+    private fun reportDragProgress(x: Float, y: Float) {
+        when (dragContent) {
+            is CellContent.App -> onDragProgress?.invoke(x, y)
+            is CellContent.FolderCell -> {
+                val ready = onFolderDragProgress?.invoke(x, y) != false
+                showDropHighlight(if (ready) folderDropTarget(x, y) else null)
+            }
+            null -> Unit
+        }
+    }
+
     /**
-     * Promotes an app drag to a workspace-owned pointer stream: the anchor listener
+     * Promotes a drag to a workspace-owned pointer stream: the anchor listener
      * stops so the synthetic cancel that [dispatchTouchEvent] sends after the move
      * has unwound clears the old child target without ending the session. [bind] can
      * then replace children mid-drag; the anchor reference stays as the drag identity
@@ -292,12 +299,11 @@ class WorkspaceView @JvmOverloads constructor(
         invalidate()
         when (content) {
             is CellContent.App -> onDragReleased?.invoke(x, y, moved, cancelled, content.app, anchor)
-            is CellContent.FolderCell -> if (!cancelled) {
-                if (!moved) {
-                    onFolderLongClick?.invoke(content.folder, anchor)
-                } else if (!isLayoutLocked()) {
-                    folderDropTarget(x, y)?.let { cell -> onFolderDrop?.invoke(content.folder, cell) }
-                }
+            is CellContent.FolderCell -> if (moved || cancelled) {
+                val cell = if (cancelled || isLayoutLocked()) null else folderDropTarget(x, y)
+                onFolderDragReleased?.invoke(content.folder, cell)
+            } else {
+                onFolderLongClick?.invoke(content.folder, anchor)
             }
             null -> Unit
         }
@@ -370,9 +376,9 @@ class WorkspaceView @JvmOverloads constructor(
      * geometry change ends the active drag, drops the stale highlight and
      * reschedules layout; an unchanged grid leaves a live drag alone.
      */
-    fun bind(grid: GridCanvas, cells: Map<Int, CellContent>) {
+    fun bind(grid: GridCanvas, cells: Map<Int, CellContent>, isDragPagePreview: Boolean = false) {
         val draggingFolder = (dragContent as? CellContent.FolderCell)?.folder
-        if (draggingFolder != null &&
+        if (!isDragPagePreview && draggingFolder != null &&
             (cells[draggingFolder.cellIndex] as? CellContent.FolderCell)?.folder?.id != draggingFolder.id
         ) cancelDrag()
         if (grid != this.grid) {

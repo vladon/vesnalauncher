@@ -48,8 +48,8 @@ The Android package name is `dev.vladon.vesna.launcher`.
   to change its position. Drag outside the folder to place it in an empty Home
   cell, or use **Remove from folder** to let Vesna choose a cell on the same
   page. If only one shortcut remains, it takes the folder's place. While
-  dragging a Home or folder shortcut, pause at the edge to show an existing
-  neighboring page, then drop on an empty cell.
+  dragging a Home shortcut, a folder member, or a closed folder, pause at the
+  edge to preview an existing neighboring page, then drop on an empty cell.
   While dragging an ordinary Home app shortcut or a shortcut out of a folder,
   pause at the outer edge of the last page to preview a new one. Drop in an
   empty cell to keep the new page; canceling leaves the layout as it was.

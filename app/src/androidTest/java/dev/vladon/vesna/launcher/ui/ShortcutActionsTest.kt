@@ -398,7 +398,7 @@ class ShortcutActionsTest {
                 val y = origin.exactCenterY()
                 val target = x + origin.width()
                 val movedTo = mutableListOf<Int>()
-                workspace.onFolderDrop = { _, cell -> movedTo += cell }
+                workspace.onFolderDragReleased = { _, cell -> if (cell != null) movedTo += cell }
 
                 fun drag(interrupt: Boolean) {
                     val down = SystemClock.uptimeMillis()

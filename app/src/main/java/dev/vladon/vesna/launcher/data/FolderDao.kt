@@ -23,6 +23,16 @@ interface FolderDao {
     @Query("UPDATE folders SET cellIndex = :cell, pageId = :pageId WHERE id = :id")
     suspend fun updateWorkspacePosition(id: Long, cell: Int, pageId: Long)
 
+    @Query(
+        "UPDATE folders SET pageId = :pageId, cellIndex = :cell " +
+            "WHERE id = :id AND pageId = :sourcePage AND cellIndex = :sourceCell " +
+            "AND EXISTS(SELECT 1 FROM workspace_pages WHERE id = :pageId) " +
+            "AND NOT EXISTS(SELECT 1 FROM folders WHERE pageId = :pageId AND cellIndex = :cell) " +
+            "AND NOT EXISTS(SELECT 1 FROM workspace_items WHERE pageId = :pageId AND cellIndex = :cell " +
+            "AND folderId IS NULL AND container != 'DOCK')",
+    )
+    suspend fun moveToEmptyCell(id: Long, sourcePage: Long, sourceCell: Int, pageId: Long, cell: Int): Int
+
     @Query("DELETE FROM folders WHERE id = :id")
     suspend fun deleteById(id: Long)
 }

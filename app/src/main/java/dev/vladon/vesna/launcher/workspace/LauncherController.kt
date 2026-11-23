@@ -470,9 +470,8 @@ class LauncherController(
         }
     }
 
-    internal fun moveFolderWithinPage(folder: Folder, toCell: Int) {
-        scope.launch { workspaceRepository.moveFolderWithinPage(folder, toCell) }
-    }
+    internal suspend fun moveFolderToCell(folder: Folder, pageId: Long, cell: Int, grid: GridCanvas): Boolean =
+        workspaceRepository.moveFolderToCell(folder, pageId, cell, grid)
 
     private fun reportPageMove(result: PageMoveResult, success: LauncherMessage) {
         _messages.tryEmit(when (result) {
