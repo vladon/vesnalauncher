@@ -262,6 +262,11 @@ while Vesna has no widget host.
   Workspace columns and dock slots run from the reading start edge, including in RTL.
   Drag hit testing and highlights follow the rendered columns. Changing layout direction
   mirrors the display without changing the saved cells or slot order.
+  Removing the last regular app shortcut from a secondary Home page also
+  removes that page when it has no other saved content. If it was selected,
+  use the same return to the first page as **Remove empty page**. Keep the
+  first page, other pages, and empty pages created manually. Moving a pin
+  between pages does not trigger cleanup.
   Temporarily unavailable shortcuts stay hidden and keep their saved Home
   cells. Those cells do not highlight or accept drops.
   When copying from the drawer, do not highlight a shortcut or folder that
