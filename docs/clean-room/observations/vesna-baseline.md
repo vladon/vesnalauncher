@@ -2689,3 +2689,36 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity114-*`.
   [Dock facts in #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7107839244)
   and [unavailable-shortcut input in #116](https://github.com/vladon/vesnalauncher/issues/116#issuecomment-7107839768).
+
+## OBS-VESNA-114 — Signed whole-folder page append
+
+- Android 15 research AVD, real 4×5 grids, 1080×2400 px at
+  420 dpi, 100% text. In-place upgrade from signed v0.4.68 to
+  published signed v0.4.69 (74).
+  [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.69)
+  `2b2bcc0deb5580423cdafa9a4c247e4b0c6fe213`, APK SHA-256
+  `e27b180b371a1603b2b51a046736dcd7b41c6a372ad340432ea7fad5dc5c6d1e`,
+  with the same verified v2 signer as v0.4.68.
+- **en-US:** a closed folder named **Work** (Gmail → Photos) was
+  the test item on a single Home page. Held at the right edge,
+  it showed a blank second page. Cancel and a release over the
+  dock left one page and the exact layout. A valid release
+  created page two with **Work** in the same cell; page one
+  lost only the folder, and the name and member order were
+  intact.
+- Dragging the folder back through the left edge returned it
+  to its original cell on page one and left page two empty, so
+  the existing-neighbor route still works.
+- **System `ar-EG`, RTL:** cancel at the physical left edge was
+  exact. A valid release created page three with **Work** in
+  the same physical cell and the same order.
+- Both results were unchanged after a process restart. Nova
+  9.0.1 Prime (90100) created a page in both directions as
+  well, with the folder at the same coordinates (LTR in
+  OBS-VESNA-109).
+- The eight-page cap and layout lock were not exercised.
+  Reverted the locale and grid through the baseline snapshot,
+  reinstalled v0.4.69 over the original state, and saved that
+  state as the new loadable baseline.
+  Evidence: `EVI-VESNA-003/parity115-*`, `release-0.4.69/`.
+  [Independent verification in #167](https://github.com/vladon/vesnalauncher/issues/167#issuecomment-7108341615).
