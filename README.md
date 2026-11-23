@@ -49,6 +49,10 @@ The Android package name is `dev.vladon.vesna.launcher`.
   separately in Vesna settings. The drawer matches Home by default; turn
   **Match Home icon size** off to pick its own size. Only the artwork changes:
   cells, labels and shortcuts stay where they are.
+- **Icon shape.** In Vesna settings, choose the shape of adaptive app icons:
+  the system shape, which is the default, or a rounded square. It applies on
+  Home, in the dock, in the app drawer and in folders. Other icons and work
+  badges stay as they are.
 - **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
   pins between the workspace and dock. Drop an app on another in the workspace
   to create a folder. In the open folder, hold and drag a shortcut onto another
@@ -74,10 +78,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
   to bring the folder back to its original cell.
 - **Work profiles.** Launch work apps from badged icons. Removing a work copy
   leaves its personal counterpart's pins in place.
-- **Appearance and accessibility.** Choose System, Light, or Dark and decide
-  whether to show app names. Use **Home screen → Hide app names on Home**
-  to hide labels on Home and in the dock without hiding drawer or folder names.
-  Keyboard shortcuts open the same menus as touch.
+- **Appearance and accessibility.** Choose System, Light, or Dark, pick the
+  system icon shape or a rounded square, and decide whether to show app
+  names. Use **Home screen → Hide app names on Home** to hide labels on Home
+  and in the dock without hiding drawer or folder names. Keyboard shortcuts
+  open the same menus as touch.
 - **Free and private.** Vesna is free of ads, subscriptions, paid features,
   in-app purchases, commercial analytics and tracking SDKs.
 

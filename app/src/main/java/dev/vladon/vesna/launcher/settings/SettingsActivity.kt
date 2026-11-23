@@ -39,6 +39,7 @@ class SettingsActivity : ComponentActivity() {
     }
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
+    private var iconShape by mutableStateOf(IconShapeMode.SYSTEM)
     private var layoutLocked by mutableStateOf(false)
     /** Null until the persisted grid arrives; the row must not flash the default. */
     private var grid by mutableStateOf<GridCanvas?>(null)
@@ -101,6 +102,8 @@ class SettingsActivity : ComponentActivity() {
                         onSetDefaultHome = ::requestDefaultHome,
                         themeMode = themeMode,
                         onThemeSelected = ::selectTheme,
+                        iconShape = iconShape,
+                        onIconShapeSelected = ::selectIconShape,
                         showAppNames = showAppNames,
                         onShowAppNamesChanged = ::changeAppNameVisibility,
                         layoutLocked = layoutLocked,
@@ -187,6 +190,7 @@ class SettingsActivity : ComponentActivity() {
 
     private fun readPreferences() {
         themeMode = appearance.themeMode
+        iconShape = appearance.iconShape
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
         pinNewApps = workspace.pinNewApps
@@ -205,6 +209,12 @@ class SettingsActivity : ComponentActivity() {
         if (mode == themeMode) return
         appearance.themeMode = mode
         themeMode = mode
+    }
+
+    private fun selectIconShape(shape: IconShapeMode) {
+        if (shape == iconShape) return
+        appearance.iconShape = shape
+        iconShape = shape
     }
 
     private fun changeAppNameVisibility(visible: Boolean) {

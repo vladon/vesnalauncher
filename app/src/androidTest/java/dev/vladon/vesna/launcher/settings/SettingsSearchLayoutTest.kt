@@ -62,6 +62,8 @@ class SettingsSearchLayoutTest {
                                 onSetDefaultHome = {},
                                 themeMode = ThemeMode.SYSTEM,
                                 onThemeSelected = {},
+                                iconShape = IconShapeMode.SYSTEM,
+                                onIconShapeSelected = {},
                                 showAppNames = true,
                                 onShowAppNamesChanged = {},
                                 layoutLocked = false,
@@ -302,6 +304,37 @@ class SettingsSearchLayoutTest {
     }
 
     @Test
+    fun iconShapeIsFoundFromSearchAndOpensTheAppearanceChoices() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        lateinit var title: String
+        lateinit var system: String
+        lateinit var square: String
+        var query = "shape"
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                title = activity.getString(R.string.settings_icon_shape)
+                system = activity.getString(R.string.settings_icon_shape_system)
+                square = activity.getString(R.string.settings_icon_shape_rounded_square)
+                if (activity.resources.configuration.locales[0].language == "ru") query = "форм"
+            }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun editor() = find { it.isEditable }
+            fun result() = find { !it.isEditable && it.text?.toString() == title }
+
+            assertTrue(until { editor() != null })
+            assertTrue(editor()!!.setQuery(query))
+            assertTrue("Settings should find the icon shape for \"$query\"", until { result() != null })
+            val card = generateSequence(result()) { it.parent }.first { it.isClickable }
+            assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("The result should open Appearance and show both shapes", until {
+                find { it.text?.toString() == system } != null && find { it.text?.toString() == square } != null
+            })
+        }
+    }
+
+    @Test
     fun workspaceGridRowHidesUntilThePersistedGridLoads() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.uiAutomation
@@ -473,6 +506,8 @@ class SettingsSearchLayoutTest {
                                         onSetDefaultHome = {},
                                         themeMode = ThemeMode.SYSTEM,
                                         onThemeSelected = {},
+                                        iconShape = IconShapeMode.SYSTEM,
+                                        onIconShapeSelected = {},
                                         showAppNames = true,
                                         onShowAppNamesChanged = {},
                                         layoutLocked = false,
@@ -584,6 +619,8 @@ class SettingsSearchLayoutTest {
                             onSetDefaultHome = {},
                             themeMode = ThemeMode.SYSTEM,
                             onThemeSelected = {},
+                            iconShape = IconShapeMode.SYSTEM,
+                            onIconShapeSelected = {},
                             showAppNames = true,
                             onShowAppNamesChanged = {},
                             layoutLocked = false,

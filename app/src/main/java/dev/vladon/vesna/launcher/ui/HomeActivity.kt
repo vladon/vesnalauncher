@@ -56,6 +56,7 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.DrawerPreferences
+import dev.vladon.vesna.launcher.settings.IconShapeMode
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.settings.VesnaTheme
@@ -197,6 +198,7 @@ class HomeActivity : ComponentActivity() {
     }
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
+    private lateinit var iconShape: IconShapeMode
     private var showAppNames = true
 
     private val controller
@@ -219,6 +221,9 @@ class HomeActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         appearance = AppearancePreferences(newBase)
         themeMode = appearance.themeMode
+        iconShape = appearance.iconShape
+        // Tiles read the shape when they bind, so it is fixed before any view inflates.
+        IconShape.roundedSquare = iconShape == IconShapeMode.ROUNDED_SQUARE
         val night = themeMode.nightOverride
         // Override only the night bits; locale, density and other changes still come from Android.
         val context = if (night == null) newBase else newBase.createConfigurationContext(
@@ -397,7 +402,7 @@ class HomeActivity : ComponentActivity() {
         // does not confirm the viewport staged by an auto-closed launch.
         drawer.discardUnconfirmedAutoCloseViewport()
         // Settings can change the preference while Home is on the back stack.
-        if (appearance.themeMode != themeMode) {
+        if (appearance.themeMode != themeMode || appearance.iconShape != iconShape) {
             recreate()
             return
         }
