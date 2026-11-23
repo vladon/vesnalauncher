@@ -177,9 +177,11 @@ class WorkspaceRepository(
     suspend fun createPage(): Long? = mutationMutex.withLock {
         val existing = db.workspacePageDao().getAll()
         if (existing.size >= MAX_WORKSPACE_PAGES) return@withLock null
-        val nextRank = (existing.maxOfOrNull { it.rank } ?: -1) + 1
-        db.workspacePageDao().insert(WorkspacePageEntity(rank = nextRank))
+        insertPageAfter(existing.lastOrNull())
     }
+
+    private suspend fun insertPageAfter(last: WorkspacePageEntity?): Long =
+        db.workspacePageDao().insert(WorkspacePageEntity(rank = (last?.rank ?: -1) + 1))
 
     /** Removes an empty extra page without changing any other page or placement. */
     internal suspend fun removeEmptyPage(pageId: Long): Boolean = mutationMutex.withLock {
@@ -353,6 +355,31 @@ class WorkspaceRepository(
         if (workspacePreferences.layoutLocked) return@withLock false
         dao.updatePlacement(source.id, Container.WORKSPACE.name, destinationCell, destinationPageId)
         true
+    }
+
+    /** Materializes a trailing drag preview and moves the exact regular pin in one commit. */
+    internal suspend fun appendPageWithWorkspacePin(
+        pinId: Long,
+        sourcePageId: Long,
+        sourceCell: Int,
+        afterPageId: Long,
+        destinationCell: Int,
+        grid: GridCanvas,
+    ): Long? = mutationMutex.withLock {
+        db.withTransaction {
+            if (workspacePreferences.layoutLocked || !grid.isValidCell(destinationCell) ||
+                !dao.hasRegularWorkspacePin(pinId, sourcePageId, sourceCell)
+            ) return@withTransaction null
+            val pages = db.workspacePageDao().getAll()
+            val last = pages.lastOrNull() ?: return@withTransaction null
+            if (pages.size >= MAX_WORKSPACE_PAGES || last.id != afterPageId || readGrid() != grid ||
+                workspacePreferences.layoutLocked
+            ) return@withTransaction null
+
+            val destinationPageId = insertPageAfter(last)
+            dao.updateWorkspacePosition(pinId, destinationCell, destinationPageId)
+            destinationPageId
+        }
     }
 
     /** Reads eligible destinations only if the selected folder is still in its source cell. */

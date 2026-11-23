@@ -10,6 +10,12 @@ interface WorkspaceItemDao {
     @Query("SELECT * FROM workspace_items")
     suspend fun getAll(): List<WorkspaceItemEntity>
 
+    @Query(
+        "SELECT EXISTS(SELECT 1 FROM workspace_items WHERE id = :id AND pageId = :pageId " +
+            "AND cellIndex = :cell AND container != 'DOCK' AND folderId IS NULL AND shortcutId IS NULL)",
+    )
+    suspend fun hasRegularWorkspacePin(id: Long, pageId: Long, cell: Int): Boolean
+
     @Query("SELECT * FROM workspace_items WHERE folderId = :folderId LIMIT 2")
     suspend fun firstTwoFolderMembers(folderId: Long): List<WorkspaceItemEntity>
 

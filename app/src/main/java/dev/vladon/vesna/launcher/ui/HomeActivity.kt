@@ -58,6 +58,7 @@ import dev.vladon.vesna.launcher.workspace.FolderRemovalResult
 import dev.vladon.vesna.launcher.workspace.LauncherMessage
 import dev.vladon.vesna.launcher.workspace.LauncherUiState
 import dev.vladon.vesna.launcher.workspace.MAX_WORKSPACE_PAGES
+import dev.vladon.vesna.launcher.workspace.NEW_WORKSPACE_PAGE_PREVIEW_ID
 import dev.vladon.vesna.launcher.workspace.PageMoveOptions
 import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
 import kotlinx.coroutines.Dispatchers
@@ -261,7 +262,9 @@ class HomeActivity : ComponentActivity() {
             if (edgePageDrag == null && !renderedState.isDragPagePreview) {
                 val source = DragSource(app, Container.WORKSPACE, cell, renderedState.activePageId, fromDrawer = false)
                 dragSource = source
-                if (renderedState.pageIds.size > 1) {
+                if (renderedState.pageIds.size > 1 ||
+                    (app.key.shortcutId == null && renderedState.pageIds.isNotEmpty())
+                ) {
                     edgePageDrag = EdgePageDrag(homePin = source)
                     backCallback.isEnabled = true
                 }
@@ -490,15 +493,20 @@ class HomeActivity : ComponentActivity() {
         }
         if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
         if (state.apps != previous.apps) updateAppCatalogue(state.apps)
-        emptyHint.isVisible = state.isWorkspaceEmpty
-        if (state.pageIds != previous.pageIds || state.activePageId != previous.activePageId) {
-            val position = state.pageIds.indexOf(state.activePageId)
+        val appendAfter = state.newPagePreviewAfter
+        emptyHint.isVisible = state.isWorkspaceEmpty && appendAfter == null
+        if (state.pageIds != previous.pageIds || state.activePageId != previous.activePageId ||
+            appendAfter != previous.newPagePreviewAfter
+        ) {
+            val position = if (appendAfter == null) state.pageIds.indexOf(state.activePageId)
+            else state.pageIds.indexOf(appendAfter) + 1
+            val count = if (appendAfter == null) state.pageIds.size else position + 1
             val hadPreviousFocus = previousPage.hasFocus()
             val hadNextFocus = nextPage.hasFocus()
             val hadIndicatorFocus = pageIndicator.hasFocus()
-            pageControls.isVisible = state.pageIds.size > 1
+            pageControls.isVisible = count > 1
             previousPage.isEnabled = position > 0
-            nextPage.isEnabled = position in 0 until state.pageIds.lastIndex
+            nextPage.isEnabled = position in 0 until count - 1
             previousPage.alpha = if (previousPage.isEnabled) 1f else 0.38f
             nextPage.alpha = if (nextPage.isEnabled) 1f else 0.38f
             if (pageControls.isVisible) {
@@ -507,7 +515,7 @@ class HomeActivity : ComponentActivity() {
             } else if (hadPreviousFocus || hadNextFocus || hadIndicatorFocus) {
                 openDrawerButton.requestFocus()
             }
-            pageIndicator.bind(position, state.pageIds.size)
+            pageIndicator.bind(position, count)
         }
         renderFolderUi(state)
         restoreHomeShortcut(state)
@@ -648,10 +656,19 @@ class HomeActivity : ComponentActivity() {
         drag.dwell?.cancel()
         if (direction == 0 || layoutLocked || drag.submitting) return
         val state = renderedState
-        val current = state.pageIds.indexOf(state.activePageId)
-        if (current < 0 || !isRenderedDragPage(drag)) return
+        if (!isRenderedDragPage(drag)) return
         val step = if (workspace.layoutDirection == View.LAYOUT_DIRECTION_RTL) -direction else direction
-        val destination = state.pageIds.getOrNull(current + step) ?: return
+        val appendAfter = state.newPagePreviewAfter
+        val destination = if (appendAfter != null) {
+            if (step < 0) appendAfter else return
+        } else {
+            val current = state.pageIds.indexOf(state.activePageId)
+            if (current < 0) return
+            state.pageIds.getOrNull(current + step) ?: if (
+                step > 0 && current == state.pageIds.lastIndex && state.pageIds.size < MAX_WORKSPACE_PAGES &&
+                drag.homePin?.app?.key?.let { it.shortcutId == null } == true
+            ) NEW_WORKSPACE_PAGE_PREVIEW_ID else return
+        }
         drag.dwell = lifecycleScope.launch {
             delay(DRAG_PAGE_DWELL_MS)
             val pin = drag.homePin
@@ -663,7 +680,11 @@ class HomeActivity : ComponentActivity() {
             ) return@launch
             drag.requestedPage = destination
             workspace.showDropHighlight(null)
-            controller.previewWorkspacePageForDrag(destination)
+            if (destination == NEW_WORKSPACE_PAGE_PREVIEW_ID) {
+                controller.previewNewWorkspacePageForDrag(state.activePageId)
+            } else {
+                controller.previewWorkspacePageForDrag(destination)
+            }
         }
     }
 
@@ -693,7 +714,7 @@ class HomeActivity : ComponentActivity() {
         lifecycleScope.launch {
             val placed = move()
             if (edgePageDrag !== drag) return@launch
-            if (placed) controller.finishWorkspacePagePreview(destination)
+            if (placed && destination != NEW_WORKSPACE_PAGE_PREVIEW_ID) controller.finishWorkspacePagePreview(destination)
             clearEdgeDrag()
             finish(placed)
         }
@@ -711,8 +732,13 @@ class HomeActivity : ComponentActivity() {
         if (pinId == null || cell == null) {
             clearEdgeDrag()
         } else {
+            val grid = renderedState.grid
             submitEdgeDrop(drag, destination, move = {
-                controller.moveWorkspacePinToCell(pinId, source.pageId, source.fromCell, destination, cell)
+                if (destination == NEW_WORKSPACE_PAGE_PREVIEW_ID) {
+                    controller.finishNewWorkspacePagePreview(pinId, source.pageId, source.fromCell, cell, grid)
+                } else {
+                    controller.moveWorkspacePinToCell(pinId, source.pageId, source.fromCell, destination, cell)
+                }
             })
         }
     }
@@ -1421,6 +1447,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showLauncherMenu() {
+        if (renderedState.isDragPagePreview) return
         val popup = VesnaPopupMenu(homeOptionsButton)
         popup.add(R.string.menu_launcher_settings) {
             startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
