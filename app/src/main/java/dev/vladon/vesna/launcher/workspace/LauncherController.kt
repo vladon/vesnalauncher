@@ -273,6 +273,9 @@ class LauncherController(
         scope.launch { workspaceRepository.addToFolder(app, folderId, source) }
     }
 
+    internal suspend fun moveFolderMemberToCell(pinId: Long, folderId: Long, pageId: Long, cell: Int): Boolean =
+        workspaceRepository.moveFolderMemberToCell(pinId, folderId, pageId, cell)
+
     /** Returns a member of [folderId] to the first free grid cell (dissolves sparse folders). */
     internal suspend fun removeFromFolder(pinId: Long, folderId: Long): FolderRemovalResult =
         workspaceRepository.removeFromFolder(pinId, folderId)

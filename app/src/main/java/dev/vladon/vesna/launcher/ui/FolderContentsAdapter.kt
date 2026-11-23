@@ -9,10 +9,15 @@ import androidx.recyclerview.widget.RecyclerView
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.workspace.FolderPin
 
-/** Grid adapter for the contents of an open folder. */
+/**
+ * Grid adapter for the contents of an open folder. Touch holds route through
+ * [onItemHold] so the grid can decide between the menu and a drag; keyboard and
+ * accessibility still open [onItemOptions].
+ */
 internal class FolderContentsAdapter(
     private val onItemClick: (LauncherApp) -> Unit,
     private val onItemOptions: (FolderPin, View) -> Unit,
+    private val onItemHold: (FolderPin, View) -> Unit,
 ) : ListAdapter<FolderPin, FolderContentsAdapter.Holder>(DIFF) {
 
     class Holder(val view: AppIconView) : RecyclerView.ViewHolder(view)
@@ -24,7 +29,10 @@ internal class FolderContentsAdapter(
         val pin = getItem(position)
         holder.view.bind(pin.app)
         holder.view.setOnClickListener { onItemClick(pin.app) }
-        holder.view.bindOptions(onOptions = { anchor -> onItemOptions(pin, anchor) })
+        holder.view.bindOptions(
+            onOptions = { anchor -> onItemOptions(pin, anchor) },
+            onTouchHold = { anchor -> onItemHold(pin, anchor) },
+        )
     }
 
     private companion object {

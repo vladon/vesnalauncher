@@ -255,7 +255,7 @@ class WorkspaceView @JvmOverloads constructor(
         }
     }
 
-    private fun folderDropTarget(x: Float, y: Float): Int? =
+    internal fun folderDropTarget(x: Float, y: Float): Int? =
         cellAtLocal(x, y)?.takeUnless { it in boundContent || isCellReserved(it) }
 
     internal fun cancelDrag() {

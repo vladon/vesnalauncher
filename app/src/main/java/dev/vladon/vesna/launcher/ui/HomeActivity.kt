@@ -101,6 +101,11 @@ class HomeActivity : ComponentActivity() {
     private var activePopup: VesnaPopupMenu? = null
     private var pendingPageMenu: Job? = null
     private var folderDialog: FolderDialog? = null
+    private data class FolderMemberDrag(val folderId: Long, val pinId: Long, val pageId: Long)
+
+    private var folderMemberDrag: FolderMemberDrag? = null
+    private val workspaceScreenLocation = IntArray(2)
+
     /** The open rename editor: a folder title, or a per-pin label override on Home. */
     private sealed interface HomeRename {
         data class Folder(val folderId: Long, val editor: RenameEditorState) : HomeRename
@@ -355,6 +360,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        folderDialog?.cancelMemberDrag()
         snackbarJob?.cancel()
         super.onStop()
     }
@@ -665,6 +671,46 @@ class HomeActivity : ComponentActivity() {
         commitOnCell(source, source.app, cell)
     }
 
+    private fun startFolderMemberDrag(folder: Folder, pinId: Long): Boolean {
+        val state = renderedState
+        if (layoutLocked || dragSource != null || folderMemberDrag != null ||
+            state.activePageId != folder.pageId ||
+            state.folderContents[folder.id].orEmpty().none { it.id == pinId }
+        ) return false
+        folderMemberDrag = FolderMemberDrag(folder.id, pinId, folder.pageId)
+        return true
+    }
+
+    private fun folderMemberDropCell(source: FolderMemberDrag, rawX: Float, rawY: Float): Int? {
+        if (layoutLocked || renderedState.activePageId != source.pageId) return null
+        workspace.getLocationOnScreen(workspaceScreenLocation)
+        return workspace.folderDropTarget(rawX - workspaceScreenLocation[0], rawY - workspaceScreenLocation[1])
+    }
+
+    private fun updateFolderMemberDrag(rawX: Float, rawY: Float) {
+        val source = folderMemberDrag ?: return
+        workspace.showDropHighlight(folderMemberDropCell(source, rawX, rawY))
+    }
+
+    private fun clearFolderMemberDrag() {
+        if (folderMemberDrag == null) return
+        folderMemberDrag = null
+        workspace.showDropHighlight(null)
+    }
+
+    private fun finishFolderMemberDrag(rawX: Float, rawY: Float, cancelled: Boolean): Boolean {
+        val source = folderMemberDrag ?: return false
+        clearFolderMemberDrag()
+        val dialog = folderDialog ?: return false
+        val cell = if (cancelled) null else folderMemberDropCell(source, rawX, rawY)
+        if (cell == null) return false
+        lifecycleScope.launch {
+            val placed = controller.moveFolderMemberToCell(source.pinId, source.folderId, source.pageId, cell)
+            if (dialog === folderDialog) dialog.finishMemberDrop(placed)
+        }
+        return true
+    }
+
     private fun showFolderDialog(folder: Folder, focusedMemberId: Long? = null) {
         folderDialog?.dismiss()
         val dialog = FolderDialog(
@@ -672,6 +718,9 @@ class HomeActivity : ComponentActivity() {
             folder = folder,
             pendingMemberFocus = focusedMemberId,
             onLaunch = { launchApp(it) },
+            onMemberDragStarted = { startFolderMemberDrag(folder, it.id) },
+            onMemberDragMoved = ::updateFolderMemberDrag,
+            onMemberDragFinished = ::finishFolderMemberDrag,
             onAppInfo = { controller.openAppInfo(it) },
             onRemoveFromFolder = { pinId ->
                 removeFolderItems(folder.pageId) { controller.removeFromFolder(pinId, folder.id) }
@@ -682,6 +731,7 @@ class HomeActivity : ComponentActivity() {
             },
             onShowPopup = ::showPopup,
             onDismissed = {
+                clearFolderMemberDrag()
                 snackbarJob?.cancel()
                 folderDialog = null
                 homeUiState.openFolderId = null

@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.workspace
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -9,9 +10,11 @@ import dev.vladon.vesna.launcher.data.FolderEntity
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
 import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
+import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -36,6 +39,7 @@ class WorkspaceRepositoryFolderRemovalTest {
 
     private lateinit var db: LauncherDatabase
     private lateinit var dao: WorkspaceItemDao
+    private lateinit var prefs: SharedPreferences
     private lateinit var repo: WorkspaceRepository
 
     @Before
@@ -44,7 +48,7 @@ class WorkspaceRepositoryFolderRemovalTest {
         db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
             .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
             .build()
-        val prefs = context.getSharedPreferences(
+        prefs = context.getSharedPreferences(
             "folder-removal-qa-${UUID.randomUUID()}",
             Context.MODE_PRIVATE,
         )
@@ -243,5 +247,121 @@ class WorkspaceRepositoryFolderRemovalTest {
             foldersBefore,
             db.folderDao().getAll(),
         )
+    }
+
+    /**
+     * An exact drop lands on the cell the user chose, never on the first free
+     * cell the "remove from folder" menu path would pick. With cells 0-4 taken,
+     * the first vacancy is 5, but the drop names 7: only 7 may change, the row
+     * keeps its stable ID and cleared membership, and a folder left with two
+     * members survives untouched.
+     */
+    @Test
+    fun memberDropLandsOnTheChosenNonFirstVacancyAndKeepsTheFolder() = runBlocking {
+        val folder = FolderEntity(title = "Apps", cellIndex = 10)
+        val folderId = db.folderDao().insert(folder)
+        seedMember("qa.first", folderId, cellIndex = 0)
+        val moving = seedMember("qa.moving", folderId, cellIndex = 1)
+        seedMember("qa.third", folderId, cellIndex = 2)
+        for (cell in 0..4) {
+            dao.insert(
+                WorkspaceItemEntity(
+                    packageName = "qa.top", className = "Main", container = "WORKSPACE", cellIndex = cell,
+                ),
+            )
+        }
+        val before = dao.getAll().associateBy { it.id }
+        val foldersBefore = db.folderDao().getAll()
+
+        assertTrue(repo.moveFolderMemberToCell(moving, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 7))
+
+        val after = dao.getAll().associateBy { it.id }
+        assertEquals(
+            "the chosen cell wins over the first vacancy (5), with the row ID kept and membership cleared",
+            before.getValue(moving).copy(cellIndex = 7, folderId = null, pageId = DEFAULT_WORKSPACE_PAGE_ID),
+            after.getValue(moving),
+        )
+        assertEquals("every other placement is untouched", before - moving + (moving to after.getValue(moving)), after)
+        assertEquals("the folder survives with two members left", foldersBefore, db.folderDao().getAll())
+    }
+
+    /**
+     * Dropping one of exactly two members dissolves the folder: the dropped row
+     * lands on its chosen cell, and the remaining member keeps its exact row ID,
+     * profile and both labels while taking over the folder's cell.
+     */
+    @Test
+    fun movingOneOfTwoMembersDissolvesTheFolderIntoItsExactCellWithLabelsKept() = runBlocking {
+        val folderCell = 11
+        val folderId = db.folderDao().insert(FolderEntity(title = "Beta", cellIndex = folderCell))
+        val leaving = dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.leaving", className = "qa.leaving.Activity", container = "WORKSPACE",
+                cellIndex = 0, folderId = folderId,
+            ),
+        )
+        val remaining = dao.insert(
+            WorkspaceItemEntity(
+                packageName = "qa.remaining", className = "qa.remaining.Activity", container = "WORKSPACE",
+                cellIndex = 1, folderId = folderId, userSerial = 7,
+                customLabel = "Kept", shortcutLabel = "Publisher",
+            ),
+        )
+
+        assertTrue(repo.moveFolderMemberToCell(leaving, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 5))
+
+        assertNull("the folder dissolves once one member is left", db.folderDao().getById(folderId))
+        val home = dao.getAll().associateBy { it.id }
+        assertEquals(
+            "the dropped member sits on the chosen cell with membership cleared",
+            WorkspaceItemEntity(
+                id = leaving, packageName = "qa.leaving", className = "qa.leaving.Activity",
+                container = "WORKSPACE", cellIndex = 5, folderId = null,
+                pageId = DEFAULT_WORKSPACE_PAGE_ID,
+            ),
+            home.getValue(leaving),
+        )
+        assertEquals(
+            "the remaining member keeps its exact row ID, profile and labels at the folder cell",
+            WorkspaceItemEntity(
+                id = remaining, packageName = "qa.remaining", className = "qa.remaining.Activity",
+                container = "WORKSPACE", cellIndex = folderCell, userSerial = 7, folderId = null,
+                pageId = DEFAULT_WORKSPACE_PAGE_ID, customLabel = "Kept", shortcutLabel = "Publisher",
+            ),
+            home.getValue(remaining),
+        )
+    }
+
+    /**
+     * Every rejected drop — occupied cell, the folder's reserved cell, an
+     * out-of-range cell, another page, an unknown folder — and a locked layout
+     * change nothing at all: no placement, no membership, no folder row.
+     */
+    @Test
+    fun invalidOrLockedDropsPreserveEveryPlacementAndTheFolder() = runBlocking {
+        val folderCell = 10
+        val folderId = db.folderDao().insert(FolderEntity(title = "Apps", cellIndex = folderCell))
+        val member = seedMember("qa.member", folderId, cellIndex = 0)
+        seedMember("qa.other", folderId, cellIndex = 1)
+        dao.insert(
+            WorkspaceItemEntity(packageName = "qa.top", className = "Main", container = "WORKSPACE", cellIndex = 3),
+        )
+        val otherPage = requireNotNull(repo.createPage())
+        val before = dao.getAll().associateBy { it.id }
+        val foldersBefore = db.folderDao().getAll()
+
+        assertFalse("an occupied cell is rejected", repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 3))
+        assertFalse("the folder cell stays reserved", repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = folderCell))
+        assertFalse("an out-of-range cell is rejected", repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = GridCanvas.DEFAULT.capacity))
+        assertFalse("a drop naming another page is rejected", repo.moveFolderMemberToCell(member, folderId, otherPage, cell = 5))
+        assertFalse("a stale folder ID is rejected", repo.moveFolderMemberToCell(member, folderId + 100, DEFAULT_WORKSPACE_PAGE_ID, cell = 5))
+
+        assertEquals("every failed drop keeps the layout exactly", before, dao.getAll().associateBy { it.id })
+        assertEquals(foldersBefore, db.folderDao().getAll())
+
+        WorkspacePreferences(prefs).layoutLocked = true
+        assertFalse("a locked layout rejects the drop", repo.moveFolderMemberToCell(member, folderId, DEFAULT_WORKSPACE_PAGE_ID, cell = 5))
+        assertEquals("the lock changed nothing either", before, dao.getAll().associateBy { it.id })
+        assertEquals(foldersBefore, db.folderDao().getAll())
     }
 }

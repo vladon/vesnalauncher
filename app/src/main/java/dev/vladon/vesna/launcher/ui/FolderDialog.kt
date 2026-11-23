@@ -4,6 +4,8 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
 import dev.vladon.vesna.launcher.R
@@ -58,6 +61,13 @@ import dev.vladon.vesna.launcher.workspace.LauncherUiState
  * Opens a folder: shows its member apps in a grid. Members launch on tap; a
  * long-press offers removal back to the workspace. The folder can be renamed or
  * removed entirely. [update] is called by the owner whenever launcher state emits.
+ *
+ * A member hold that leaves the touch slop starts a member drag: [onMemberDragStarted]
+ * arms the session with the owner, [onMemberDragMoved] reports the pointer in raw
+ * screen coordinates, and [onMemberDragFinished] reports the release. While the
+ * pointer really moves, the dialog surface hides itself (transparent decor, no
+ * dim) so the owner can show its own drop target underneath; [finishMemberDrop]
+ * resolves a queued drop and [cancelMemberDrag] cancels an active drag.
  */
 internal class FolderDialog(
     context: Context,
@@ -70,6 +80,9 @@ internal class FolderDialog(
     private val onRemoveFolder: () -> Unit,
     private val onShowPopup: (VesnaPopupMenu) -> Unit,
     private val onDismissed: () -> Unit,
+    private val onMemberDragStarted: (FolderPin) -> Boolean,
+    private val onMemberDragMoved: (Float, Float) -> Unit,
+    private val onMemberDragFinished: (Float, Float, Boolean) -> Boolean,
 ) {
 
     private val host = ComposeView(context)
@@ -79,10 +92,24 @@ internal class FolderDialog(
     private val adapter = FolderContentsAdapter(
         onItemClick = onLaunch,
         onItemOptions = ::showItemMenu,
+        onItemHold = { pin, anchor -> list.onMemberHold(pin, anchor) },
     )
     private var currentTitle by mutableStateOf(folder.title)
+    private val layoutLockedState = mutableStateOf(false)
 
-    var layoutLocked by mutableStateOf(false)
+    /** The Compose dialog's own window, found lazily from the grid's parents. */
+    private var memberWindow: Window? = null
+    private var memberSurfaceDim = 0f
+    private var memberSurfaceHidden = false
+    private var awaitingMemberDrop = false
+
+    var layoutLocked: Boolean
+        get() = layoutLockedState.value
+        set(value) {
+            if (layoutLockedState.value == value) return
+            layoutLockedState.value = value
+            if (value) list.cancelMemberDrag()
+        }
 
     internal var showAppNames: Boolean
         get() = appNames.visible
@@ -90,13 +117,29 @@ internal class FolderDialog(
 
     init {
         list.adapter = adapter
+        list.isMemberDragAllowed = { !layoutLocked }
+        list.isMemberInputLocked = { awaitingMemberDrop }
+        list.onMemberHoldOptions = ::showItemMenu
+        list.onMemberDragStarted = onMemberDragStarted
+        list.onMemberDragMoved = { x, y ->
+            hideMemberSurface()
+            onMemberDragMoved(x, y)
+        }
+        list.onMemberDragFinished = { x, y, cancelled ->
+            awaitingMemberDrop = onMemberDragFinished(x, y, cancelled)
+            if (awaitingMemberDrop) {
+                memberWindow?.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            } else {
+                restoreMemberSurface()
+            }
+        }
     }
 
     fun show(parent: ViewGroup, themeMode: ThemeMode) {
         host.setContent {
             VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
                 AlertDialog(
-                    onDismissRequest = ::dismiss,
+                    onDismissRequest = { if (!list.cancelMemberDrag()) dismiss() },
                     title = { Text(currentTitle, maxLines = 2, overflow = TextOverflow.Ellipsis) },
                     text = {
                         Column {
@@ -117,9 +160,37 @@ internal class FolderDialog(
 
     /** Closes the dialog (for example when the folder dissolved). */
     fun dismiss() {
+        // End member motion silently: callbacks must not outlive the window,
+        // and the owner tears its own armed drag down through [onDismissed].
+        awaitingMemberDrop = false
+        list.clearMemberDrag()
         val parent = host.parent as? ViewGroup ?: return
         parent.removeView(host)
         onDismissed()
+    }
+
+    /**
+     * Resolves a queued member drop: [placed] closes the dialog on the accepted
+     * placement; false restores the hidden surface, the same window and focus.
+     * No-op once the dialog is gone.
+     */
+    fun finishMemberDrop(placed: Boolean) {
+        if (!awaitingMemberDrop) return
+        if (placed) {
+            dismiss()
+            return
+        }
+        if (host.parent == null) {
+            // Dismissed while the drop resolved; the window no longer exists.
+            awaitingMemberDrop = false
+            return
+        }
+        restoreMemberSurface()
+    }
+
+    /** Cancels an armed or active member drag (for example the owner's onStop). */
+    fun cancelMemberDrag() {
+        list.cancelMemberDrag()
     }
 
     suspend fun showSnackbar(message: String) {
@@ -167,6 +238,43 @@ internal class FolderDialog(
         if (!layoutLocked) popup.add(R.string.folder_remove_from_folder) { onRemoveFromFolder(pin.id) }
         popup.add(R.string.menu_app_info) { onAppInfo(pin.app) }
         onShowPopup(popup)
+    }
+
+    /**
+     * Hides the dialog surface for a real drag: the decor content turns fully
+     * transparent (alpha, not visibility) and the dim drops to zero, but the
+     * same window stays attached and focused so the original pointer stream
+     * keeps arriving as the finger travels outside the dialog bounds.
+     */
+    private fun hideMemberSurface() {
+        if (memberSurfaceHidden) return
+        val window = memberWindow ?: findMemberWindow(list)?.also { memberWindow = it } ?: return
+        memberSurfaceHidden = true
+        memberSurfaceDim = window.attributes.dimAmount
+        window.decorView.alpha = 0f
+        window.attributes = window.attributes.apply { dimAmount = 0f }
+    }
+
+    /** Restores the hidden surface: same window, same focus, original dim. */
+    private fun restoreMemberSurface() {
+        awaitingMemberDrop = false
+        if (!memberSurfaceHidden) return
+        val window = memberWindow ?: return
+        memberSurfaceHidden = false
+        window.decorView.alpha = 1f
+        window.attributes = window.attributes.apply {
+            dimAmount = memberSurfaceDim
+            flags = flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+        }
+    }
+
+    private fun findMemberWindow(view: View): Window? {
+        var candidate: View? = view
+        while (candidate != null) {
+            if (candidate is DialogWindowProvider) return candidate.window
+            candidate = candidate.parent as? View
+        }
+        return null
     }
 }
 
