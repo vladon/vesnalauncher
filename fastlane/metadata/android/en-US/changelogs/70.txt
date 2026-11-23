@@ -1,0 +1,1 @@
+Drag an app shortcut past the last Home page and pause to preview a new page. Drop it in the cell you want; canceling leaves your layout unchanged.

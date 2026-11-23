@@ -34,6 +34,9 @@ enum class LauncherMessage {
     FOLDER_APPS_UNAVAILABLE,
 }
 
+/** Render-only page identity; never included in [LauncherUiState.pageIds] or persisted. */
+internal const val NEW_WORKSPACE_PAGE_PREVIEW_ID = Long.MIN_VALUE
+
 /** Everything the launcher UI renders. */
 data class LauncherUiState(
     val apps: List<LauncherApp> = emptyList(),
@@ -43,11 +46,12 @@ data class LauncherUiState(
     val dock: DockLayout = DockLayout(emptyList(), emptyList()),
     val folders: Map<Long, Folder> = emptyMap(),
     val folderContents: Map<Long, List<FolderPin>> = emptyMap(),
-    /** Workspace page IDs in display order; [activePageId] names the rendered page. */
+    /** Persisted workspace page IDs in display order. */
     val pageIds: List<Long> = emptyList(),
     val activePageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
     val canRemoveActivePage: Boolean = false,
     internal val isDragPagePreview: Boolean = false,
+    internal val newPagePreviewAfter: Long? = null,
 ) {
     val isWorkspaceEmpty: Boolean get() = workspaceCells.isEmpty()
 }
@@ -90,7 +94,12 @@ class LauncherController(
 
     private val appCatalogue = MutableStateFlow(AppCatalogue(emptyList()))
 
-    private data class PageSelection(val saved: Long, val dragPreview: Long? = null)
+    private sealed interface DragPagePreview {
+        data class Existing(val pageId: Long) : DragPagePreview
+        data class Append(val afterPageId: Long) : DragPagePreview
+    }
+
+    private data class PageSelection(val saved: Long, val dragPreview: DragPagePreview? = null)
 
     private val pageSelection = MutableStateFlow(PageSelection(workspaceRepository.savedActivePageId()))
 
@@ -148,25 +157,29 @@ class LauncherController(
             val orderedIds = saved.pageIds
             // The stored ID can outlive a deleted page if the process stopped
             // between the Room write and the preference update.
-            val preview = pages.dragPreview?.takeIf { it in orderedIds }
+            val drag = pages.dragPreview
+            val appendAfter = (drag as? DragPagePreview.Append)?.afterPageId?.takeIf { it in orderedIds }
+            val preview = if (appendAfter != null) NEW_WORKSPACE_PAGE_PREVIEW_ID
+            else (drag as? DragPagePreview.Existing)?.pageId?.takeIf { it in orderedIds }
             val selection = preview ?: pages.saved.takeIf { it in orderedIds }
                 ?: orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
-            val workspace = WorkspaceResolver.workspaceLayout(
+            val workspace = if (appendAfter != null) null else WorkspaceResolver.workspaceLayout(
                 saved.items, layout.renderedApps, saved.folders, selection, saved.grid,
             )
             LauncherUiState(
                 apps = layout.catalogue.apps,
-                workspaceCells = workspace.cells,
-                reservedWorkspaceCellsMask = workspace.reservedCellsMask,
+                workspaceCells = workspace?.cells.orEmpty(),
+                reservedWorkspaceCellsMask = workspace?.reservedCellsMask ?: 0,
                 grid = saved.grid,
                 dock = layout.dock,
                 folders = layout.foldersById,
                 folderContents = layout.folderContents,
                 pageIds = orderedIds,
                 activePageId = selection,
-                canRemoveActivePage = selection != DEFAULT_WORKSPACE_PAGE_ID &&
+                canRemoveActivePage = appendAfter == null && selection != DEFAULT_WORKSPACE_PAGE_ID &&
                     saved.items.none { it.pageId == selection } && saved.folders.none { it.pageId == selection },
                 isDragPagePreview = preview != null,
+                newPagePreviewAfter = appendAfter,
             )
         }.stateIn(scope, SharingStarted.Eagerly, LauncherUiState())
 
@@ -225,7 +238,11 @@ class LauncherController(
 
     /** Drag hover changes what Home renders, not the page restored on a cold start. */
     internal fun previewWorkspacePageForDrag(pageId: Long) {
-        pageSelection.update { it.copy(dragPreview = pageId) }
+        pageSelection.update { it.copy(dragPreview = DragPagePreview.Existing(pageId)) }
+    }
+
+    internal fun previewNewWorkspacePageForDrag(afterPageId: Long) {
+        pageSelection.update { it.copy(dragPreview = DragPagePreview.Append(afterPageId)) }
     }
 
     internal fun cancelWorkspacePagePreview() {
@@ -234,9 +251,26 @@ class LauncherController(
 
     /** Commit the preview's page only after the exact drop has succeeded. */
     internal suspend fun finishWorkspacePagePreview(pageId: Long) = pageActionMutex.withLock {
-        if (pageSelection.value.dragPreview == pageId && workspaceRepository.selectPage(pageId)) {
+        if ((pageSelection.value.dragPreview as? DragPagePreview.Existing)?.pageId == pageId &&
+            workspaceRepository.selectPage(pageId)
+        ) {
             pageSelection.value = PageSelection(pageId)
         }
+    }
+
+    internal suspend fun finishNewWorkspacePagePreview(
+        pinId: Long,
+        sourcePageId: Long,
+        sourceCell: Int,
+        cell: Int,
+        grid: GridCanvas,
+    ): Boolean = pageActionMutex.withLock {
+        val preview = pageSelection.value.dragPreview as? DragPagePreview.Append ?: return@withLock false
+        val pageId = workspaceRepository.appendPageWithWorkspacePin(
+            pinId, sourcePageId, sourceCell, preview.afterPageId, cell, grid,
+        ) ?: return@withLock false
+        if (workspaceRepository.selectPage(pageId)) pageSelection.value = PageSelection(pageId)
+        true
     }
 
     /** Removes the captured page only if it is still active and has no saved content. */

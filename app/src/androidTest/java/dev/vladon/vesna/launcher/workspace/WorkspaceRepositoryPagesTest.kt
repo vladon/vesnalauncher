@@ -690,6 +690,58 @@ class WorkspaceRepositoryPagesTest {
     }
 
     @Test
+    fun edgeAppendMovesTheExactRegularPinAndNeverLeavesAnEmptyPageOnRefusal() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
+            .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK).build()
+        val prefsName = "qa_workspace_edge_append"
+        context.deleteSharedPreferences(prefsName)
+        try {
+            val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            val dao = db.workspaceItemDao()
+            val pages = db.workspacePageDao()
+            val repository = WorkspaceRepository(dao, db, db.folderDao(), prefs)
+            val first = DEFAULT_WORKSPACE_PAGE_ID
+            val source = requireNotNull(repository.createPage())
+            val app = LauncherApp(AppKey("qa.append", "Main"), "Append", null)
+            val action = LauncherApp(app.key.copy(shortcutId = "compose"), "Compose", null)
+            assertTrue(repository.insertWorkspaceAt(app, 3, first))
+            assertTrue(repository.insertWorkspaceAt(app, 3, source))
+            assertTrue(repository.insertWorkspaceAt(action, 4, source))
+            assertTrue(repository.insertIntoDock(app, 0))
+            val original = dao.getAll().sortedBy { it.id }
+            val originalPages = pages.getAll()
+            val pin = original.single { it.pageId == source && it.cellIndex == 3 }
+            val actionPin = original.single { it.shortcutId == "compose" }
+            val grid = GridCanvas.DEFAULT
+
+            assertNull(repository.appendPageWithWorkspacePin(pin.id, source, 3, first, 7, grid))
+            assertNull(repository.appendPageWithWorkspacePin(pin.id, first, 3, source, 7, grid))
+            assertNull(repository.appendPageWithWorkspacePin(pin.id, source, 3, source, grid.capacity, grid))
+            assertNull(repository.appendPageWithWorkspacePin(pin.id, source, 3, source, 7, grid.copy(columns = 3)))
+            assertNull(repository.appendPageWithWorkspacePin(actionPin.id, source, 4, source, 7, grid))
+            WorkspacePreferences(prefs).layoutLocked = true
+            assertNull(repository.appendPageWithWorkspacePin(pin.id, source, 3, source, 7, grid))
+            WorkspacePreferences(prefs).layoutLocked = false
+            assertEquals(originalPages, pages.getAll())
+            assertEquals(original, dao.getAll().sortedBy { it.id })
+
+            val target = requireNotNull(repository.appendPageWithWorkspacePin(pin.id, source, 3, source, 7, grid))
+            val moved = original.map { if (it.id == pin.id) it.copy(pageId = target, cellIndex = 7) else it }
+            assertEquals(originalPages + WorkspacePageEntity(id = target, rank = 2), pages.getAll())
+            assertEquals(moved, dao.getAll().sortedBy { it.id })
+            repeat(MAX_WORKSPACE_PAGES - 3) { requireNotNull(repository.createPage()) }
+            val capped = pages.getAll()
+            assertNull(repository.appendPageWithWorkspacePin(pin.id, target, 7, capped.last().id, 8, grid))
+            assertEquals(capped, pages.getAll())
+            assertEquals(moved, dao.getAll().sortedBy { it.id })
+        } finally {
+            db.close()
+            context.deleteSharedPreferences(prefsName)
+        }
+    }
+
+    @Test
     fun folderMoveSkipsFullPagesAndOnlyUpdatesTheSelectedFoldersPlacement() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)

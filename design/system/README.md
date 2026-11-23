@@ -262,6 +262,11 @@ while Vesna has no widget host.
   Workspace columns and dock slots run from the reading start edge, including in RTL.
   Drag hit testing and highlights follow the rendered columns. Changing layout direction
   mirrors the display without changing the saved cells or slot order.
+  While holding a regular Home app shortcut, dwelling at the trailing edge
+  of the last page previews a blank page (right in LTR, left in RTL). Use
+  the existing page indicator and empty-cell highlight. Create the page
+  only on a valid cell drop; cancellation and invalid drops preserve the
+  starting page and placements. Keep the existing Home page limit.
   Removing the last regular app shortcut from a secondary Home page also
   removes that page when it has no other saved content. If it was selected,
   use the same return to the first page as **Remove empty page**. Keep the
