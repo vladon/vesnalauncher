@@ -1259,3 +1259,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   capacity and atomic rejection for #106 / PR #128 on the
   signed build, not a Nova capacity limit. Evidence:
   `EVI-VESNA-003/parity55-*` and `parity45-cycle55-*`.
+
+## OBS-VESNA-055 — Manual restore retains a renamed native action
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). In Nova, pinned Clock's **Create new
+  timer** action as a separate Home shortcut and renamed it
+  `Backup Timer QA`, keeping the ordinary Clock pin alongside.
+- Exported a completed local `.novabackup` through the system
+  picker. Removed just the action pin and verified it was
+  absent. Selected that file and accepted **Overwrite current
+  layout?**. The restored shortcut kept the saved cell, the
+  custom visible label and the publisher action description.
+- Opened Clock on Alarm, cold-started Nova, and tapped the
+  restored shortcut. It opened the native Timer keypad rather
+  than the last-used Alarm screen. No timer was started.
+- Vesna Settings searches for `backup`, `restore` and `export`
+  exposed no manual file route. No Vesna restore or Android-
+  managed transfer behavior is inferred from this.
+- Restored both original layouts and removed the test files.
+  Observed only the backup UI and file metadata, not its
+  contents. Evidence: `EVI-VESNA-003/parity56-*` and
+  `parity33-cycle56-*`; follow-up for #116.

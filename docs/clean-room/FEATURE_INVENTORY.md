@@ -149,9 +149,9 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| BACKUP-001 | Backup creation | Nova exported a local file through the system picker; no matching route found in Vesna 0.4.50 (OBS-VESNA-033; #116). |
+| BACKUP-001 | Backup creation | Nova exports a local file through the system picker; no matching Settings route found in signed Vesna v0.4.54 (OBS-VESNA-033/055; #116). |
 | BACKUP-002 | Backup content categories | pending |
-| BACKUP-003 | Restore operation | Nova preserved the current layout on cancellation and malformed input; the valid backup replaced it after confirmation (OBS-VESNA-033). |
+| BACKUP-003 | Restore operation | Nova preserved the current layout on cancellation and malformed input. Valid restore after confirmation brought back a renamed native Clock action in its saved cell and it still launched Timer (OBS-VESNA-033/055). |
 | BACKUP-004 | Missing app handling on restore | Nova restored a marked placeholder that survived restart; reinstall reactivated it in the same slot (OBS-VESNA-034; #116). |
 | BACKUP-005 | Widget restore behavior | pending |
 | BACKUP-006 | Restore errors/warnings | pending |
