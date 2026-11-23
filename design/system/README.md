@@ -264,6 +264,12 @@ while Vesna has no widget host.
   When the Home control row is too narrow for both page arrows at full size, show only the 48 dp minimum targets for Home options, the page picker, and the app drawer. Keep swipe navigation and the picker available, and move keyboard focus from a disappearing arrow to the picker.
   Reduce the Home control row's outer spacing before touching its 48 dp targets. Keep page picker labels short enough to show the number at 184 dp with enlarged text, while exposing the full page name and checked radio state to accessibility.
   Android Home returns to the same workspace page and closes launcher menus, the drawer, and open folder dialogs without saving a rename draft. Back still dismisses the frontmost layer first.
+  Open the app drawer for an upward fling or for a slow upward drag that covers
+  360 dp, or half of a shorter workspace but at least the touch slop, with little
+  sideways drift. Once the pointer passes the touch slop on empty space, drop
+  the pending Home options long press so a slow swipe never opens the menu. A
+  stationary hold still does, and a tile's long press keeps Android's tolerance
+  for a finger that wanders.
   When Android recreates Home, retain keyboard focus on the same workspace shortcut on the active page or the same dock favorite if it is still visible. Leave focus within an open drawer or dialog.
   If a second finger joins an active drag, clear the highlight and restore the starting layout. The remaining touches cannot finish the drop; a new touch can start another drag.
   Workspace columns and dock slots run from the reading start edge, including in RTL.

@@ -18,7 +18,9 @@ import dev.vladon.vesna.launcher.workspace.GridCanvas
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.min
 
 /**
  * The workspace: one [AppIconView] child per occupied cell of the [GridCanvas]
@@ -26,7 +28,7 @@ import kotlin.math.max
  *
  * Touch model:
  * - tap launches an app or opens a folder; a long press on empty space opens the launcher menu; an upward
- *   fling opens the drawer and a horizontal swipe selects an adjacent page;
+ *   fling, or a slow upward drag long enough, opens the drawer and a horizontal swipe selects an adjacent page;
  * - long-pressing an icon starts a drag session: the view dims the icon, reports
  *   progress in workspace-local coordinates and lets [HomeActivity] decide the drop
  *   target (grid cell or dock); highlights are drawn via [showDropHighlight];
@@ -125,6 +127,12 @@ class WorkspaceView @JvmOverloads constructor(
     private var pageSwipeInterrupted = false
     private var longPressed = false
 
+    /** The fast swipe-up path already answered this gesture. */
+    private var swipeUpSent = false
+
+    /** True when the DOWN landed on the empty grid, whose own long press opens the launcher menu. */
+    private var emptyAreaPressed = false
+
     private val gestureDetector = GestureDetector(
         context,
         object : GestureDetector.SimpleOnGestureListener() {
@@ -136,6 +144,7 @@ class WorkspaceView @JvmOverloads constructor(
             ): Boolean {
                 val dx = abs(e2.x - (e1?.x ?: e2.x))
                 if (velocityY < -FLING_VELOCITY && dx < MAX_FLING_DRIFT_DP * density) {
+                    swipeUpSent = true
                     onSwipeUp?.invoke()
                     return true
                 }
@@ -163,20 +172,30 @@ class WorkspaceView @JvmOverloads constructor(
             pageSwipe = false
             pageSwipeInterrupted = false
             longPressed = false
+            swipeUpSent = false
+            emptyAreaPressed = false
             dragPromoted = false
         } else if (action == MotionEvent.ACTION_POINTER_DOWN) {
             // A different finger may occupy index zero later in this stream.
             pageSwipeInterrupted = true
-        } else if (action == MotionEvent.ACTION_MOVE && !longPressed && !pageSwipe && !pageSwipeInterrupted) {
-            val dx = abs(ev.x - downX)
-            pageSwipe = dx >= PAGE_SWIPE_DP * density && dx > abs(ev.y - downY) * 1.5f
-            if (pageSwipe) {
-                // Cancel the pressed child or the empty grid before handling release.
-                val cancel = MotionEvent.obtain(ev)
-                cancel.action = MotionEvent.ACTION_CANCEL
-                gestureDetector.onTouchEvent(cancel)
-                super.dispatchTouchEvent(cancel)
-                cancel.recycle()
+        } else if (action == MotionEvent.ACTION_MOVE) {
+            // Android keeps the empty grid's long press pending until the pointer leaves the
+            // whole view, so a slow swipe must end it as soon as it passes the slop. A tile's
+            // own long press keeps Android's tolerance for a finger that wanders while holding.
+            if (emptyAreaPressed && !longPressed && hypot(ev.x - downX, ev.y - downY) > dragSlop) {
+                super.cancelLongPress()
+            }
+            if (!longPressed && !pageSwipe && !pageSwipeInterrupted) {
+                val dx = abs(ev.x - downX)
+                pageSwipe = dx >= PAGE_SWIPE_DP * density && dx > abs(ev.y - downY) * 1.5f
+                if (pageSwipe) {
+                    // Cancel the pressed child or the empty grid before handling release.
+                    val cancel = MotionEvent.obtain(ev)
+                    cancel.action = MotionEvent.ACTION_CANCEL
+                    gestureDetector.onTouchEvent(cancel)
+                    super.dispatchTouchEvent(cancel)
+                    cancel.recycle()
+                }
             }
         }
         if (dragPromoted) {
@@ -203,6 +222,7 @@ class WorkspaceView @JvmOverloads constructor(
             return true
         }
         if (!longPressed) gestureDetector.onTouchEvent(ev)
+        if (action == MotionEvent.ACTION_UP && !longPressed && !swipeUpSent) longSwipeUp(ev)
         val alreadyPromoted = dragPromoted
         val handled = super.dispatchTouchEvent(ev)
         if (!alreadyPromoted && dragPromoted) {
@@ -214,6 +234,26 @@ class WorkspaceView @JvmOverloads constructor(
             cancel.recycle()
         }
         return handled
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        // Only the empty grid reaches this path; a tile owns and consumes its own stream.
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) emptyAreaPressed = true
+        return super.onTouchEvent(event)
+    }
+
+    /** A slow upward drag opens the drawer as well, once it has travelled far enough. */
+    private fun longSwipeUp(up: MotionEvent) {
+        val drift = abs(up.x - downX)
+        // A short workspace, such as landscape or split screen, asks for half of its height instead,
+        // but never less than the touch slop, so a tap never opens the drawer.
+        val distance = max(
+            dragSlop.toFloat(),
+            min(SWIPE_UP_DISTANCE_DP * density, (height - paddingTop - paddingBottom) / 2f),
+        )
+        if (!pageSwipeInterrupted && downY - up.y >= distance && drift < MAX_FLING_DRIFT_DP * density) {
+            onSwipeUp?.invoke()
+        }
     }
 
     // Until promotion the dragged tile keeps the stream, so a stationary hold
@@ -501,6 +541,7 @@ class WorkspaceView @JvmOverloads constructor(
         const val FLING_VELOCITY = 1200f
         const val MAX_FLING_DRIFT_DP = 100f
         const val PAGE_SWIPE_DP = 56f
+        const val SWIPE_UP_DISTANCE_DP = 360f
         const val DRAGGED_ALPHA = 0.45f
         const val HIGHLIGHT_INSET_DP = 6
         const val HIGHLIGHT_RADIUS_DP = 12f

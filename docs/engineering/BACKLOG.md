@@ -292,6 +292,7 @@ unchanged.
 
 | Item | Evidence |
 |---|---|
+| Slow upward swipe opens the drawer instead of the workspace menu ([#170](https://github.com/vladon/vesnalauncher/issues/170)) | 0.4.70 — [Android 15 QA](verification/VESNA-QA-SLOW-SWIPE-DRAWER.md) verified 1100 px swipes from 300 to 925 ms opening the drawer once, a slow 400 px swipe opening neither surface, the stationary-hold menu, and an unchanged tile hold. |
 | Create a Home page by dropping a closed folder past the last page ([#167](https://github.com/vladon/vesnalauncher/issues/167)) | 0.4.69 — [Android 15 QA](verification/VESNA-QA-WHOLE-FOLDER-EDGE-APPEND.md) verified the blank preview, cancellation and invalid release, exact placement with unchanged name and member order, restart, the page cap, and compact RTL. |
 | Edge-drag a closed Home folder to an existing neighboring page ([#163](https://github.com/vladon/vesnalauncher/issues/163)) | 0.4.68 — [Android 15 QA](verification/VESNA-QA-WHOLE-FOLDER-EDGE-NEIGHBOR.md) verified exact LTR/RTL placement, cancellation, occupied cells, stable membership, and restart without creating an extra page. |
 | Create a Home page by dropping a folder member past the last page ([#160](https://github.com/vladon/vesnalauncher/issues/160)) | 0.4.67 — [Android 15 QA](verification/VESNA-QA-FOLDER-MEMBER-EDGE-APPEND.md) verified exact drops and cancellation, sparse-folder cleanup on the source page, compact RTL, and restart. |

@@ -35,8 +35,9 @@ The Android package name is `dev.vladon.vesna.launcher`.
 - **App shortcuts.** With Vesna set as the default Home app, hold a Home icon
   and choose an action offered by the app to open it or add it to Home.
   Use **Edit name** to rename a Home pin without changing its drawer name.
-- **App drawer and search.** Swipe up or tap the app-grid button. Search by name
-  with or without accents, and press Enter to open a single result.
+- **App drawer and search.** Swipe up, quickly or as a slow drag across most of
+  the screen, or tap the app-grid button. Search by name with or without accents,
+  and press Enter to open a single result.
   Enable **Automatically close drawer** in App drawer settings if you want
   Back to return to Home after launching an app.
   Enable **Remember position** to reopen the vertical list at the same place
