@@ -25,6 +25,14 @@ class DrawerAppsAdapter(
             notifyDataSetChanged()
         }
 
+    /** Scales only the artwork of every tile; cells and labels keep their size. */
+    var iconScale = 1f
+        set(value) {
+            if (field == value) return
+            field = value
+            notifyDataSetChanged()
+        }
+
     override fun getItemViewType(position: Int): Int = if (singleColumn) ROW else TILE
 
     override fun onCurrentListChanged(previousList: List<LauncherApp>, currentList: List<LauncherApp>) {
@@ -34,12 +42,15 @@ class DrawerAppsAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder =
         Holder(AppIconView(parent.context).apply {
             useSurfaceLabel()
-            if (viewType == ROW) useDrawerListRow()
+            if (viewType == ROW) useDrawerListRow() else keepDefaultTileHeight()
+            artworkScale = iconScale
         })
 
     override fun onBindViewHolder(holder: Holder, position: Int) = bindTile(holder.view, getItem(position))
 
     fun bindTile(tile: AppIconView, app: LauncherApp) {
+        // A recycled tile may keep the scale from an earlier bind.
+        tile.artworkScale = iconScale
         tile.bind(app)
         tile.setOnClickListener { onItemClick(app) }
         tile.bindOptions(

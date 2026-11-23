@@ -357,6 +357,7 @@ class HomeActivity : ComponentActivity() {
         hiddenDrawerApps = drawerPreferences.hiddenApps
         drawer.layoutMode = drawerPreferences.layoutMode
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
+        applyIconScales()
 
         // Open before hierarchy restoration so Android can restore the search text and focus.
         if (savedInstanceState?.getBoolean(DRAWER_OPEN_STATE) == true) drawer.open(showKeyboard = false)
@@ -404,6 +405,7 @@ class HomeActivity : ComponentActivity() {
         drawer.layoutMode = drawerPreferences.layoutMode
         drawer.rememberPosition = drawerPreferences.rememberPosition
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
+        applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {
             hiddenDrawerApps = hiddenApps
@@ -412,6 +414,14 @@ class HomeActivity : ComponentActivity() {
         // The Home role can change while Home is on the back stack; reconcile
         // the saved action pins with what Android still reports.
         controller.recheckAppActions()
+    }
+
+    /** Artwork only: the grid, dock, labels and saved placements are not resized. */
+    private fun applyIconScales() {
+        val home = workspacePreferences.iconScalePercent
+        workspace.iconScale = home / 100f
+        val drawerSize = if (drawerPreferences.followsHomeIconScale) home else drawerPreferences.iconScalePercent
+        drawer.iconScale = drawerSize / 100f
     }
 
     override fun onDestroy() {

@@ -32,6 +32,14 @@ internal class DrawerPager(context: Context, attrs: AttributeSet) : RecyclerView
             for (index in 0 until childCount) (getChildAt(index) as Page).showAppNames(value)
         }
 
+    /** Scales only the artwork of every tile; pages, cells and labels keep their size. */
+    var iconScale = 1f
+        set(value) {
+            if (field == value) return
+            field = value
+            for (index in 0 until childCount) (getChildAt(index) as Page).iconScale = value
+        }
+
     init {
         layoutManager = pages
         adapter = pageAdapter
@@ -144,6 +152,7 @@ internal class DrawerPager(context: Context, attrs: AttributeSet) : RecyclerView
                 if (index < count) bindTile?.invoke(tile, apps[start + index])
             }
             page.showAppNames(showAppNames)
+            page.iconScale = iconScale
         }
     }
 
@@ -167,6 +176,13 @@ internal class DrawerPager(context: Context, attrs: AttributeSet) : RecyclerView
         fun showAppNames(show: Boolean) {
             for (index in 0 until childCount) (getChildAt(index) as AppIconView).setAppNameVisible(show)
         }
+
+        var iconScale = 1f
+            set(value) {
+                if (field == value) return
+                field = value
+                for (index in 0 until childCount) (getChildAt(index) as AppIconView).artworkScale = value
+            }
 
         override fun generateDefaultLayoutParams(): ViewGroup.LayoutParams =
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)

@@ -16,6 +16,9 @@
     <string name="settings_pin_new_apps_detail">Пока Vesna запущена, добавлять ярлык нового приложения, если на текущей странице есть место и расположение не заблокировано.</string>
     <string name="settings_hide_home_app_names">Скрыть названия на главном экране</string>
     <string name="settings_hide_home_app_names_detail">Затрагивает док, но не список приложений.</string>
+    <string name="settings_home_icon_size">Размер значков на главном экране</string>
+    <string name="settings_home_icon_size_detail">Значки приложений и папок на главном экране. Сетка, подписи и ярлыки остаются на местах.</string>
+    <string name="settings_icon_size_value">%1$d%%</string>
     <string name="settings_workspace_grid">Сетка рабочего стола</string>
     <string name="settings_workspace_grid_detail">Столбцы и строки на страницах рабочего стола</string>
     <string name="settings_workspace_grid_summary_fmt">%1$s × %2$s</string>
@@ -51,6 +54,10 @@
     <string name="settings_drawer_remember_position_detail">После возврата на главный экран список приложений откроется на прежнем месте.</string>
     <string name="settings_drawer_show_keyboard">Показывать клавиатуру при открытии</string>
     <string name="settings_drawer_show_keyboard_detail">Сразу фокусировать поиск и открывать клавиатуру при открытии списка приложений.</string>
+    <string name="settings_drawer_follow_home">Как на главном экране</string>
+    <string name="settings_drawer_follow_home_detail">Список приложений использует размер значков главного экрана. Выключите, чтобы выбрать отдельный размер.</string>
+    <string name="settings_drawer_icon_size">Размер значков в списке приложений</string>
+    <string name="settings_drawer_icon_size_detail">Значки в списке приложений; сохраняется, пока используется размер главного экрана.</string>
     <string name="settings_hide_drawer_apps">Скрыть приложения</string>
     <string name="settings_hide_drawer_apps_detail">Ярлыки останутся на главном экране и в доке. Для поиска введите полное название.</string>
     <string name="settings_drawer_app_hidden">Скрыто при просмотре</string>

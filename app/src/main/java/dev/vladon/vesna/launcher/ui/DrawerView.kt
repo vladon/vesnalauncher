@@ -90,6 +90,15 @@ class DrawerView @JvmOverloads constructor(
             requestLayout()
         }
 
+    /** Scales only the artwork of drawer tiles; cells, rows and labels keep their size. */
+    internal var iconScale = 1f
+        set(value) {
+            if (field == value) return
+            field = value
+            adapter.iconScale = value
+            pager.iconScale = value
+        }
+
     private val list: RecyclerView
     private val pager: DrawerPager
     private val fastScroller: DrawerFastScroller
