@@ -1759,14 +1759,32 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   On restored all 12 visible rows at their original bounds,
   matching the Nova 9.0.1 Prime comparison in OBS-VESNA-071.
   Home and dock placements were unchanged.
-- Back closed the restored drawer; its next opening started
-  at the top. In a separate run, replacing the Vesna process
-  after Clock → Home discarded the pending offset, but the
-  preference remained enabled. Other navigation modes, search
-  and grid/pager behavior were not independently rerun here.
+- Back closed the restored drawer; its next opening showed
+  Calendar first, matching the original top viewport (the
+  restored viewport had Chrome first). In a separate run,
+  replacing the Vesna process after Clock → Home discarded
+  the pending offset, but the preference remained enabled.
+  Other navigation modes, search and grid/pager behavior
+  were not independently rerun here.
 - Restored the vertical grid, the original drawer preferences
   and Nova as system Home. Verified both Home layouts and docks;
   Vesna v0.4.59 remained installed.
 - Evidence: `EVI-VESNA-003/parity78-*`, `parity70-cycle78-*`
   and `release-0.4.59`.
   [Independent result in #141](https://github.com/vladon/vesnalauncher/issues/141#issuecomment-7092515174).
+
+## OBS-VESNA-078 — Folder sorting with mixed-case labels
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.59 (64; APK identity in OBS-VESNA-077).
+  Renamed the Gmail and Photos pins to `alpha` and `Beta`,
+  respectively, and used an unchanged `Files` pin.
+- Both Home folders began in the order `Files`, `alpha`, `Beta`.
+  Nova **Sort** and Vesna **Sort alphabetically** both produced
+  `alpha`, `Beta`, `Files`. Lowercase `alpha` sorted before
+  uppercase `Beta`; the two commands do not simply sort by
+  character code. The folder cell and unrelated Home pins did
+  not move.
+- Restored the original labels, workspace and docks in both
+  launchers. This trial did not establish accent ordering or RTL.
+  Evidence: `EVI-VESNA-003/parity79-*`.
