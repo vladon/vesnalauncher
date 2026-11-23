@@ -990,3 +990,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   workspace with both entries still present.
 - Restored both original layouts. Evidence: `EVI-VESNA-003/parity42-*`;
   follow-up for #115. Only the tested drag paths were exercised.
+
+## OBS-VESNA-042 — Editing a workspace shortcut label
+
+- Owned Android 15 AVD, Nova 9.0.1 Prime (90100) and signed Vesna
+  v0.4.52 (57). Both started with an ordinary Gmail pin on Home.
+- In Nova, long-press Gmail → **Edit** exposes the app label.
+  Editing it and tapping **Done** renamed the pin in place. The
+  label survived a cold launcher restart, the renamed pin still
+  launched Gmail, and drawer search still listed the app as Gmail.
+- In a separate edit, pressing Back first hid the keyboard. A
+  second Back closed the editor and **kept** the edited label,
+  including after a cold restart; Back was not a cancel path.
+- The same Home long-press in Vesna showed Add to dock, Remove
+  from workspace and App info, with no label editor. This check
+  did not exercise custom icons or per-icon gestures.
+- Restored the original Gmail label. Evidence:
+  `EVI-VESNA-003/parity43-*`; follow-up for #114.
