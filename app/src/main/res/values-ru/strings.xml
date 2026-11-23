@@ -120,6 +120,10 @@
     <string name="name_required">Введите название.</string>
     <string name="rename_save">Сохранить</string>
     <string name="rename_reset">Сбросить</string>
+    <string name="folder_add_apps">Добавить приложения</string>
+    <string name="folder_add_apps_confirm">Добавить</string>
+    <string name="folder_add_apps_empty">Все доступные приложения уже в этой папке.</string>
+    <string name="folder_add_apps_unavailable">Приложения не добавлены. Откройте выбор приложений снова.</string>
     <string name="folder_sort_alphabetically">Сортировать по алфавиту</string>
     <string name="folder_remove_from_folder">Убрать из папки</string>
     <string name="folder_removal_no_room">На этой странице мало места. Переместите или уберите ярлыки, чтобы освободить место.</string>

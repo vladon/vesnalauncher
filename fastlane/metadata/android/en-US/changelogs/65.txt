@@ -1,0 +1,1 @@
+Hold a Home folder and choose Add apps to add several installed apps at once. Cancel leaves the folder unchanged.

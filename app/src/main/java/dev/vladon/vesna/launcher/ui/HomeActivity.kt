@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -126,12 +127,21 @@ class HomeActivity : ComponentActivity() {
         data class Dock(val id: Long) : ShortcutFocus
     }
 
+    private class FolderAppSelection(
+        val target: ShortcutFocus.WorkspaceFolder,
+        val apps: List<LauncherApp>,
+        val restoreKeyboardFocus: Boolean,
+    ) {
+        val selected = mutableStateOf<Set<AppKey>>(emptySet())
+    }
+
     private class HomeUiState : ViewModel() {
         var shortcutFocus: ShortcutFocus? = null
         var drawerAppFocus: AppKey? = null
         var openFolderId: Long? = null
         var focusedMemberId: Long? = null
         var rename: HomeRename? = null
+        var folderAppSelection: FolderAppSelection? = null
     }
 
     private val homeUiState: HomeUiState by viewModels {
@@ -139,6 +149,7 @@ class HomeActivity : ComponentActivity() {
     }
     private var pendingShortcutFocus: ShortcutFocus? = null
     private var renameHost: ComposeView? = null
+    private var folderAppPickerHost: ComposeView? = null
     private var snackbarJob: Job? = null
     private val homeSnackbar by lazy { createHomeSnackbar() }
     private var renderedState = LauncherUiState()
@@ -356,6 +367,7 @@ class HomeActivity : ComponentActivity() {
             dock.cancelDrag()
             cancelDrawerGesture()
             dismissHomeRename()
+            dismissFolderAppPicker()
         }
         folderDialog?.layoutLocked = locked
         emptyHint.setText(if (locked) R.string.workspace_layout_locked else R.string.workspace_empty_hint)
@@ -377,6 +389,7 @@ class HomeActivity : ComponentActivity() {
             pendingPageMenu = null
             activePopup?.dismiss()
             dismissHomeRename()
+            dismissFolderAppPicker()
             dismissFolderDialog()
         }
         if (fromSystemHome) drawer.closeForHome() else drawer.close()
@@ -464,7 +477,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun focusedHomeShortcut(): ShortcutFocus? {
-        if (drawer.isOpen || folderDialog != null || renameHost != null) return null
+        if (drawer.isOpen || folderDialog != null || renameHost != null || folderAppPickerHost != null) return null
         val state = renderedState
         val cell = workspace.focusedChild?.tag as? Int
         if (cell != null) {
@@ -488,7 +501,9 @@ class HomeActivity : ComponentActivity() {
     private fun requestHomeShortcutFocus(focus: ShortcutFocus) {
         // On recreation or dialog dismissal, wait for the underlying Home layout.
         homeContent.doOnPreDraw {
-            if (drawer.isOpen || folderDialog != null || renameHost != null) return@doOnPreDraw
+            if (drawer.isOpen || folderDialog != null || renameHost != null || folderAppPickerHost != null) {
+                return@doOnPreDraw
+            }
             val current = renderedState
             val tile = when (focus) {
                 is ShortcutFocus.WorkspaceApp -> workspace.findChildForCell(focus.cell).takeIf {
@@ -778,6 +793,7 @@ class HomeActivity : ComponentActivity() {
             return
         }
         val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.folder_add_apps) { promptFolderAppPicker(folder, anchor.hasFocus()) }
         popup.add(R.string.folder_rename) { promptFolderRename(folder.id) }
         if (renderedState.folderContents[folder.id].orEmpty().size >= 2) {
             popup.add(R.string.folder_sort_alphabetically) {
@@ -836,6 +852,13 @@ class HomeActivity : ComponentActivity() {
                 if (!present) dismissHomeRename() else if (renameHost == null) showHomeRename(rename)
             }
         }
+        homeUiState.folderAppSelection?.let { selection ->
+            if (editableFolder(selection.target, state) == null) {
+                dismissFolderAppPicker()
+            } else if (folderAppPickerHost == null) {
+                showFolderAppPicker(selection)
+            }
+        }
     }
 
     private fun showHomeRename(rename: HomeRename) {
@@ -882,6 +905,61 @@ class HomeActivity : ComponentActivity() {
         val host = renameHost ?: return
         renameHost = null
         homeContent.removeView(host)
+    }
+
+    private fun editableFolder(target: ShortcutFocus.WorkspaceFolder, state: LauncherUiState): Folder? {
+        if (layoutLocked || state.activePageId != target.pageId) return null
+        val folder = (state.workspaceCells[target.cell] as? CellContent.FolderCell)?.folder
+        return folder?.takeIf { it.id == target.id }
+    }
+
+    private fun promptFolderAppPicker(folder: Folder, restoreKeyboardFocus: Boolean) {
+        val target = ShortcutFocus.WorkspaceFolder(folder.pageId, folder.cellIndex, folder.id)
+        if (editableFolder(target, renderedState) == null) return
+        val members = renderedState.folderContents[folder.id].orEmpty().mapTo(HashSet()) { it.app.key }
+        val apps = renderedState.apps.filterNot { it.key in members }
+        val selection = FolderAppSelection(target, apps, restoreKeyboardFocus)
+        homeUiState.folderAppSelection = selection
+        showFolderAppPicker(selection)
+    }
+
+    private fun showFolderAppPicker(selection: FolderAppSelection) {
+        val host = ComposeView(this)
+        folderAppPickerHost = host
+        host.setContent {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+                FolderAddAppsDialog(
+                    apps = selection.apps,
+                    selected = selection.selected.value,
+                    onToggle = { key ->
+                        val selected = selection.selected.value
+                        selection.selected.value = if (key in selected) selected - key else selected + key
+                    },
+                    onDismiss = { dismissFolderAppPicker(restoreFocus = true) },
+                    onSave = save@{
+                        if (homeUiState.folderAppSelection !== selection) return@save
+                        val folder = editableFolder(selection.target, renderedState)
+                        val selected = selection.selected.value
+                        dismissFolderAppPicker(restoreFocus = true)
+                        if (folder != null && selected.isNotEmpty()) {
+                            // Append in the catalogue's displayed order, not the order of taps.
+                            val keys = selection.apps.mapNotNull { it.key.takeIf(selected::contains) }
+                            controller.addAppsToFolder(folder, keys)
+                        }
+                    },
+                )
+            }
+        }
+        homeContent.addView(host, 0, 0)
+    }
+
+    private fun dismissFolderAppPicker(restoreFocus: Boolean = false) {
+        val selection = homeUiState.folderAppSelection
+        homeUiState.folderAppSelection = null
+        val host = folderAppPickerHost ?: return
+        folderAppPickerHost = null
+        homeContent.removeView(host)
+        if (restoreFocus && selection?.restoreKeyboardFocus == true) requestHomeShortcutFocus(selection.target)
     }
 
     /**
@@ -1027,6 +1105,7 @@ class HomeActivity : ComponentActivity() {
             LauncherMessage.APP_INFO_UNAVAILABLE -> getString(R.string.toast_app_info_unavailable)
             LauncherMessage.SHORTCUT_UNAVAILABLE -> getString(R.string.toast_shortcut_unavailable)
             LauncherMessage.SHORTCUT_ALREADY_PINNED -> getString(R.string.toast_shortcut_already_pinned)
+            LauncherMessage.FOLDER_APPS_UNAVAILABLE -> return showSnackbar(R.string.folder_add_apps_unavailable, null)
         }
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }

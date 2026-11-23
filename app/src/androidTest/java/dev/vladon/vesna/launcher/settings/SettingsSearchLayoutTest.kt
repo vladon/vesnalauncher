@@ -312,7 +312,8 @@ class SettingsSearchLayoutTest {
             assertTrue(button!!.performAction(AccessibilityNodeInfo.ACTION_FOCUS))
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_ENTER)
             assertTrue("Enter on the focused Apply should submit the draft", until { submissions.get() == 1 })
-            assertTrue("A rejected grid should report in place and leave the editor open", reveal(automation) {
+            // Keyboard focus can scroll Apply below the rejection notice, which precedes it.
+            assertTrue("A rejected grid should report in place and leave the editor open", reveal(automation, forward = false) {
                 find { it.text?.toString() == failure }
             } != null)
             assertTrue("A rejection must not change the current dimensions",

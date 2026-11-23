@@ -31,6 +31,7 @@ enum class LauncherMessage {
     SHORTCUT_MOVED, FOLDER_MOVED, NO_MOVE_DESTINATION, MOVE_DESTINATION_FULL, MOVE_UNAVAILABLE,
     WORKSPACE_PAGE_REORDERED, WORKSPACE_PAGE_ORDER_CHANGED,
     APP_INFO_UNAVAILABLE, SHORTCUT_UNAVAILABLE, SHORTCUT_ALREADY_PINNED,
+    FOLDER_APPS_UNAVAILABLE,
 }
 
 /** Everything the launcher UI renders. */
@@ -272,6 +273,18 @@ class LauncherController(
     /** Adds a dragged app into an existing folder. */
     internal fun addToFolder(app: LauncherApp, folderId: Long, source: WorkspaceRepository.FolderDropSource) {
         scope.launch { workspaceRepository.addToFolder(app, folderId, source) }
+    }
+
+    internal fun addAppsToFolder(folder: Folder, keys: List<AppKey>) {
+        scope.launch {
+            val catalogue = appCatalogue.value.byKey
+            val apps = keys.mapNotNull(catalogue::get)
+            if (apps.size != keys.size ||
+                !workspaceRepository.addAppsToFolder(folder.id, folder.pageId, folder.cellIndex, apps)
+            ) {
+                _messages.tryEmit(LauncherMessage.FOLDER_APPS_UNAVAILABLE)
+            }
+        }
     }
 
     internal suspend fun reorderFolderMember(folderId: Long, pageId: Long, pinId: Long, targetId: Long): Boolean =

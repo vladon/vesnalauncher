@@ -260,6 +260,7 @@ or in-app export. Implementation remains gated on review and transport tests.
 
 | Item | Evidence |
 |---|---|
+| Add several apps to an existing Home folder ([#134](https://github.com/vladon/vesnalauncher/issues/134)) | 0.4.60 — [Android 15 QA](verification/VESNA-QA-FOLDER-BATCH-ADD.md) verified one save, both cancel paths, layout lock, restart, single-app drag, and enlarged keyboard access. |
 | Remember the vertical drawer list after Android Home ([#141](https://github.com/vladon/vesnalauncher/issues/141)) | 0.4.59 — [Android 15 QA](verification/VESNA-QA-DRAWER-REMEMBER-POSITION.md) verified both switch states, exact row bounds, navigation modes and preference persistence. |
 | One-action alphabetical Home folder sorting ([#135](https://github.com/vladon/vesnalauncher/issues/135)) | 0.4.58 — [Android 15 QA](verification/VESNA-QA-FOLDER-SORT.md) verified the explicit command, localized and custom labels, unchanged membership and cell, lock, and restart. |
 | Reorder shortcuts inside an open Home folder ([#131](https://github.com/vladon/vesnalauncher/issues/131)) | 0.4.57 — [Android 15 QA](verification/VESNA-QA-FOLDER-REORDER.md) verified insertion, edge scroll, cancellation, lock and restart without regressing drag-out. |

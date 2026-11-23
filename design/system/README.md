@@ -184,6 +184,16 @@ Use Material component motion defaults. For the custom drawer, track the finger 
 **Folder rename.** Use the same dialog from the Home folder menu and from an open folder. Focus and select the current name in the outlined field. **Save** and the keyboard's **Done** action trim surrounding whitespace; a blank name shows an inline error and leaves the editor open. **Cancel** discards the draft. Return to the invoking surface, keeping the folder open if renaming started there.
 Keep the draft, selection, and any visible validation message when Android recreates Home during a configuration change. Clear the validation message when the name is corrected. Do not save the draft as the folder name until the user confirms it.
 
+**Add apps to a Home folder.** In the unlocked closed-folder menu, **Add apps**
+opens a Material dialog with a scrollable list of installed apps not already
+in that folder. Each row is one checkbox target: keep the app artwork and work
+badge, show the app name, and allow the label to wrap. Keep **Cancel** and
+**Add** visible while the list scrolls. Disable Add until something is checked.
+Use the landscape width to keep a usable list viewport at enlarged text sizes.
+Back and Cancel discard the draft; one Add appends all checked apps without
+moving the folder or changing its existing members. Restore keyboard focus to
+the initiating Home tile after dismissal.
+
 **Sort a Home folder.** Put **Sort alphabetically** in the unlocked Home
 folder menu when the folder has at least two visible shortcuts. Sort on
 explicit selection by the displayed names in the launcher's current

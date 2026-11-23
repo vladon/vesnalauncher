@@ -68,14 +68,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -95,7 +90,6 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
@@ -103,6 +97,8 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.search.searchKey
+import dev.vladon.vesna.launcher.ui.VesnaFocusRingOutset
+import dev.vladon.vesna.launcher.ui.vesnaFocusRing
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.GridResizeResult
 import kotlinx.coroutines.launch
@@ -157,7 +153,7 @@ internal fun SettingsScreen(
     ) {
         // Keep the root search usable when the IME leaves no room for both
         // the visual heading and the directory. Subpages keep their Up action.
-        val searchBarHeight = searchHeight + SettingsFocusRingOutset * 2
+        val searchBarHeight = searchHeight + VesnaFocusRingOutset * 2
         val standardChrome = appBarHeight + searchBarHeight + 12.dp + 12.dp + 24.dp
         val shortDirectory = !inSubpage && maxHeight < standardChrome + 48.dp
         val narrow = maxWidth < 320.dp
@@ -178,7 +174,7 @@ internal fun SettingsScreen(
                     },
                     navigationIcon = {
                         if (inSubpage) {
-                            IconButton(onClick = up, modifier = Modifier.settingsFocusRing()) {
+                            IconButton(onClick = up, modifier = Modifier.vesnaFocusRing()) {
                                 Icon(
                                     painterResource(R.drawable.ic_settings_back),
                                     contentDescription = stringResource(R.string.settings_back_to_root),
@@ -203,7 +199,7 @@ internal fun SettingsScreen(
                             narrow = narrow,
                             modifier = Modifier
                                 .width(searchWidth)
-                                .padding(vertical = SettingsFocusRingOutset),
+                                .padding(vertical = VesnaFocusRingOutset),
                         )
                     },
                 )
@@ -224,10 +220,10 @@ internal fun SettingsScreen(
                                 end = 16.dp,
                                 top = when {
                                     inSubpage -> 16.dp
-                                    shortDirectory -> SettingsFocusRingOutset
+                                    shortDirectory -> VesnaFocusRingOutset
                                     else -> 12.dp
                                 },
-                                bottom = if (shortDirectory) SettingsFocusRingOutset else 24.dp,
+                                bottom = if (shortDirectory) VesnaFocusRingOutset else 24.dp,
                             ),
                     ) {
                         when (page) {
@@ -312,7 +308,7 @@ private fun SettingsSearchField(
         onValueChange = onQueryChange,
         modifier = modifier
             .focusRequester(editorFocus)
-            .settingsFocusRing()
+            .vesnaFocusRing()
             .onFocusChanged { focused = it.isFocused }
             .semantics { contentDescription = searchLabel },
         placeholder = {
@@ -334,7 +330,7 @@ private fun SettingsSearchField(
                         if (clearFocused) editorFocus.requestFocus()
                         onQueryChange("")
                     },
-                    modifier = Modifier.settingsFocusRing().onFocusChanged { clearFocused = it.isFocused },
+                    modifier = Modifier.vesnaFocusRing().onFocusChanged { clearFocused = it.isFocused },
                 ) {
                     Icon(
                         painterResource(R.drawable.ic_clear_search),
@@ -401,7 +397,7 @@ private fun SettingsDirectory(
                             open(entry.page, if (entry.page == SettingsPage.DEFAULT_LAUNCHER)
                                 R.string.settings_default_launcher else entry.title)
                         },
-                        modifier = Modifier.fillMaxWidth().settingsFocusRing(radius = 12.dp),
+                        modifier = Modifier.fillMaxWidth().vesnaFocusRing(radius = 12.dp),
                     ) {
                         Column(Modifier.padding(16.dp)) {
                             Text(stringResource(R.string.settings_search_breadcrumb, stringResource(entry.page.title)),
@@ -429,7 +425,7 @@ private fun SettingsDirectory(
                     headlineContent = { Text(title) },
                     supportingContent = { Text(summary) },
                     trailingContent = { Icon(painterResource(R.drawable.ic_settings_forward), contentDescription = null) },
-                    modifier = Modifier.settingsFocusRing(radius = 12.dp).clickable(role = Role.Button) { open(page, null) },
+                    modifier = Modifier.vesnaFocusRing(radius = 12.dp).clickable(role = Role.Button) { open(page, null) },
                 )
             }
             if (!found) {
@@ -500,7 +496,7 @@ private fun ThemeSettings(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
                 headlineContent = { Text(label) },
                 leadingContent = { RadioButton(selected = selected, onClick = null) },
                 modifier = Modifier
-                    .settingsFocusRing(radius = 12.dp)
+                    .vesnaFocusRing(radius = 12.dp)
                     .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
             )
         }
@@ -519,7 +515,7 @@ private fun SettingsSwitch(
         supportingContent = { Text(stringResource(summary)) },
         trailingContent = { Switch(checked = checked, onCheckedChange = null) },
         modifier = Modifier
-            .settingsFocusRing(radius = 12.dp)
+            .vesnaFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
 }
@@ -610,7 +606,7 @@ private fun DrawerAppSettings(
                 trailingContent = { Switch(checked = hidden, onCheckedChange = null) },
                 modifier = Modifier
                     .heightIn(min = 48.dp)
-                    .settingsFocusRing(radius = 12.dp)
+                    .vesnaFocusRing(radius = 12.dp)
                     .toggleable(value = hidden, role = Role.Switch) { onHiddenChanged(app.key, it) }
                     .semantics { stateDescription = visibility },
             )
@@ -639,7 +635,7 @@ private fun DrawerLayoutSettings(mode: DrawerLayoutMode, onSelect: (DrawerLayout
                     headlineContent = { Text(stringResource(choice.title)) },
                     leadingContent = { RadioButton(selected = selected, onClick = null) },
                     modifier = Modifier
-                        .settingsFocusRing(radius = 12.dp)
+                        .vesnaFocusRing(radius = 12.dp)
                         .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
                 )
             }
@@ -675,7 +671,7 @@ private fun WorkspaceGridSettings(
         trailingContent = if (locked || editing) null else {
             { Icon(painterResource(R.drawable.ic_settings_forward), contentDescription = null) }
         },
-        modifier = Modifier.settingsFocusRing(radius = 12.dp).then(
+        modifier = Modifier.vesnaFocusRing(radius = 12.dp).then(
             // Locked layouts disable the row; the supporting text names the reason.
             // While the editor is open, the row stays inert so a stray tap cannot
             // discard the draft.
@@ -754,7 +750,7 @@ private fun WorkspaceGridSettings(
                 }
             },
             enabled = !submitting && !locked,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).settingsFocusRing(),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).vesnaFocusRing(),
         ) {
             Text(stringResource(R.string.settings_workspace_grid_apply), textAlign = TextAlign.Center)
         }
@@ -765,7 +761,7 @@ private fun WorkspaceGridSettings(
                 rejection = GRID_REJECTION_NONE
             },
             enabled = !submitting,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).settingsFocusRing(),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).vesnaFocusRing(),
         ) {
             Text(stringResource(R.string.settings_workspace_grid_cancel), textAlign = TextAlign.Center)
         }
@@ -790,7 +786,7 @@ private fun WorkspaceGridDimensionChoice(
                 onClick = { onSelect(value) },
                 enabled = enabled,
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = count),
-                modifier = Modifier.settingsFocusRing(),
+                modifier = Modifier.vesnaFocusRing(),
             ) {
                 Text(value.toString())
             }
@@ -834,7 +830,7 @@ private fun DefaultLauncherSetup(state: DefaultHomeState, onSetDefaultHome: () -
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = onSetDefaultHome,
-            modifier = Modifier.heightIn(min = 48.dp).settingsFocusRing(),
+            modifier = Modifier.heightIn(min = 48.dp).vesnaFocusRing(),
         ) {
             Text(stringResource(R.string.menu_set_default_home), textAlign = TextAlign.Center)
         }
@@ -884,32 +880,11 @@ private fun AboutContent(versionName: String) {
         Spacer(Modifier.height(16.dp))
         OutlinedButton(
             onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, REPOSITORY_URL.toUri())) },
-            modifier = Modifier.heightIn(min = 48.dp).settingsFocusRing(),
+            modifier = Modifier.heightIn(min = 48.dp).vesnaFocusRing(),
         ) {
             Text(stringResource(R.string.about_github), textAlign = TextAlign.Center)
         }
     }
 }
-
-@Composable
-private fun Modifier.settingsFocusRing(radius: Dp? = null): Modifier {
-    var focused by remember { mutableStateOf(false) }
-    val focusColor = MaterialTheme.colorScheme.secondary
-    return onFocusChanged { focused = it.isFocused }.drawBehind {
-        if (focused) {
-            // The center of the 2 dp stroke is 3 dp outside the control.
-            val offset = (SettingsFocusRingOutset - 1.dp).toPx()
-            drawRoundRect(
-                color = focusColor,
-                topLeft = Offset(-offset, -offset),
-                size = Size(size.width + 2 * offset, size.height + 2 * offset),
-                cornerRadius = CornerRadius((radius?.toPx() ?: size.height / 2) + offset),
-                style = Stroke(2.dp.toPx()),
-            )
-        }
-    }
-}
-
-private val SettingsFocusRingOutset = 4.dp
 
 private const val REPOSITORY_URL = "https://github.com/vladon/vesnalauncher"

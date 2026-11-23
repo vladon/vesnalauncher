@@ -725,6 +725,50 @@ class WorkspaceRepository(
             true
         }
 
+    /**
+     * Appends a resolved batch of ordinary apps as new copies at the end of
+     * [folderId], in the provided order, without touching prior members or any
+     * top-level duplicate pins. The caller resolves live installed targets, so
+     * the repository only revalidates under [mutationMutex] in one transaction:
+     * the layout must be unlocked, the folder must still sit at the exact
+     * ([pageId], [cellIndex]) the caller looked at, and every key must be a
+     * plain activity key, distinct within the batch and absent from the folder's
+     * persisted members. Any stale target, duplicate or mixed batch is reported
+     * as `false` before the first insert — members are never partially added.
+     */
+    internal suspend fun addAppsToFolder(
+        folderId: Long,
+        pageId: Long,
+        cellIndex: Int,
+        apps: List<LauncherApp>,
+    ): Boolean = mutationMutex.withLock {
+        db.withTransaction {
+            if (workspacePreferences.layoutLocked) return@withTransaction false
+            val folder = folderDao.getById(folderId)
+            if (folder == null || folder.pageId != pageId || folder.cellIndex != cellIndex) {
+                return@withTransaction false
+            }
+            if (apps.isEmpty()) return@withTransaction false
+            val keys = HashSet<AppKey>(apps.size)
+            for (app in apps) {
+                if (app.key.shortcutId != null || !keys.add(app.key)) return@withTransaction false
+            }
+            val members = dao.folderMembersInOrder(folderId)
+            if (members.any { AppKey(it.packageName, it.className, it.userSerial, it.shortcutId) in keys }) {
+                return@withTransaction false
+            }
+            // Settings can change while the reads above are suspended.
+            if (workspacePreferences.layoutLocked) return@withTransaction false
+            // Same append convention as a single drawer drop: continue after the
+            // sparse-or-dense maximum rank.
+            var position = members.maxOfOrNull { it.cellIndex } ?: -1
+            for (app in apps) {
+                insertFolderMember(app.key, folderId, ++position, actionPinLabel(app))
+            }
+            true
+        }
+    }
+
     private suspend fun insertFolderMember(key: AppKey, folderId: Long, position: Int, publisherLabel: String?) {
         dao.insert(pinEntity(key, Container.WORKSPACE, position, folderId = folderId, publisherLabel = publisherLabel))
     }
