@@ -1,0 +1,1 @@
+Choose the shape of adaptive app icons in Vesna settings: the system shape, which is the default, or a rounded square. It applies on Home, in the dock, in the app drawer and in folders. Other icons and work badges stay as they are.

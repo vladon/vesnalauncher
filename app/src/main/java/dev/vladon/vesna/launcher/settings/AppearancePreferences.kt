@@ -13,6 +13,13 @@ internal class AppearancePreferences(context: Context) {
         }
         set(value) = prefs.edit { putString(THEME_MODE, value.preferenceValue) }
 
+    var iconShape: IconShapeMode
+        get() {
+            val saved = prefs.getString(ICON_SHAPE, null)
+            return IconShapeMode.entries.firstOrNull { it.preferenceValue == saved } ?: IconShapeMode.SYSTEM
+        }
+        set(value) = prefs.edit { putString(ICON_SHAPE, value.preferenceValue) }
+
     var showAppNames: Boolean
         get() = prefs.getBoolean(SHOW_APP_NAMES, true)
         set(value) = prefs.edit { putBoolean(SHOW_APP_NAMES, value) }
@@ -20,5 +27,6 @@ internal class AppearancePreferences(context: Context) {
     private companion object {
         const val THEME_MODE = "theme_mode"
         const val SHOW_APP_NAMES = "show_app_names"
+        const val ICON_SHAPE = "icon_shape"
     }
 }

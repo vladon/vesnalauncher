@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
+import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.AttributeSet
@@ -260,6 +261,9 @@ class AppIconView @JvmOverloads constructor(
         contentDescription = description
     }
 
-    private fun freshDrawable(drawable: Drawable?): Drawable? =
-        drawable?.constantState?.newDrawable() ?: drawable
+    private fun freshDrawable(drawable: Drawable?): Drawable? {
+        val fresh = drawable?.constantState?.newDrawable() ?: drawable
+        // The wrapper has no constant state, so a second pass returns the same fresh instance.
+        return if (IconShape.roundedSquare && fresh is AdaptiveIconDrawable) RoundedSquareIcon(fresh) else fresh
+    }
 }

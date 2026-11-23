@@ -120,6 +120,8 @@ internal fun SettingsScreen(
     onSetDefaultHome: () -> Unit,
     themeMode: ThemeMode,
     onThemeSelected: (ThemeMode) -> Unit,
+    iconShape: IconShapeMode,
+    onIconShapeSelected: (IconShapeMode) -> Unit,
     showAppNames: Boolean,
     onShowAppNamesChanged: (Boolean) -> Unit,
     layoutLocked: Boolean,
@@ -298,6 +300,10 @@ internal fun SettingsScreen(
                             SettingsPage.APPEARANCE -> {
                                 SearchTarget(searchTarget == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
                                 Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_icon_shape) {
+                                    IconShapeSettings(iconShape, onIconShapeSelected)
+                                }
+                                Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_show_app_names) {
                                     SettingsSwitch(
                                         R.string.settings_show_app_names, R.string.settings_show_app_names_detail,
@@ -421,6 +427,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_icon_size, R.string.settings_drawer_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
+                    SearchEntry(SettingsPage.APPEARANCE, R.string.settings_icon_shape, R.string.settings_icon_shape_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
                 )
                 for (entry in entries) {
@@ -528,6 +535,34 @@ private fun ThemeSettings(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
                 ThemeMode.LIGHT -> R.string.settings_theme_light
                 ThemeMode.DARK -> R.string.settings_theme_dark
             })
+            ListItem(
+                headlineContent = { Text(label) },
+                leadingContent = { RadioButton(selected = selected, onClick = null) },
+                modifier = Modifier
+                    .vesnaFocusRing(radius = 12.dp)
+                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
+            )
+        }
+    }
+}
+
+@Composable
+private fun IconShapeSettings(shape: IconShapeMode, onSelect: (IconShapeMode) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_icon_shape),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.semantics { heading() },
+    )
+    Spacer(Modifier.height(8.dp))
+    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (choice in IconShapeMode.entries) {
+            val selected = choice == shape
+            val label = stringResource(
+                when (choice) {
+                    IconShapeMode.SYSTEM -> R.string.settings_icon_shape_system
+                    IconShapeMode.ROUNDED_SQUARE -> R.string.settings_icon_shape_rounded_square
+                },
+            )
             ListItem(
                 headlineContent = { Text(label) },
                 leadingContent = { RadioButton(selected = selected, onClick = null) },
