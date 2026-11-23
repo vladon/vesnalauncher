@@ -12,21 +12,24 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.PackageEvent
+import dev.vladon.vesna.launcher.platform.ShortcutPublisher
 
 /** Non-fatal feedback from launcher actions, mapped to user-visible strings by the UI. */
 enum class LauncherMessage {
     WORKSPACE_FULL, DOCK_FULL, WORKSPACE_PAGE_NOT_EMPTY,
     SHORTCUT_MOVED, FOLDER_MOVED, NO_MOVE_DESTINATION, MOVE_DESTINATION_FULL, MOVE_UNAVAILABLE,
     WORKSPACE_PAGE_REORDERED, WORKSPACE_PAGE_ORDER_CHANGED,
-    APP_INFO_UNAVAILABLE,
+    APP_INFO_UNAVAILABLE, SHORTCUT_UNAVAILABLE, SHORTCUT_ALREADY_PINNED,
 }
 
 /** Everything the launcher UI renders. */
@@ -64,6 +67,9 @@ class LauncherController(
 
     private val refreshMutex = Mutex()
     private val pageActionMutex = Mutex()
+    private val shortcutMutationMutex = Mutex()
+    private val shortcutRevision = MutableStateFlow(0)
+    private var hadShortcutHostPermission = false
     // The ordered drawer list and the placement index come from the same discovery.
     private data class AppCatalogue(val apps: List<LauncherApp>) {
         val byKey = apps.associateBy { it.key }
@@ -72,10 +78,11 @@ class LauncherController(
     private class LayoutProjection(
         val catalogue: AppCatalogue,
         val saved: SavedLayout,
+        val renderedApps: Map<AppKey, LauncherApp>,
     ) {
-        val dock = WorkspaceResolver.dockLayout(saved.items, catalogue.byKey)
+        val dock = WorkspaceResolver.dockLayout(saved.items, renderedApps)
         val foldersById = saved.folders.associateBy { it.id }
-        val folderContents = WorkspaceResolver.folderContents(saved.items, catalogue.byKey)
+        val folderContents = WorkspaceResolver.folderContents(saved.items, renderedApps)
     }
 
     private val appCatalogue = MutableStateFlow(AppCatalogue(emptyList()))
@@ -87,8 +94,48 @@ class LauncherController(
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
 
     // Page navigation changes the grid, not the global dock or saved folder contents.
-    private val layout = combine(appCatalogue, workspaceRepository.savedLayout) { catalogue, saved ->
-        LayoutProjection(catalogue, saved)
+    private val layout = combine(appCatalogue, workspaceRepository.savedLayout, shortcutRevision) { catalogue, saved, revision ->
+        LayoutProjection(catalogue, saved, placementApps(catalogue, saved, revision))
+    }
+
+    private data class PinnedAppProjection(
+        val catalogue: AppCatalogue,
+        val savedLabels: Map<AppKey, String>,
+        val revision: Int,
+        val apps: Map<AppKey, LauncherApp>,
+    )
+
+    // Confined to the layout collector. Geometry and label edits should not reload publisher icons.
+    private var pinnedAppProjection: PinnedAppProjection? = null
+
+    private suspend fun placementApps(
+        catalogue: AppCatalogue,
+        saved: SavedLayout,
+        revision: Int,
+    ): Map<AppKey, LauncherApp> {
+        val cached = pinnedAppProjection?.takeIf { it.catalogue === catalogue && it.revision == revision }
+        var actionCount = 0
+        var changed = false
+        for (item in saved.items) {
+            if (item.key.shortcutId == null || item.shortcutLabel == null) continue
+            actionCount++
+            if (cached?.savedLabels?.get(item.key) != item.shortcutLabel) changed = true
+        }
+        if (actionCount == 0) {
+            pinnedAppProjection = null
+            return catalogue.byKey
+        }
+        if (cached != null && !changed && cached.savedLabels.size == actionCount) return cached.apps
+        val labels = buildMap {
+            for (item in saved.items) {
+                val label = item.shortcutLabel ?: continue
+                if (item.key.shortcutId != null) putIfAbsent(item.key, label)
+            }
+        }
+        val pinned = withContext(Dispatchers.IO) { appLauncher.shortcuts.resolvePinned(labels, catalogue.byKey) }
+        val apps = if (pinned.isEmpty()) catalogue.byKey else catalogue.byKey + pinned
+        pinnedAppProjection = PinnedAppProjection(catalogue, labels, revision, apps)
+        return apps
     }
 
     val state: StateFlow<LauncherUiState> =
@@ -103,7 +150,7 @@ class LauncherController(
                 orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
             }
             val workspace = WorkspaceResolver.workspaceLayout(
-                saved.items, layout.catalogue.byKey, saved.folders, selection, saved.grid,
+                saved.items, layout.renderedApps, saved.folders, selection, saved.grid,
             )
             LauncherUiState(
                 apps = layout.catalogue.apps,
@@ -122,8 +169,13 @@ class LauncherController(
 
     init {
         scope.launch { refresh() }
+        recheckAppActions()
         scope.launch {
             packageEvents.collect { event ->
+                if (event == PackageEvent.ShortcutsChanged) {
+                    shortcutRevision.update { it + 1 }
+                    return@collect
+                }
                 if (event is PackageEvent.Removed) {
                     workspaceRepository.removeAllForPackage(event.packageName, event.userSerial)
                 }
@@ -133,6 +185,11 @@ class LauncherController(
     }
 
     internal fun launch(app: LauncherApp): Boolean {
+        if (app.key.shortcutId != null) {
+            val launched = appLauncher.launch(app)
+            if (!launched) shortcutRevision.update { it + 1 }
+            return launched
+        }
         if (appLauncher.launch(app)) return true
         // A package change may have made the tile stale. Refresh the catalogue.
         scope.launch { refresh() }
@@ -290,8 +347,66 @@ class LauncherController(
         }
     }
 
+    internal suspend fun appActions(app: LauncherApp): List<LauncherApp> =
+        withContext(Dispatchers.IO) { appLauncher.shortcuts.published(app) }
+
+    internal fun pinAppAction(action: LauncherApp, pageId: Long) {
+        val shortcutId = action.key.shortcutId ?: return
+        val publisher = ShortcutPublisher(action.key)
+        scope.launch(Dispatchers.IO) {
+            val result = shortcutMutationMutex.withLock {
+                workspaceRepository.pinAppAction(action, pageId) { ids ->
+                    appLauncher.shortcuts.replacePins(publisher, ids, shortcutId.takeIf { it in ids })
+                }
+            }
+            when (result) {
+                AppActionPinResult.PINNED -> shortcutRevision.update { it + 1 }
+                AppActionPinResult.FULL -> _messages.tryEmit(LauncherMessage.WORKSPACE_FULL)
+                AppActionPinResult.ALREADY_PINNED -> _messages.tryEmit(LauncherMessage.SHORTCUT_ALREADY_PINNED)
+                AppActionPinResult.UNAVAILABLE -> _messages.tryEmit(LauncherMessage.SHORTCUT_UNAVAILABLE)
+            }
+        }
+    }
+
+    internal suspend fun workspacePinId(app: LauncherApp, cell: Int, pageId: Long): Long? =
+        workspaceRepository.workspacePinId(app.key, cell, pageId)
+
+    internal suspend fun renameWorkspacePin(pinId: Long, cell: Int, pageId: Long, label: String?): Boolean =
+        workspaceRepository.renameWorkspacePin(pinId, cell, pageId, label)
+
+    internal fun recheckAppActions() {
+        scope.launch(Dispatchers.IO) {
+            val changed = shortcutMutationMutex.withLock {
+                val allowed = appLauncher.shortcuts.canQuery()
+                if (hadShortcutHostPermission == allowed) return@withLock false
+                hadShortcutHostPermission = allowed
+                if (allowed) {
+                    // Reconcile a prior interruption between Android and Room, or a removal while
+                    // another launcher held the Home role. Only our own Android pins are touched.
+                    for (publisher in appLauncher.shortcuts.pinnedPublishers()) syncAndroidPins(publisher)
+                }
+                true
+            }
+            if (changed) shortcutRevision.update { it + 1 }
+        }
+    }
+
+    private suspend fun syncAndroidPins(publisher: ShortcutPublisher) {
+        val ids = workspaceRepository.shortcutIds(publisher.packageName, publisher.userSerial)
+        appLauncher.shortcuts.replacePins(publisher, ids)
+    }
+
     fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long) {
-        scope.launch { workspaceRepository.removeFromWorkspace(app, cell, pageId) }
+        scope.launch(Dispatchers.IO) {
+            if (app.key.shortcutId == null) {
+                workspaceRepository.removeFromWorkspace(app, cell, pageId)
+            } else {
+                shortcutMutationMutex.withLock {
+                    workspaceRepository.removeFromWorkspace(app, cell, pageId)
+                    syncAndroidPins(ShortcutPublisher(app.key))
+                }
+            }
+        }
     }
 
     fun addToDock(app: LauncherApp) {
@@ -301,7 +416,17 @@ class LauncherController(
     }
 
     fun removeFromDock(pinId: Long) {
-        scope.launch { workspaceRepository.removeFromDock(pinId) }
+        val key = state.value.dock.pins.firstOrNull { it.id == pinId }?.app?.key
+        scope.launch(Dispatchers.IO) {
+            if (key?.shortcutId == null) {
+                workspaceRepository.removeFromDock(pinId)
+            } else {
+                shortcutMutationMutex.withLock {
+                    workspaceRepository.removeFromDock(pinId)
+                    syncAndroidPins(ShortcutPublisher(key))
+                }
+            }
+        }
     }
 
     /** A locale change updates app metadata, not the saved layout. */

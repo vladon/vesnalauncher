@@ -12,6 +12,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,10 +22,10 @@ import java.util.UUID
 /**
  * Room migration verification through the unmodified production
  * [LauncherDatabase.build]: authentic historical schemas are seeded into a
- * unique disposable test file and migrated to version 4 (1→2→3→4, 2→3→4,
- * 3→4), and a fresh install exercises Room's on-create path. Migration and
- * Room's own post-migration schema + identity validation run inside Room; any
- * failure throws uncaught and fails the test.
+ * unique disposable test file and migrated to version 6 (1→2→…→6, 2→3→…→6,
+ * 3→4→…→6, 5→6), and a fresh install exercises Room's on-create path.
+ * Migration and Room's own post-migration schema + identity validation run
+ * inside Room; any failure throws uncaught and fails the test.
  *
  * Historical sources (authentic Room-generated DDL of the era):
  * - v1: tag `v0.1.0` — `app/src/main/java/dev/vladon/vesna/launcher/data/LauncherDatabase.kt`
@@ -32,24 +33,29 @@ import java.util.UUID
  * - v2: tag `v0.2.0` — same files, adds `userSerial INTEGER NOT NULL` inline.
  * - v3: tag `v0.4.2` — same files at version 3 (`MIGRATION_1_2`/`MIGRATION_2_3`):
  *   `folderId` on `workspace_items`, `folders` table without pages.
+ * - v5: pre app-actions schema — `workspace_pages` + enforced `pageId` foreign
+ *   keys (3→4) and `workspace_grid` (4→5); no shortcut/label columns.
  *
  * Fixture matrix: v1/v2 layout rows (page assignment derived), a full v3
  * workspace/dock/folder-member mix, an empty v3 database, a malformed v3
  * database (unknown container, orphan `folderId`, negative and duplicate
- * `cellIndex`), and a fresh install (default-page seed callback).
+ * `cellIndex`), a v5 workspace/dock/folder mix, and a fresh install (default
+ * page seed callback).
  *
  * Kept checks (not duplicated by Room): isolation fails fast before Room opens
  * (seeded file absent, production path/dir distinct, opened file IS the seeded
- * one), `PRAGMA user_version` = 5, surviving `(packageName, className)` index
+ * one), `PRAGMA user_version` = 6, surviving `(packageName, className)` index
  * columns plus the 3→4 `pageId` indices, row identity/container/cell/
  * userSerial/folderId, derived `pageId` (default page for top-level non-DOCK
  * rows, null for dock rows and folder members), folders on the default page,
  * exactly one page row (the default page, rank 0), data intact after
- * close/reopen. Table_info, identity-hash equality and the enforced page
- * foreign keys (child column, parent table, `ON DELETE RESTRICT` action) are
- * deliberately not re-asserted: Room validates all of them itself on open via
- * its schema comparison. Process-death/reboot durability is a separate task;
- * the production database is never touched.
+ * close/reopen. The 5→6 regression additionally proves the migrated schema
+ * accepts action rows (`shortcutId` + cached `shortcutLabel`) and per-pin
+ * `customLabel` writes/clears. Table_info, identity-hash equality and the
+ * enforced page foreign keys (child column, parent table, `ON DELETE RESTRICT`
+ * action) are deliberately not re-asserted: Room validates all of them itself
+ * on open via its schema comparison. Process-death/reboot durability is a
+ * separate task; the production database is never touched.
  */
 @RunWith(AndroidJUnit4::class)
 class RoomMigrationQaTest {
@@ -170,12 +176,73 @@ class RoomMigrationQaTest {
     )
 
     @Test
+    fun migrationFromV5PreservesRowsAndAddsNullableShortcutColumns() = migrateAndVerify(
+        version = 5,
+        createItemsSql = SQL_CREATE_ITEMS_V5,
+        rows = listOf(
+            FixtureRow(id = 1, pkg = "dev.vladon.qa.fixture1", cls = ".AlphaActivity", container = "WORKSPACE", cell = 5, pageId = 1),
+            FixtureRow(id = 2, pkg = "dev.vladon.qa.fixture2", cls = ".BetaActivity", container = "DOCK", cell = 2),
+            FixtureRow(id = 3, pkg = "dev.vladon.qa.fixture3", cls = ".GammaActivity", container = "WORKSPACE", cell = 6, folderId = 1),
+        ),
+        expectedItems = listOf(
+            WorkspaceItemEntity(
+                id = 1, packageName = "dev.vladon.qa.fixture1", className = ".AlphaActivity",
+                container = "WORKSPACE", cellIndex = 5, userSerial = 0, folderId = null, pageId = 1,
+                shortcutId = null, customLabel = null, shortcutLabel = null,
+            ),
+            WorkspaceItemEntity(
+                id = 2, packageName = "dev.vladon.qa.fixture2", className = ".BetaActivity",
+                container = "DOCK", cellIndex = 2, userSerial = 0, folderId = null, pageId = null,
+                shortcutId = null, customLabel = null, shortcutLabel = null,
+            ),
+            WorkspaceItemEntity(
+                id = 3, packageName = "dev.vladon.qa.fixture3", className = ".GammaActivity",
+                container = "WORKSPACE", cellIndex = 6, userSerial = 0, folderId = 1, pageId = null,
+                shortcutId = null, customLabel = null, shortcutLabel = null,
+            ),
+        ),
+        folders = listOf(FolderRow(id = 1, title = "Work", cellIndex = 9, pageId = 1)),
+        expectedFolders = listOf(FolderEntity(id = 1, title = "Work", cellIndex = 9, pageId = 1)),
+        afterMigrate = { db ->
+            // The migrated schema must accept saved action rows (publisher
+            // package + profile + shortcut ID, with the cached label) and
+            // per-pin label writes/clears on both migrated and new rows.
+            val dao = db.workspaceItemDao()
+            dao.insert(
+                WorkspaceItemEntity(
+                    packageName = "dev.vladon.qa.fixture1",
+                    className = ".AlphaActivity",
+                    container = dev.vladon.vesna.launcher.workspace.Container.WORKSPACE.name,
+                    cellIndex = 7,
+                    pageId = 1,
+                    shortcutId = "share",
+                    shortcutLabel = "Share",
+                ),
+            )
+            val savedAction = dao.getAll().single { it.shortcutId == "share" }
+            assertEquals("Share", savedAction.shortcutLabel)
+            assertEquals(listOf("share"), dao.shortcutIds("dev.vladon.qa.fixture1", userSerial = 0))
+
+            dao.updateCustomLabel(savedAction.id, "Send it")
+            assertEquals("Send it", dao.getAll().single { it.id == savedAction.id }.customLabel)
+            dao.updateCustomLabel(savedAction.id, null)
+            assertNull(dao.getAll().single { it.id == savedAction.id }.customLabel)
+
+            // The migrated ordinary app row keeps every new column NULL.
+            val migratedApp = dao.getAll().single { it.id == 1L }
+            assertNull(migratedApp.shortcutId)
+            assertNull(migratedApp.shortcutLabel)
+            assertNull(migratedApp.customLabel)
+        },
+    )
+
+    @Test
     fun freshInstallSeedsSingleDefaultPage() {
         assertIsolatedTarget()
 
         withOpenedDatabase { db ->
             assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
-            assertEquals(5, pragmaUserVersion(db))
+            assertEquals(6, pragmaUserVersion(db))
             assertEquals(emptyList<WorkspaceItemEntity>(), readItems(db))
             assertEquals(emptyList<FolderEntity>(), readFolders(db))
             assertEquals(listOf(WorkspacePageEntity(id = 1, rank = 0)), readPages(db))
@@ -214,12 +281,53 @@ class RoomMigrationQaTest {
             "`userSerial` INTEGER NOT NULL, " +
             "`folderId` INTEGER)"
 
+    /** Room-generated DDL for the `workspace_items` entity at versions 4–5: adds the nullable `pageId` FK. */
+    private val SQL_CREATE_ITEMS_V5 =
+        "CREATE TABLE IF NOT EXISTS `workspace_items` (" +
+            "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "`packageName` TEXT NOT NULL, " +
+            "`className` TEXT NOT NULL, " +
+            "`container` TEXT NOT NULL, " +
+            "`cellIndex` INTEGER NOT NULL, " +
+            "`userSerial` INTEGER NOT NULL, " +
+            "`folderId` INTEGER, " +
+            "`pageId` INTEGER, " +
+            "FOREIGN KEY(`pageId`) REFERENCES `workspace_pages`(`id`) " +
+            "ON UPDATE NO ACTION ON DELETE RESTRICT)"
+
     /** Room-generated DDL for the `folders` entity at tag `v0.4.2` (v3): no pages yet. */
     private val SQL_CREATE_FOLDERS_V3 =
         "CREATE TABLE IF NOT EXISTS `folders` (" +
             "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
             "`title` TEXT NOT NULL, " +
             "`cellIndex` INTEGER NOT NULL)"
+
+    /** Room-generated DDL for the `folders` entity at versions 4–5: adds the nullable `pageId` FK. */
+    private val SQL_CREATE_FOLDERS_V5 =
+        "CREATE TABLE IF NOT EXISTS `folders` (" +
+            "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "`title` TEXT NOT NULL, " +
+            "`cellIndex` INTEGER NOT NULL, " +
+            "`pageId` INTEGER, " +
+            "FOREIGN KEY(`pageId`) REFERENCES `workspace_pages`(`id`) " +
+            "ON UPDATE NO ACTION ON DELETE RESTRICT)"
+
+    /** Room-generated DDL for `workspace_pages` (introduced by 3→4, unchanged since). */
+    private val SQL_CREATE_PAGES_V5 =
+        "CREATE TABLE IF NOT EXISTS `workspace_pages` (" +
+            "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "`rank` INTEGER NOT NULL)"
+
+    /** Room-generated DDL for `workspace_grid` (introduced by 4→5). */
+    private val SQL_CREATE_GRID_V5 =
+        "CREATE TABLE IF NOT EXISTS `workspace_grid` (" +
+            "`id` INTEGER NOT NULL, `columnCount` INTEGER NOT NULL, `rowCount` INTEGER NOT NULL, PRIMARY KEY(`id`))"
+
+    private val SQL_CREATE_ITEMS_PAGE_INDEX_V5 =
+        "CREATE INDEX IF NOT EXISTS `index_workspace_items_pageId` ON `workspace_items` (`pageId`)"
+
+    private val SQL_CREATE_FOLDERS_PAGE_INDEX_V5 =
+        "CREATE INDEX IF NOT EXISTS `index_folders_pageId` ON `folders` (`pageId`)"
 
     /** Same index declaration on the entity at both historical tags. */
     private val SQL_CREATE_ITEMS_INDEX =
@@ -238,13 +346,15 @@ class RoomMigrationQaTest {
         val cell: Int,
         val userSerial: Long = 0,
         val folderId: Long? = null,
+        val pageId: Long? = null,
     )
 
-    private data class FolderRow(val id: Long, val title: String, val cellIndex: Int)
+    private data class FolderRow(val id: Long, val title: String, val cellIndex: Int, val pageId: Long? = null)
 
     private data class Seed(
         val createSql: String,
         val folderCreateSql: String?,
+        val extraCreateSqls: List<String> = emptyList(),
         val inserts: List<Pair<String, Array<Any?>>>,
     )
 
@@ -253,23 +363,46 @@ class RoomMigrationQaTest {
         val itemInsertSql = when (version) {
             1 -> "INSERT INTO workspace_items (id, packageName, className, container, cellIndex) VALUES (?, ?, ?, ?, ?)"
             2 -> "INSERT INTO workspace_items (id, packageName, className, container, cellIndex, userSerial) VALUES (?, ?, ?, ?, ?, ?)"
-            else -> "INSERT INTO workspace_items (id, packageName, className, container, cellIndex, userSerial, folderId) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            3 -> "INSERT INTO workspace_items (id, packageName, className, container, cellIndex, userSerial, folderId) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            else -> "INSERT INTO workspace_items (id, packageName, className, container, cellIndex, userSerial, folderId, pageId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         }
         val itemInserts = rows.map { row ->
             itemInsertSql to when (version) {
                 1 -> arrayOf<Any?>(row.id, row.pkg, row.cls, row.container, row.cell)
                 2 -> arrayOf<Any?>(row.id, row.pkg, row.cls, row.container, row.cell, row.userSerial)
-                else -> arrayOf<Any?>(row.id, row.pkg, row.cls, row.container, row.cell, row.userSerial, row.folderId)
+                3 -> arrayOf<Any?>(row.id, row.pkg, row.cls, row.container, row.cell, row.userSerial, row.folderId)
+                else -> arrayOf<Any?>(row.id, row.pkg, row.cls, row.container, row.cell, row.userSerial, row.folderId, row.pageId)
             }
         }
+        val folderInsertSql =
+            if (version >= 4) "INSERT INTO folders (id, title, cellIndex, pageId) VALUES (?, ?, ?, ?)"
+            else "INSERT INTO folders (id, title, cellIndex) VALUES (?, ?, ?)"
         val folderInserts = folders.map { folder ->
-            "INSERT INTO folders (id, title, cellIndex) VALUES (?, ?, ?)" to
-                arrayOf<Any?>(folder.id, folder.title, folder.cellIndex)
+            folderInsertSql to
+                if (version >= 4) arrayOf<Any?>(folder.id, folder.title, folder.cellIndex, folder.pageId)
+                else arrayOf<Any?>(folder.id, folder.title, folder.cellIndex)
+        }
+        // Page-augmented schemas also seed the single default page row (rank 0).
+        val pageSeed = if (version >= 4) {
+            listOf("INSERT INTO workspace_pages (id, rank) VALUES (1, 0)" to emptyArray<Any?>())
+        } else {
+            emptyList()
         }
         return Seed(
             createSql = createSql,
-            folderCreateSql = if (version >= 3) SQL_CREATE_FOLDERS_V3 else null,
-            inserts = itemInserts + folderInserts,
+            folderCreateSql = SQL_CREATE_FOLDERS_V3.takeIf { version == 3 },
+            extraCreateSqls = if (version >= 4) {
+                listOf(
+                    SQL_CREATE_PAGES_V5,
+                    SQL_CREATE_FOLDERS_V5,
+                    SQL_CREATE_GRID_V5,
+                    SQL_CREATE_ITEMS_PAGE_INDEX_V5,
+                    SQL_CREATE_FOLDERS_PAGE_INDEX_V5,
+                )
+            } else {
+                emptyList()
+            },
+            inserts = pageSeed + itemInserts + folderInserts,
         )
     }
 
@@ -277,6 +410,7 @@ class RoomMigrationQaTest {
         SQLiteDatabase.openOrCreateDatabase(seededDbFile, null).use { raw ->
             raw.execSQL(seed.createSql)
             raw.execSQL(SQL_CREATE_ITEMS_INDEX)
+            seed.extraCreateSqls.forEach(raw::execSQL)
             seed.folderCreateSql?.let(raw::execSQL)
             seed.inserts.forEach { (sql, args) -> raw.execSQL(sql, args) }
             raw.version = version
@@ -305,6 +439,7 @@ class RoomMigrationQaTest {
         folders: List<FolderRow> = emptyList(),
         expectedFolders: List<FolderEntity> = emptyList(),
         expectedPages: List<WorkspacePageEntity> = listOf(WorkspacePageEntity(id = 1, rank = 0)),
+        afterMigrate: (suspend (LauncherDatabase) -> Unit)? = null,
     ) {
         assertIsolatedTarget()
 
@@ -312,7 +447,7 @@ class RoomMigrationQaTest {
 
         withOpenedDatabase { db ->
             assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
-            assertEquals(5, pragmaUserVersion(db))
+            assertEquals(6, pragmaUserVersion(db))
             assertEquals(listOf("packageName", "className"), pragmaIndexColumns(db, INDEX_ITEMS_LEGACY))
             assertEquals(listOf("pageId"), pragmaIndexColumns(db, INDEX_ITEMS_PAGE))
             assertEquals(listOf("pageId"), pragmaIndexColumns(db, INDEX_FOLDERS_PAGE))
@@ -326,6 +461,7 @@ class RoomMigrationQaTest {
             assertEquals(seededDbFile.canonicalPath, File(db.openHelper.writableDatabase.path).canonicalPath)
             assertEquals(expectedItems, readItems(db))
             assertEquals(expectedPages, readPages(db))
+            afterMigrate?.let { runBlocking { it(db) } }
         }
     }
 

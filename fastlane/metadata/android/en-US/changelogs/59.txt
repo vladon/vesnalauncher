@@ -1,0 +1,1 @@
+Open or pin actions offered by an app from its Home screen icon. Edit a Home shortcut’s name without renaming the app in the drawer. A locked layout still lets you open actions, but prevents adding or editing shortcuts.

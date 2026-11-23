@@ -94,6 +94,7 @@ class AppLauncher(private val appContext: Context) {
 
     private val launcherApps = appContext.getSystemService(LauncherApps::class.java)
     private val userManager = appContext.getSystemService(UserManager::class.java)
+    internal val shortcuts = AppShortcuts(appContext)
 
     /**
      * @return false when the activity no longer exists (disabled or uninstalled since
@@ -102,6 +103,7 @@ class AppLauncher(private val appContext: Context) {
      * without crashing, but the list itself is still correct.
      */
     fun launch(app: LauncherApp): Boolean {
+        if (app.key.shortcutId != null) return shortcuts.launch(app.key)
         return tryStart {
             if (app.key.userSerial == MAIN_PROFILE_SERIAL || launcherApps == null) {
                 appContext.startActivity(mainProfileIntent(app))

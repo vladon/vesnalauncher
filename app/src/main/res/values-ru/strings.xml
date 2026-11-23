@@ -68,6 +68,9 @@
     <!-- Меню рабочего стола и дока -->
     <string name="menu_add_to_workspace">Добавить на рабочий стол</string>
     <string name="menu_remove_from_workspace">Убрать с рабочего стола</string>
+    <string name="menu_edit_name">Изменить название</string>
+    <string name="menu_action_open">Открыть</string>
+    <string name="menu_add_to_home">Добавить на главный экран</string>
     <string name="menu_add_to_dock">Добавить в док</string>
     <string name="menu_move_to_page">На страницу…</string>
     <string name="menu_remove_from_dock">Убрать из дока</string>
@@ -99,6 +102,8 @@
     <string name="toast_no_move_destination">Сначала освободите место на другой странице</string>
     <string name="toast_move_destination_full">На этой странице нет места</string>
     <string name="toast_move_unavailable">Перемещение больше недоступно</string>
+    <string name="toast_shortcut_unavailable">Этот ярлык больше недоступен</string>
+    <string name="toast_shortcut_already_pinned">Этот ярлык уже добавлен на главный экран</string>
     <string name="app_launch_failed">Не удалось открыть приложение</string>
     <string name="toast_app_info_unavailable">Не удалось открыть сведения о приложении</string>
     <string name="toast_dock_full">Док заполнен</string>
@@ -107,8 +112,10 @@
     <string name="folder_default_title">Папка</string>
     <string name="folder_rename">Переименовать папку</string>
     <string name="folder_name">Имя папки</string>
-    <string name="folder_name_required">Введите имя папки.</string>
-    <string name="folder_rename_save">Сохранить</string>
+    <string name="pin_name">Название</string>
+    <string name="name_required">Введите название.</string>
+    <string name="rename_save">Сохранить</string>
+    <string name="rename_reset">Сбросить</string>
     <string name="folder_remove_from_folder">Убрать из папки</string>
     <string name="folder_removal_no_room">На этой странице мало места. Переместите или уберите ярлыки, чтобы освободить место.</string>
     <string name="folder_open_hint">Папка с %1$d приложениями</string>

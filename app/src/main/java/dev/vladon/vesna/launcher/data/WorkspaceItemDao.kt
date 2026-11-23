@@ -49,10 +49,18 @@ interface WorkspaceItemDao {
     @Query(
         "DELETE FROM workspace_items WHERE id = (" +
             "SELECT id FROM workspace_items WHERE packageName = :packageName AND className = :className " +
-            "AND userSerial = :userSerial AND pageId = :pageId AND cellIndex = :cell " +
+            "AND userSerial = :userSerial AND shortcutId IS :shortcutId " +
+            "AND pageId = :pageId AND cellIndex = :cell " +
             "AND container != 'DOCK' AND folderId IS NULL ORDER BY id LIMIT 1)",
     )
-    suspend fun deleteWorkspacePin(packageName: String, className: String, userSerial: Long, pageId: Long, cell: Int)
+    suspend fun deleteWorkspacePin(
+        packageName: String,
+        className: String,
+        userSerial: Long,
+        shortcutId: String?,
+        pageId: Long,
+        cell: Int,
+    )
 
     @Query("DELETE FROM workspace_items WHERE id = :id AND container = 'DOCK' AND folderId IS NULL")
     suspend fun deleteDockPin(id: Long)
@@ -65,4 +73,15 @@ interface WorkspaceItemDao {
 
     @Query("DELETE FROM workspace_items WHERE packageName = :packageName AND userSerial = :userSerial")
     suspend fun deleteByPackage(packageName: String, userSerial: Long)
+
+    /** Real snapshot of the pinned action IDs of one publisher package in one profile. */
+    @Query(
+        "SELECT DISTINCT shortcutId FROM workspace_items " +
+            "WHERE packageName = :packageName AND userSerial = :userSerial AND shortcutId IS NOT NULL",
+    )
+    suspend fun shortcutIds(packageName: String, userSerial: Long): List<String>
+
+    /** Per-pin rename; `label = NULL` clears the override. Returns the row count written. */
+    @Query("UPDATE workspace_items SET customLabel = :label WHERE id = :id")
+    suspend fun updateCustomLabel(id: Long, label: String?): Int
 }

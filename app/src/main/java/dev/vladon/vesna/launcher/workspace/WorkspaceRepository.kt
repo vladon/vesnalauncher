@@ -15,16 +15,33 @@ import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.data.toDomain
 import dev.vladon.vesna.launcher.data.toEntity
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 internal enum class DockMoveResult { MOVED, SOURCE_MISSING, FULL }
 internal enum class PageMoveResult { MOVED, FULL, UNAVAILABLE }
 internal enum class FolderRemovalResult { REMOVED, NO_ROOM, UNAVAILABLE }
 internal enum class GridResizeResult { APPLIED, TOO_MANY_ITEMS, LOCKED }
+
+/** Outcome of pinning an app-published action to a workspace page. */
+enum class AppActionPinResult {
+    /** The action was pinned to the platform and recorded in the layout. */
+    PINNED,
+
+    /** The same publisher action is already pinned in any container. */
+    ALREADY_PINNED,
+
+    /** The selected page has no free cell. */
+    FULL,
+
+    /** Locked layout, missing page, not an action, or the platform pin failed. */
+    UNAVAILABLE,
+}
 
 internal data class PageMoveTarget(val id: Long, val number: Int)
 internal data class PageMoveOptions(val sourceId: Long, val pages: List<PageMoveTarget>)
@@ -232,7 +249,14 @@ class WorkspaceRepository(
         val pageId = savedActivePageId()
         if (db.workspacePageDao().getById(pageId) == null) return@withLock
         val items = dao.getAll()
-        if (items.any { it.packageName == app.key.packageName && it.userSerial == app.key.userSerial }) return@withLock
+        // An ordinary app row blocks the auto-pin; the package's saved action
+        // pins do not — the fresh app itself must still be placed.
+        if (items.any {
+                it.shortcutId == null && it.packageName == app.key.packageName && it.userSerial == app.key.userSerial
+            }
+        ) {
+            return@withLock
+        }
         val cell = readGrid().firstFreeCell(occupiedCells(items, folderDao.getAll(), pageId)) ?: return@withLock
         // Settings can change while Room reads are suspended.
         if (allowsAutomaticPlacement()) insertWorkspaceApp(app, cell, pageId)
@@ -242,11 +266,34 @@ class WorkspaceRepository(
         workspacePreferences.pinNewApps && !workspacePreferences.layoutLocked
 
     private suspend fun insertWorkspaceApp(app: LauncherApp, cell: Int, pageId: Long) {
-        dao.insert(
-            WorkspaceItem(id = 0, key = app.key, container = Container.WORKSPACE, cellIndex = cell, pageId = pageId)
-                .toEntity(),
-        )
+        dao.insert(pinEntity(app.key, Container.WORKSPACE, cell, pageId = pageId, publisherLabel = actionPinLabel(app)))
     }
+
+    /**
+     * The publisher label an action pin caches at creation time; ordinary app
+     * pins keep no cached label. Reads the canonical [LauncherApp.publisherLabel]
+     * so copying a renamed (already projected) pin persists the publisher's
+     * name, never the user's visible override.
+     */
+    private fun actionPinLabel(app: LauncherApp): String? = if (app.key.shortcutId != null) app.publisherLabel else null
+
+    private fun pinEntity(
+        key: AppKey,
+        container: Container,
+        cellIndex: Int,
+        pageId: Long? = null,
+        folderId: Long? = null,
+        publisherLabel: String? = null,
+    ): WorkspaceItemEntity =
+        WorkspaceItem(
+            id = 0,
+            key = key,
+            container = container,
+            cellIndex = cellIndex,
+            folderId = folderId,
+            pageId = pageId,
+            shortcutLabel = publisherLabel,
+        ).toEntity()
 
     /** Reads the selected pin and destinations from the same layout snapshot. */
     internal suspend fun pageMoveOptions(key: AppKey, cell: Int, pageId: Long): PageMoveOptions? =
@@ -332,16 +379,107 @@ class WorkspaceRepository(
         val dock = dao.getAll().filter { it.container == Container.DOCK.name && it.folderId == null }
         if (dock.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
         val order = (dock.maxOfOrNull { it.cellIndex } ?: -1) + 1
-        dao.insert(WorkspaceItem(id = 0, key = app.key, container = Container.DOCK, cellIndex = order).toEntity())
+        dao.insert(pinEntity(app.key, Container.DOCK, order, publisherLabel = actionPinLabel(app)))
         true
     }
 
     suspend fun removeFromWorkspace(app: LauncherApp, cell: Int, pageId: Long = DEFAULT_WORKSPACE_PAGE_ID) =
         mutationMutex.withLock {
-            dao.deleteWorkspacePin(app.key.packageName, app.key.className, app.key.userSerial, pageId, cell)
+            dao.deleteWorkspacePin(
+                app.key.packageName, app.key.className, app.key.userSerial, app.key.shortcutId, pageId, cell,
+            )
         }
 
     suspend fun removeFromDock(pinId: Long) = mutationMutex.withLock { dao.deleteDockPin(pinId) }
+
+    // App actions -----------------------------------------------------------------
+
+    /**
+     * Pins the app-published action [action] into the first free cell of
+     * [pageId]. The whole sequence runs under [mutationMutex]:
+     *
+     * 1. A locked layout, a missing page or a non-action key reports
+     *    [AppActionPinResult.UNAVAILABLE] — the platform is never contacted.
+     * 2. Dedup matches the publisher package + profile + shortcut ID across
+     *    every pinned placement (workspace, dock, folders) and reports
+     *    [AppActionPinResult.ALREADY_PINNED].
+     * 3. A full page reports [AppActionPinResult.FULL].
+     * 4. Only then [desiredIds] validates the desired platform pin set — every
+     *    currently pinned action ID of the same package and profile across all
+     *    containers, plus this action. A `false` return (platform pin failed)
+     *    reports [AppActionPinResult.UNAVAILABLE] without any Room row.
+     * 5. Once platform pinning starts, finish the Room write or restore the
+     *    previous platform set (best effort) before allowing cancellation.
+     *    A failed database write reports [AppActionPinResult.UNAVAILABLE].
+     *
+     * The inserted row caches the action's publisher label as `shortcutLabel`.
+     */
+    suspend fun pinAppAction(
+        action: LauncherApp,
+        pageId: Long,
+        desiredIds: suspend (Set<String>) -> Boolean,
+    ): AppActionPinResult = mutationMutex.withLock {
+        val key = action.key
+        val shortcutId = key.shortcutId ?: return@withLock AppActionPinResult.UNAVAILABLE
+        if (workspacePreferences.layoutLocked) return@withLock AppActionPinResult.UNAVAILABLE
+        if (db.workspacePageDao().getById(pageId) == null) return@withLock AppActionPinResult.UNAVAILABLE
+
+        val items = dao.getAll()
+        // Dedup by publisher package + profile + shortcut ID across every
+        // pinned placement (className is only metadata and may drift).
+        if (items.any { it.packageName == key.packageName && it.userSerial == key.userSerial && it.shortcutId == shortcutId }) {
+            return@withLock AppActionPinResult.ALREADY_PINNED
+        }
+        val cell = readGrid().firstFreeCell(occupiedCells(items, folderDao.getAll(), pageId))
+            ?: return@withLock AppActionPinResult.FULL
+
+        val previousIds = dao.shortcutIds(key.packageName, key.userSerial).toSet()
+        withContext(NonCancellable) {
+            if (!desiredIds(previousIds + shortcutId)) return@withContext AppActionPinResult.UNAVAILABLE
+            try {
+                dao.insert(
+                    pinEntity(key, Container.WORKSPACE, cell, pageId = pageId, publisherLabel = action.publisherLabel),
+                )
+            } catch (_: Exception) {
+                // The layout never recorded the pin, so the platform must not keep it.
+                runCatching { desiredIds(previousIds) }
+                return@withContext AppActionPinResult.UNAVAILABLE
+            }
+            AppActionPinResult.PINNED
+        }
+    }
+
+    /**
+     * Real snapshot of the pinned action IDs of one publisher package in one
+     * profile, for syncing the platform pin set when saved pins are removed.
+     */
+    suspend fun shortcutIds(packageName: String, userSerial: Long): Set<String> = mutationMutex.withLock {
+        dao.shortcutIds(packageName, userSerial).toSet()
+    }
+
+    /**
+     * The stable row ID of the top-level pin for [key] still sitting at
+     * ([pageId], [cell]), or null when the pin has moved or is gone.
+     */
+    internal suspend fun workspacePinId(key: AppKey, cell: Int, pageId: Long): Long? = mutationMutex.withLock {
+        workspacePinAt(dao.getAll(), key, pageId, cell)?.id
+    }
+
+    /**
+     * Renames the single pin identified by stable [pinId], verified against the
+     * page and cell the caller is looking at. The override applies to this pin
+     * only — the app's catalogue entry and every position stay untouched — and
+     * a null [label] clears it. Returns false when the layout is locked (a
+     * submitted or stale editor must not save after the lock) or the pin has
+     * moved or is gone.
+     */
+    internal suspend fun renameWorkspacePin(pinId: Long, cell: Int, pageId: Long, label: String?): Boolean =
+        mutationMutex.withLock {
+            if (workspacePreferences.layoutLocked) return@withLock false
+            val pin = dao.getAll().firstOrNull { it.id == pinId && it.isOnPage(pageId) && it.cellIndex == cell }
+                ?: return@withLock false
+            dao.updateCustomLabel(pin.id, label) > 0
+        }
 
     /** Removes an uninstalled package's pins and resolves affected folders in the same transaction. */
     suspend fun removeAllForPackage(packageName: String, userSerial: Long) = mutationMutex.withLock {
@@ -361,7 +499,7 @@ class WorkspaceRepository(
         val uninstalledPins = ArrayList<Long>()
         val packageInstalled = HashMap<Pair<String, Long>, Boolean>()
         for (item in dao.getAll()) {
-            if (AppKey(item.packageName, item.className, item.userSerial) in launchableKeys) continue
+            if (AppKey(item.packageName, item.className, item.userSerial, item.shortcutId) in launchableKeys) continue
             val installed = packageInstalled.getOrPut(item.packageName to item.userSerial) {
                 isPackageInstalled(item.packageName, item.userSerial)
             }
@@ -402,8 +540,7 @@ class WorkspaceRepository(
 
     private fun workspacePinAt(items: List<WorkspaceItemEntity>, key: AppKey, pageId: Long, cell: Int): WorkspaceItemEntity? =
         items.firstOrNull {
-            it.isOnPage(pageId) && it.cellIndex == cell &&
-                it.packageName == key.packageName && it.className == key.className && it.userSerial == key.userSerial
+            it.isOnPage(pageId) && it.cellIndex == cell && it.hasKey(key)
         }
 
     private fun WorkspaceItemEntity.isOnPage(pageId: Long): Boolean =
@@ -454,13 +591,7 @@ class WorkspaceRepository(
 
             val insertSlot = slot.coerceIn(0, dock.size)
             dao.insert(
-                WorkspaceItem(
-                    id = 0,
-                    key = app.key,
-                    container = Container.DOCK,
-                    cellIndex = insertSlot,
-                    userSerial = app.key.userSerial,
-                ).toEntity(),
+                pinEntity(app.key, Container.DOCK, insertSlot, publisherLabel = actionPinLabel(app)),
             )
             dock.forEachIndexed { index, pin ->
                 val newSlot = if (index < insertSlot) index else index + 1
@@ -565,7 +696,7 @@ class WorkspaceRepository(
         db.withTransaction {
             val folderId = folderDao.insert(FolderEntity(title = defaultTitle, cellIndex = targetCell, pageId = pageId))
             dao.updateFolder(target.id, folderId)
-            if (draggedItem == null) insertFolderMember(key, folderId, targetCell + 1)
+            if (draggedItem == null) insertFolderMember(key, folderId, targetCell + 1, actionPinLabel(dragged))
             else dao.updateFolder(draggedItem.id, folderId)
         }
         true
@@ -584,7 +715,7 @@ class WorkspaceRepository(
                     if (item.hasKey(key)) return@withLock false
                     lastPosition = maxOf(lastPosition, item.cellIndex)
                 }
-                insertFolderMember(key, folderId, lastPosition + 1)
+                insertFolderMember(key, folderId, lastPosition + 1, actionPinLabel(app))
             } else {
                 val entry = folderDropPin(items, key, pageId, source) ?: return@withLock false
                 dao.updateFolder(entry.id, folderId)
@@ -592,8 +723,8 @@ class WorkspaceRepository(
             true
         }
 
-    private suspend fun insertFolderMember(key: AppKey, folderId: Long, position: Int) {
-        dao.insert(WorkspaceItem(0, key, Container.WORKSPACE, position, folderId = folderId).toEntity())
+    private suspend fun insertFolderMember(key: AppKey, folderId: Long, position: Int, publisherLabel: String?) {
+        dao.insert(pinEntity(key, Container.WORKSPACE, position, folderId = folderId, publisherLabel = publisherLabel))
     }
 
     private fun folderDropPin(
@@ -611,7 +742,8 @@ class WorkspaceRepository(
         id == pinId && container == Container.DOCK.name && folderId == null
 
     private fun WorkspaceItemEntity.hasKey(key: AppKey): Boolean =
-        packageName == key.packageName && className == key.className && userSerial == key.userSerial
+        packageName == key.packageName && className == key.className && userSerial == key.userSerial &&
+            shortcutId == key.shortcutId
 
     /**
      * Returns the selected pin of [folderId] to the first free grid cell. If the folder

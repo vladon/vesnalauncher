@@ -96,4 +96,67 @@ class WorkspaceResolverTest {
         val items = listOf(WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = GridCanvas.DEFAULT.capacity))
         assertTrue(WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA)), emptyList()).cells.isEmpty())
     }
+
+    @Test
+    fun `custom label projects onto workspace dock and folder pins`() {
+        val items = listOf(
+            WorkspaceItem(1, keyA, Container.WORKSPACE, cellIndex = 0, customLabel = "Grid alias"),
+            WorkspaceItem(2, keyB, Container.DOCK, cellIndex = 0, customLabel = "Dock alias"),
+            WorkspaceItem(3, keyC, Container.WORKSPACE, cellIndex = 0, folderId = 7L, customLabel = "Folder alias"),
+            WorkspaceItem(4, keyA, Container.DOCK, cellIndex = 1),
+        )
+        val apps = listOf(app(keyA), app(keyB), app(keyC)).associateBy { it.key }
+        val folder = Folder(id = 7L, title = "Work", cellIndex = 3)
+
+        assertEquals(
+            CellContent.App(app(keyA).copy(label = "Grid alias", canonicalLabel = "com.a")),
+            WorkspaceResolver.workspaceLayout(items, apps, listOf(folder)).cells.getValue(0),
+        )
+        assertEquals(
+            listOf(
+                DockPin(2, app(keyB).copy(label = "Dock alias", canonicalLabel = "com.b")),
+                DockPin(4, app(keyA)),
+            ),
+            WorkspaceResolver.dockLayout(items, apps).pins,
+        )
+        assertEquals(
+            listOf(FolderPin(3, app(keyC).copy(label = "Folder alias", canonicalLabel = "com.c"))),
+            WorkspaceResolver.folderContents(items, apps).getValue(7L),
+        )
+    }
+
+    @Test
+    fun `renamed pin keeps canonical name and badged accessibility`() {
+        val badged = LauncherApp(key = keyA, label = "Original", badgedLabel = "Original (work)")
+
+        // Without a rename nothing changes: badged name only.
+        assertEquals("Original (work)", badged.accessibilityLabel)
+
+        val renamed = badged.withVisibleLabel("Renamed")
+        assertEquals("Renamed", renamed.label)
+        assertEquals("The canonical publisher name survives the projection", "Original", renamed.publisherLabel)
+        assertEquals("Visible custom name first, badged app name second", "Renamed, Original (work)", renamed.accessibilityLabel)
+
+        // A renamed pin without a badge announces just the visible name.
+        val renamedNoBadge = LauncherApp(key = keyB, label = "Plain").withVisibleLabel("Custom")
+        assertEquals("Custom", renamedNoBadge.accessibilityLabel)
+        assertEquals("Plain", renamedNoBadge.publisherLabel)
+
+        // Unlabelled apps keep the plain catalogue label for accessibility.
+        assertEquals("Original", LauncherApp(key = keyC, label = "Original").accessibilityLabel)
+    }
+
+    @Test
+    fun `canonical name survives chained projections`() {
+        val once = LauncherApp(key = keyA, label = "Share").withVisibleLabel("Send it")
+        assertEquals("Send it", once.label)
+        assertEquals("Share", once.publisherLabel)
+
+        val twice = once.withVisibleLabel("Again")
+        assertEquals("Again", twice.label)
+        assertEquals("The first canonical name wins across re-projections", "Share", twice.publisherLabel)
+
+        // A null override leaves the already-projected app untouched.
+        assertEquals(once, once.withVisibleLabel(null))
+    }
 }

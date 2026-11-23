@@ -21,6 +21,10 @@ import dev.vladon.vesna.launcher.workspace.DEFAULT_WORKSPACE_PAGE_ID
  * `REFERENCES` clause when the added column defaults to NULL, which is exactly
  * how the 3→4 migration attaches it to existing installs. The default places
  * legacy construction (tests) on the default page.
+ *
+ * `shortcutId`, `customLabel` and `shortcutLabel` are nullable with no SQL
+ * default: the additive 5→6 migration appends them to existing installs, and
+ * ordinary app pins keep all three NULL.
  */
 @Entity(
     tableName = "workspace_items",
@@ -44,4 +48,7 @@ data class WorkspaceItemEntity(
     val folderId: Long? = null,
     val pageId: Long? =
         if (folderId == null && container == Container.WORKSPACE.name) DEFAULT_WORKSPACE_PAGE_ID else null,
+    val shortcutId: String? = null,
+    val customLabel: String? = null,
+    val shortcutLabel: String? = null,
 )

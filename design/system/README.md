@@ -184,6 +184,18 @@ Use Material component motion defaults. For the custom drawer, track the finger 
 **Folder rename.** Use the same dialog from the Home folder menu and from an open folder. Focus and select the current name in the outlined field. **Save** and the keyboard's **Done** action trim surrounding whitespace; a blank name shows an inline error and leaves the editor open. **Cancel** discards the draft. Return to the invoking surface, keeping the folder open if renaming started there.
 Keep the draft, selection, and any visible validation message when Android recreates Home during a configuration change. Clear the validation message when the name is corrected. Do not save the draft as the folder name until the user confirms it.
 
+**Home shortcut actions.** In the anchored tile menu, list publisher action
+names only when Android makes enabled actions available from that app and
+profile. Use the same menu roles, focus and touch targets to offer **Open**
+and, when unlocked, **Add to Home** for the selected action.
+Keep the app-published action and the ordinary app pin distinct.
+
+**Edit name.** Use the same dialog and draft behavior as folder rename.
+Save applies to this placement only; **Reset** restores the default name.
+Keep launch and App info available when locked, but hide editing and pinning
+and dismiss an open shortcut editor without saving. Do not offer Widgets
+while Vesna has no widget host.
+
 [Material buttons](https://developer.android.com/develop/ui/compose/components/button) · [Search bar](https://developer.android.com/develop/ui/compose/components/search-bar) · [Switch](https://developer.android.com/develop/ui/compose/components/switch) · [Dialogs](https://developer.android.com/develop/ui/compose/components/dialog)
 
 ### Screen composition
