@@ -2651,7 +2651,8 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - **400 px in 800 ms:** Vesna opened the menu in 3 of 3;
   Nova opened neither surface in 3 of 3.
 - **Controls:** the long swipe in 300 ms opened the drawer
-  for Vesna (2 of 2) and for Nova (3 of 4). The short swipe
+  for Vesna (2 of 2) and for Nova (7 of 8); at 390 ms Nova
+  opened it in 3 of 4, and each miss opened nothing. The short swipe
   in 150 ms opened the drawer for Vesna (2 of 2) and nothing
   for Nova (3 of 3). A stationary hold opened the workspace
   menu in Vesna and the Widgets sheet in Nova.
@@ -2662,3 +2663,29 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   thresholds. No setting was changed.
   Evidence: `EVI-VESNA-003/parity112-*`.
   [Issue #170](https://github.com/vladon/vesnalauncher/issues/170).
+
+## OBS-VESNA-113 — Uninstalled app with three pins
+
+- Android 15 research AVD, `en-US`. Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.68 (73). Official Arcticons Black
+  15.4.7 (1580) was installed and pinned three times in each
+  launcher: on Home, in the dock and inside a two-app folder.
+- Right after uninstalling, both launchers had removed all
+  three pins. The folder kept its other two members in their
+  cells, every other pin and dock slot was unchanged, and the
+  app no longer appeared in the drawer. A launcher restart
+  changed nothing.
+- Side facts from building the fixture. With its four dock
+  slots full, Vesna's **Add to dock** added nothing and showed
+  the toast **The dock is full**; after one pin was removed it
+  added the app in the free slot. Nova, with five dock pins,
+  put a sixth app dropped from the drawer on a second dock
+  page, and a swipe across the dock returned to the first page.
+- In Nova a drop from the drawer onto a folder displaced the
+  folder instead of adding the app; dragging an existing Home
+  pin onto the folder added it.
+- Restored through the loadable baseline snapshot and
+  re-checked both layouts, both docks and the 4×4 Nova grid.
+  Evidence: `EVI-VESNA-003/parity114-*`.
+  [Dock facts in #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7107839244)
+  and [unavailable-shortcut input in #116](https://github.com/vladon/vesnalauncher/issues/116#issuecomment-7107839768).

@@ -62,7 +62,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-010 | App context menus in drawer | Nova 9.0.1 offers per-app dismissal in predictions, alphabetical hiding, and native app actions in drawer search. Vesna v0.4.54 lists the tested Clock action on Home but not in either drawer menu (OBS-VESNA-022/024/052; #112, #114, #119). |
 | DRAWER-011 | App launching from drawer | pending |
 | DRAWER-012 | Newly installed app handling | discovered (Add icons to home screen setting) |
-| DRAWER-013 | Uninstalled app handling | pending |
+| DRAWER-013 | Uninstalled app handling | Both remove an uninstalled app's pins from Home, the dock and folders at once, keep the other pins and members, and drop it from the drawer; the same after restart (signed Vesna v0.4.68; OBS-VESNA-113). |
 | DRAWER-014 | Work profile apps | discovered (Work apps in their own tab setting, checked) |
 | DRAWER-015 | Alphabetical index/scroller | discovered (Fast scrollbar) |
 | DRAWER-016 | Empty and error states | pending |
