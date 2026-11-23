@@ -1831,3 +1831,56 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Evidence: `EVI-VESNA-003/parity81-*`, `parity70-cycle81-*`,
   and the matched Vesna list from `parity80-vesna-vertical-list-calendar`.
   [Issue #146](https://github.com/vladon/vesnalauncher/issues/146).
+
+## OBS-VESNA-081 — Signed v0.4.60 batch addition to a Home folder
+
+- [PR #145](https://github.com/vladon/vesnalauncher/pull/145)
+  merged at `f7aeecfff8ee2557a0047d7c2188a5a184cc3ba3`.
+  The [v0.4.60](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.60)
+  tag points to that commit. Independently verified the public
+  signed APK (65), not a local `main` build. SHA-256:
+  `b558e40da154530d5cb4e11365a95d4bfc5332a3b6225ac8f3b5e01b4f8ec557`;
+  v2 signer matched v0.4.59.
+- Android 15 research AVD. Prepared the Gmail/Photos folder
+  from OBS-VESNA-061 on signed v0.4.59, where **Add apps** was
+  absent. Upgrading in place preserved its exact cell, both
+  members, and unrelated Home and dock pins. In Nova 9.0.1
+  Prime (90100), on-screen **Navigate up** in **Select apps**
+  also discarded the Contacts/Drive draft, in addition to the
+  Android Back result in OBS-VESNA-061.
+- On signed v0.4.60, selecting Contacts and Drive enabled
+  **Add**; explicit **Cancel** and Android **Back** each
+  kept just the two original members and cleared the draft.
+  One **Add** kept Gmail and Photos in order, appended both
+  choices and preserved the cell and surrounding pins. The
+  same four members survived a cold launcher restart.
+- A normal drawer drag appended Files without moving its
+  existing Home pin. With workspace lock on, the closed-folder
+  hold reported “Workspace layout is locked” and exposed no
+  **Add apps** action.
+- Evidence: `EVI-VESNA-003/parity82-*`, `parity66-cycle82-*`
+  and `release-0.4.60`.
+  [Independent result in #134](https://github.com/vladon/vesnalauncher/issues/134#issuecomment-7093214586).
+
+## OBS-VESNA-082 — Drawer memory with auto-close enabled
+
+- Android 15 research AVD, gesture navigation, each launcher
+  system Home for its trial. Nova 9.0.1 Prime (90100) and
+  signed Vesna v0.4.59 (64) / v0.4.60 (65). Single-column
+  app list, no query or keyboard. Both auto-close and
+  **Remember position** were on.
+- Scrolled off the top, opened Clock from its ordinary row,
+  pressed Android Home while Clock was foreground, and opened
+  the list again. With Nova smart folders and frequently used
+  rows off, Nova kept the exact offset and visible rows. With
+  those extra sections on, Nova reopened at an intermediate
+  position, not the top and not the exact prior rows.
+- Both signed Vesna versions returned to their original top
+  rows. On signed v0.4.60, disabling only auto-close restored
+  the exact offset after the same Clock → Android Home flow.
+  This does not change the auto-close-off result in OBS-VESNA-077.
+- Restored both original workspaces, docks and drawer settings,
+  the Vesna workspace lock, and Nova as system Home. Verified
+  Vesna v0.4.60 remained installed.
+- Evidence: `EVI-VESNA-003/parity82-combo-*` and
+  `parity78-combo-*`. [Issue #147](https://github.com/vladon/vesnalauncher/issues/147).
