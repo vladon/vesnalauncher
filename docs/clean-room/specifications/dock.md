@@ -30,10 +30,12 @@ The inventory and the observable paging behavior are covered here.
   the selector's exact limits are not established.
 - Interactions: search bar placement interacts with dock position
   (HOME-010: "Dock (Below icons)" places search under the dock).
-- Persistence: a pin on the second dock page survived launcher restart
-  (OBS-VESNA-021); wrap preference and position-memory variants were not
-  replayed.
-- Evidence: OBS-DOCK-001/002 (EVI-DOCK-001), OBS-VESNA-021/022
+- Persistence: the second-page pin survived restart. With the dock
+  overlay, gesture hide/show retained the active page in-process;
+  restart from a visible dock started on page one and restart from a
+  hidden dock kept it hidden. These paths were unchanged by the memory
+  option (OBS-VESNA-037).
+- Evidence: OBS-DOCK-001/002 (EVI-DOCK-001), OBS-VESNA-021/022/037
   (EVI-VESNA-003).
 - Confidence: Observed for rendering and tested paging paths.
 

@@ -883,3 +883,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Evidence: `EVI-VESNA-003/parity37-*`. Confidence: observed
   for a dock-linked search bar and the tested two-page layout.
   Gesture-toggle and position-memory settings were not exercised.
+
+## OBS-VESNA-037 — Dock gesture, automatic close, and restart state
+
+- On Android 15, Nova 9.0.1 Prime (90100), left the research
+  dock enabled with two identifiable pages. Temporarily enabled
+  overlay and assigned a downward workspace swipe to toggle it.
+- The swipe hid and showed the dock and its attached search bar
+  without moving the workspace icons. Starting on page two, the
+  same-process hide/show returned page two both with dock position
+  memory off and with it on.
+- Cold process restart from a visible page two showed page one
+  with either memory setting; restarting from a hidden dock left
+  it hidden in both cases. The tested paths did not distinguish
+  the memory setting; other triggers were not tested.
+- With automatic close off, launching Gmail from the workspace
+  and returning Home left the dock visible. With it on, the same
+  action returned to a hidden dock. Restored the original bindings,
+  switches, visible dock, and pins; removed the disposable app.
+- Signed Vesna v0.4.51 (56) had no dock gesture in Settings search.
+  Follow-up for #115. Evidence: `EVI-VESNA-003/parity38-*` on the
+  owned AVD; no physical device or other gesture route exercised.
