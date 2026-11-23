@@ -1217,3 +1217,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - No timer was started. Restored the original layouts and Nova
   as Android Home. Evidence: `EVI-VESNA-003/parity53-*` and the
   Nova search setup `parity50-cycle53-*`; follow-up for #114.
+
+## OBS-VESNA-053 — Vesna name edits distinguish Back, Save and Reset
+
+- On the Android 15 research AVD, signed Vesna v0.4.54 (59) had
+  an ordinary Gmail Home pin matching the Nova 9.0.1 Prime
+  (90100) reference in OBS-VESNA-042. Nova remained Android Home
+  during the Vesna replay; the editor was still available.
+- In Vesna, long-press Gmail → **Edit name**, type a draft, then
+  press Back twice. The first Back left the editor open; the
+  second dismissed it and discarded the draft. The original
+  name was still present after restart. In the Nova reference,
+  the equivalent Back sequence kept the edit.
+- **Save** renamed the existing pin in the same cell. The
+  alias survived restart and still opened Gmail. Drawer search
+  found `Gmail` and returned no matches for the Home alias.
+- **Reset** closed the editor and immediately restored `Gmail`
+  without an additional Save. Restart confirmed the original
+  layout and label; no changes to Nova were needed.
+- Evidence: `EVI-VESNA-003/parity54-*` and draft-entry captures
+  under `parity52-cycle54-*`. Follow-up for #114.
