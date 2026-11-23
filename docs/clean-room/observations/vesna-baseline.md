@@ -930,3 +930,21 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   earlier run (OBS-VESNA-019). A positive store/installer path in
   Nova, and full or secondary selected pages in this Vesna
   release, were not tested here.
+
+## OBS-VESNA-039 — Auto-placement stays on the selected page
+
+- Signed Vesna v0.4.52 (57), tag at
+  `f1f785c3478280300c91dd9a6fbeb7e3881695bd`, on the Android 15
+  research AVD; auto-placement on and workspace unlocked.
+- Added a blank second page through **Home options → Add home
+  page**. With page two selected, a fresh install created one
+  shortcut in its upper-left cell. Page one had no test shortcut.
+- Uninstalled the fixture and filled all 20 cells on page one
+  while leaving page two empty. With the full page selected, a
+  fresh install changed none of its cells. The app appeared in
+  the drawer, page two stayed empty, and no third page was added.
+- Restored the original emulator snapshot and checked the
+  layout, preferences and removal of both disposable packages.
+  Evidence: `EVI-VESNA-003/parity39-vesna052-*page*` and
+  `parity39-vesna052-full-primary-*`. Follow-up for #107; no
+  new Nova installer run.
