@@ -2076,3 +2076,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   one-page layouts and docks.
 - Evidence: `EVI-VESNA-003/parity88-*`.
   [Follow-up in #139](https://github.com/vladon/vesnalauncher/issues/139#issuecomment-7094554724).
+
+## OBS-VESNA-091 — Last shortcut removal and empty-page cleanup
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.62 (67). Both had two unlocked pages
+  of four columns by five rows. Page one was nonempty; page
+  two held only a regular Drive pin in its bottom-left cell.
+- In Nova, **Remove** left the blank second page reachable
+  during the session even after the Undo bar disappeared.
+  After a cold launcher restart, the outward swipe stayed on
+  page one. In a separate timed trial, **Undo** restored Drive
+  to the exact second-page cell and it survived restart.
+- Vesna **Remove from workspace** left the blank “Home page
+  2 of 2” reachable after restart. **Home options → Remove
+  empty page** removed it manually, without changing the
+  other remaining pins or the dock.
+- This checks cleanup after explicit last-pin removal, not
+  a never-populated page or emptying it through a drag.
+  Restored both original layouts, grid settings and docks.
+  Evidence: `EVI-VESNA-003/parity89-*`.
+  [Issue #153](https://github.com/vladon/vesnalauncher/issues/153).
