@@ -109,7 +109,7 @@ behavior, an ID is never reassigned to a different behavior.
 
 | ID | Feature | Discovery status |
 |---|---|---|
-| GESTURE-001 | Swipe up / down on home screen | Nova 8.9.9 and 9.0.1 open the drawer on the 1100 px path at 500–925 ms as well as in fast swipes. Signed Vesna v0.4.68 opens the workspace menu instead on every slow swipe and on a slow 400 px swipe (OBS-VESNA-003, 006–007, 009, 112; AT-GESTURE-112.5; #170). |
+| GESTURE-001 | Swipe up / down on home screen | Nova 8.9.9 and 9.0.1 open the drawer on the 1100 px path at 500–925 ms as well as in fast swipes. Signed Vesna v0.4.68/69 opened the workspace menu instead; v0.4.70 opens the drawer on slow and fast long swipes, opens neither surface on a slow 400 px swipe, and keeps the stationary-hold menu and the tile long-press (OBS-VESNA-003, 006–007, 009, 112, 115, 118; AT-GESTURE-112.5; #170). |
 | GESTURE-002 | Double tap | discovered (Prime-gated) |
 | GESTURE-003 | Long press on empty space | observed (opens customize mode) |
 | GESTURE-004 | Pinch in/out | discovered (Prime-gated rows) |
@@ -128,7 +128,7 @@ behavior, an ID is never reassigned to a different behavior.
 | APPPEAR-004 | Icon packs | Nova applies installed Arcticons Black to Home, dock and drawer and retains the choice after process restart. Uncovered apps keep their own artwork, and Nova returns to system artwork after the pack is removed and the launcher restarts (OBS-VESNA-095/108). No pack selector found in signed Vesna v0.4.63 with the same pack installed (#157). |
 | APPPEAR-005 | Label font size / color / shadow | Nova changes label size (six steps), font, shadow and single-line behaviour from Home screen → Label, and text tone from Style → Home screen → Text (OBS-VESNA-116; #173, #155). Signed Vesna v0.4.69 offers only the show/hide switches; hiding Home labels keeps drawer names (OBS-VESNA-088/093; #152). |
 | APPPEAR-006 | Accent colors / dynamic colors | Nova changes its global palette independently of theme mode and can override just the drawer background. No equivalent controls found in tested signed Vesna v0.4.63–69 (OBS-VESNA-094/097/116; #155/#158). Wallpaper colors untested. |
-| APPPEAR-007 | Transparency of backgrounds (drawer/dock/search) | pending |
+| APPPEAR-007 | Transparency of backgrounds (drawer/dock/search) | No transparency control found in Nova 9.0.1's app drawer color picker or dock background card; Vesna v0.4.70 settings search finds none either. Not a confirmed difference. Nova shapes the dock background with a per-corner radius and style (OBS-VESNA-117). |
 | APPPEAR-008 | Wallpaper-dependent behaviors | pending |
 | APPPEAR-009 | Scroll/search bar personalization | pending |
 | APPPEAR-010 | Animation speed preferences | pending |

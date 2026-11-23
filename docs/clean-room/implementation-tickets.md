@@ -234,6 +234,10 @@ Traceability: every ticket's acceptance scenario lives in
   Reproduced on signed v0.4.68 from two starting cells: the
   menu opened in 11 of 11 slow long swipes and 3 of 3 slow
   short swipes, while Nova opened the drawer (OBS-VESNA-112).
+- Fixed on signed v0.4.70: 16 of 16 slow long swipes opened
+  the drawer with no menu, the slow short swipe opened neither
+  surface, and the stationary hold and tile long-press still
+  work (OBS-VESNA-118).
 
 ## NT-HOME-01 (P1) — Open the workspace from Vesna's app icon
 

@@ -2778,3 +2778,59 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity117-*`.
   [Issue #173](https://github.com/vladon/vesnalauncher/issues/173)
   and [text tones in #155](https://github.com/vladon/vesnalauncher/issues/155#issuecomment-7109519114).
+
+## OBS-VESNA-117 — Background controls and transparency
+
+- Android 15 research AVD, `en-US`. Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.70 (75). No setting was changed in
+  Nova; only its settings pages were read.
+- **Nova app drawer surface:** Style → App drawer → Surface
+  shows a grid of system-palette tones and a grid of opaque
+  **Fixed colors**, with separate Surface, Text and Accent
+  tabs. That page has no transparency control.
+- **Nova dock background:** Home screen → Dock → Dock
+  background has an on/off switch, **Draw behind navigation
+  bar**, **Padding**, and a corner-radius slider with a shape
+  dropdown for each corner. The page ends there.
+- **Vesna:** Settings search for `transparent`, `opacity`,
+  `dock background`, `corner`, `radius`, `animation` and
+  `transition` returned **No settings found**.
+- Transparency is therefore not a confirmed difference:
+  neither launcher offered a control in the explored pages.
+  The dock background shape is a Nova-only control, left as a
+  reference fact in #115. Nova's transition and animation
+  rows were only seen, not exercised.
+- Both Home layouts were unchanged afterwards.
+  Evidence: `EVI-VESNA-003/parity118-*`.
+  [Dock background fact in #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7110009865).
+
+## OBS-VESNA-118 — Signed v0.4.70 slow upward swipe
+
+- Android 15 research AVD, `en-US`, gesture navigation,
+  1080×2400 px at 420 dpi. In-place upgrade from signed
+  v0.4.69 to published signed v0.4.70 (75).
+  [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.70)
+  `013cef2924a3a47ec0c9c13d0f4be180a9ef5883`, APK SHA-256
+  `dedcc3a0a7a651991a6b01327c8ba1d7bd3f64e9065bb5b24d2d7a6803a539c5`,
+  with the same verified v2 signer as v0.4.69.
+- Same trajectories and starting cells as OBS-VESNA-112; each
+  was repeated from both empty bottom-row cells.
+- **1100 px in 500, 665, 800 or 925 ms:** the drawer opened in
+  16 of 16 trials and the workspace menu never appeared. On
+  v0.4.68 and v0.4.69 the menu had opened in every slow trial.
+- **1100 px in 300 or 390 ms:** the drawer opened in 8 of 8
+  trials.
+- **400 px in 800 ms:** neither surface opened, in 4 of 4
+  trials. **400 px in 150 ms:** the drawer opened in 2 of 2.
+- **Stationary hold on an empty cell:** the workspace menu
+  opened in 2 of 2 trials.
+- **Tile long-press:** a plain hold on a Home shortcut still
+  opened its own menu. A hold with the finger drifting 6–18 px
+  also opened the shortcut menu and did not move the tile.
+- Every criterion of AT-GESTURE-112.5 passed for the tested
+  paths. Two-finger gestures and other screen sizes were not
+  exercised. The maintainer's issue was still open at the
+  time of this check. No layout changed; v0.4.70 was kept and
+  saved as the new loadable baseline.
+  Evidence: `EVI-VESNA-003/parity119-*`, `release-0.4.70/`.
+  [Independent verification in #170](https://github.com/vladon/vesnalauncher/issues/170#issuecomment-7110009227).
