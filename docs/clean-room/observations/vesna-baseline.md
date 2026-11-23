@@ -948,3 +948,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity39-vesna052-*page*` and
   `parity39-vesna052-full-primary-*`. Follow-up for #107; no
   new Nova installer run.
+
+## OBS-VESNA-040 — Landscape dock placement and rotation
+
+- Owned Android 15 AVD, Nova 9.0.1 Prime (90100) and signed Vesna
+  v0.4.52 (57). Compared the same two emulated sensor orientations
+  with Android rotation unlocked. Neither launcher was reinstalled.
+- With **Look & feel → Allow Home screen rotation** enabled, Nova
+  rotated to 2400×1080. Its five dock pins and attached search
+  pill formed vertical columns at the left edge in one orientation
+  and at the right edge in the other. With the preference off,
+  the same sensor rotation left Nova at 1080×2400 in portrait.
+- With its original settings, Vesna rotated to 2400×1080 in both
+  orientations. The four dock pins stayed in a horizontal bottom
+  row and kept their left-to-right order. The Camera dock pin
+  opened Camera from both launchers in the first landscape
+  orientation. Returning upright restored the portrait layouts.
+- Restored the original rotation preference and AVD state.
+  Evidence: `EVI-VESNA-003/parity41-*`. Follow-up for #115;
+  multipage dock navigation in landscape was not established.
+- Nova store-install auto-placement remains untested: neither a
+  Play Store launcher activity nor the market details link
+  resolved on this AVD.

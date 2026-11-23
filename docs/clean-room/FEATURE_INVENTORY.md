@@ -77,7 +77,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DOCK-004 | Add/remove/reorder dock items | pending |
 | DOCK-005 | Folders in dock | pending |
 | DOCK-006 | Dock across pages (persistent vs per-page) | pending |
-| DOCK-007 | Dock in landscape | pending |
+| DOCK-007 | Dock in landscape | Nova 9.0.1 moves the dock and attached search bar to a side when rotation is allowed; Vesna v0.4.52 keeps the dock at the bottom in both orientations (OBS-VESNA-040; #115). |
 
 ## FOLDER — Folders
 
