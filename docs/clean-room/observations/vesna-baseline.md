@@ -1741,3 +1741,32 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   original grids, layouts and docks.
   Evidence: `EVI-VESNA-003/parity77-*` and `parity45-cycle77-*`.
   [Follow-up in #132](https://github.com/vladon/vesnalauncher/issues/132#issuecomment-7092378192).
+
+## OBS-VESNA-077 — Signed v0.4.59 remembers the vertical drawer after Home
+
+- [PR #143](https://github.com/vladon/vesnalauncher/pull/143)
+  merged at `1323070deea48d2f32aa2bdcf77d60cf401c6f60`;
+  the [v0.4.59](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.59)
+  tag points to the same commit. Independently installed the
+  public release (64), not a local `main` build. APK SHA-256:
+  `b924689015bef518a404b7764b59669bda99bea4630f2dc596e4869a5c8b6e84`;
+  the v2 signer matched v0.4.58.
+- Android 15 research AVD, gesture navigation, Vesna as Home,
+  single-column **Vertical list**, auto-close off, no query or IME.
+  After scrolling, opening Clock from its normal row, pressing
+  Android Home and reopening the drawer, **Remember position**
+  off (untouched default) returned to the original top rows.
+  On restored all 12 visible rows at their original bounds,
+  matching the Nova 9.0.1 Prime comparison in OBS-VESNA-071.
+  Home and dock placements were unchanged.
+- Back closed the restored drawer; its next opening started
+  at the top. In a separate run, replacing the Vesna process
+  after Clock → Home discarded the pending offset, but the
+  preference remained enabled. Other navigation modes, search
+  and grid/pager behavior were not independently rerun here.
+- Restored the vertical grid, the original drawer preferences
+  and Nova as system Home. Verified both Home layouts and docks;
+  Vesna v0.4.59 remained installed.
+- Evidence: `EVI-VESNA-003/parity78-*`, `parity70-cycle78-*`
+  and `release-0.4.59`.
+  [Independent result in #141](https://github.com/vladon/vesnalauncher/issues/141#issuecomment-7092515174).
