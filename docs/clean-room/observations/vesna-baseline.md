@@ -2415,3 +2415,56 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored the original timeout, grids, layouts and docks.
   Evidence: `EVI-VESNA-003/parity100-*`.
   [Follow-up in #132](https://github.com/vladon/vesnalauncher/issues/132#issuecomment-7097341299).
+
+## OBS-VESNA-104 — Whole folder drag to an existing page
+
+- Android 15 research AVD, system Arabic (Egypt) in actual
+  RTL, 4×5 workspace. In Nova 9.0.1 Prime (90100) and both
+  signed Vesna v0.4.66 (71) and v0.4.67 (72), page one had
+  a closed Gmail → Photos folder; page two had Files at
+  physical bottom-left and a free cell beside it.
+- Holding the whole folder at the physical left edge in Nova
+  previewed the existing page with Files. Drop put the folder
+  beside the marker; its two members stayed in order.
+- In Vesna, both releases kept page one visible while held.
+  Drop moved the folder to the chosen screen cell on **page
+  one**, retaining both members. Files still occupied its
+  exact cell on page two and dock locations were unchanged.
+  This is not the individual member route fixed in #160.
+- LTR and whole-folder creation of a new page were not
+  compared in this pass. Evidence: `EVI-VESNA-003/parity101-*whole-folder*`.
+  [Issue #163](https://github.com/vladon/vesnalauncher/issues/163)
+  and [signed-release confirmation](https://github.com/vladon/vesnalauncher/issues/163#issuecomment-7097779694).
+
+## OBS-VESNA-105 — Signed folder-member edge append
+
+- Android 15 research AVD, 1080×2400 at 420 dpi, 100% text,
+  4×5 Home. Nova 9.0.1 Prime (90100) and signed Vesna
+  v0.4.66 (71) started the RTL run with a single-page
+  Files → Gmail → Photos folder. Nova used the physical left
+  edge to put Files on page two. v0.4.66 stayed on page one
+  and extracted it into the same screen cell there.
+- Upgraded in place to signed v0.4.67 (72).
+  [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.67)
+  `4c3ee82a5b08ef2df1c5b1e2a0325c12e1bce67b`; APK SHA-256
+  `a52594cc9cf21474f00fbf32735ff08e1b43f8667227d995bb901c8d37d7b9ea`,
+  with the same verified v2 signer as v0.4.66.
+- In actual `ar-EG`, the held left edge now showed a blank
+  successor. Cancel and a release over the dock reopened
+  the original ordered folder and kept one page. Valid drop
+  placed Files in the selected bottom-left cell of page two.
+  Gmail → Photos remained in the original folder cell.
+- Both page layouts, member order and dock survived cold
+  restart. Dropping Gmail onto Files on the now-existing
+  neighbor reopened the unchanged folder and moved nothing.
+- In a separate `en-US` two-member Gmail → Photos fixture,
+  the right edge previewed page two; cancel kept the exact
+  order and one page. Valid drop placed Gmail bottom-right
+  on page two, leaving Photos in the former folder cell.
+  Both placements and the dock survived restart, matching
+  Nova's LTR result from OBS-VESNA-100.
+- Restored original locale, grid, layouts and docks; kept
+  the signed v0.4.67 update. Keyboard, compact screens and
+  the page cap were not exercised in this pass.
+  Evidence: `EVI-VESNA-003/parity101-*`, `release-0.4.67/`.
+  [Independent verification in #160](https://github.com/vladon/vesnalauncher/issues/160#issuecomment-7097791450).
