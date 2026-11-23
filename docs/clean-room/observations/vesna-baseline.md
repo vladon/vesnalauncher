@@ -1111,3 +1111,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   layouts; removed the disposable pin and verified the second
   Nova dock page was empty again. Evidence:
   `EVI-VESNA-003/parity48-*`; follow-up for #115.
+
+## OBS-VESNA-048 — Selected dock page carries across workspace pages
+
+- Android 15 research AVD in portrait, Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.53 (58). Each had two workspace pages
+  distinguished by their pins. Nova had two dock pages, with
+  five regular pins on page one and one test pin on page two.
+- In Nova, with dock page two selected, workspace swipes
+  2→1→2 changed the workspace while keeping the same dock pin
+  and bounds. On workspace page two, a dock swipe selected
+  dock page one without moving the workspace. Workspace swipes
+  2→1→2 then kept all five first-page dock pins and bounds.
+  The active dock page was shared, not stored per workspace page.
+- On Vesna, the same workspace swipes changed the visible page
+  (confirmed by page labels and the test pin), while the four
+  dock pins kept their order and bounds. No dock paging was used.
+- The original layouts and package state were restored. This
+  tests in-session paging, not dock position memory on restart.
+  Evidence: `EVI-VESNA-003/parity49-*`; follow-up for #115.
