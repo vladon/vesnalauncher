@@ -87,9 +87,9 @@ behavior, an ID is never reassigned to a different behavior.
 | FOLDER-002 | Folder naming and rename | observed |
 | FOLDER-003 | Folder open/close behavior | observed (window mode; BACK closes) |
 | FOLDER-004 | Folder icon appearance (preview grid) | observed (mini previews) |
-| FOLDER-005 | Add/remove apps inside folder | pending |
+| FOLDER-005 | Add/remove apps inside folder | Both accept a drop onto a closed folder. Nova offers direct drag-out to a chosen cell; Vesna v0.4.54 removes via menu and places the item in a free Home cell (OBS-VESNA-057; #130). |
 | FOLDER-006 | Reorder inside folder | pending |
-| FOLDER-007 | Folder deletion and last-item behavior | pending |
+| FOLDER-007 | Folder deletion and last-item behavior | Both dissolve the tested folder when one member remains, retaining that member in the former folder cell. Deletion of the whole folder not tested (OBS-VESNA-057). |
 | FOLDER-008 | Folder layout (grid size inside folder) | discovered (Grid AUTO, Scroll direction Horizontal, Mode Window) |
 
 ## WIDGET — Widgets

@@ -1300,3 +1300,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   transmission or behavior of other providers. Restored the
   original radios and layouts. Evidence: `EVI-VESNA-003/parity57-*`
   and `parity31-*cycle57-*`; follow-up for #113.
+
+## OBS-VESNA-057 — Workspace folder removal and the chosen cell
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). In each, dropped Photos onto Gmail,
+  then Files onto the closed folder. Opening it showed all
+  three members and Files was no longer a top-level pin.
+- In Nova, dragging Files out of the open folder placed it
+  in the selected empty Home cell and left a two-member folder.
+  Dragging Photos out next dissolved it, leaving Gmail in
+  the former folder cell.
+- In Vesna, the corresponding hold-and-drag opened the member
+  menu rather than moving Files to the chosen cell. **Remove
+  from folder** returned members to Home automatically. In a
+  control, removing Photos first put it into the earlier
+  vacancy left by Files, not Photos' original cell.
+- Removing the penultimate member through the Vesna menu
+  dissolved the folder. Gmail remained in its former cell and
+  both extracted apps were present after a cold restart.
+- Restored both layouts. Evidence: `EVI-VESNA-003/parity58-*`.
+  Workspace drag-out gap tracked in #130; paging and reordering
+  inside an open folder were not tested here.
