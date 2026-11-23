@@ -2651,11 +2651,11 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - **400 px in 800 ms:** Vesna opened the menu in 3 of 3;
   Nova opened neither surface in 3 of 3.
 - **Controls:** the long swipe in 300 ms opened the drawer
-  for Vesna (2 of 2) and for Nova (7 of 8); at 390 ms Nova
-  opened it in 3 of 4, and each miss opened nothing. The short swipe
-  in 150 ms opened the drawer for Vesna (2 of 2) and nothing
-  for Nova (3 of 3). A stationary hold opened the workspace
-  menu in Vesna and the Widgets sheet in Nova.
+  for Vesna (2 of 2) and for Nova (7 of 8). At 390 ms Nova
+  opened it in 3 of 4, and each miss opened nothing. The
+  short swipe in 150 ms opened the drawer for Vesna (2 of 2)
+  and nothing for Nova (3 of 3). A stationary hold opened the
+  workspace menu in Vesna and the Widgets sheet in Nova.
 - This is NT-GESTURE-03 again, last recorded on v0.4.16
   (OBS-VESNA-014). The slow swipes pass touch slop in their
   first frames, so movement should cancel the pending long
@@ -2716,9 +2716,37 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   9.0.1 Prime (90100) created a page in both directions as
   well, with the folder at the same coordinates (LTR in
   OBS-VESNA-109).
-- The eight-page cap and layout lock were not exercised.
+- The maintainer had closed #167 before this check. The
+  eight-page cap and layout lock were not exercised.
   Reverted the locale and grid through the baseline snapshot,
   reinstalled v0.4.69 over the original state, and saved that
   state as the new loadable baseline.
   Evidence: `EVI-VESNA-003/parity115-*`, `release-0.4.69/`.
   [Independent verification in #167](https://github.com/vladon/vesnalauncher/issues/167#issuecomment-7108341615).
+
+## OBS-VESNA-115 — Regressions on v0.4.69 and reinstall
+
+- Android 15 research AVD, `en-US`, published signed Vesna
+  v0.4.69 (74) and Nova 9.0.1 Prime (90100). Each open defect
+  was replayed once on the new build.
+- **Slow upward swipe (#170):** still reproduces. On the
+  1100 px path the workspace menu opened in 3 of 3 trials at
+  665 ms and in 1 of 1 at 925 ms. Added for symmetry with
+  Nova, 390 ms opened the drawer in 3 of 3, as did the 300 ms
+  control (1 of 1). On this path the menu appears from
+  somewhere between 390 and 665 ms.
+- **Shortcut onto an app on another page (#168):** still
+  refused. Drive stayed in its original cell and both pages
+  were unchanged.
+- **Reinstall after uninstall:** with the app pinned on Home
+  and in the dock, uninstalling removed both pins in each
+  launcher, as in OBS-VESNA-113. Reinstalling the same APK
+  did not bring either pin back, neither at once nor after a
+  launcher restart. An unavailable shortcut therefore only
+  comes from a saved layout.
+- Restored through the loadable baseline snapshot and
+  re-checked both layouts, both docks and the 4×4 Nova grid.
+  Evidence: `EVI-VESNA-003/parity116-*`.
+  [#170](https://github.com/vladon/vesnalauncher/issues/170#issuecomment-7108816589),
+  [#168](https://github.com/vladon/vesnalauncher/issues/168#issuecomment-7108817240)
+  and [#116](https://github.com/vladon/vesnalauncher/issues/116#issuecomment-7108817872).
