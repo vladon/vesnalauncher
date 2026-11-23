@@ -1,0 +1,1 @@
+Swipe up slowly to open the app drawer. A slow upward swipe no longer opens the Home options menu; holding still on an empty space still does.
