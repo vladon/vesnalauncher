@@ -1505,3 +1505,27 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored original layouts and kept v0.4.55 installed.
   Evidence: `EVI-VESNA-003/parity67-*`.
   [Follow-up in #131](https://github.com/vladon/vesnalauncher/issues/131#issuecomment-7090974852).
+
+## OBS-VESNA-067 — Edge drag from a folder to an existing Home page
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.55 (60). Both had Files, Gmail and Photos in a
+  page-one folder, and a Drive marker on page two. The
+  lower-right cell was vacant on both pages.
+- Held Files in the open folder, moved to the right edge,
+  dwelled for about 1.5 seconds, and released over the
+  lower-right cell. Nova showed Drive on page two behind
+  the still-open folder during the drag. After dismissing the
+  folder window, Files occupied the chosen page-two cell.
+- Vesna stayed on page one and put Files in its lower-right
+  cell. Page two still contained only Drive. The two other
+  members stayed in the original folder in both launchers,
+  and the page assignments survived cold starts.
+- An ordinary-pin control created a second page via edge
+  drag in Nova. The equivalent edge dwell in Vesna moved
+  the pin on page one both with and without a pre-existing
+  neighbor; the Vesna test page was added via Home options.
+- Restored the original one-page layouts and docks. Evidence:
+  `EVI-VESNA-003/parity68-*`. Existing-page drag routing is
+  tracked in #139, separate from the passing same-page
+  exact-cell extraction in #130.
