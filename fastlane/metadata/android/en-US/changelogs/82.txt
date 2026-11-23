@@ -1,0 +1,1 @@
+When an app search matches nothing, Vesna can now offer to hand the query to other apps: search the web, Maps, Play Store or YouTube. Turn on Search actions in App drawer settings; nothing is sent while typing and the local search is unchanged.

@@ -1,5 +1,6 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -327,6 +328,7 @@ class HomeActivity : ComponentActivity() {
         }
 
         drawer.onAppClick = ::launchApp
+        drawer.onSearchAction = ::launchSearchAction
         drawer.closeOnLaunch = { drawerPreferences.closeOnLaunch }
         drawer.onItemOptions = { app, anchor -> showDrawerItemMenu(anchor, app, renderedState.activePageId) }
         drawer.onItemDragStarted = { app, _ ->
@@ -364,6 +366,7 @@ class HomeActivity : ComponentActivity() {
         hiddenDrawerApps = drawerPreferences.hiddenApps
         drawer.layoutMode = drawerPreferences.layoutMode
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
+        drawer.externalSearchActions = drawerPreferences.externalSearchActions
         applyDockVisibility()
         applyIconScales()
 
@@ -413,6 +416,7 @@ class HomeActivity : ComponentActivity() {
         drawer.layoutMode = drawerPreferences.layoutMode
         drawer.rememberPosition = drawerPreferences.rememberPosition
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
+        drawer.externalSearchActions = drawerPreferences.externalSearchActions
         applyDockVisibility()
         applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps
@@ -1346,6 +1350,15 @@ class HomeActivity : ComponentActivity() {
         if (controller.launch(app)) return true
         showSnackbar(R.string.app_launch_failed, folderDialog)
         return false
+    }
+
+    /** Hands the search query to another app; the intent was resolved when the row was shown. */
+    private fun launchSearchAction(intent: Intent) {
+        try {
+            startActivity(intent)
+        } catch (error: ActivityNotFoundException) {
+            showSnackbar(R.string.app_launch_failed, folderDialog)
+        }
     }
 
     private fun removeFolderItems(pageId: Long, remove: suspend () -> FolderRemovalResult) {

@@ -53,6 +53,7 @@ class SettingsActivity : ComponentActivity() {
     private var closeDrawerOnLaunch by mutableStateOf(false)
     private var rememberDrawerPosition by mutableStateOf(false)
     private var showKeyboardOnDrawerOpen by mutableStateOf(false)
+    private var drawerSearchActions by mutableStateOf(false)
     private var drawerIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerFollowsHome by mutableStateOf(true)
     private var showAppNames by mutableStateOf(true)
@@ -159,6 +160,11 @@ class SettingsActivity : ComponentActivity() {
                             drawerPreferences.keyboardOnOpen = enabled
                             showKeyboardOnDrawerOpen = enabled
                         },
+                        drawerSearchActions = drawerSearchActions,
+                        onDrawerSearchActionsChanged = { enabled ->
+                            drawerPreferences.externalSearchActions = enabled
+                            drawerSearchActions = enabled
+                        },
                         drawerIconPercent = drawerIconPercent,
                         onDrawerIconPercentChanged = { percent ->
                             drawerPreferences.iconScalePercent = percent
@@ -214,6 +220,7 @@ class SettingsActivity : ComponentActivity() {
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         rememberDrawerPosition = drawerPreferences.rememberPosition
         showKeyboardOnDrawerOpen = drawerPreferences.keyboardOnOpen
+        drawerSearchActions = drawerPreferences.externalSearchActions
         homeIconPercent = workspace.iconScalePercent
         dockIconPercent = dockPreferences.iconScalePercent
         drawerIconPercent = drawerPreferences.iconScalePercent

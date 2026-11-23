@@ -146,6 +146,8 @@ internal fun SettingsScreen(
     onRememberDrawerPositionChanged: (Boolean) -> Unit,
     showKeyboardOnDrawerOpen: Boolean,
     onShowKeyboardOnDrawerOpenChanged: (Boolean) -> Unit,
+    drawerSearchActions: Boolean,
+    onDrawerSearchActionsChanged: (Boolean) -> Unit,
     drawerIconPercent: Int,
     onDrawerIconPercentChanged: (Int) -> Unit,
     drawerFollowsHome: Boolean,
@@ -304,6 +306,7 @@ internal fun SettingsScreen(
                                 closeDrawerOnLaunch, onCloseDrawerOnLaunchChanged,
                                 rememberDrawerPosition, onRememberDrawerPositionChanged,
                                 showKeyboardOnDrawerOpen, onShowKeyboardOnDrawerOpenChanged,
+                                drawerSearchActions, onDrawerSearchActionsChanged,
                                 drawerIconPercent, onDrawerIconPercentChanged,
                                 drawerFollowsHome, onDrawerFollowsHomeChanged,
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
@@ -312,6 +315,7 @@ internal fun SettingsScreen(
                                 searchTarget == R.string.settings_drawer_close_on_launch,
                                 searchTarget == R.string.settings_drawer_remember_position,
                                 searchTarget == R.string.settings_drawer_show_keyboard,
+                                searchTarget == R.string.settings_search_actions,
                                 searchTarget == R.string.settings_drawer_follow_home,
                                 searchTarget == R.string.settings_drawer_icon_size,
                             )
@@ -443,6 +447,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_close_on_launch, R.string.settings_drawer_close_on_launch_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_remember_position, R.string.settings_drawer_remember_position_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_show_keyboard, R.string.settings_drawer_show_keyboard_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_search_actions, R.string.settings_search_actions_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_follow_home, R.string.settings_drawer_follow_home_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_icon_size, R.string.settings_drawer_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
@@ -658,6 +663,8 @@ private fun DrawerAppSettings(
     onRememberPositionChanged: (Boolean) -> Unit,
     showKeyboard: Boolean,
     onShowKeyboardChanged: (Boolean) -> Unit,
+    searchActions: Boolean,
+    onSearchActionsChanged: (Boolean) -> Unit,
     iconPercent: Int,
     onIconPercentChanged: (Int) -> Unit,
     followHome: Boolean,
@@ -670,14 +677,16 @@ private fun DrawerAppSettings(
     closeOnLaunchHighlighted: Boolean,
     rememberPositionHighlighted: Boolean,
     showKeyboardHighlighted: Boolean,
+    searchActionsHighlighted: Boolean,
     followHomeHighlighted: Boolean,
     iconSizeHighlighted: Boolean,
 ) {
     // A search target may not be composed yet in a short, scaled viewport.
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = when {
-        hideHighlighted -> 6
-        iconSizeHighlighted -> 5
-        followHomeHighlighted -> 4
+        hideHighlighted -> 7
+        iconSizeHighlighted -> 6
+        followHomeHighlighted -> 5
+        searchActionsHighlighted -> 4
         showKeyboardHighlighted -> 3
         rememberPositionHighlighted -> 2
         closeOnLaunchHighlighted -> 1
@@ -710,6 +719,14 @@ private fun DrawerAppSettings(
                 SettingsSwitch(
                     R.string.settings_drawer_show_keyboard, R.string.settings_drawer_show_keyboard_detail,
                     showKeyboard, onShowKeyboardChanged,
+                )
+            }
+        }
+        item(key = "search-actions") {
+            SearchTarget(searchActionsHighlighted) {
+                SettingsSwitch(
+                    R.string.settings_search_actions, R.string.settings_search_actions_detail,
+                    searchActions, onSearchActionsChanged,
                 )
             }
         }
