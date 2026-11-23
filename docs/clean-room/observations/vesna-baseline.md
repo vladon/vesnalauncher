@@ -2174,3 +2174,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   icon packs were not exercised. Evidence:
   `EVI-VESNA-003/parity91-*color*`, `parity91-*palette*`.
   [Issue #155](https://github.com/vladon/vesnalauncher/issues/155).
+
+## OBS-VESNA-095 — Installed icon pack on Home, dock and drawer
+
+- Android 15 research AVD, `en-US`, Nova 9.0.1 Prime (90100)
+  and signed Vesna v0.4.63 (68). Captured both without a
+  pack, then installed official Arcticons Black 15.4.7 (1580),
+  `com.donnnno.arcticons.light`, without opening the pack app.
+  [Fixture](https://github.com/Arcticons-Team/Arcticons/releases/tag/15.4.7)
+  APK SHA-256 `3cf9c829848a531a5d69ab5449e16b6c4be6caa7cc4e11b1744cc12a79c8b512`.
+- Nova **Look & feel → Icon style → Icon theme** listed just
+  **System** before installation, then also **Arcticons Black**.
+  Selecting the pack replaced Gmail on Home, Chrome in the dock
+  and Calendar in the unfiltered alphabetical list with outline
+  artwork; Home and dock placements did not move. The pack was
+  still selected after process restart and the two Home/dock
+  icon centers matched their themed crops exactly. Selecting
+  **System** restored those centers exactly while the pack
+  was still installed.
+- Vesna listed Arcticons Black as an ordinary app. The tested
+  Home, dock, and drawer icons kept their system artwork.
+  Appearance had no pack control and Settings search for
+  `icon pack` said **No settings found**. Missing-match
+  fallback and other icon pack formats were not tested.
+- Rolled back the temporary install, verified the original
+  Nova theme, grid, both Home/dock layouts and absence of
+  the pack. Evidence: `EVI-VESNA-003/parity92-*`,
+  `arcticons-15.4.7/`.
+  [Issue #157](https://github.com/vladon/vesnalauncher/issues/157).

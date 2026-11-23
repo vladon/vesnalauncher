@@ -125,7 +125,7 @@ behavior, an ID is never reassigned to a different behavior.
 | APPPEAR-001 | Themes (light/dark/system) | pending |
 | APPPEAR-002 | Icon size | Nova changes actual desktop/drawer sizes together or independently; no equivalent size controls found in signed Vesna v0.4.59 (OBS-VESNA-080; #146). |
 | APPPEAR-003 | Icon shape / adaptive icon handling | Nova changes adaptive masks on Home, dock and the unfiltered app list. The tested Vesna v0.4.59 settings offer no equivalent selector (OBS-VESNA-079; #144). |
-| APPPEAR-004 | Icon packs | pending |
+| APPPEAR-004 | Icon packs | Nova applies installed Arcticons Black to Home, dock and drawer and retains the choice after process restart. No pack selector found in signed Vesna v0.4.63 with the same pack installed (OBS-VESNA-095; #157). |
 | APPPEAR-005 | Label font size / color / shadow | Typography not tested. Nova hides Home labels without hiding drawer names; signed Vesna v0.4.63 now also does so, preserving visible folder labels (OBS-VESNA-088/093; #152). |
 | APPPEAR-006 | Accent colors / dynamic colors | Nova's Custom palette recolors its Settings independently of theme mode; no palette selector found in signed Vesna v0.4.63 (OBS-VESNA-094; #155). Wallpaper-derived colors untested. |
 | APPPEAR-007 | Transparency of backgrounds (drawer/dock/search) | pending |
