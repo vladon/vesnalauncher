@@ -3144,11 +3144,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   overview appeared in seven trials, horizontal
   and diagonal, lasting 0.22 to 0.34 s, with one
   page and with two. A two-finger tap did
-  nothing.
+  nothing. The long-press timeout on this AVD is
+  400 ms, so the fastest trial ran under it.
 - **Vesna:** a swipe down, a double tap, a
   two-finger swipe up and both pinch directions
   did nothing. Settings search for `gesture` and
   `swipe` returned **No settings found**.
+- **Re-checked on signed v0.4.73 (78)** with
+  three pages, a marker on the middle one: the
+  pinch-in and a 600 px two-finger swipe stayed
+  on the middle page, while the same 600 px
+  swipe with one finger reached the next page.
+  Two-finger input is ignored rather than
+  treated as a one-finger swipe. **Go to
+  page…**, the Home options entries and **Move
+  to position 3** behaved as above on the new
+  build.
 - **Nova, edit mode:** the house button at the
   top of each page is outlined on ordinary pages
   and filled on the Home page. After a tap on
@@ -3214,7 +3225,9 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 | After force-stop and relaunch | 139 px | 101 px |
 
 - Home cells kept their 239 × 339 px bounds and
-  the dock its 126 px artwork in every state. The
+  the dock its 126 px artwork in every state; the
+  whole dock band is pixel-identical between the
+  100 %, 110 % and 130 % frames. The
   label sits lower under a larger artwork. The
   drawer tile height follows the artwork above
   100%; the release note does not mention this.
