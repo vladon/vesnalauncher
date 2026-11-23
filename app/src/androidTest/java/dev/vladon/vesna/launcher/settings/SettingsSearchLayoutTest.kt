@@ -72,6 +72,8 @@ class SettingsSearchLayoutTest {
                                 onPinNewAppsChanged = {},
                                 hideHomeAppNames = false,
                                 onHideHomeAppNamesChanged = {},
+                                homeIconPercent = 100,
+                                onHomeIconPercentChanged = {},
                                 drawerLayoutMode = DrawerLayoutMode.GRID,
                                 onDrawerLayoutModeSelected = {},
                                 closeDrawerOnLaunch = false,
@@ -80,6 +82,10 @@ class SettingsSearchLayoutTest {
                                 onRememberDrawerPositionChanged = {},
                                 showKeyboardOnDrawerOpen = false,
                                 onShowKeyboardOnDrawerOpenChanged = {},
+                                drawerIconPercent = 100,
+                                onDrawerIconPercentChanged = {},
+                                drawerFollowsHome = true,
+                                onDrawerFollowsHomeChanged = {},
                                 drawerApps = emptyList(),
                                 hiddenDrawerApps = emptySet(),
                                 onDrawerAppHiddenChanged = { _, _ -> },
@@ -246,6 +252,41 @@ class SettingsSearchLayoutTest {
             assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
             assertTrue("The result should open the app drawer page and highlight its switch", until {
                 find { it.text?.toString() == detail } != null && find { it.text?.toString() == highlight } != null
+            })
+        }
+    }
+
+    @Test
+    fun iconSizeSettingsAreFoundFromSearchAndOpenTheHomeScreenSlider() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        lateinit var homeSize: String
+        lateinit var drawerSize: String
+        lateinit var matchHome: String
+        lateinit var homePage: String
+        var query = "icon size"
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                homeSize = activity.getString(R.string.settings_home_icon_size)
+                drawerSize = activity.getString(R.string.settings_drawer_icon_size)
+                matchHome = activity.getString(R.string.settings_drawer_follow_home)
+                homePage = activity.getString(R.string.settings_home_screen)
+                if (activity.resources.configuration.locales[0].language == "ru") query = "значк"
+            }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun editor() = find { it.isEditable }
+            fun result(title: String) = find { !it.isEditable && it.text?.toString() == title }
+
+            assertTrue(until { editor() != null })
+            assertTrue(editor()!!.setQuery(query))
+            assertTrue("Settings should offer all three icon size settings for \"$query\"", until {
+                result(homeSize) != null && result(drawerSize) != null && result(matchHome) != null
+            })
+            val card = generateSequence(result(homeSize)) { it.parent }.first { it.isClickable }
+            assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("The Home size should open the Home screen page at its slider", until {
+                find { it.text?.toString() == homePage } != null && find { it.rangeInfo != null } != null
             })
         }
     }
@@ -442,6 +483,8 @@ class SettingsSearchLayoutTest {
                                         onPinNewAppsChanged = {},
                                         hideHomeAppNames = false,
                                         onHideHomeAppNamesChanged = {},
+                                        homeIconPercent = 100,
+                                        onHomeIconPercentChanged = {},
                                         drawerLayoutMode = DrawerLayoutMode.GRID,
                                         onDrawerLayoutModeSelected = {},
                                         closeDrawerOnLaunch = false,
@@ -450,6 +493,10 @@ class SettingsSearchLayoutTest {
                                         onRememberDrawerPositionChanged = {},
                                         showKeyboardOnDrawerOpen = false,
                                         onShowKeyboardOnDrawerOpenChanged = {},
+                                        drawerIconPercent = 100,
+                                        onDrawerIconPercentChanged = {},
+                                        drawerFollowsHome = true,
+                                        onDrawerFollowsHomeChanged = {},
                                         drawerApps = emptyList(),
                                         hiddenDrawerApps = emptySet(),
                                         onDrawerAppHiddenChanged = { _, _ -> },
@@ -547,6 +594,8 @@ class SettingsSearchLayoutTest {
                             onPinNewAppsChanged = {},
                             hideHomeAppNames = false,
                             onHideHomeAppNamesChanged = {},
+                            homeIconPercent = 100,
+                            onHomeIconPercentChanged = {},
                             drawerLayoutMode = DrawerLayoutMode.GRID,
                             onDrawerLayoutModeSelected = {},
                             closeDrawerOnLaunch = false,
@@ -555,6 +604,10 @@ class SettingsSearchLayoutTest {
                             onRememberDrawerPositionChanged = {},
                             showKeyboardOnDrawerOpen = false,
                             onShowKeyboardOnDrawerOpenChanged = {},
+                            drawerIconPercent = 100,
+                            onDrawerIconPercentChanged = {},
+                            drawerFollowsHome = true,
+                            onDrawerFollowsHomeChanged = {},
                             drawerApps = emptyList(),
                             hiddenDrawerApps = emptySet(),
                             onDrawerAppHiddenChanged = { _, _ -> },

@@ -45,6 +45,10 @@ The Android package name is `dev.vladon.vesna.launcher`.
   app. This does not remember filtered searches.
   Enable **Show keyboard on open** to focus search and open the keyboard
   each time the drawer opens. It is off by default.
+- **Icon sizes.** Choose the artwork size for Home and for the app drawer
+  separately in Vesna settings. The drawer matches Home by default; turn
+  **Match Home icon size** off to pick its own size. Only the artwork changes:
+  cells, labels and shortcuts stay where they are.
 - **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
   pins between the workspace and dock. Drop an app on another in the workspace
   to create a folder. In the open folder, hold and drag a shortcut onto another

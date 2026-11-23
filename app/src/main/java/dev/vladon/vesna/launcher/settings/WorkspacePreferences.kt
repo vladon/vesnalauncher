@@ -19,6 +19,11 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean(HIDE_HOME_APP_NAMES, false)
         set(value) = prefs.edit { putBoolean(HIDE_HOME_APP_NAMES, value) }
 
+    /** Home icon artwork as a percentage of the default; cells and labels are not scaled. */
+    var iconScalePercent: Int
+        get() = IconScale.coerce(prefs.getInt(ICON_SCALE_PERCENT, IconScale.DEFAULT))
+        set(value) = prefs.edit { putInt(ICON_SCALE_PERCENT, value) }
+
     fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         prefs.registerOnSharedPreferenceChangeListener(listener)
     }
@@ -31,5 +36,6 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         const val LAYOUT_LOCKED = "workspace_layout_locked"
         private const val PIN_NEW_APPS = "workspace_pin_new_apps"
         private const val HIDE_HOME_APP_NAMES = "workspace_hide_app_names"
+        private const val ICON_SCALE_PERCENT = "workspace_icon_scale_percent"
     }
 }

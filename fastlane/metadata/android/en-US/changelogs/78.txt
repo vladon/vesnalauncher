@@ -1,0 +1,1 @@
+Choose the icon size for Home and for the app drawer separately in Vesna settings. The drawer matches Home until you turn Match Home icon size off. Only the artwork changes; cells, labels and shortcuts stay where they are.

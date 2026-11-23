@@ -44,10 +44,13 @@ class SettingsActivity : ComponentActivity() {
     private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
     private var hideHomeAppNames by mutableStateOf(false)
+    private var homeIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
     private var closeDrawerOnLaunch by mutableStateOf(false)
     private var rememberDrawerPosition by mutableStateOf(false)
     private var showKeyboardOnDrawerOpen by mutableStateOf(false)
+    private var drawerIconPercent by mutableStateOf(IconScale.DEFAULT)
+    private var drawerFollowsHome by mutableStateOf(true)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
     private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
@@ -117,6 +120,11 @@ class SettingsActivity : ComponentActivity() {
                             workspace.hideHomeAppNames = hidden
                             hideHomeAppNames = hidden
                         },
+                        homeIconPercent = homeIconPercent,
+                        onHomeIconPercentChanged = { percent ->
+                            workspace.iconScalePercent = percent
+                            homeIconPercent = percent
+                        },
                         drawerLayoutMode = drawerLayoutMode,
                         onDrawerLayoutModeSelected = ::changeDrawerLayoutMode,
                         closeDrawerOnLaunch = closeDrawerOnLaunch,
@@ -133,6 +141,16 @@ class SettingsActivity : ComponentActivity() {
                         onShowKeyboardOnDrawerOpenChanged = { enabled ->
                             drawerPreferences.keyboardOnOpen = enabled
                             showKeyboardOnDrawerOpen = enabled
+                        },
+                        drawerIconPercent = drawerIconPercent,
+                        onDrawerIconPercentChanged = { percent ->
+                            drawerPreferences.iconScalePercent = percent
+                            drawerIconPercent = percent
+                        },
+                        drawerFollowsHome = drawerFollowsHome,
+                        onDrawerFollowsHomeChanged = { follow ->
+                            drawerPreferences.followsHomeIconScale = follow
+                            drawerFollowsHome = follow
                         },
                         drawerApps = drawerApps,
                         hiddenDrawerApps = hiddenDrawerApps,
@@ -177,6 +195,9 @@ class SettingsActivity : ComponentActivity() {
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         rememberDrawerPosition = drawerPreferences.rememberPosition
         showKeyboardOnDrawerOpen = drawerPreferences.keyboardOnOpen
+        homeIconPercent = workspace.iconScalePercent
+        drawerIconPercent = drawerPreferences.iconScalePercent
+        drawerFollowsHome = drawerPreferences.followsHomeIconScale
         hiddenDrawerApps = drawerPreferences.hiddenApps
     }
 

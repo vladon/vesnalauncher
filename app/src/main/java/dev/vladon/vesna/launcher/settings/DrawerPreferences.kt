@@ -37,6 +37,16 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(KEYBOARD_ON_OPEN, false)
         set(value) = prefs.edit { putBoolean(KEYBOARD_ON_OPEN, value) }
 
+    /** The drawer's own artwork size, kept for when it stops following Home. */
+    var iconScalePercent: Int
+        get() = IconScale.coerce(prefs.getInt(ICON_SCALE_PERCENT, IconScale.DEFAULT))
+        set(value) = prefs.edit { putInt(ICON_SCALE_PERCENT, value) }
+
+    /** On by default, which keeps the drawer looking as it did before the setting existed. */
+    var followsHomeIconScale: Boolean
+        get() = prefs.getBoolean(FOLLOWS_HOME_ICON_SCALE, true)
+        set(value) = prefs.edit { putBoolean(FOLLOWS_HOME_ICON_SCALE, value) }
+
     var hiddenApps: Set<AppKey>
         get() = prefs.getStringSet(HIDDEN_APPS, null)?.mapNotNullTo(HashSet(), ::parseDrawerKey).orEmpty()
         set(value) = prefs.edit {
@@ -47,6 +57,8 @@ internal class DrawerPreferences(context: Context) {
         private const val CLOSE_ON_LAUNCH = "drawer_close_on_launch"
         private const val HIDDEN_APPS = "drawer_hidden_apps"
         private const val KEYBOARD_ON_OPEN = "drawer_keyboard_on_open"
+        private const val FOLLOWS_HOME_ICON_SCALE = "drawer_icon_follows_home_icon_scale"
+        private const val ICON_SCALE_PERCENT = "drawer_icon_scale_percent"
         private const val LAYOUT_MODE = "drawer_layout_mode"
         private const val REMEMBER_POSITION = "drawer_remember_position"
     }

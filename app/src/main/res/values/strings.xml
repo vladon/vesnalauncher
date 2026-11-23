@@ -16,6 +16,9 @@
     <string name="settings_pin_new_apps_detail">When Vesna is running, add a shortcut for a newly installed app if the current page has space and the layout is unlocked.</string>
     <string name="settings_hide_home_app_names">Hide app names on Home</string>
     <string name="settings_hide_home_app_names_detail">Also hides dock labels. The app drawer is unchanged.</string>
+    <string name="settings_home_icon_size">Home icon size</string>
+    <string name="settings_home_icon_size_detail">App and folder artwork on Home. Cells, labels and shortcuts stay where they are.</string>
+    <string name="settings_icon_size_value">%1$d%%</string>
     <string name="settings_workspace_grid">Workspace grid</string>
     <string name="settings_workspace_grid_detail">Columns and rows on home pages</string>
     <string name="settings_workspace_grid_summary_fmt">%1$s × %2$s</string>
@@ -47,6 +50,10 @@
     <string name="settings_drawer_remember_position_detail">After pressing Home, reopen the vertical app list where you left it.</string>
     <string name="settings_drawer_show_keyboard">Show keyboard on open</string>
     <string name="settings_drawer_show_keyboard_detail">Focus search and open the keyboard each time the app drawer opens.</string>
+    <string name="settings_drawer_follow_home">Match Home icon size</string>
+    <string name="settings_drawer_follow_home_detail">The drawer uses the Home icon size. Turn off to choose its own size.</string>
+    <string name="settings_drawer_icon_size">Drawer icon size</string>
+    <string name="settings_drawer_icon_size_detail">App artwork in the drawer, kept for when it stops matching Home.</string>
     <string name="settings_hide_drawer_apps">Hide apps</string>
     <string name="settings_hide_drawer_apps_detail">Home and dock shortcuts stay. Search by full name to find a hidden app.</string>
     <string name="settings_drawer_app_hidden">Hidden from browsing</string>

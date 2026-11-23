@@ -50,6 +50,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -129,6 +130,8 @@ internal fun SettingsScreen(
     onPinNewAppsChanged: (Boolean) -> Unit,
     hideHomeAppNames: Boolean,
     onHideHomeAppNamesChanged: (Boolean) -> Unit,
+    homeIconPercent: Int,
+    onHomeIconPercentChanged: (Int) -> Unit,
     drawerLayoutMode: DrawerLayoutMode,
     onDrawerLayoutModeSelected: (DrawerLayoutMode) -> Unit,
     closeDrawerOnLaunch: Boolean,
@@ -137,6 +140,10 @@ internal fun SettingsScreen(
     onRememberDrawerPositionChanged: (Boolean) -> Unit,
     showKeyboardOnDrawerOpen: Boolean,
     onShowKeyboardOnDrawerOpenChanged: (Boolean) -> Unit,
+    drawerIconPercent: Int,
+    onDrawerIconPercentChanged: (Int) -> Unit,
+    drawerFollowsHome: Boolean,
+    onDrawerFollowsHomeChanged: (Boolean) -> Unit,
     drawerApps: List<LauncherApp>,
     hiddenDrawerApps: Set<AppKey>,
     onDrawerAppHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -264,18 +271,29 @@ internal fun SettingsScreen(
                                         hideHomeAppNames, onHideHomeAppNamesChanged,
                                     )
                                 }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_home_icon_size) {
+                                    SettingsSlider(
+                                        R.string.settings_home_icon_size, R.string.settings_home_icon_size_detail,
+                                        homeIconPercent, onHomeIconPercentChanged,
+                                    )
+                                }
                             }
                             SettingsPage.APP_DRAWER -> DrawerAppSettings(
                                 drawerLayoutMode, onDrawerLayoutModeSelected,
                                 closeDrawerOnLaunch, onCloseDrawerOnLaunchChanged,
                                 rememberDrawerPosition, onRememberDrawerPositionChanged,
                                 showKeyboardOnDrawerOpen, onShowKeyboardOnDrawerOpenChanged,
+                                drawerIconPercent, onDrawerIconPercentChanged,
+                                drawerFollowsHome, onDrawerFollowsHomeChanged,
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
                                 searchTarget == R.string.settings_hide_drawer_apps,
                                 searchTarget == R.string.settings_drawer_layout,
                                 searchTarget == R.string.settings_drawer_close_on_launch,
                                 searchTarget == R.string.settings_drawer_remember_position,
                                 searchTarget == R.string.settings_drawer_show_keyboard,
+                                searchTarget == R.string.settings_drawer_follow_home,
+                                searchTarget == R.string.settings_drawer_icon_size,
                             )
                             SettingsPage.APPEARANCE -> {
                                 SearchTarget(searchTarget == R.string.settings_theme) { ThemeSettings(themeMode, onThemeSelected) }
@@ -394,10 +412,13 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_icon_size, R.string.settings_home_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_close_on_launch, R.string.settings_drawer_close_on_launch_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_remember_position, R.string.settings_drawer_remember_position_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_show_keyboard, R.string.settings_drawer_show_keyboard_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_follow_home, R.string.settings_drawer_follow_home_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_icon_size, R.string.settings_drawer_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
@@ -535,6 +556,43 @@ private fun SettingsSwitch(
     )
 }
 
+/** A discrete size choice over the offered percentage steps; the artwork alone changes. */
+@Composable
+private fun SettingsSlider(
+    @StringRes title: Int,
+    @StringRes summary: Int,
+    percent: Int,
+    onValueChange: (Int) -> Unit,
+    enabled: Boolean = true,
+) {
+    val value = stringResource(R.string.settings_icon_size_value, percent)
+    val description = stringResource(title)
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            stringResource(title),
+            Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(summary),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(value, style = MaterialTheme.typography.titleSmall)
+        Slider(
+            value = percent.toFloat(),
+            onValueChange = { onValueChange(IconScale.coerce(it.toInt())) },
+            valueRange = IconScale.steps.first().toFloat()..IconScale.steps.last().toFloat(),
+            steps = IconScale.steps.size - 2,
+            enabled = enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = description; stateDescription = value },
+        )
+    }
+}
+
 @Composable
 private fun DrawerAppSettings(
     layoutMode: DrawerLayoutMode,
@@ -545,6 +603,10 @@ private fun DrawerAppSettings(
     onRememberPositionChanged: (Boolean) -> Unit,
     showKeyboard: Boolean,
     onShowKeyboardChanged: (Boolean) -> Unit,
+    iconPercent: Int,
+    onIconPercentChanged: (Int) -> Unit,
+    followHome: Boolean,
+    onFollowHomeChanged: (Boolean) -> Unit,
     apps: List<LauncherApp>,
     hiddenApps: Set<AppKey>,
     onHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -553,10 +615,14 @@ private fun DrawerAppSettings(
     closeOnLaunchHighlighted: Boolean,
     rememberPositionHighlighted: Boolean,
     showKeyboardHighlighted: Boolean,
+    followHomeHighlighted: Boolean,
+    iconSizeHighlighted: Boolean,
 ) {
     // A search target may not be composed yet in a short, scaled viewport.
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = when {
-        hideHighlighted -> 4
+        hideHighlighted -> 6
+        iconSizeHighlighted -> 5
+        followHomeHighlighted -> 4
         showKeyboardHighlighted -> 3
         rememberPositionHighlighted -> 2
         closeOnLaunchHighlighted -> 1
@@ -589,6 +655,22 @@ private fun DrawerAppSettings(
                 SettingsSwitch(
                     R.string.settings_drawer_show_keyboard, R.string.settings_drawer_show_keyboard_detail,
                     showKeyboard, onShowKeyboardChanged,
+                )
+            }
+        }
+        item(key = "follow-home") {
+            SearchTarget(followHomeHighlighted) {
+                SettingsSwitch(
+                    R.string.settings_drawer_follow_home, R.string.settings_drawer_follow_home_detail,
+                    followHome, onFollowHomeChanged,
+                )
+            }
+        }
+        item(key = "icon-size") {
+            SearchTarget(iconSizeHighlighted) {
+                SettingsSlider(
+                    R.string.settings_drawer_icon_size, R.string.settings_drawer_icon_size_detail,
+                    iconPercent, onIconPercentChanged, enabled = !followHome,
                 )
             }
         }

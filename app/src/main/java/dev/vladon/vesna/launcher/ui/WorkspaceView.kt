@@ -93,6 +93,14 @@ class WorkspaceView @JvmOverloads constructor(
             }
         }
 
+    /** Scales only the artwork of every tile; cells, labels and touch targets keep their size. */
+    internal var iconScale = 1f
+        set(value) {
+            if (field == value) return
+            field = value
+            for (index in 0 until childCount) (getChildAt(index) as AppIconView).artworkScale = value
+        }
+
     private var lastCellW = 0
     private var lastCellH = 0
 
@@ -441,6 +449,7 @@ class WorkspaceView @JvmOverloads constructor(
                 // space for the icon and a complete line of scaled label text.
                 it.setPadding(it.paddingLeft, 0, it.paddingRight, 0)
                 it.tag = cell
+                it.artworkScale = iconScale
                 addView(it)
             }
             when (content) {
