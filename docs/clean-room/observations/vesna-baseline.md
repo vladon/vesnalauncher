@@ -1322,3 +1322,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored both layouts. Evidence: `EVI-VESNA-003/parity58-*`.
   Workspace drag-out gap tracked in #130; paging and reordering
   inside an open folder were not tested here.
+
+## OBS-VESNA-058 — Reordering members inside a workspace folder
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). Both started with the same visual reading
+  order: Files, Gmail, Photos. Held Photos and dragged it over
+  Files, releasing inside the same open folder.
+- Nova inserted Photos first, shifting Files and Gmail in order.
+  The new order survived closing the folder, reopening it, and
+  cold-starting the launcher.
+- Vesna opened the Photos member menu. Dismissing it, reopening
+  the folder, and cold-starting all left the original order and
+  all three members intact.
+- Restored both initial layouts. Evidence:
+  `EVI-VESNA-003/parity58-cycle59-*`. Internal ordering is
+  tracked in #131, separate from drag-out (#130). Multi-page
+  behavior was not exercised.
