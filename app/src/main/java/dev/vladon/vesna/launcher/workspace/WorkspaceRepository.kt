@@ -373,16 +373,39 @@ class WorkspaceRepository(
             if (workspacePreferences.layoutLocked || !grid.isValidCell(destinationCell) ||
                 !dao.hasRegularWorkspacePin(pinId, sourcePageId, sourceCell)
             ) return@withTransaction null
-            val pages = db.workspacePageDao().getAll()
-            val last = pages.lastOrNull() ?: return@withTransaction null
-            if (pages.size >= MAX_WORKSPACE_PAGES || last.id != afterPageId || readGrid() != grid ||
-                workspacePreferences.layoutLocked
-            ) return@withTransaction null
-
-            val destinationPageId = insertPageAfter(last)
+            val destinationPageId = insertPageForPreview(afterPageId, grid) ?: return@withTransaction null
             dao.updateWorkspacePosition(pinId, destinationCell, destinationPageId)
             destinationPageId
         }
+    }
+
+    /** Appends and promotes the exact member, resolving its source folder in the same commit. */
+    internal suspend fun appendPageWithFolderMember(
+        pinId: Long,
+        folderId: Long,
+        sourcePageId: Long,
+        afterPageId: Long,
+        destinationCell: Int,
+        grid: GridCanvas,
+    ): Long? = mutationMutex.withLock {
+        db.withTransaction {
+            if (workspacePreferences.layoutLocked || !grid.isValidCell(destinationCell) ||
+                !dao.hasFolderMember(pinId, folderId) || folderDao.getById(folderId)?.pageId != sourcePageId
+            ) return@withTransaction null
+            val destinationPageId = insertPageForPreview(afterPageId, grid) ?: return@withTransaction null
+            promoteMemberToWorkspace(pinId, destinationCell, destinationPageId, folderId)
+            destinationPageId
+        }
+    }
+
+    /** Under the mutation lock and transaction, materialize only the still-current trailing preview. */
+    private suspend fun insertPageForPreview(afterPageId: Long, grid: GridCanvas): Long? {
+        val pages = db.workspacePageDao().getAll()
+        val last = pages.lastOrNull() ?: return null
+        if (pages.size >= MAX_WORKSPACE_PAGES || last.id != afterPageId || readGrid() != grid ||
+            workspacePreferences.layoutLocked
+        ) return null
+        return insertPageAfter(last)
     }
 
     /** Reads eligible destinations only if the selected folder is still in its source cell. */
@@ -874,7 +897,7 @@ class WorkspaceRepository(
         val pageId = folder.pageId ?: return@withLock FolderRemovalResult.UNAVAILABLE
         val occupied = occupiedCells(items, folderDao.getAll(), pageId)
         val cell = readGrid().firstFreeCell(occupied) ?: return@withLock FolderRemovalResult.NO_ROOM
-        promoteMemberToWorkspace(pinId, cell, pageId, folderId)
+        db.withTransaction { promoteMemberToWorkspace(pinId, cell, pageId, folderId) }
         FolderRemovalResult.REMOVED
     }
 
@@ -967,7 +990,7 @@ class WorkspaceRepository(
         }
         // Settings can change while the reads above are suspended.
         if (workspacePreferences.layoutLocked) return@withLock false
-        promoteMemberToWorkspace(pinId, cell, destinationPageId, folderId)
+        db.withTransaction { promoteMemberToWorkspace(pinId, cell, destinationPageId, folderId) }
         true
     }
 
@@ -975,15 +998,13 @@ class WorkspaceRepository(
      * The shared write behind "remove from folder" and an exact member drop:
      * moves [pinId] to the top-level workspace [cell] on the placement page
      * [pageId] — the destination page for a cross-page drop — and resolves the
-     * folder in one Room transaction, so a folder left with fewer than two
-     * members dissolves with its remaining member returning to the folder cell
-     * on the folder's own page.
+     * folder inside the caller's Room transaction: a folder left with fewer than
+     * two members dissolves with its remaining member returning to the folder
+     * cell on the folder's own page.
      */
     private suspend fun promoteMemberToWorkspace(pinId: Long, cell: Int, pageId: Long, folderId: Long) {
-        db.withTransaction {
-            dao.updatePlacement(pinId, Container.WORKSPACE.name, cell, pageId)
-            dissolveIfSparse(folderId)
-        }
+        dao.updatePlacement(pinId, Container.WORKSPACE.name, cell, pageId)
+        dissolveIfSparse(folderId)
     }
 
     /** Renames a folder. Returns false when the folder does not exist. */

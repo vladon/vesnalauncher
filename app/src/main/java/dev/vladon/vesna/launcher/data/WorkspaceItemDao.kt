@@ -16,6 +16,9 @@ interface WorkspaceItemDao {
     )
     suspend fun hasRegularWorkspacePin(id: Long, pageId: Long, cell: Int): Boolean
 
+    @Query("SELECT EXISTS(SELECT 1 FROM workspace_items WHERE id = :id AND folderId = :folderId)")
+    suspend fun hasFolderMember(id: Long, folderId: Long): Boolean
+
     @Query("SELECT * FROM workspace_items WHERE folderId = :folderId LIMIT 2")
     suspend fun firstTwoFolderMembers(folderId: Long): List<WorkspaceItemEntity>
 

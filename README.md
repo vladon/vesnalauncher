@@ -50,9 +50,9 @@ The Android package name is `dev.vladon.vesna.launcher`.
   page. If only one shortcut remains, it takes the folder's place. While
   dragging a Home or folder shortcut, pause at the edge to show an existing
   neighboring page, then drop on an empty cell.
-  While dragging an ordinary Home app shortcut, pause at the outer edge of
-  the last page to preview a new one. Drop in a cell to keep the new page;
-  canceling leaves the layout as it was.
+  While dragging an ordinary Home app shortcut or a shortcut out of a folder,
+  pause at the outer edge of the last page to preview a new one. Drop in an
+  empty cell to keep the new page; canceling leaves the layout as it was.
 - **Add several apps to a folder.** Hold a closed Home folder, choose
   **Add apps**, check the apps you want, then tap **Add** once. Cancel or Back
   discards the selection. Unlock the Home layout to make changes.
