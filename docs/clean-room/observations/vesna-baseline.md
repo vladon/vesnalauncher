@@ -1356,3 +1356,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Both original layouts restored. Evidence:
   `EVI-VESNA-003/parity60-*`. One-action unpin tracked in
   #132; packed-grid removal was not tested.
+
+## OBS-VESNA-060 — Folder overflow and scroll direction
+
+- Android 15 research AVD, Nova 9.0.1 Prime (90100) and signed
+  Vesna v0.4.54 (59). Matched folders contained the same twelve
+  apps. Tested at 520×890 pixels, 420 dpi (about 198×339 dp)
+  and 200% text.
+- Nova's Horizontal direction showed three pages of four
+  members. A vertical swipe did not change pages; a further
+  horizontal swipe on the last page stayed there, and reversing
+  direction returned to page two. Selecting Vertical in Nova's
+  Folders settings changed the active swipe axis while retaining
+  the same three groups.
+- Vesna showed all twelve by vertical scrolling. Horizontal
+  swipe did not advance the list. The last row was fully visible
+  at the settled bottom, and Rename folder and Remove folder
+  remained in place across scrolling. Settings search for
+  `folder` exposed layout lock and app-name visibility, not
+  a folder direction preference.
+- Restored both layouts, display and text size, and Nova's
+  original Horizontal setting. Evidence: `EVI-VESNA-003/parity61-*`.
+  Optional direction parity: #133. Compact vertical overflow
+  worked on this release, consistent with PRs #55 and #71.
