@@ -3284,3 +3284,45 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored through the baseline snapshot.
   Evidence: `EVI-VESNA-003/parity128-*`.
   [Issue #186](https://github.com/vladon/vesnalauncher/issues/186).
+
+## OBS-VESNA-128 — Signed v0.4.74 icon shape setting
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.74 (79), tag at PR #185
+  merge `10eecf41c423e27e56d9e639645be79af71ec143`,
+  APK SHA-256
+  `0e5fe328093214733a477c30126d7f3d3ca5265fe118591cb13811f0644f3c32`,
+  with the same verified v2 signer as v0.4.73.
+  Installed in place over the restored original
+  state; both original layouts survived the
+  upgrade. Nova 9.0.1 Prime (90100) was not
+  re-run: its icon-shape handling is in 079 and
+  the version is unchanged.
+- **Settings:** Vesna settings → Appearance →
+  **Icon shape** ("Mask for adaptive app icons on
+  Home, in the dock, in the app drawer, and in
+  folders. Other icons and work badges stay as
+  they are."), with **System (default)** selected
+  by default and **Rounded square** as the other
+  choice. Settings search for `shape` finds it.
+- Verified crops of Gmail on Home, Calendar in
+  the dock and Calendar in the vertical drawer
+  grid: System shows the circular mask everywhere;
+  Rounded square changes all three to a rounded
+  square with the artwork content and the 126 px
+  bounding box unchanged. Home cells and the dock
+  kept their bounds. Folders were not checked.
+- After force-stop and relaunch the rounded square
+  was still applied (the Home and drawer crops
+  pixel-identical to the pre-restart rounded
+  frames). Back on System the three crops equal
+  the default frames again; the small crop
+  difference behind the icon is the wallpaper.
+- Nova's Look & feel offers many icon shapes;
+  Vesna implements the two approved choices.
+- Restored System (default). Saved
+  `baseline_research_0.4.74`, proved that it
+  loads, and deleted the 0.4.73 baseline.
+  Evidence: `EVI-VESNA-003/parity128-*`,
+  `release-0.4.74/`.
+  [Independent verification in #144](https://github.com/vladon/vesnalauncher/issues/144#issuecomment-7115689678).
