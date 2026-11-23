@@ -1024,3 +1024,30 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   returned no results. This is the signed pre-fix baseline, not
   a test of merged PR #128. Widget migration was not exercised.
 - Evidence: `EVI-VESNA-003/parity44-*`. Follow-up for #106.
+
+## OBS-VESNA-044 — Signed Vesna grid resize independently verified
+
+- On the owned Android 15 AVD, updated signed v0.4.52 (57) in
+  place to the official v0.4.53 APK (58). Verified the release
+  asset SHA-256 and the same signing certificate as v0.4.52.
+  The v0.4.53 tag resolves to PR #128's merge commit
+  `90e8cb3e7aff6fa91fe69f467de1356b0f7387f6`. All 17 existing
+  workspace shortcuts and the dock retained their positions.
+- Settings search for `grid` opened **Workspace grid**, showing
+  4 columns × 5 rows. Selecting 2×2 and pressing **Cancel** left
+  both the dimensions and the layout unchanged.
+- Merged Files and Gmail into a folder and moved it to the
+  bottom-right cell on the otherwise populated page. Applying
+  2×2 spread the 16 top-level items across four pages (four each),
+  with the folder on page four. Checked every page for missing or
+  duplicated items, the unchanged dock, and both folder members.
+  The layout and folder membership persisted after a cold start.
+- Returning to 4×5 left the same items on each of the four pages;
+  it did not reconstruct the previous one-page arrangement. Nova
+  restored original cells in its separate five-item 4×4 fixture
+  (OBS-VESNA-043); the fixture density and starting size differ.
+- Restored the original layout and kept v0.4.53 installed.
+  `EVI-VESNA-003/parity45-*`; independent device verification for
+  #106. The eight-page cap was not replayed. Widget migration was
+  not tested: the stock Nova widget drop reached Android's
+  widget-data consent, which was declined.
