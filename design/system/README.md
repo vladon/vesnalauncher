@@ -226,8 +226,8 @@ member, or a closed folder, dwell briefly at either workspace edge to reveal
 the next existing page. Mirror the edge mapping in RTL. Turn once per edge
 entry; moving into the workspace rearms it. Reuse the dragged state layer
 for empty cells. Only a valid drop saves the destination and exact cell.
-Moving a closed folder keeps its name and members together and never creates
-a page. Cancellation or an occupied target restores the source layout.
+Moving a closed folder keeps its name and member order. Cancellation or an
+occupied target restores the source layout.
 Keep the keyboard-accessible **Move to page…** menu available outside a drag.
 
 **Home shortcut actions.** In the anchored tile menu, list publisher action
@@ -269,12 +269,13 @@ while Vesna has no widget host.
   Workspace columns and dock slots run from the reading start edge, including in RTL.
   Drag hit testing and highlights follow the rendered columns. Changing layout direction
   mirrors the display without changing the saved cells or slot order.
-  When holding a regular Home app shortcut or dragging a shortcut out of a
-  folder, dwelling at the trailing edge of the last page previews a blank
-  page (right in LTR, left in RTL). Reuse the page indicator and empty-cell
-  highlight. Create the page only on a valid cell drop. Canceling or dropping
-  without a target preserves the layout and restores an open source folder.
-  Keep the existing Home page limit.
+  When holding a regular Home app shortcut, dragging a shortcut out of a
+  folder, or dragging a closed folder, dwelling at the trailing edge of the
+  last page previews a blank page (right in LTR, left in RTL). Reuse the page
+  indicator and empty-cell highlight. Create the page only on a valid cell
+  drop. Canceling or dropping without a target preserves the layout and
+  restores an open source folder. A dropped folder keeps its name and member
+  order. Keep the existing Home page limit.
   Removing the last regular app shortcut from a secondary Home page also
   removes that page when it has no other saved content. If it was selected,
   use the same return to the first page as **Remove empty page**. Keep the

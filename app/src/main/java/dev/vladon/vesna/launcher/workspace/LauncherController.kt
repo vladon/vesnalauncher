@@ -289,6 +289,17 @@ class LauncherController(
         workspaceRepository.appendPageWithFolderMember(pinId, folderId, sourcePageId, afterPageId, cell, grid)
     }
 
+    /** Materializes the trailing preview and moves the exact closed folder in one commit. */
+    internal suspend fun finishNewWorkspacePagePreviewWithFolder(
+        folderId: Long,
+        sourcePageId: Long,
+        sourceCell: Int,
+        cell: Int,
+        grid: GridCanvas,
+    ): Boolean = commitNewWorkspacePagePreview { afterPageId ->
+        workspaceRepository.appendPageWithFolder(folderId, sourcePageId, sourceCell, afterPageId, cell, grid)
+    }
+
     private suspend inline fun commitNewWorkspacePagePreview(append: (Long) -> Long?): Boolean =
         pageActionMutex.withLock {
             val preview = pageSelection.value.dragPreview as? DragPagePreview.Append ?: return@withLock false

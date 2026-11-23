@@ -119,7 +119,8 @@ class HomeActivity : ComponentActivity() {
         val dockPinId: Long = 0,
     )
 
-    private class EdgePageDrag(val homePin: DragSource? = null) {
+    /** [wholeFolder] marks a closed folder dragged as a unit, which may also append a page. */
+    private class EdgePageDrag(val homePin: DragSource? = null, val wholeFolder: Boolean = false) {
         var direction = 0
         var dwell: Job? = null
         var requestedPage: Long? = null
@@ -687,7 +688,8 @@ class HomeActivity : ComponentActivity() {
             if (current < 0) return
             state.pageIds.getOrNull(current + step) ?: if (
                 step > 0 && current == state.pageIds.lastIndex && state.pageIds.size < MAX_WORKSPACE_PAGES &&
-                (folderMemberDrag != null || drag.homePin?.app?.key?.let { it.shortcutId == null } == true)
+                (drag.wholeFolder || folderMemberDrag != null ||
+                    drag.homePin?.app?.key?.let { it.shortcutId == null } == true)
             ) NEW_WORKSPACE_PAGE_PREVIEW_ID else return
         }
         drag.dwell = lifecycleScope.launch {
@@ -766,7 +768,7 @@ class HomeActivity : ComponentActivity() {
 
     private fun updateWholeFolderDrag(x: Float, y: Float): Boolean {
         if (dragSource != null || edgePageDrag?.submitting == true) return false
-        val drag = edgePageDrag ?: EdgePageDrag().also {
+        val drag = edgePageDrag ?: EdgePageDrag(wholeFolder = true).also {
             edgePageDrag = it
             backCallback.isEnabled = true
         }
@@ -784,7 +786,15 @@ class HomeActivity : ComponentActivity() {
         val destination = drag.requestedPage
         val grid = renderedState.grid
         if (destination != null) {
-            submitEdgeDrop(drag, destination, move = { controller.moveFolderToCell(folder, destination, cell, grid) })
+            submitEdgeDrop(drag, destination, move = {
+                if (destination == NEW_WORKSPACE_PAGE_PREVIEW_ID) {
+                    controller.finishNewWorkspacePagePreviewWithFolder(
+                        folder.id, folder.pageId, folder.cellIndex, cell, grid,
+                    )
+                } else {
+                    controller.moveFolderToCell(folder, destination, cell, grid)
+                }
+            })
         } else {
             clearEdgeDrag()
             lifecycleScope.launch { controller.moveFolderToCell(folder, folder.pageId, cell, grid) }

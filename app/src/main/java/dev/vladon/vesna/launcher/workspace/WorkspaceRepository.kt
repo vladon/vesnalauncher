@@ -398,6 +398,26 @@ class WorkspaceRepository(
         }
     }
 
+    /** Appends a page and moves the exact closed folder in one commit; its member rows stay as they are. */
+    internal suspend fun appendPageWithFolder(
+        folderId: Long,
+        sourcePageId: Long,
+        sourceCell: Int,
+        afterPageId: Long,
+        destinationCell: Int,
+        grid: GridCanvas,
+    ): Long? = mutationMutex.withLock {
+        db.withTransaction {
+            val source = folderDao.getById(folderId)
+            if (workspacePreferences.layoutLocked || !grid.isValidCell(destinationCell) || source == null ||
+                source.pageId != sourcePageId || source.cellIndex != sourceCell
+            ) return@withTransaction null
+            val destinationPageId = insertPageForPreview(afterPageId, grid) ?: return@withTransaction null
+            folderDao.updateWorkspacePosition(folderId, destinationCell, destinationPageId)
+            destinationPageId
+        }
+    }
+
     /** Under the mutation lock and transaction, materialize only the still-current trailing preview. */
     private suspend fun insertPageForPreview(afterPageId: Long, grid: GridCanvas): Long? {
         val pages = db.workspacePageDao().getAll()
