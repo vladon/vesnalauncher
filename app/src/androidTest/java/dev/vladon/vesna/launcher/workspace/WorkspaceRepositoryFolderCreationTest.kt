@@ -1,15 +1,18 @@
 package dev.vladon.vesna.launcher.workspace
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.data.FolderEntity
 import dev.vladon.vesna.launcher.data.LauncherDatabase
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
 import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
+import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -37,6 +40,7 @@ class WorkspaceRepositoryFolderCreationTest {
 
     private lateinit var db: LauncherDatabase
     private lateinit var dao: WorkspaceItemDao
+    private lateinit var prefs: SharedPreferences
     private lateinit var repo: WorkspaceRepository
 
     @Before
@@ -45,7 +49,7 @@ class WorkspaceRepositoryFolderCreationTest {
         db = Room.inMemoryDatabaseBuilder(context, LauncherDatabase::class.java)
             .addCallback(LauncherDatabase.DEFAULT_PAGE_SEED_CALLBACK)
             .build()
-        val prefs = context.getSharedPreferences(
+        prefs = context.getSharedPreferences(
             "folder-creation-qa-${UUID.randomUUID()}",
             Context.MODE_PRIVATE,
         )
@@ -220,5 +224,139 @@ class WorkspaceRepositoryFolderCreationTest {
         assertEquals(workspacePin, rows.getValue(workspacePin.id))
         assertEquals(originalDock, rows.getValue(originalDock.id))
         assertEquals(folder.id, rows.getValue(dockPin.id).folderId)
+    }
+
+    /** Seeds a WORKSPACE folder member; [cellIndex] is its rank inside the folder. */
+    private suspend fun seedMember(pkg: String, folderId: Long, cellIndex: Int): Long =
+        dao.insert(
+            WorkspaceItemEntity(
+                packageName = pkg,
+                className = "$pkg.Activity",
+                container = "WORKSPACE",
+                cellIndex = cellIndex,
+                folderId = folderId,
+            ),
+        )
+
+    @Test
+    fun batchAppendPreservesExistingMemberRowsOrderAndTopLevelDuplicatePins() = runBlocking {
+        val folderId = db.folderDao().insert(FolderEntity(title = "Apps", cellIndex = 10, pageId = DEFAULT_WORKSPACE_PAGE_ID))
+        seedMember("com.example.contacts", folderId, cellIndex = 0)
+        seedMember("com.example.calendar", folderId, cellIndex = 1)
+        seedPin("com.example.contacts", cellIndex = 5)
+        val membersBefore = dao.getAll().filter { it.folderId == folderId }
+        val folderBefore = db.folderDao().getAll().single()
+
+        assertTrue(
+            repo.addAppsToFolder(
+                folderId,
+                DEFAULT_WORKSPACE_PAGE_ID,
+                cellIndex = 10,
+                apps = listOf(app("com.example.browser"), app("com.example.camera")),
+            ),
+        )
+
+        val membersAfter = dao.folderMembersInOrder(folderId)
+        assertEquals("prior members keep their exact rows, ids and order", membersBefore, membersAfter.take(2))
+        assertEquals(
+            "the batch appends in the provided order after the last rank",
+            listOf("com.example.browser" to 2, "com.example.camera" to 3),
+            membersAfter.drop(2).map { it.packageName to it.cellIndex },
+        )
+        assertEquals("the folder keeps its own placement", folderBefore, db.folderDao().getAll().single())
+        assertEquals(
+            "the pre-existing top-level duplicate pin survives untouched",
+            listOf(5),
+            dao.getAll().filter { it.packageName == "com.example.contacts" && it.folderId == null }.map { it.cellIndex },
+        )
+    }
+
+    @Test
+    fun mixedBatchWithDuplicateMemberIsRefusedWithoutAddingTheNewApps() = runBlocking {
+        val folderId = db.folderDao().insert(FolderEntity(title = "Apps", cellIndex = 10, pageId = DEFAULT_WORKSPACE_PAGE_ID))
+        seedMember("com.example.contacts", folderId, cellIndex = 0)
+        val rowsBefore = dao.getAll()
+        val foldersBefore = db.folderDao().getAll()
+
+        assertFalse(
+            "a batch holding a persisted member and a new app must be refused whole",
+            repo.addAppsToFolder(
+                folderId,
+                DEFAULT_WORKSPACE_PAGE_ID,
+                cellIndex = 10,
+                apps = listOf(app("com.example.browser"), app("com.example.contacts")),
+            ),
+        )
+
+        assertEquals("the refused mixed batch must not partially add the new app", rowsBefore, dao.getAll())
+        assertEquals(foldersBefore, db.folderDao().getAll())
+    }
+
+    @Test
+    fun batchNamingAStaleFolderPlacementIsRefused() = runBlocking {
+        val folderId = db.folderDao().insert(FolderEntity(title = "Apps", cellIndex = 10, pageId = DEFAULT_WORKSPACE_PAGE_ID))
+        seedMember("com.example.contacts", folderId, cellIndex = 0)
+        val batch = listOf(app("com.example.browser"))
+        val rowsBefore = dao.getAll()
+
+        assertFalse("a stale cell is rejected", repo.addAppsToFolder(folderId, DEFAULT_WORKSPACE_PAGE_ID, cellIndex = 11, apps = batch))
+        assertFalse(
+            "a stale page is rejected",
+            repo.addAppsToFolder(folderId, DEFAULT_WORKSPACE_PAGE_ID + 1, cellIndex = 10, apps = batch),
+        )
+        assertFalse(
+            "a stale folder id is rejected",
+            repo.addAppsToFolder(folderId + 100, DEFAULT_WORKSPACE_PAGE_ID, cellIndex = 10, apps = batch),
+        )
+        assertEquals("every refused batch keeps the layout exactly", rowsBefore, dao.getAll())
+    }
+
+    @Test
+    fun lockedLayoutRefusesTheWholeBatch() = runBlocking {
+        val folderId = db.folderDao().insert(FolderEntity(title = "Apps", cellIndex = 10, pageId = DEFAULT_WORKSPACE_PAGE_ID))
+        seedMember("com.example.contacts", folderId, cellIndex = 0)
+        val rowsBefore = dao.getAll()
+
+        WorkspacePreferences(prefs).layoutLocked = true
+        assertFalse(
+            "a locked layout rejects the batch",
+            repo.addAppsToFolder(
+                folderId,
+                DEFAULT_WORKSPACE_PAGE_ID,
+                cellIndex = 10,
+                apps = listOf(app("com.example.browser")),
+            ),
+        )
+        assertEquals("the lock changed nothing", rowsBefore, dao.getAll())
+    }
+
+    @Test
+    fun batchValidationRejectsEmptyDuplicateAndActionKeysWithoutMutating() = runBlocking {
+        val folderId = db.folderDao().insert(FolderEntity(title = "Apps", cellIndex = 10, pageId = DEFAULT_WORKSPACE_PAGE_ID))
+        seedMember("com.example.contacts", folderId, cellIndex = 0)
+        val rowsBefore = dao.getAll()
+
+        assertFalse("an empty batch is rejected", repo.addAppsToFolder(folderId, DEFAULT_WORKSPACE_PAGE_ID, cellIndex = 10, apps = emptyList()))
+        assertFalse(
+            "the same app twice in one batch is rejected",
+            repo.addAppsToFolder(
+                folderId,
+                DEFAULT_WORKSPACE_PAGE_ID,
+                cellIndex = 10,
+                apps = listOf(app("com.example.browser"), app("com.example.browser")),
+            ),
+        )
+        assertFalse(
+            "an action key is not an ordinary app pin",
+            repo.addAppsToFolder(
+                folderId,
+                DEFAULT_WORKSPACE_PAGE_ID,
+                cellIndex = 10,
+                apps = listOf(
+                    LauncherApp(AppKey("com.example.browser", "com.example.browser.Activity", shortcutId = "action"), "Browser"),
+                ),
+            ),
+        )
+        assertEquals("the rejected batches keep the layout exactly", rowsBefore, dao.getAll())
     }
 }

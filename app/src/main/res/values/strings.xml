@@ -116,6 +116,10 @@
     <string name="name_required">Enter a name.</string>
     <string name="rename_save">Save</string>
     <string name="rename_reset">Reset</string>
+    <string name="folder_add_apps">Add apps</string>
+    <string name="folder_add_apps_confirm">Add</string>
+    <string name="folder_add_apps_empty">All available apps are already in this folder.</string>
+    <string name="folder_add_apps_unavailable">No apps added. Reopen Add apps and try again.</string>
     <string name="folder_sort_alphabetically">Sort alphabetically</string>
     <string name="folder_remove_from_folder">Remove from folder</string>
     <string name="folder_removal_no_room">Not enough room on this page. Move or remove shortcuts to make room.</string>
