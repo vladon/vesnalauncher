@@ -32,6 +32,11 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(REMEMBER_POSITION, false)
         set(value) = prefs.edit { putBoolean(REMEMBER_POSITION, value) }
 
+    /** Off by default: only this option brings the keyboard up with the drawer. */
+    var keyboardOnOpen: Boolean
+        get() = prefs.getBoolean(KEYBOARD_ON_OPEN, false)
+        set(value) = prefs.edit { putBoolean(KEYBOARD_ON_OPEN, value) }
+
     var hiddenApps: Set<AppKey>
         get() = prefs.getStringSet(HIDDEN_APPS, null)?.mapNotNullTo(HashSet(), ::parseDrawerKey).orEmpty()
         set(value) = prefs.edit {
@@ -41,6 +46,7 @@ internal class DrawerPreferences(context: Context) {
     companion object {
         private const val CLOSE_ON_LAUNCH = "drawer_close_on_launch"
         private const val HIDDEN_APPS = "drawer_hidden_apps"
+        private const val KEYBOARD_ON_OPEN = "drawer_keyboard_on_open"
         private const val LAYOUT_MODE = "drawer_layout_mode"
         private const val REMEMBER_POSITION = "drawer_remember_position"
     }

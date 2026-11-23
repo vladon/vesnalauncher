@@ -29,6 +29,7 @@ import dev.vladon.vesna.launcher.settings.DrawerLayoutMode
 import dev.vladon.vesna.launcher.settings.SettingsActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -314,6 +315,23 @@ class DrawerSearchTest {
             assertEquals("Qu", search.text.toString())
         }
         assertVisibleLabels(listOf("Quokka"))
+    }
+
+    @Test
+    fun keyboardOnOpenMovesTheInitialFocusToSearch() {
+        // Off by default: Close owns the initial focus and no keyboard is requested.
+        onDrawer { host ->
+            assertTrue(host.findViewById<View>(R.id.drawer_close).hasFocus())
+            host.close()
+            host.keyboardOnOpen = true
+            host.open()
+            assertTrue(host.findViewById<EditText>(R.id.drawer_search).hasFocus())
+            assertFalse(host.findViewById<View>(R.id.drawer_close).hasFocus())
+            // A drawer restored after recreation is already open and must not raise the keyboard.
+            host.close()
+            host.open(showKeyboard = false)
+            assertTrue(host.findViewById<View>(R.id.drawer_close).hasFocus())
+        }
     }
 
     @Test

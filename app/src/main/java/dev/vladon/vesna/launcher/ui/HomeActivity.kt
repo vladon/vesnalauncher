@@ -356,9 +356,10 @@ class HomeActivity : ComponentActivity() {
         applyWorkspaceLock()
         hiddenDrawerApps = drawerPreferences.hiddenApps
         drawer.layoutMode = drawerPreferences.layoutMode
+        drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
 
         // Open before hierarchy restoration so Android can restore the search text and focus.
-        if (savedInstanceState?.getBoolean(DRAWER_OPEN_STATE) == true) drawer.open()
+        if (savedInstanceState?.getBoolean(DRAWER_OPEN_STATE) == true) drawer.open(showKeyboard = false)
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -402,6 +403,7 @@ class HomeActivity : ComponentActivity() {
         applyAppNameVisibility(appearance.showAppNames)
         drawer.layoutMode = drawerPreferences.layoutMode
         drawer.rememberPosition = drawerPreferences.rememberPosition
+        drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {
             hiddenDrawerApps = hiddenApps

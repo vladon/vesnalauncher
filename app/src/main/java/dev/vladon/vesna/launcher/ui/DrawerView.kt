@@ -1,5 +1,6 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -20,6 +21,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
@@ -53,6 +56,9 @@ class DrawerView @JvmOverloads constructor(
                 autoCloseViewport = null
             }
         }
+
+    /** With the opt-in setting, opening the drawer focuses search and raises the keyboard. */
+    internal var keyboardOnOpen = false
     internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
     /** Long-press on a drawer item arms a drag from the drawer (drag layer drives). */
@@ -503,6 +509,18 @@ class DrawerView @JvmOverloads constructor(
         imm?.hideSoftInputFromWindow(searchField.windowToken, 0)
     }
 
+    private fun raiseKeyboard() {
+        // The drawer is still sliding in; wait for the field to own the window's focus.
+        searchField.post {
+            // The host activity owns the window; any other host keeps its own keyboard state.
+            val window = (context as? Activity)?.window ?: return@post
+            // The drawer may have closed, or the field lost focus, while this was queued.
+            if (isOpen && searchField.hasFocus()) {
+                WindowCompat.getInsetsController(window, searchField).show(WindowInsetsCompat.Type.ime())
+            }
+        }
+    }
+
     internal fun submitApps(apps: List<LauncherApp>, hiddenApps: Set<AppKey> = emptySet()) {
         val search = AppSearch(apps, hiddenApps)
         appSearch = search
@@ -517,7 +535,8 @@ class DrawerView @JvmOverloads constructor(
         getChildAt(0).setPadding(insets.left, insets.top, insets.right, insets.bottom)
     }
 
-    fun open() {
+    /** A restored drawer is already open, so only a user opening raises the keyboard. */
+    fun open(showKeyboard: Boolean = keyboardOnOpen) {
         if (isOpen) return
         discardUnconfirmedAutoCloseViewport()
         animate().cancel()
@@ -534,7 +553,7 @@ class DrawerView @JvmOverloads constructor(
         syncFastScrollViewport()
         if (height > 0) animate().translationY(0f).start()
         onOpenedChanged?.invoke(true)
-        closeButton.requestFocus()
+        if (showKeyboard && searchField.requestFocus()) raiseKeyboard() else closeButton.requestFocus()
     }
 
     internal fun closeForHome() {
