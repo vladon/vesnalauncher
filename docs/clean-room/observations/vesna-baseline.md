@@ -2566,3 +2566,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   layouts, both docks and the System theme.
   Evidence: `EVI-VESNA-003/parity107-*`.
   [Follow-up in #157](https://github.com/vladon/vesnalauncher/issues/157#issuecomment-7102057099).
+
+## OBS-VESNA-109 — Whole folder dragged past the last page
+
+- Android 15 research AVD, `en-US`, real 4×5 grids (Nova's
+  row height checked on the workspace). Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.68 (73), each with a single
+  Home page holding one closed Gmail → Photos folder at
+  top-right.
+- Holding the whole folder at the physical right edge in Nova
+  showed a blank second page with the add-page **+**.
+  Releasing at the top-right coordinates placed the folder on
+  the new page two; the other pin stayed on page one. Both
+  pages survived a launcher restart.
+- In Vesna, page one stayed visible while the folder was held.
+  Releasing kept the folder in its original cell on the single
+  page, with every other pin and the dock unchanged. PR #164
+  deliberately excluded page creation for whole folders.
+- Cancel and the page cap were not exercised for this case.
+  Restored through the loadable baseline snapshot and re-checked
+  both layouts, both docks and the 4×4 Nova grid.
+  Evidence: `EVI-VESNA-003/parity109-*`.
+  [Issue #167](https://github.com/vladon/vesnalauncher/issues/167).
