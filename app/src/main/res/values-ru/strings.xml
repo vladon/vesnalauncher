@@ -18,6 +18,8 @@
     <string name="settings_hide_home_app_names_detail">Затрагивает док, но не список приложений.</string>
     <string name="settings_home_icon_size">Размер значков на главном экране</string>
     <string name="settings_home_icon_size_detail">Значки приложений и папок на главном экране. Сетка, подписи и ярлыки остаются на местах.</string>
+    <string name="settings_dock_icon_size">Размер значков в доке</string>
+    <string name="settings_dock_icon_size_detail">Значки избранных приложений в доке. Ярлыки сохраняют порядок; ячейки главного экрана подстраиваются, чтобы док оставался под ними.</string>
     <string name="settings_icon_size_value">%1$d%%</string>
     <string name="settings_workspace_grid">Сетка рабочего стола</string>
     <string name="settings_workspace_grid_detail">Столбцы и строки на страницах рабочего стола</string>
