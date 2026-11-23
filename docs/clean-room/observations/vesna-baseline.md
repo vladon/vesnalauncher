@@ -2362,3 +2362,33 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored both original single-page layouts, docks, and
   the Nova 4×4 grid. Evidence: `EVI-VESNA-003/parity98-*`.
   [Cap verification in #151](https://github.com/vladon/vesnalauncher/issues/151#issuecomment-7096855113).
+
+## OBS-VESNA-102 — Signed whole-folder unpin and Undo
+
+- Android 15 research AVD, `en-US`, 1080×2400 px at 420 dpi.
+  Prepared a 2×2 page with `Release QA` (Files → Gmail →
+  Photos) and three other pins; a separate Gmail pin was on
+  another page. Signed v0.4.65 (70) only offered **Remove
+  folder** and refused because there was no room to ungroup.
+- Upgraded in place to published signed v0.4.66 (71).
+  [Release/tag](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.66)
+  `bbb2c7e2b8eaad49e0072e7d557c55981cb3b6e0`, APK SHA-256
+  `4377b2acff17717f2e89245870dec8e18982b3658ec176edecbd75a77c3b4518`;
+  same verified v2 signer as v0.4.65.
+- **Ungroup folder** and **Remove folder and shortcuts**
+  were separate. Ungroup retained its full-page capacity
+  guard, and with space kept both pins in a separate
+  control. Lock hid both editing actions; unlocking restored them.
+- The new action unpinned the packed folder and offered
+  **Undo**. Undo restored the exact folder title, cell and
+  member order; after process restart all five pages and the
+  dock had their exact original placements for this fixture.
+- Removing without Undo survived another restart. Only
+  the target folder was absent; the separate Gmail, other
+  pins and dock stayed put. Files, Gmail and Photos remained
+  installed and visible in the drawer. This matches Nova's
+  packed-page unpin and Undo in OBS-VESNA-076.
+- Restored original layouts, grids and unlocked state;
+  kept the signed v0.4.66 update.
+  Evidence: `EVI-VESNA-003/parity99-*`, `release-0.4.66/`.
+  [Independent verification in #132](https://github.com/vladon/vesnalauncher/issues/132#issuecomment-7097087961).
