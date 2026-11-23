@@ -1007,3 +1007,20 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   did not exercise custom icons or per-icon gestures.
 - Restored the original Gmail label. Evidence:
   `EVI-VESNA-003/parity43-*`; follow-up for #114.
+
+## OBS-VESNA-043 — An edge folder through grid shrink and expansion
+
+- On the owned Android 15 AVD, Nova 9.0.1 Prime (90100) had four
+  shortcuts across the top row and a folder containing Gmail and
+  Nova Settings in the bottom-right cell of a 4×4 workspace.
+- Shrinking to 2×2 left the folder on page one, moved one of the
+  ordinary shortcuts to page two, and kept all five top-level
+  items reachable. The 2×2 setting and the folder's position
+  survived a cold restart, and the folder still opened to both
+  members. Expanding to 4×4 restored all five original cells and
+  the folder still contained both entries.
+- Restored the original Nova workspace and removed the fixture.
+  In signed Vesna v0.4.52 (57), Settings search for `grid` still
+  returned no results. This is the signed pre-fix baseline, not
+  a test of merged PR #128. Widget migration was not exercised.
+- Evidence: `EVI-VESNA-003/parity44-*`. Follow-up for #106.
