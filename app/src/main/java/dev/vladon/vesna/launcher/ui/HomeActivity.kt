@@ -366,6 +366,9 @@ class HomeActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Android delivers a Home intent before resume. Returning via Back
+        // does not confirm the viewport staged by an auto-closed launch.
+        drawer.discardUnconfirmedAutoCloseViewport()
         // Settings can change the preference while Home is on the back stack.
         if (appearance.themeMode != themeMode) {
             recreate()

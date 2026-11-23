@@ -435,6 +435,45 @@ class DrawerSearchTest {
     }
 
     @Test
+    fun autoClosedListRestoresThePreLaunchOffsetOnlyAfterHome() {
+        val apps = List(64) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
+        val anchor = 9
+        val offset = -24
+        onDrawer { host ->
+            host.layoutMode = DrawerLayoutMode.LIST
+            host.closeOnLaunch = { true }
+            host.rememberPosition = true
+            host.onAppClick = { it.key == apps[anchor + 1].key }
+            host.submitApps(apps)
+        }
+        assertVisibleLabels(apps.map { it.label })
+
+        fun launchFromScrolledListAndReturn(viaHome: Boolean) {
+            onDrawer { host ->
+                val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+                (list.layoutManager as GridLayoutManager).scrollToPositionWithOffset(anchor, offset)
+            }
+            assertFirstVisibleApp(apps[anchor].label, offset)
+            onDrawer { host ->
+                val list = host.findViewById<RecyclerView>(R.id.drawer_list)
+                assertTrue(requireNotNull(list.findViewHolderForAdapterPosition(anchor + 1)).itemView.performClick())
+                assertTrue("A successful launch must auto-close the drawer", !host.isOpen)
+                if (viaHome) host.closeForHome()
+                host.discardUnconfirmedAutoCloseViewport()
+                host.open()
+            }
+        }
+
+        launchFromScrolledListAndReturn(viaHome = true)
+        assertFirstVisibleApp(apps[anchor].label, offset)
+        launchFromScrolledListAndReturn(viaHome = false)
+        assertFirstVisibleApp(apps.first().label, 0)
+        onDrawer { it.rememberPosition = false }
+        launchFromScrolledListAndReturn(viaHome = true)
+        assertFirstVisibleApp(apps.first().label, 0)
+    }
+
+    @Test
     fun quickDownwardSwipeScrollsBackBeforeItCanCloseTheDrawer() {
         val apps = List(96) { app("dev.vladon.fixture.tool$it", ".Main", "Tool $it") }
         onDrawer { it.submitApps(apps) }

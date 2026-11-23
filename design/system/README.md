@@ -339,7 +339,9 @@ while Vesna has no widget host.
   available on return. An unsuccessful launch never closes the drawer.
   **Remember position** is a separate searchable switch, off by default.
   When enabled, Android Home remembers the first visible app and exact
-  offset of the open, unfiltered vertical list for the next drawer opening.
+  offset from the unfiltered vertical list for the next drawer opening.
+  If a successful launch auto-closes the list, keep the pre-launch offset
+  only when the user returns through Android Home, not through Back.
   Keep that position only in memory; persist the switch, not the offset.
   Filtered results and other layouts keep their existing reset behavior.
   The page also offers a searchable **Hide apps** section. List all

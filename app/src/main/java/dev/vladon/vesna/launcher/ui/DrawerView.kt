@@ -48,7 +48,10 @@ class DrawerView @JvmOverloads constructor(
     internal var rememberPosition = false
         set(value) {
             field = value
-            if (!value) homeReturnViewport = null
+            if (!value) {
+                homeReturnViewport = null
+                autoCloseViewport = null
+            }
         }
     internal var onItemOptions: ((LauncherApp, View) -> Unit)? = null
 
@@ -74,6 +77,7 @@ class DrawerView @JvmOverloads constructor(
             adapter.singleColumn = value == DrawerLayoutMode.LIST
             pendingPageViewport = null
             homeReturnViewport = null
+            autoCloseViewport = null
             if (value != DrawerLayoutMode.PAGED) pager.submitApps(emptyList())
             pager.scrollToApp(0)
             applyFilter(resetScroll = true)
@@ -119,6 +123,7 @@ class DrawerView @JvmOverloads constructor(
     private var pendingViewport: Viewport? = null
     private var pendingPageViewport: Viewport? = null
     private var homeReturnViewport: Viewport? = null
+    private var autoCloseViewport: Viewport? = null
 
     internal var isOpen = false
         private set
@@ -484,7 +489,13 @@ class DrawerView @JvmOverloads constructor(
 
     private fun launchApp(app: LauncherApp) {
         if (onAppClick?.invoke(app) != true) return
-        if (closeOnLaunch()) close() else hideKeyboard()
+        if (closeOnLaunch()) {
+            val viewport = rememberableListViewport()
+            close()
+            autoCloseViewport = viewport
+        } else {
+            hideKeyboard()
+        }
     }
 
     private fun hideKeyboard() {
@@ -508,6 +519,7 @@ class DrawerView @JvmOverloads constructor(
 
     fun open() {
         if (isOpen) return
+        discardUnconfirmedAutoCloseViewport()
         animate().cancel()
         isOpen = true
         if (visibility != VISIBLE) translationY = height.toFloat()
@@ -526,15 +538,26 @@ class DrawerView @JvmOverloads constructor(
     }
 
     internal fun closeForHome() {
-        if (!isOpen) return
-        homeReturnViewport = if (
-            rememberPosition && layoutMode == DrawerLayoutMode.LIST &&
-            searchField.text.isNullOrEmpty() && !resetScrollOnCommit
-        ) currentListViewport() else null
+        if (!isOpen) {
+            autoCloseViewport?.let { homeReturnViewport = it }
+            discardUnconfirmedAutoCloseViewport()
+            return
+        }
+        homeReturnViewport = rememberableListViewport()
         close()
     }
 
+    internal fun discardUnconfirmedAutoCloseViewport() {
+        autoCloseViewport = null
+    }
+
+    private fun rememberableListViewport(): Viewport? = if (
+        isOpen && rememberPosition && layoutMode == DrawerLayoutMode.LIST &&
+        searchField.text.isNullOrEmpty() && !resetScrollOnCommit
+    ) currentListViewport() else null
+
     fun close() {
+        discardUnconfirmedAutoCloseViewport()
         if (!isOpen) return
         animate().cancel()
         isOpen = false
