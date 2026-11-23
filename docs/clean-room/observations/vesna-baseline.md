@@ -3044,11 +3044,12 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   leftward swipe did nothing, in 2 of 2 trials.
 - **Errata for 119:** that pass read only the
   workspace nodes, which the dump also lists
-  behind an open drawer. Its first-page result
-  for Nova is therefore incomplete: the page did
-  not wrap, but the drawer had opened. The
-  looping and indicator results stand, and the
-  fact was added to #174.
+  behind an open drawer. Its saved dump lists
+  the drawer's nodes, so its first-page result
+  for Nova is incomplete: the page did not
+  wrap, but the drawer had opened. The looping
+  and indicator results stand, and the fact was
+  added to #174.
 - Nova's gesture bindings on this AVD, read in
   Settings → Gestures & inputs: Home button →
   Nova Search, Swipe up → App drawer, Swipe down
