@@ -2054,3 +2054,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Evidence: `EVI-VESNA-003/parity87-vesna-061-*`,
   `parity87-vesna-062-*`, `parity70-cycle87-*` and `release-0.4.62`.
   [Independent result in #147](https://github.com/vladon/vesnalauncher/issues/147#issuecomment-7094304067).
+
+## OBS-VESNA-090 — Folder-member edge drag and dissolution in RTL
+
+- Android 15 research AVD, system `ar-EG` in RTL, Nova 9.0.1
+  Prime (90100) and signed Vesna v0.4.62 (67). Both had the
+  same Files → Gmail → Photos rank order in a Home folder on
+  logical page two, and a Contacts marker on logical page one.
+- Holding Files at the physical **right** edge showed Contacts
+  on page one before release in both. CANCEL kept both pages
+  and the original three ranks. An occupied drop on Contacts
+  in Vesna also kept both layouts and reopened the unchanged
+  folder; the Nova occupied-cell case was not compared here.
+- Dropping on the chosen empty bottom-row cell put Files on
+  page one while Gmail and Photos stayed in the source folder
+  at its original cell. The assignments and surviving order
+  persisted in both after cold start.
+- Then dragging Gmail from the two-member folder across the
+  same edge left Photos as a regular pin in the original
+  folder cell in both. Restored `en-US` and both original
+  one-page layouts and docks.
+- Evidence: `EVI-VESNA-003/parity88-*`.
+  [Follow-up in #139](https://github.com/vladon/vesnalauncher/issues/139#issuecomment-7094554724).
