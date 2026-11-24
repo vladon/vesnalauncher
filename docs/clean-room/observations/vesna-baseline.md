@@ -4315,3 +4315,28 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   no folder (workspace equal to the baseline),
   both launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity143-*`.
+
+## OBS-VESNA-151 — Drawer background matrix completed on v0.4.81
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.81 (86) on the
+  `baseline_research_0.4.81` snapshot. Fills the
+  remaining combos of 138's drawer-background
+  matrix (Rose was verified under Vesna, Dark
+  and Ocean there).
+- **Sage + Dark theme:** drawer gutter
+  **(16,21,16)** — a dark Sage variant,
+  contrast-checked like Rose's dark variant.
+- **Sage + Ocean palette:** gutter
+  **(245,252,244)** — identical to Sage + Vesna:
+  the fixed backgrounds do **not** shift with
+  the launcher palette, same as Rose (254,247,253
+  under both).
+- **Rose + Dark** was (23,17,22) (138). Full
+  matrix now: fixed backgrounds are
+  palette-independent in both themes and
+  theme-checked.
+- Restored: Follow theme (drawer gutter back to
+  the exact (249,250,239)), palette Vesna, theme
+  System; both launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity144-*`.
