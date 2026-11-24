@@ -3538,5 +3538,45 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Vesna shows only a no-results state. The
   external providers and suggestions gap is
   tracked in #113.
-- Restored both launchers to the baseline.
+  Restored both launchers to the baseline.
   Evidence: `EVI-VESNA-003/parity132-*`.
+
+## OBS-VESNA-135 — Search actions on v0.4.77
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.77 (82), tag at PR #190
+  merge `62d437c6bdda7530a32322aaf243f3fd6f80013f`,
+  APK SHA-256
+  `57991653f4f38af28bf7ff7653a604b9e3e36292ade07af9fa68327a2f8ae007`,
+  with the same verified v2 signer as v0.4.76.
+  Installed in place over the restored original
+  state; both original layouts survived the
+  upgrade. Nova 9.0.1 Prime (90100) was not
+  re-run: its web suggestions are in 028 and the
+  version is unchanged.
+- **Setting found:** Settings search for
+  `search action` offered **Vesna settings › App
+  drawer › Search actions** ("When a search
+  matches no apps, offer to hand the query to
+  other apps. Nothing is sent while typing and
+  the local search is unchanged."), off by
+  default.
+- **Off:** a no-match query showed **No matching
+  apps** with no external suggestions.
+- **On:** the same query showed three action rows
+  below the no-results text: **Search the web**,
+  **Search in Maps** and **Search in YouTube**.
+  Tapping **Search the web** opened the Google
+  search app with the query. Typing and results
+  were unchanged while on.
+- **Toggle:** switching back to off restored the
+  no-results state.
+- Not exercised: the Maps and YouTube action
+  rows, Dark and compact RTL.
+- Restored Search actions off; the workspace
+  equals the default frame. Saved
+  `baseline_research_0.4.77`, proved that it
+  loads, and deleted the 0.4.76 baseline.
+  Evidence: `EVI-VESNA-003/parity133-*`,
+  `release-0.4.77/`.
+  [Stage 1 verification in #113](https://github.com/vladon/vesnalauncher/issues/113#issuecomment-7117861015).
