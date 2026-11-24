@@ -4217,3 +4217,44 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity140-*`
   (frames `p142-vcold*`, `p142-v481-run*`,
   `p142-v479-run*`).
+
+## OBS-VESNA-148 — Icon pack inside folders and the persisted pack selection on v0.4.81
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.81 (86) on the
+  `baseline_research_0.4.81` snapshot; fixture
+  Arcticons Black 15.4.7 reinstalled (it had
+  been removed in 141's cleanup). Completes the
+  folder part of the #157 release-note claim.
+- **Persisted selection.** The stored Icon pack
+  preference survived the pack's uninstall:
+  reinstalling Arcticons without touching
+  Settings re-activated the pack artwork
+  immediately (the radio read selected before
+  any tap, and the Gmail home artwork differed
+  from the system-art frame on the first
+  capture). 141's "System restored" claim covered
+  the visible fallback only — the stored
+  selection had stayed on the removed pack.
+  Behaviour is user-friendly (the choice is
+  remembered), noted to correct the record.
+- **Folder coverage verified.** A folder made by
+  dropping Maps onto Gmail shows the pack's
+  outline artwork on both members inside the
+  open folder popup; the whole workspace around
+  it is pack-styled as well. The closed folder's
+  preview renders an Arcticons folder glyph
+  (brown) instead of the default mini-grid.
+- **Ungroup folder is the clean exit:** the
+  folder popup exposes **Ungroup folder** and
+  **Rename folder**; Ungroup dissolved the folder
+  and returned Maps and Gmail to their exact
+  baseline cells (`VHOME == baseline` with no
+  manual repair; already inventoried as
+  FOLDER-007 from the v0.4.5x era).
+- Restored: Icon pack → System (the row is
+  selectable again with the pack installed), the
+  Gmail artwork returned to the exact pre-pack
+  pixels, and Arcticons was uninstalled; both
+  launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity142-*`.
