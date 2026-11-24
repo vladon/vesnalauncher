@@ -1,0 +1,1 @@
+The app drawer has a background choice of its own: follow the theme (default), Rose, or Sage. The fixed backgrounds are contrast-checked in both themes and change only the drawer; Home, the dock, and the global theme stay as they are.
