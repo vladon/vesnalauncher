@@ -85,6 +85,9 @@
     <string name="settings_icon_shape_detail">Маска для адаптивных значков на главном экране, в доке, в списке приложений и в папках. Остальные значки и рабочие бейджи не меняются.</string>
     <string name="settings_icon_shape_system">Как в системе (по умолчанию)</string>
     <string name="settings_icon_shape_rounded_square">Скруглённый квадрат</string>
+    <string name="settings_icon_pack">Набор иконок</string>
+    <string name="settings_icon_pack_detail">Иконки из установленного набора на главном экране, в доке, в списке приложений и в папках. Непокрытые набором приложения остаются с системными иконками, рабочие бейджи не меняются.</string>
+    <string name="settings_icon_pack_system">Как в системе (по умолчанию)</string>
     <string name="settings_palette">Палитра</string>
     <string name="settings_palette_detail">Подобранные акцентные цвета для рабочего стола, дока, списка приложений, настроек и диалогов. Палитра действует и в светлой, и в тёмной теме.</string>
     <string name="settings_palette_vesna">Vesna (по умолчанию)</string>

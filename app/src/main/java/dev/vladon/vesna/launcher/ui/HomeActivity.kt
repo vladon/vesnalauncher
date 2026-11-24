@@ -206,6 +206,9 @@ class HomeActivity : ComponentActivity() {
     private lateinit var palette: LauncherPalette
     private var showAppNames = true
 
+    /** The icon pack the current catalogue artwork was built with. */
+    private var appliedIconPack = AppearancePreferences.SYSTEM_ICON_PACK
+
     private val controller
         get() = VesnaApplication.graph(this).controller
 
@@ -228,6 +231,7 @@ class HomeActivity : ComponentActivity() {
         themeMode = appearance.themeMode
         iconShape = appearance.iconShape
         palette = appearance.palette
+        appliedIconPack = appearance.iconPack
         // Tiles read the shape when they bind, so it is fixed before any view inflates.
         IconShape.roundedSquare = iconShape == IconShapeMode.ROUNDED_SQUARE
         val night = themeMode.nightOverride
@@ -416,6 +420,13 @@ class HomeActivity : ComponentActivity() {
         // Android delivers a Home intent before resume. Returning via Back
         // does not confirm the viewport staged by an auto-closed launch.
         drawer.discardUnconfirmedAutoCloseViewport()
+        // A pack picked in Settings only changes artwork; rebuild the catalogue in
+        // place. Runs before the theme recreate below so a recreation, which
+        // re-reads the preference into appliedIconPack, cannot swallow it.
+        if (appearance.iconPack != appliedIconPack) {
+            appliedIconPack = appearance.iconPack
+            controller.refreshAppArtwork()
+        }
         // Settings can change the preference while Home is on the back stack.
         if (appearance.themeMode != themeMode || appearance.iconShape != iconShape || appearance.palette != palette) {
             recreate()
