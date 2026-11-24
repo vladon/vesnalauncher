@@ -3573,7 +3573,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   no-results state.
 - Not exercised: the Maps and YouTube action
   rows, Dark and compact RTL.
-  Restored Search actions off; the workspace
+- Restored Search actions off; the workspace
   equals the default frame. Saved
   `baseline_research_0.4.77`, proved that it
   loads, and deleted the 0.4.76 baseline.
@@ -3585,12 +3585,16 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 
 - Android 15 research AVD, `en-US`. Signed Vesna
   v0.4.77 (82) on a fresh baseline load. This
-  closes [OBS-VESNA-133](#obs-vesna-133--dock-pin-drag-swap-not-reproduced-on-v0476):
-  the "not reproduced" result there was a method
-  artifact. The `DROP` helper's 0.72 s hold does
-  not lift a dock pin; a hold of about 1.3 s with
+  closes [OBS-VESNA-133](#obs-vesna-133--dock-pin-drag-swap-not-reproduced-on-v0476)
+  for current builds: the "not reproduced" result
+  there is explained by a hold-duration artifact
+  — the `DROP` helper's 0.72 s hold does not lift
+  a dock pin, while a hold of about 1.3 s with
   0.22 s move steps and a 0.9 s pause over the
-  target reorders the dock on the same build.
+  target reorders the dock on v0.4.77. OBS-133's
+  build, v0.4.76, was not re-tested with the
+  longer hold, so the explanation is unproven for
+  that release.
 - **Insert semantics.** A dock-pin drag released
   over another occupied dock tile removes the pin
   from its slot and inserts it at the target
