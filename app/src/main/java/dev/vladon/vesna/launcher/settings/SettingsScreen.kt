@@ -143,6 +143,8 @@ internal fun SettingsScreen(
     onShowDockChanged: (Boolean) -> Unit,
     dockCapacity: Int,
     onDockCapacityChanged: (Int) -> Unit,
+    homeOrientation: HomeOrientation,
+    onHomeOrientationSelected: (HomeOrientation) -> Unit,
     homeIconPercent: Int,
     onHomeIconPercentChanged: (Int) -> Unit,
     dockIconPercent: Int,
@@ -300,6 +302,10 @@ internal fun SettingsScreen(
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_dock_capacity) {
                                     DockCapacitySettings(dockCapacity, onDockCapacityChanged)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_home_orientation) {
+                                    HomeOrientationSettings(homeOrientation, onHomeOrientationSelected)
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_home_icon_size) {
@@ -466,6 +472,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_show_dock, R.string.settings_show_dock_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_capacity, R.string.settings_dock_capacity_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_orientation, R.string.settings_home_orientation_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_icon_size, R.string.settings_home_icon_size_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_icon_size, R.string.settings_dock_icon_size_detail),
@@ -742,6 +749,45 @@ private fun SettingsSlider(
                 .fillMaxWidth()
                 .semantics { contentDescription = description; stateDescription = value },
         )
+    }
+}
+
+/** Whether Home follows the device rotation or stays portrait. */
+@Composable
+private fun HomeOrientationSettings(
+    orientation: HomeOrientation,
+    onSelect: (HomeOrientation) -> Unit,
+) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            stringResource(R.string.settings_home_orientation),
+            Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.settings_home_orientation_detail),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (choice in HomeOrientation.entries) {
+                val selected = choice == orientation
+                val label = stringResource(
+                    when (choice) {
+                        HomeOrientation.SYSTEM -> R.string.settings_home_orientation_follow
+                        HomeOrientation.PORTRAIT -> R.string.settings_home_orientation_portrait
+                    },
+                )
+                ListItem(
+                    headlineContent = { Text(label) },
+                    leadingContent = { RadioButton(selected = selected, onClick = null) },
+                    modifier = Modifier
+                        .vesnaFocusRing(radius = 12.dp)
+                        .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
+                )
+            }
+        }
     }
 }
 

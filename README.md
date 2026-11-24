@@ -32,7 +32,9 @@ The Android package name is `dev.vladon.vesna.launcher`.
   second dock page in order, and a swipe across the dock flips pages. Vesna
   saves your layout locally and restores it after a restart. Turn **Show dock**
   off in Home screen settings to hide the dock; it keeps its pins and returns
-  with them when you turn it back on.
+  with them when you turn it back on. **Home screen orientation** follows the
+  device by default or locks Home to portrait; apps launched from Home keep
+  the device orientation.
   Removing the last app shortcut from a secondary page also removes that page
   if it has no other saved content. Empty pages you add manually stay until
   you remove them or populate and empty them this way.

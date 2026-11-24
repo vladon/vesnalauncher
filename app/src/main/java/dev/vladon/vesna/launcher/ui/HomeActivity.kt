@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.Gravity
@@ -58,6 +59,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.DrawerPreferences
+import dev.vladon.vesna.launcher.settings.HomeOrientation
 import dev.vladon.vesna.launcher.settings.IconShapeMode
 import dev.vladon.vesna.launcher.settings.LauncherPalette
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
@@ -383,6 +385,7 @@ class HomeActivity : ComponentActivity() {
         drawer.externalSearchActions = drawerPreferences.externalSearchActions
         applyDockVisibility()
         applyDockCapacity()
+        applyHomeOrientation()
         applyIconScales()
 
         // Open before hierarchy restoration so Android can restore the search text and focus.
@@ -445,6 +448,7 @@ class HomeActivity : ComponentActivity() {
         )
         applyDockVisibility()
         applyDockCapacity()
+        applyHomeOrientation()
         applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {
@@ -465,6 +469,19 @@ class HomeActivity : ComponentActivity() {
     /** Slots per dock page; the next render rebinds so overflow reflows onto pages. */
     private fun applyDockCapacity() {
         dock.capacity = dockPreferences.capacity
+    }
+
+    /**
+     * Follow the device (the shipped default) or hold the launcher window portrait.
+     * Home handles configuration changes in place (see the manifest), so switching
+     * re-lays the workspace, dock, page controls and drawer out live, and a launch
+     * from Home still gets the device orientation.
+     */
+    private fun applyHomeOrientation() {
+        requestedOrientation = when (workspacePreferences.orientation) {
+            HomeOrientation.SYSTEM -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            HomeOrientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
     }
 
     /** Artwork only: the grid, dock, labels and saved placements are not resized. */
