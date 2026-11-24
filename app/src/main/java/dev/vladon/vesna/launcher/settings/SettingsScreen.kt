@@ -97,6 +97,7 @@ import androidx.core.net.toUri
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.platform.IconPackInfo
 import dev.vladon.vesna.launcher.search.searchKey
 import dev.vladon.vesna.launcher.ui.VesnaFocusRingOutset
 import dev.vladon.vesna.launcher.ui.vesnaFocusRing
@@ -122,6 +123,9 @@ internal fun SettingsScreen(
     onThemeSelected: (ThemeMode) -> Unit,
     iconShape: IconShapeMode,
     onIconShapeSelected: (IconShapeMode) -> Unit,
+    iconPack: String,
+    iconPackOptions: List<IconPackInfo>,
+    onIconPackSelected: (String) -> Unit,
     palette: LauncherPalette,
     onPaletteSelected: (LauncherPalette) -> Unit,
     showAppNames: Boolean,
@@ -332,6 +336,10 @@ internal fun SettingsScreen(
                                     IconShapeSettings(iconShape, onIconShapeSelected)
                                 }
                                 Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_icon_pack) {
+                                    IconPackSettings(iconPack, iconPackOptions, onIconPackSelected)
+                                }
+                                Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_palette) {
                                     PaletteSettings(palette, onPaletteSelected)
                                 }
@@ -464,6 +472,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_icon_shape, R.string.settings_icon_shape_detail),
+                    SearchEntry(SettingsPage.APPEARANCE, R.string.settings_icon_pack, R.string.settings_icon_pack_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_palette, R.string.settings_palette_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
                 )
@@ -606,6 +615,40 @@ private fun IconShapeSettings(shape: IconShapeMode, onSelect: (IconShapeMode) ->
                 modifier = Modifier
                     .vesnaFocusRing(radius = 12.dp)
                     .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
+            )
+        }
+    }
+}
+
+@Composable
+private fun IconPackSettings(selected: String, packs: List<IconPackInfo>, onSelect: (String) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_icon_pack),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.semantics { heading() },
+    )
+    Spacer(Modifier.height(8.dp))
+    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val systemSelected = packs.none { it.packageName == selected }
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_icon_pack_system)) },
+            leadingContent = { RadioButton(selected = systemSelected, onClick = null) },
+            modifier = Modifier
+                .vesnaFocusRing(radius = 12.dp)
+                .selectable(
+                    selected = systemSelected,
+                    role = Role.RadioButton,
+                    onClick = { onSelect(AppearancePreferences.SYSTEM_ICON_PACK) },
+                ),
+        )
+        for (pack in packs) {
+            val isSelected = pack.packageName == selected
+            ListItem(
+                headlineContent = { Text(pack.label) },
+                leadingContent = { RadioButton(selected = isSelected, onClick = null) },
+                modifier = Modifier
+                    .vesnaFocusRing(radius = 12.dp)
+                    .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(pack.packageName) }),
             )
         }
     }

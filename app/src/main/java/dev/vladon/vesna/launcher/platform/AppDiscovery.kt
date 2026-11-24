@@ -29,7 +29,10 @@ interface AppDiscovery {
     fun isPackageInstalled(packageName: String, userSerial: Long): Boolean
 }
 
-class LauncherAppsAppDiscovery(private val appContext: Context) : AppDiscovery {
+internal class LauncherAppsAppDiscovery(
+    private val appContext: Context,
+    private val iconPacks: IconPackResolver,
+) : AppDiscovery {
 
     private val launcherApps = appContext.getSystemService(LauncherApps::class.java)
     private val userManager = appContext.getSystemService(UserManager::class.java)
@@ -55,11 +58,19 @@ class LauncherAppsAppDiscovery(private val appContext: Context) : AppDiscovery {
                 val label = activity.label.toString().ifBlank { component.packageName }
                 val profileLabel = if (badgeLabels) packageManager.getUserBadgedLabel(label, profile) else label
                 badgeLabels = profileLabel !== label
+                // Pack artwork replaces the system icon before badging, so a work
+                // profile still shows its badge on top of the pack's drawing.
+                val packIcon = iconPacks.selectedDrawableFor(component.packageName, component.className, densityDpi)
+                val icon = if (packIcon != null) {
+                    packageManager.getUserBadgedIcon(packIcon, profile)
+                } else {
+                    activity.getBadgedIcon(densityDpi)
+                }
                 result.add(
                     LauncherApp(
                         key = AppKey(component.packageName, component.className, userSerial),
                         label = label,
-                        icon = activity.getBadgedIcon(densityDpi),
+                        icon = icon,
                         badgedLabel = if (badgeLabels) profileLabel.toString() else null,
                     ),
                 )

@@ -22,12 +22,18 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.platform.IconPackInfo
+import dev.vladon.vesna.launcher.platform.IconPackResolver
 import dev.vladon.vesna.launcher.workspace.GridCanvas
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Entry point for Vesna's settings directory and named pages. */
 class SettingsActivity : ComponentActivity() {
@@ -41,6 +47,8 @@ class SettingsActivity : ComponentActivity() {
     private var defaultHome by mutableStateOf(DefaultHomeState.UNAVAILABLE)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var iconShape by mutableStateOf(IconShapeMode.SYSTEM)
+    private var iconPack by mutableStateOf(AppearancePreferences.SYSTEM_ICON_PACK)
+    private var iconPackOptions by mutableStateOf<List<IconPackInfo>>(emptyList())
     private var palette by mutableStateOf(LauncherPalette.VESNA)
     private var layoutLocked by mutableStateOf(false)
     /** Null until the persisted grid arrives; the row must not flash the default. */
@@ -113,6 +121,9 @@ class SettingsActivity : ComponentActivity() {
                         onThemeSelected = ::selectTheme,
                         iconShape = iconShape,
                         onIconShapeSelected = ::selectIconShape,
+                        iconPack = iconPack,
+                        iconPackOptions = iconPackOptions,
+                        onIconPackSelected = ::selectIconPack,
                         palette = palette,
                         onPaletteSelected = ::selectPalette,
                         showAppNames = showAppNames,
@@ -222,6 +233,7 @@ class SettingsActivity : ComponentActivity() {
     private fun readPreferences() {
         themeMode = appearance.themeMode
         iconShape = appearance.iconShape
+        iconPack = appearance.iconPack
         palette = appearance.palette
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
@@ -239,6 +251,11 @@ class SettingsActivity : ComponentActivity() {
         drawerIconPercent = drawerPreferences.iconScalePercent
         drawerFollowsHome = drawerPreferences.followsHomeIconScale
         hiddenDrawerApps = drawerPreferences.hiddenApps
+        lifecycleScope.launch {
+            iconPackOptions = withContext(Dispatchers.IO) {
+                IconPackResolver(applicationContext, appearance).installedPacks()
+            }
+        }
     }
 
     private fun selectTheme(mode: ThemeMode) {
@@ -251,6 +268,13 @@ class SettingsActivity : ComponentActivity() {
         if (shape == iconShape) return
         appearance.iconShape = shape
         iconShape = shape
+    }
+
+    /** Catalogue artwork rebuilds when Home resumes; this only records the choice. */
+    private fun selectIconPack(packageName: String) {
+        if (packageName == iconPack) return
+        appearance.iconPack = packageName
+        iconPack = packageName
     }
 
     private fun selectPalette(chosen: LauncherPalette) {

@@ -62,6 +62,13 @@ The Android package name is `dev.vladon.vesna.launcher`.
   the system shape, which is the default, or a rounded square. It applies on
   Home, in the dock, in the app drawer and in folders. Other icons and work
   badges stay as they are.
+- **Icon pack.** In Vesna settings, pick an installed icon pack instead of the
+  system icons. Vesna discovers packs that follow the documented ADW format
+  (verified with Arcticons) and applies their artwork on Home, in the dock, in
+  the app drawer and in folders. Apps the pack does not cover keep their
+  system artwork, work badges stay, and no icon-shape mask is applied on top
+  of pack art. Selecting System restores the original artwork without
+  uninstalling the pack.
 - **Palette.** In Vesna settings, pick a curated accent palette: the Vesna
   green, which is the default, Ocean blue-teal, or Sunset amber. Each palette
   ships contrast-checked Light and Dark colors and applies to Home, the dock,

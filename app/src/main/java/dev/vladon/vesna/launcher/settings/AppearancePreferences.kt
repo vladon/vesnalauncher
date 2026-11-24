@@ -27,14 +27,23 @@ internal class AppearancePreferences(context: Context) {
         }
         set(value) = prefs.edit { putString(PALETTE, value.preferenceValue) }
 
+    /** Package name of the selected icon pack, or [SYSTEM_ICON_PACK] for system artwork. */
+    var iconPack: String
+        get() = prefs.getString(ICON_PACK, null) ?: SYSTEM_ICON_PACK
+        set(value) = prefs.edit { putString(ICON_PACK, value) }
+
     var showAppNames: Boolean
         get() = prefs.getBoolean(SHOW_APP_NAMES, true)
         set(value) = prefs.edit { putBoolean(SHOW_APP_NAMES, value) }
 
-    private companion object {
+    internal companion object {
         const val THEME_MODE = "theme_mode"
         const val SHOW_APP_NAMES = "show_app_names"
         const val ICON_SHAPE = "icon_shape"
         const val PALETTE = "palette"
+        private const val ICON_PACK = "icon_pack"
+
+        /** The preference value meaning system artwork, not an installed pack. */
+        const val SYSTEM_ICON_PACK = "system"
     }
 }

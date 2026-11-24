@@ -81,6 +81,9 @@
     <string name="settings_icon_shape_detail">Mask for adaptive app icons on Home, in the dock, in the app drawer, and in folders. Other icons and work badges stay as they are.</string>
     <string name="settings_icon_shape_system">System (default)</string>
     <string name="settings_icon_shape_rounded_square">Rounded square</string>
+    <string name="settings_icon_pack">Icon pack</string>
+    <string name="settings_icon_pack_detail">Artwork from an installed icon pack on Home, in the dock, in the app drawer, and in folders. Apps the pack does not cover keep their system artwork, and work badges stay as they are.</string>
+    <string name="settings_icon_pack_system">System (default)</string>
     <string name="settings_palette">Palette</string>
     <string name="settings_palette_detail">Curated accent colors for Home, the dock, the app drawer, Settings, and dialogs. The palette applies in both Light and Dark themes.</string>
     <string name="settings_palette_vesna">Vesna (default)</string>

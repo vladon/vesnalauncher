@@ -1,0 +1,1 @@
+Installed icon packs can now theme app icons: Settings → Appearance → Icon pack discovers packs that follow the documented ADW format (verified with Arcticons). Covered apps switch on Home, in the dock, in the drawer, and in folders; uncovered apps keep their system artwork, work badges stay, and no shape mask is applied on top of pack art.

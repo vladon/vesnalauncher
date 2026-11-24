@@ -626,6 +626,13 @@ class LauncherController(
         }
     }
 
+    /** An icon-pack change updates app artwork, not the saved layout. */
+    internal fun refreshAppArtwork() {
+        scope.launch {
+            refreshMutex.withLock { appCatalogue.value = discoverApps() }
+        }
+    }
+
     private suspend fun discoverApps(): AppCatalogue =
         withContext(Dispatchers.IO) { AppCatalogue(discovery.discover()) }
 

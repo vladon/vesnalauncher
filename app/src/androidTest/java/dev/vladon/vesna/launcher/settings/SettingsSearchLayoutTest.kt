@@ -64,6 +64,9 @@ class SettingsSearchLayoutTest {
                                 onThemeSelected = {},
                                 iconShape = IconShapeMode.SYSTEM,
                                 onIconShapeSelected = {},
+                                iconPack = AppearancePreferences.SYSTEM_ICON_PACK,
+                                iconPackOptions = emptyList(),
+                                onIconPackSelected = {},
                                 palette = LauncherPalette.VESNA,
                                 onPaletteSelected = {},
                                 showAppNames = true,
@@ -347,6 +350,35 @@ class SettingsSearchLayoutTest {
     }
 
     @Test
+    fun iconPackIsFoundFromSearchAndShowsTheSystemChoice() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val automation = instrumentation.uiAutomation
+        lateinit var title: String
+        lateinit var system: String
+        var query = "pack"
+        ActivityScenario.launch(SettingsActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                title = activity.getString(R.string.settings_icon_pack)
+                system = activity.getString(R.string.settings_icon_pack_system)
+                if (activity.resources.configuration.locales[0].language == "ru") query = "набор"
+            }
+            fun find(predicate: (AccessibilityNodeInfo) -> Boolean) =
+                automation.rootInActiveWindow?.findVisible(predicate)
+            fun editor() = find { it.isEditable }
+            fun result() = find { !it.isEditable && it.text?.toString() == title }
+
+            assertTrue(until { editor() != null })
+            assertTrue(editor()!!.setQuery(query))
+            assertTrue("Settings should find the icon pack for \"$query\"", until { result() != null })
+            val card = generateSequence(result()) { it.parent }.first { it.isClickable }
+            assertTrue(card.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            assertTrue("The result should open Appearance and offer System artwork", until {
+                find { it.text?.toString() == system } != null
+            })
+        }
+    }
+
+    @Test
     fun workspaceGridRowHidesUntilThePersistedGridLoads() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val automation = instrumentation.uiAutomation
@@ -520,6 +552,9 @@ class SettingsSearchLayoutTest {
                                         onThemeSelected = {},
                                         iconShape = IconShapeMode.SYSTEM,
                                         onIconShapeSelected = {},
+                                        iconPack = AppearancePreferences.SYSTEM_ICON_PACK,
+                                        iconPackOptions = emptyList(),
+                                        onIconPackSelected = {},
                                         palette = LauncherPalette.VESNA,
                                         onPaletteSelected = {},
                                         showAppNames = true,
@@ -644,6 +679,9 @@ class SettingsSearchLayoutTest {
                             onThemeSelected = {},
                             iconShape = IconShapeMode.SYSTEM,
                             onIconShapeSelected = {},
+                            iconPack = AppearancePreferences.SYSTEM_ICON_PACK,
+                            iconPackOptions = emptyList(),
+                            onIconPackSelected = {},
                             palette = LauncherPalette.VESNA,
                             onPaletteSelected = {},
                             showAppNames = true,
