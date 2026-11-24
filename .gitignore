@@ -37,3 +37,6 @@ keystore/
 keystore/
 keystore/
 .[a-z0-9]*_*.png
+
+# Research scratch (session tooling, staging; disposable)
+.tmp/
