@@ -124,7 +124,7 @@ class WorkspaceView @JvmOverloads constructor(
         }
 
     private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ColorUtils.setAlphaComponent(context.getColor(R.color.workspace_page_primary), HIGHLIGHT_ALPHA)
+        color = ColorUtils.setAlphaComponent(context.vesnaPaletteColor(R.attr.workspace_page_primary), HIGHLIGHT_ALPHA)
         style = Paint.Style.FILL
     }
 

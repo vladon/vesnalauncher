@@ -5,6 +5,39 @@
     <style name="Theme.Vesna.Chrome" parent="Theme.Vesna.Platform">
         <item name="android:colorAccent">@color/workspace_page_primary</item>
         <item name="android:colorBackgroundFloating">@color/home_control_surface</item>
+        <!-- View-layer palette roles; LauncherPalette overlays replace them per palette. -->
+        <item name="vesna_surface">@color/vesna_surface</item>
+        <item name="vesna_surface_container">@color/vesna_surface_container</item>
+        <item name="vesna_outline">@color/vesna_outline</item>
+        <item name="vesna_on_surface_variant">@color/vesna_on_surface_variant</item>
+        <item name="workspace_page_primary">@color/workspace_page_primary</item>
+        <item name="home_control_surface">@color/home_control_surface</item>
+        <item name="home_control_secondary">@color/home_control_secondary</item>
+        <item name="home_control_on_surface">@color/home_control_on_surface</item>
+    </style>
+
+    <!-- Ocean palette (light values; values-night redefines these styles for dark). -->
+    <style name="ThemeOverlay.Vesna.Palette.Ocean" parent="">
+        <item name="vesna_surface">#F6FAFF</item>
+        <item name="vesna_surface_container">#EAEEF3</item>
+        <item name="vesna_outline">#74777C</item>
+        <item name="vesna_on_surface_variant">#44474B</item>
+        <item name="workspace_page_primary">#225EA6</item>
+        <item name="home_control_surface">#E5E9EE</item>
+        <item name="home_control_secondary">#4B6177</item>
+        <item name="home_control_on_surface">#1D2023</item>
+    </style>
+
+    <!-- Sunset palette (light values; values-night redefines these styles for dark). -->
+    <style name="ThemeOverlay.Vesna.Palette.Sunset" parent="">
+        <item name="vesna_surface">#FDF8F6</item>
+        <item name="vesna_surface_container">#F1EDEA</item>
+        <item name="vesna_outline">#7A7674</item>
+        <item name="vesna_on_surface_variant">#494644</item>
+        <item name="workspace_page_primary">#904802</item>
+        <item name="home_control_surface">#EBE7E4</item>
+        <item name="home_control_secondary">#745748</item>
+        <item name="home_control_on_surface">#221F1D</item>
     </style>
 
     <style name="Theme.Vesna.Settings" parent="Theme.Vesna.Chrome">

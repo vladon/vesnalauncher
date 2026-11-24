@@ -59,6 +59,7 @@ import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.DrawerPreferences
 import dev.vladon.vesna.launcher.settings.IconShapeMode
+import dev.vladon.vesna.launcher.settings.LauncherPalette
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.settings.VesnaTheme
@@ -202,6 +203,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
     private lateinit var iconShape: IconShapeMode
+    private lateinit var palette: LauncherPalette
     private var showAppNames = true
 
     private val controller
@@ -225,6 +227,7 @@ class HomeActivity : ComponentActivity() {
         appearance = AppearancePreferences(newBase)
         themeMode = appearance.themeMode
         iconShape = appearance.iconShape
+        palette = appearance.palette
         // Tiles read the shape when they bind, so it is fixed before any view inflates.
         IconShape.roundedSquare = iconShape == IconShapeMode.ROUNDED_SQUARE
         val night = themeMode.nightOverride
@@ -237,6 +240,8 @@ class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // View-layer launcher controls take their palette roles from the activity theme.
+        if (palette.overlayStyle != 0) theme.applyStyle(palette.overlayStyle, true)
         pendingShortcutFocus = homeUiState.shortcutFocus
         homeUiState.shortcutFocus = null
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -408,7 +413,7 @@ class HomeActivity : ComponentActivity() {
         // does not confirm the viewport staged by an auto-closed launch.
         drawer.discardUnconfirmedAutoCloseViewport()
         // Settings can change the preference while Home is on the back stack.
-        if (appearance.themeMode != themeMode || appearance.iconShape != iconShape) {
+        if (appearance.themeMode != themeMode || appearance.iconShape != iconShape || appearance.palette != palette) {
             recreate()
             return
         }
@@ -1082,7 +1087,7 @@ class HomeActivity : ComponentActivity() {
         folderDialog = dialog
         homeUiState.openFolderId = folder.id
         homeUiState.focusedMemberId = null
-        dialog.show(homeContent, themeMode)
+        dialog.show(homeContent, themeMode, palette)
         dialog.update(renderedState)
     }
 
@@ -1174,7 +1179,7 @@ class HomeActivity : ComponentActivity() {
         val host = ComposeView(this)
         renameHost = host
         host.setContent {
-            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme()), palette = palette) {
                 when (rename) {
                     is HomeRename.Folder -> VesnaRenameDialog(
                         editor = rename.editor,
@@ -1236,7 +1241,7 @@ class HomeActivity : ComponentActivity() {
         val host = ComposeView(this)
         folderAppPickerHost = host
         host.setContent {
-            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme()), palette = palette) {
                 FolderAddAppsDialog(
                     apps = selection.apps,
                     selected = selection.selected.value,
@@ -1420,7 +1425,7 @@ class HomeActivity : ComponentActivity() {
         // Draw after the elevated drawer without adding a shadow to the host.
         host.translationZ = drawer.elevation
         host.setContent {
-            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme()), palette = palette) {
                 Box(
                     modifier = Modifier.fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.safeDrawing)

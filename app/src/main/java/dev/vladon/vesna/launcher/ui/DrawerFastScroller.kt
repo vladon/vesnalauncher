@@ -22,9 +22,9 @@ internal class DrawerFastScroller(context: Context, attrs: AttributeSet) : View(
     private data class Section(val letter: String, val position: Int)
 
     private val density = resources.displayMetrics.density
-    private val trackColor = context.getColor(R.color.vesna_outline)
-    private val thumbColor = context.getColor(R.color.workspace_page_primary)
-    private val focusColor = context.getColor(R.color.home_control_secondary)
+    private val trackColor = context.vesnaPaletteColor(R.attr.vesna_outline)
+    private val thumbColor = context.vesnaPaletteColor(R.attr.workspace_page_primary)
+    private val focusColor = context.vesnaPaletteColor(R.attr.home_control_secondary)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     private var indexedApps: List<LauncherApp>? = null

@@ -292,6 +292,7 @@ unchanged.
 
 | Item | Evidence |
 |---|---|
+| Curated launcher palettes ([#155](https://github.com/vladon/vesnalauncher/issues/155)) | 0.4.78 — [Android 15 QA](verification/VESNA-QA-PALETTES.md) verified the unchanged Vesna default, Ocean and Sunset on Home, the drawer and Settings, both themes, pref persistence, cold start, Settings search, and Russian. `PaletteContrastTest` keeps every palette's text pairs at 4.5:1 or more and outlines at 3:1 in both themes. |
 | Adaptive icon shape ([#144](https://github.com/vladon/vesnalauncher/issues/144)) | 0.4.74 — [Android 15 QA](verification/VESNA-QA-ICON-SHAPE.md) verified the unchanged default, rounded squares on Home, in the dock, the drawer and a folder, unchanged legacy icons, switching back, restart, Settings search, Dark, and Russian at 130 % text. |
 | Separate Home and app drawer icon sizes ([#146](https://github.com/vladon/vesnalauncher/issues/146)) | 0.4.73 — [Android 15 QA](verification/VESNA-QA-ICON-SIZES.md) verified the unchanged default, Home scaling with the drawer linked and unlinked, a remembered drawer size, fixed list rows, restart, Settings search, Dark, and compact RTL. |
 | Cross-page drops onto an occupied cell create or extend a folder ([#168](https://github.com/vladon/vesnalauncher/issues/168)) | 0.4.72 — [Android 15 QA](verification/VESNA-QA-CROSS-PAGE-FOLDER-DROPS.md) verified an app onto an app and onto a folder from another page, unchanged other rows and dock, cancellation, an invalid release, the pin's own cell, restart, and compact RTL. |

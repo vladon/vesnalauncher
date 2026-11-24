@@ -140,7 +140,7 @@ class AppIconView @JvmOverloads constructor(
 
     /** Tiles on an opaque drawer or folder surface don't need wallpaper label treatment. */
     internal fun useSurfaceLabel() {
-        labelView.setTextColor(context.getColor(R.color.home_control_on_surface))
+        labelView.setTextColor(context.vesnaPaletteColor(R.attr.home_control_on_surface))
         labelView.background = null
     }
 

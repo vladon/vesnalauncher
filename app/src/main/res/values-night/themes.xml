@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Vesna.Platform" parent="android:Theme.Material.NoActionBar" />
+
+    <!-- Dark variants of the palette overlays; same style names as values/themes.xml. -->
+    <style name="ThemeOverlay.Vesna.Palette.Ocean" parent="">
+        <item name="vesna_surface">#111417</item>
+        <item name="vesna_surface_container">#1D2023</item>
+        <item name="vesna_outline">#8D9196</item>
+        <item name="vesna_on_surface_variant">#C3C7CC</item>
+        <item name="workspace_page_primary">#A0CAFF</item>
+        <item name="home_control_surface">#272A2E</item>
+        <item name="home_control_secondary">#B1C9E3</item>
+        <item name="home_control_on_surface">#DFE3E8</item>
+    </style>
+
+    <style name="ThemeOverlay.Vesna.Palette.Sunset" parent="">
+        <item name="vesna_surface">#161311</item>
+        <item name="vesna_surface_container">#221F1D</item>
+        <item name="vesna_outline">#94908D</item>
+        <item name="vesna_on_surface_variant">#CAC5C3</item>
+        <item name="workspace_page_primary">#FFB37F</item>
+        <item name="home_control_surface">#2C2927</item>
+        <item name="home_control_secondary">#E0BFAD</item>
+        <item name="home_control_on_surface">#E6E1DF</item>
+    </style>
 </resources>

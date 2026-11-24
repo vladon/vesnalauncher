@@ -58,6 +58,11 @@ The Android package name is `dev.vladon.vesna.launcher`.
   the system shape, which is the default, or a rounded square. It applies on
   Home, in the dock, in the app drawer and in folders. Other icons and work
   badges stay as they are.
+- **Palette.** In Vesna settings, pick a curated accent palette: the Vesna
+  green, which is the default, Ocean blue-teal, or Sunset amber. Each palette
+  ships contrast-checked Light and Dark colors and applies to Home, the dock,
+  the app drawer, dialogs and Settings; the choice is independent of the
+  Light, Dark or System theme.
 - **Drag and drop.** Drag apps from the drawer to the workspace or dock. Move
   pins between the workspace and dock. Drop an app on another in the workspace
   to create a folder. In the open folder, hold and drag a shortcut onto another

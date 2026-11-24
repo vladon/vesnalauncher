@@ -64,6 +64,8 @@ class SettingsSearchLayoutTest {
                                 onThemeSelected = {},
                                 iconShape = IconShapeMode.SYSTEM,
                                 onIconShapeSelected = {},
+                                palette = LauncherPalette.VESNA,
+                                onPaletteSelected = {},
                                 showAppNames = true,
                                 onShowAppNamesChanged = {},
                                 layoutLocked = false,
@@ -516,6 +518,8 @@ class SettingsSearchLayoutTest {
                                         onThemeSelected = {},
                                         iconShape = IconShapeMode.SYSTEM,
                                         onIconShapeSelected = {},
+                                        palette = LauncherPalette.VESNA,
+                                        onPaletteSelected = {},
                                         showAppNames = true,
                                         onShowAppNamesChanged = {},
                                         layoutLocked = false,
@@ -566,7 +570,8 @@ class SettingsSearchLayoutTest {
             assertTrue("The fixture must have more Settings content below the viewport", until { scroller() != null })
             automation.waitForIdle(250, 4_000)
             val initialBounds = anchorBounds()
-            for (step in 0 until 10) {
+            // The Appearance page grew with the Palette group; keep scrolling to its limit.
+            for (step in 0 until 20) {
                 val region = scroller() ?: break
                 val bounds = Rect().also(region::getBoundsInScreen)
                 val x = bounds.centerX()
@@ -635,6 +640,8 @@ class SettingsSearchLayoutTest {
                             onThemeSelected = {},
                             iconShape = IconShapeMode.SYSTEM,
                             onIconShapeSelected = {},
+                            palette = LauncherPalette.VESNA,
+                            onPaletteSelected = {},
                             showAppNames = true,
                             onShowAppNamesChanged = {},
                             layoutLocked = false,

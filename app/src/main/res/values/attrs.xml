@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher View-layer color roles; values come from the activity theme, which
+         the chosen LauncherPalette overlays (see themes.xml). -->
+    <declare-styleable name="VesnaViewPalette">
+        <attr name="vesna_surface" format="color" />
+        <attr name="vesna_surface_container" format="color" />
+        <attr name="vesna_outline" format="color" />
+        <attr name="vesna_on_surface_variant" format="color" />
+        <attr name="workspace_page_primary" format="color" />
+        <attr name="home_control_surface" format="color" />
+        <attr name="home_control_secondary" format="color" />
+        <attr name="home_control_on_surface" format="color" />
+    </declare-styleable>
+</resources>

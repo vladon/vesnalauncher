@@ -159,7 +159,7 @@ class DrawerView @JvmOverloads constructor(
 
     init {
         inflate(context, R.layout.view_drawer, this)
-        setBackgroundResource(R.color.vesna_surface)
+        setBackgroundColor(context.vesnaPaletteColor(R.attr.vesna_surface))
         elevation = 8 * density
 
         adapter = DrawerAppsAdapter(
@@ -389,7 +389,7 @@ class DrawerView @JvmOverloads constructor(
         row.setText(label)
         row.textSize = 16f
         row.typeface = ResourcesCompat.getFont(context, R.font.inter_regular)
-        row.setTextColor(context.getColor(R.color.vesna_on_surface_variant))
+        row.setTextColor(context.vesnaPaletteColor(R.attr.vesna_on_surface_variant))
         row.setOnClickListener {
             onSearchAction?.invoke(intent)
             if (closeOnLaunch()) close()
