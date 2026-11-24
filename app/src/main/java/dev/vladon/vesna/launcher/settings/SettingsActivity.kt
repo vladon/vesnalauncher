@@ -32,6 +32,7 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.platform.IconPackInfo
 import dev.vladon.vesna.launcher.platform.IconPackResolver
+import dev.vladon.vesna.launcher.settings.HomeOrientation
 import dev.vladon.vesna.launcher.workspace.DockPages
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +62,7 @@ class SettingsActivity : ComponentActivity() {
     private var showDock by mutableStateOf(true)
     private var dockCapacity by mutableStateOf(DockPages.DEFAULT_CAPACITY)
     private var dockPinCount by mutableStateOf(0)
+    private var homeOrientation by mutableStateOf(HomeOrientation.SYSTEM)
     private var homeIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var dockIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
@@ -160,6 +162,8 @@ class SettingsActivity : ComponentActivity() {
                         },
                         dockCapacity = dockCapacity,
                         onDockCapacityChanged = ::changeDockCapacity,
+                        homeOrientation = homeOrientation,
+                        onHomeOrientationSelected = ::selectHomeOrientation,
                         homeIconPercent = homeIconPercent,
                         onHomeIconPercentChanged = { percent ->
                             workspace.iconScalePercent = percent
@@ -251,6 +255,7 @@ class SettingsActivity : ComponentActivity() {
         hideHomeAppNames = workspace.hideHomeAppNames
         showDock = dockPreferences.visible
         dockCapacity = dockPreferences.capacity
+        homeOrientation = workspace.orientation
         drawerLayoutMode = drawerPreferences.layoutMode
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         rememberDrawerPosition = drawerPreferences.rememberPosition
@@ -308,6 +313,13 @@ class SettingsActivity : ComponentActivity() {
         }
         dockPreferences.capacity = slots
         dockCapacity = slots
+    }
+
+    /** Home applies the choice on its next resume; launched apps keep the device orientation. */
+    private fun selectHomeOrientation(orientation: HomeOrientation) {
+        if (orientation == homeOrientation) return
+        workspace.orientation = orientation
+        homeOrientation = orientation
     }
 
     private fun changeDrawerLayoutMode(mode: DrawerLayoutMode) {

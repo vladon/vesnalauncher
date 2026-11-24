@@ -26,6 +26,10 @@
     <string name="settings_dock_capacity_detail">Favorite slots per dock page. Extra pins flow onto a second page in order; a reduction is rejected when it cannot hold every pin.</string>
     <string name="settings_dock_capacity_value">%1$d slots</string>
     <string name="toast_dock_capacity_pins">Fewer slots cannot hold every pin</string>
+    <string name="settings_home_orientation">Home screen orientation</string>
+    <string name="settings_home_orientation_detail">Rotate the workspace, dock and page controls with the device, or keep Home portrait. Apps launched from Home keep the device orientation.</string>
+    <string name="settings_home_orientation_follow">Follow device</string>
+    <string name="settings_home_orientation_portrait">Portrait</string>
     <string name="settings_icon_size_value">%1$d%%</string>
     <string name="settings_workspace_grid">Workspace grid</string>
     <string name="settings_workspace_grid_detail">Columns and rows on home pages</string>

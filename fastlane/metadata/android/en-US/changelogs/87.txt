@@ -1,0 +1,1 @@
+Home screen orientation: follow the device (as before) or lock Home to portrait. The choice survives restarts; apps launched from Home keep the device orientation.

@@ -24,6 +24,14 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = IconScale.coerce(prefs.getInt(ICON_SCALE_PERCENT, IconScale.DEFAULT))
         set(value) = prefs.edit { putInt(ICON_SCALE_PERCENT, value) }
 
+    /** Whether the Home window follows the device rotation or stays portrait. */
+    var orientation: HomeOrientation
+        get() {
+            val saved = prefs.getString(HOME_ORIENTATION, null)
+            return HomeOrientation.entries.firstOrNull { it.preferenceValue == saved } ?: HomeOrientation.SYSTEM
+        }
+        set(value) = prefs.edit { putString(HOME_ORIENTATION, value.preferenceValue) }
+
     fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
         prefs.registerOnSharedPreferenceChangeListener(listener)
     }
@@ -37,5 +45,6 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         private const val PIN_NEW_APPS = "workspace_pin_new_apps"
         private const val HIDE_HOME_APP_NAMES = "workspace_hide_app_names"
         private const val ICON_SCALE_PERCENT = "workspace_icon_scale_percent"
+        private const val HOME_ORIENTATION = "home_orientation"
     }
 }
