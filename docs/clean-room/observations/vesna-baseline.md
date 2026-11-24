@@ -3955,3 +3955,33 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   baseline. Evidence:
   `EVI-VESNA-003/parity139-*`,
   `release-0.4.80/`.
+
+## OBS-VESNA-142 — Drag toward the hidden dock area on v0.4.80
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.80 (85) on the `baseline_research_0.4.80`
+  snapshot. Show dock is a **Home screen**
+  setting (settings search `show dock`), not an
+  App drawer one. Vesna-only: Nova has no
+  hide-dock control to compare.
+- With Show dock off, the workspace grid
+  relayouts into the reclaimed space (cells grow
+  from 339 to 399 px tall — pins shift, e.g.
+  Maps [290,526] → [290,586]); this matches
+  132's "Home gives the freed space back".
+- Dragging a workspace pin (Maps) down over the
+  hidden dock area: **no dock UI appears during
+  the hold** — no placeholder, no dock bar, no
+  dock-related nodes in the hold dump — and
+  releasing there is a **no-op**: the pin stays
+  in its (relaid) workspace cell. The hidden
+  dock is not a drop target and does not
+  surface while dragging.
+- Side observation (known behaviour
+  re-confirmed): a pin drag that reaches the
+  screen's right edge previews **Home page 2 of
+  2**; releasing with a cancel discards the
+  preview page and returns the pin.
+- Restored: Show dock on, the grid back to
+  339 px cells, both launchers equal to the
+  baseline. Evidence: `EVI-VESNA-003/parity140-*`.
