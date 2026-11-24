@@ -3716,3 +3716,63 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   loads, and deleted the 0.4.77 baseline.
   Evidence: `EVI-VESNA-003/parity136-*`,
   `release-0.4.78/`.
+
+## OBS-VESNA-138 — Drawer-only background choice on v0.4.79
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.79 (84), main `b9002a74`
+  (PR #192 merge), APK SHA-256
+  `2a6a83e97465aa93faadc4e1546a3880db028c2db3c9062c561354f7389f4f3f`,
+  same verified v2 signer. Installed in place
+  over the restored v0.4.78 original state; the
+  Home, dock and drawer layouts survived the
+  upgrade.
+- **Setting:** Settings search `drawer
+  background` jumps to **App drawer → Drawer
+  background** ("Applies only to the app drawer.
+  Home, the dock, and the global theme stay
+  unchanged."), three inline radio rows —
+  **Follow theme** (default, selected out of the
+  box), **Rose**, **Sage**.
+- Navigation gotcha: opening the App drawer page
+  through the settings list lands it scrolled to
+  the top (Drawer layout section first), so the
+  row coordinates differ from the search jump; a
+  fixed-coordinate tap missed and changed
+  nothing. Use fresh bounds after every
+  navigation.
+- **Drawer-only.** Pixel probes on the empty
+  drawer gutter: Follow theme (249,250,239) →
+  Rose (254,247,253) → Sage (245,252,244) → back
+  to Follow theme with an exact restore. The
+  drawer search-field surface keeps its own
+  (232,233,222), an app-artwork probe was
+  unchanged, and the Home wallpaper, dock scrim
+  and artwork probes were pixel-identical across
+  all three choices.
+- **Persistence:** Rose survived a force-stop
+  and relaunch (drawer still (254,247,253), radio
+  still Rose).
+- **Dark theme:** with Rose selected, Theme
+  Dark turns the drawer surface to a dark Rose
+  variant (23,17,22) — the fixed backgrounds are
+  contrast-checked in both themes.
+- **Independent of the #155 palette:** with
+  palette Ocean and drawer Rose, the drawer
+  gutter stayed (254,247,253) while Home neutrals
+  follow Ocean — the settings do not fight.
+- Nova 9.0.1 comparison: the same result is
+  reached through Style → App drawer → Colors →
+  Surface with system Material You swatches
+  (arbitrary tones plus custom), while Vesna
+  ships two curated fixed backgrounds plus
+  Follow theme — narrower but pre-checked
+  ([097](#obs-vesna-097--drawer-only-background-color);
+  [verification comment in
+  #158](https://github.com/vladon/vesnalauncher/issues/158#issuecomment-7119783213)).
+- Restored Follow theme, palette Vesna and
+  Theme System; the layout equals the baseline.
+  Saved `baseline_research_0.4.79`, proved that
+  it loads, and deleted the 0.4.78 baseline.
+  Evidence: `EVI-VESNA-003/parity137-*`,
+  `release-0.4.79/`.
