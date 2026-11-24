@@ -4670,14 +4670,18 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   and no paused banner. Turning the apps back on via Nova's
   button cleared QUIET_MODE and restored the bright pairs and
   badges.
-- Environment note: during this cycle's captures the Vesna
-  drawer rendered in a dark scheme (background ≈ (17,20,14))
-  while the system stayed light (Night mode: no, Battery Saver
-  off, `low_power` 0). The dark scheme persisted across the
-  pause/resume cycles; the previous cycle's drawer frames were
-  light ((249,250,239)). The cause was not established — the
-  drawer-only background choice (OBS-VESNA-138) is the suspect
-  knob — and no setting was changed.
+- Environment note (resolved): this cycle's captures rendered in
+  Vesna's Dark theme (drawer background ≈ (17,20,14)) — the
+  Appearance Theme radio read **Dark**, left on by the earlier
+  OBS-VESNA-155 palette/theme probe, whose restoration covered
+  the dialog and folder but not the theme; the system stayed
+  light throughout (Night mode: no, Battery Saver off,
+  `low_power` 0). Every OBS-VESNA-156/157 pixel comparison ran
+  under the same theme on both sides of each diff, so the
+  results stand. The theme has been restored to System (radio
+  verified): settings and drawer are back to (249,250,239), the
+  drawer's fresh dump shows the full 57 tiles / 16 work tiles,
+  and the light frames match the older cycles.
 - **Work-app enumeration differs.** Set-diff over the saved
   dumps: Vesna's grid shows 16 work tiles — Calendar, Camera,
   Chrome, Clock, Contacts, Drive, Files, Gmail, Google,
@@ -4691,4 +4695,16 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   work Voice Search entry (an activity of the Google package;
   Vesna lists Google as well). Nova's list matches the package
   set one-to-one.
+- **Hidden work apps.** Both launchers hide work copies
+  individually. Vesna's Settings › App drawer › Hide apps lists
+  Work Calendar, Work Camera, … as separate toggle rows:
+  hiding Work Camera removed only that tile and kept the
+  personal Camera. Nova's Hide apps page lists the work copies
+  as badge-marked icons with plain labels and per-entry
+  checkboxes; with the work Camera checked, its Work tab list
+  skipped Camera (Calendar → Chrome). Hiding is
+  launcher-private: with the work Camera hidden in Nova,
+  Vesna's drawer still showed the Work Camera tile. Restored:
+  both hides cleared — the tile is back in Vesna's grid and
+  Camera is back in Nova's Work list.
 - Evidence: `EVI-VESNA-003/parity153-*`.
