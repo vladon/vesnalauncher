@@ -42,6 +42,10 @@ The Android package name is `dev.vladon.vesna.launcher`.
   and press Enter to open a single result. When a search matches nothing,
   optional **Search actions** can hand the query to the web, Maps, Play Store
   or YouTube on an explicit tap; nothing is sent while typing.
+  In App drawer settings you can also pick a **Drawer background**:
+  follow the theme, which is the default, Rose, or Sage. The fixed
+  backgrounds are contrast-checked in both themes and change only the
+  drawer; Home, the dock, and the global theme stay as they are.
   Enable **Automatically close drawer** in App drawer settings if you want
   Back to return to Home after launching an app.
   Enable **Remember position** to reopen the vertical list at the same place

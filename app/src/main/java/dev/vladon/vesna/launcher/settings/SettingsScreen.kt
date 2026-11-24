@@ -150,6 +150,8 @@ internal fun SettingsScreen(
     onShowKeyboardOnDrawerOpenChanged: (Boolean) -> Unit,
     drawerSearchActions: Boolean,
     onDrawerSearchActionsChanged: (Boolean) -> Unit,
+    drawerBackground: DrawerBackgroundMode,
+    onDrawerBackgroundSelected: (DrawerBackgroundMode) -> Unit,
     drawerIconPercent: Int,
     onDrawerIconPercentChanged: (Int) -> Unit,
     drawerFollowsHome: Boolean,
@@ -305,6 +307,7 @@ internal fun SettingsScreen(
                             }
                             SettingsPage.APP_DRAWER -> DrawerAppSettings(
                                 drawerLayoutMode, onDrawerLayoutModeSelected,
+                                drawerBackground, onDrawerBackgroundSelected,
                                 closeDrawerOnLaunch, onCloseDrawerOnLaunchChanged,
                                 rememberDrawerPosition, onRememberDrawerPositionChanged,
                                 showKeyboardOnDrawerOpen, onShowKeyboardOnDrawerOpenChanged,
@@ -314,6 +317,7 @@ internal fun SettingsScreen(
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
                                 searchTarget == R.string.settings_hide_drawer_apps,
                                 searchTarget == R.string.settings_drawer_layout,
+                                searchTarget == R.string.settings_drawer_background,
                                 searchTarget == R.string.settings_drawer_close_on_launch,
                                 searchTarget == R.string.settings_drawer_remember_position,
                                 searchTarget == R.string.settings_drawer_show_keyboard,
@@ -454,6 +458,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_remember_position, R.string.settings_drawer_remember_position_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_show_keyboard, R.string.settings_drawer_show_keyboard_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_search_actions, R.string.settings_search_actions_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_background, R.string.settings_drawer_background_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_follow_home, R.string.settings_drawer_follow_home_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_icon_size, R.string.settings_drawer_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
@@ -693,6 +698,8 @@ private fun SettingsSlider(
 private fun DrawerAppSettings(
     layoutMode: DrawerLayoutMode,
     onLayoutModeSelected: (DrawerLayoutMode) -> Unit,
+    background: DrawerBackgroundMode,
+    onBackgroundSelected: (DrawerBackgroundMode) -> Unit,
     closeOnLaunch: Boolean,
     onCloseOnLaunchChanged: (Boolean) -> Unit,
     rememberPosition: Boolean,
@@ -710,6 +717,7 @@ private fun DrawerAppSettings(
     onHiddenChanged: (AppKey, Boolean) -> Unit,
     hideHighlighted: Boolean,
     layoutHighlighted: Boolean,
+    backgroundHighlighted: Boolean,
     closeOnLaunchHighlighted: Boolean,
     rememberPositionHighlighted: Boolean,
     showKeyboardHighlighted: Boolean,
@@ -719,19 +727,25 @@ private fun DrawerAppSettings(
 ) {
     // A search target may not be composed yet in a short, scaled viewport.
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = when {
-        hideHighlighted -> 7
-        iconSizeHighlighted -> 6
-        followHomeHighlighted -> 5
-        searchActionsHighlighted -> 4
-        showKeyboardHighlighted -> 3
-        rememberPositionHighlighted -> 2
-        closeOnLaunchHighlighted -> 1
+        hideHighlighted -> 8
+        iconSizeHighlighted -> 7
+        followHomeHighlighted -> 6
+        searchActionsHighlighted -> 5
+        showKeyboardHighlighted -> 4
+        rememberPositionHighlighted -> 3
+        closeOnLaunchHighlighted -> 2
+        backgroundHighlighted -> 1
         else -> 0
     })
     LazyColumn(Modifier.fillMaxWidth(), state = listState) {
         item(key = "drawer-layout") {
             SearchTarget(layoutHighlighted) {
                 DrawerLayoutSettings(layoutMode, onLayoutModeSelected)
+            }
+        }
+        item(key = "drawer-background") {
+            SearchTarget(backgroundHighlighted) {
+                DrawerBackgroundSettings(background, onBackgroundSelected)
             }
         }
         item(key = "close-on-launch") {
@@ -827,6 +841,42 @@ private fun DrawerAppSettings(
                     .toggleable(value = hidden, role = Role.Switch) { onHiddenChanged(app.key, it) }
                     .semantics { stateDescription = visibility },
             )
+        }
+    }
+}
+
+@Composable
+private fun DrawerBackgroundSettings(mode: DrawerBackgroundMode, onSelect: (DrawerBackgroundMode) -> Unit) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            stringResource(R.string.settings_drawer_background),
+            Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.settings_drawer_background_detail),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (choice in DrawerBackgroundMode.entries) {
+                val selected = choice == mode
+                val label = stringResource(
+                    when (choice) {
+                        DrawerBackgroundMode.THEME -> R.string.settings_drawer_background_theme
+                        DrawerBackgroundMode.ROSE -> R.string.settings_drawer_background_rose
+                        DrawerBackgroundMode.SAGE -> R.string.settings_drawer_background_sage
+                    },
+                )
+                ListItem(
+                    headlineContent = { Text(label) },
+                    leadingContent = { RadioButton(selected = selected, onClick = null) },
+                    modifier = Modifier
+                        .vesnaFocusRing(radius = 12.dp)
+                        .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
+                )
+            }
         }
     }
 }

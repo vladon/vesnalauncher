@@ -163,6 +163,11 @@
     <string name="drawer_search_hint_compact">Search</string>
     <string name="drawer_clear_search">Clear search</string>
     <string name="settings_search_actions">Search actions</string>
+    <string name="settings_drawer_background">Drawer background</string>
+    <string name="settings_drawer_background_detail">Applies only to the app drawer. Home, the dock, and the global theme stay unchanged.</string>
+    <string name="settings_drawer_background_theme">Follow theme</string>
+    <string name="settings_drawer_background_rose">Rose</string>
+    <string name="settings_drawer_background_sage">Sage</string>
     <string name="settings_search_actions_detail">When a search matches no apps, offer to hand the query to other apps. Nothing is sent while typing and the local search is unchanged.</string>
     <string name="drawer_search_action_web">Search the web</string>
     <string name="drawer_search_action_maps">Search in Maps</string>

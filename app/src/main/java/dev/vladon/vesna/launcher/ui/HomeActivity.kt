@@ -251,6 +251,10 @@ class HomeActivity : ComponentActivity() {
         workspace = findViewById(R.id.workspace)
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
+        drawer.applyDrawerBackground(
+            drawerPreferences.background,
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES,
+        )
         applyAppNameVisibility(appearance.showAppNames)
         homeContent = findViewById(R.id.home_content)
         homeControls = findViewById(R.id.home_controls)
@@ -422,6 +426,10 @@ class HomeActivity : ComponentActivity() {
         drawer.rememberPosition = drawerPreferences.rememberPosition
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
         drawer.externalSearchActions = drawerPreferences.externalSearchActions
+        drawer.applyDrawerBackground(
+            drawerPreferences.background,
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES,
+        )
         applyDockVisibility()
         applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps

@@ -38,6 +38,7 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.AppSearch
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.DrawerBackgroundMode
 import dev.vladon.vesna.launcher.settings.DrawerLayoutMode
 import kotlin.math.abs
 
@@ -59,6 +60,15 @@ class DrawerView @JvmOverloads constructor(
 
     /** With the opt-in setting, an empty search offers actions that pass the query to other apps. */
     internal var externalSearchActions = false
+
+    /**
+     * Applies the drawer-only background choice; [dark] must be the effective night mode.
+     * [DrawerBackgroundMode.THEME] keeps the palette-driven surface.
+     */
+    internal fun applyDrawerBackground(mode: DrawerBackgroundMode, dark: Boolean) {
+        val argb = if (dark) mode.darkArgb else mode.lightArgb
+        setBackgroundColor(if (argb != 0) argb else context.vesnaPaletteColor(R.attr.vesna_surface))
+    }
 
     internal var closeOnLaunch: () -> Boolean = { false }
     internal var rememberPosition = false

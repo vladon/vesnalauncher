@@ -42,6 +42,13 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(EXTERNAL_SEARCH_ACTIONS, false)
         set(value) = prefs.edit { putBoolean(EXTERNAL_SEARCH_ACTIONS, value) }
 
+    var background: DrawerBackgroundMode
+        get() {
+            val saved = prefs.getString(BACKGROUND, null)
+            return DrawerBackgroundMode.entries.firstOrNull { it.preferenceValue == saved } ?: DrawerBackgroundMode.THEME
+        }
+        set(value) = prefs.edit { putString(BACKGROUND, value.preferenceValue) }
+
     /** The drawer's own artwork size, kept for when it stops following Home. */
     var iconScalePercent: Int
         get() = IconScale.coerce(prefs.getInt(ICON_SCALE_PERCENT, IconScale.DEFAULT))
@@ -67,6 +74,7 @@ internal class DrawerPreferences(context: Context) {
         private const val ICON_SCALE_PERCENT = "drawer_icon_scale_percent"
         private const val LAYOUT_MODE = "drawer_layout_mode"
         private const val REMEMBER_POSITION = "drawer_remember_position"
+        private const val BACKGROUND = "drawer_background"
     }
 }
 
