@@ -4240,6 +4240,15 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   settled by **0.95 s** (the first captured
   frame). A fresh-boot Nova number was not
   taken.
+- **Follow-up (v0.4.82, normal `adb reboot`
+  path):** on the same freshly rebooted system,
+  force-stop/relaunch measured — **Nova 9.0.1:
+  settled ≤ 0.91 s / 1.2 s**; **Vesna v0.4.82:
+  TotalTime 370–490 ms, settled ≤ 2.11 s /
+  2.14 s**. The fresh-reboot gap is ~2×
+  (Nova ~1 s vs Vesna ~2.1 s); the earlier
+  4.4–6.3 s numbers were snapshot-restore first
+  boots (colder than a normal reboot).
 - Related Vesna acceptance suggestion (for the
   implementer to size): from a force-stopped
   cold start on a freshly booted API 35
