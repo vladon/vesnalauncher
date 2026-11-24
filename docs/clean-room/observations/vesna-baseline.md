@@ -4708,3 +4708,39 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   both hides cleared — the tile is back in Vesna's grid and
   Camera is back in Nova's Work list.
 - Evidence: `EVI-VESNA-003/parity153-*`.
+
+## OBS-VESNA-158 — Notification badge configuration parity (SYS-003)
+
+- Cycle start: v0.4.82 remains the latest Vesna release and the
+  installed AVD build (main tip b103262a, no open PRs).
+- **Nova 9.0.1 Prime** (main settings › Notification badges):
+  a master switch (ON), *Choose a style* = **Dynamic badges**
+  (the subtitle names the alternatives — notification dots and
+  numeric dots), a **Large / Medium / Small** size radio with a
+  live preview tile (Small selected on this AVD), a
+  *Notifications in popup menu* toggle (ON — show notification
+  content when long-pressing a badged app), and a *Test
+  notification badge* button (known to post a group summary,
+  which Android never badges — OBS-SYS-113).
+- **Vesna v0.4.82** has no badge configuration at all: settings
+  search for `badge` returns only the work-badge mentions inside
+  the Icon shape and Icon pack subtitles; `notification` and
+  `dot` return **No settings found**.
+- **The pipeline difference is structural.** The research probe
+  posted a real, badgeable notification (importance=4, no group
+  flags). The AVD's `enabled_notification_listeners` holds only
+  Google's AiAi and Pixel Launcher's listener — neither
+  launcher's — so nothing renders on either launcher here.
+  Decisively, Vesna's APK contains **no
+  NotificationListenerService** (no `listener` reference in the
+  dex or the binary manifest — the only Badge strings are the
+  work-badge artwork), so notification badges are structurally
+  impossible on v0.4.82. Nova implements
+  `com.teslacoilsw.launcher/.notificationlistener.NotificationListener`
+  (granted on ENV-1, OBS-SYS-112).
+- Tooling note: the probe was rebuilt (same debug signature) to
+  post a notification from a broadcast receiver, after its first
+  raw-sdk build rendered an empty activity; the fixture remains
+  installed for user 0 and 11. The test notification was
+  dismissed after the check. No launcher setting was changed.
+- Evidence: `EVI-VESNA-003/parity154-*`.
