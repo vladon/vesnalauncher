@@ -3953,5 +3953,5 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   reboot. Saved `baseline_research_0.4.80`,
   proved that it loads, and deleted the 0.4.79
   baseline. Evidence:
-  `EVI-VESNA-003/parity140-*`,
+  `EVI-VESNA-003/parity139-*`,
   `release-0.4.80/`.
