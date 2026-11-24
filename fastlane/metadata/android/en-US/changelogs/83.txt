@@ -1,0 +1,1 @@
+Vesna settings gains a Palette choice under Appearance: the default Vesna green, Ocean blue-teal, or Sunset amber. Each curated palette ships contrast-checked Light and Dark colors and applies to Home, the dock, the drawer, dialogs and Settings, independently of the System, Light or Dark theme.

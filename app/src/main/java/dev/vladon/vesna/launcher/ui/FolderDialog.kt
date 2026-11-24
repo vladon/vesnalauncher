@@ -51,6 +51,7 @@ import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.LauncherPalette
 import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.settings.VesnaTheme
 import dev.vladon.vesna.launcher.workspace.Folder
@@ -146,9 +147,9 @@ internal class FolderDialog(
         }
     }
 
-    fun show(parent: ViewGroup, themeMode: ThemeMode) {
+    fun show(parent: ViewGroup, themeMode: ThemeMode, palette: LauncherPalette) {
         host.setContent {
-            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme())) {
+            VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme()), palette = palette) {
                 AlertDialog(
                     onDismissRequest = { if (!list.cancelMemberDrag()) dismiss() },
                     title = { Text(currentTitle, maxLines = 2, overflow = TextOverflow.Ellipsis) },

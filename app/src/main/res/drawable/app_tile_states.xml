@@ -13,7 +13,7 @@
                 <inset android:inset="2dp">
                     <shape>
                         <corners android:radius="12dp" />
-                        <solid android:color="@color/home_control_surface" />
+                        <solid android:color="?attr/home_control_surface" />
                         <stroke android:width="2dp" android:color="@color/home_control_secondary" />
                     </shape>
                 </inset>

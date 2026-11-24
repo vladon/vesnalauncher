@@ -50,7 +50,7 @@ internal class FolderGridView(context: Context, attrs: AttributeSet) : RecyclerV
     private val targetInset = 6 * density
     private val targetRadius = 12 * density
     private val targetPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ColorUtils.setAlphaComponent(context.getColor(R.color.workspace_page_primary), 41)
+        color = ColorUtils.setAlphaComponent(context.vesnaPaletteColor(R.attr.workspace_page_primary), 41)
     }
     private val scrollZone = 24 * density
     private val scrollStep = (6 * density).toInt().coerceAtLeast(1)

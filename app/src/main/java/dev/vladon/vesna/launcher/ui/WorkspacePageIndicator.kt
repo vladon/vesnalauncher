@@ -13,8 +13,8 @@ import kotlin.math.ceil
 class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val density = resources.displayMetrics.density
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val primary = context.getColor(R.color.workspace_page_primary)
-    private val outline = context.getColor(R.color.vesna_outline)
+    private val primary = context.vesnaPaletteColor(R.attr.workspace_page_primary)
+    private val outline = context.vesnaPaletteColor(R.attr.vesna_outline)
     private var selected = -1
     private var count = 0
 

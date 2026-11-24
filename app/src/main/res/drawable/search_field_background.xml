@@ -2,16 +2,16 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_activated="true">
         <shape>
-            <solid android:color="@color/home_control_surface" />
+            <solid android:color="?attr/home_control_surface" />
             <corners android:radius="100dp" />
-            <stroke android:width="2dp" android:color="@color/home_control_secondary" />
+            <stroke android:width="2dp" android:color="?attr/home_control_secondary" />
         </shape>
     </item>
     <item>
         <shape>
-            <solid android:color="@color/home_control_surface" />
+            <solid android:color="?attr/home_control_surface" />
             <corners android:radius="100dp" />
-            <stroke android:width="1dp" android:color="@color/vesna_outline" />
+            <stroke android:width="1dp" android:color="?attr/vesna_outline" />
         </shape>
     </item>
 </selector>

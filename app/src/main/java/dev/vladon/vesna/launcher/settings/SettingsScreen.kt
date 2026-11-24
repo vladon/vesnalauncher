@@ -122,6 +122,8 @@ internal fun SettingsScreen(
     onThemeSelected: (ThemeMode) -> Unit,
     iconShape: IconShapeMode,
     onIconShapeSelected: (IconShapeMode) -> Unit,
+    palette: LauncherPalette,
+    onPaletteSelected: (LauncherPalette) -> Unit,
     showAppNames: Boolean,
     onShowAppNamesChanged: (Boolean) -> Unit,
     layoutLocked: Boolean,
@@ -326,6 +328,10 @@ internal fun SettingsScreen(
                                     IconShapeSettings(iconShape, onIconShapeSelected)
                                 }
                                 Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_palette) {
+                                    PaletteSettings(palette, onPaletteSelected)
+                                }
+                                Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_show_app_names) {
                                     SettingsSwitch(
                                         R.string.settings_show_app_names, R.string.settings_show_app_names_detail,
@@ -453,6 +459,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_icon_shape, R.string.settings_icon_shape_detail),
+                    SearchEntry(SettingsPage.APPEARANCE, R.string.settings_palette, R.string.settings_palette_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
                 )
                 for (entry in entries) {
@@ -594,6 +601,35 @@ private fun IconShapeSettings(shape: IconShapeMode, onSelect: (IconShapeMode) ->
                 modifier = Modifier
                     .vesnaFocusRing(radius = 12.dp)
                     .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(choice) }),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PaletteSettings(chosen: LauncherPalette, onSelect: (LauncherPalette) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_palette),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.semantics { heading() },
+    )
+    Spacer(Modifier.height(8.dp))
+    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (palette in LauncherPalette.entries) {
+            val selected = palette == chosen
+            val label = stringResource(
+                when (palette) {
+                    LauncherPalette.VESNA -> R.string.settings_palette_vesna
+                    LauncherPalette.OCEAN -> R.string.settings_palette_ocean
+                    LauncherPalette.SUNSET -> R.string.settings_palette_sunset
+                },
+            )
+            ListItem(
+                headlineContent = { Text(label) },
+                leadingContent = { RadioButton(selected = selected, onClick = null) },
+                modifier = Modifier
+                    .vesnaFocusRing(radius = 12.dp)
+                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(palette) }),
             )
         }
     }

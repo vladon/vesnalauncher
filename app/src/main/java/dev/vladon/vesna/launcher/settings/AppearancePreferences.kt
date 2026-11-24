@@ -20,6 +20,13 @@ internal class AppearancePreferences(context: Context) {
         }
         set(value) = prefs.edit { putString(ICON_SHAPE, value.preferenceValue) }
 
+    var palette: LauncherPalette
+        get() {
+            val saved = prefs.getString(PALETTE, null)
+            return LauncherPalette.entries.firstOrNull { it.preferenceValue == saved } ?: LauncherPalette.VESNA
+        }
+        set(value) = prefs.edit { putString(PALETTE, value.preferenceValue) }
+
     var showAppNames: Boolean
         get() = prefs.getBoolean(SHOW_APP_NAMES, true)
         set(value) = prefs.edit { putBoolean(SHOW_APP_NAMES, value) }
@@ -28,5 +35,6 @@ internal class AppearancePreferences(context: Context) {
         const val THEME_MODE = "theme_mode"
         const val SHOW_APP_NAMES = "show_app_names"
         const val ICON_SHAPE = "icon_shape"
+        const val PALETTE = "palette"
     }
 }
