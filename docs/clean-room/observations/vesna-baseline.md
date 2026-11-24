@@ -4506,3 +4506,33 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: theme System, no folder; both
   launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity149-*`.
+
+## OBS-VESNA-155 — Rename folder dialog palette/theme probe completed on v0.4.82
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.82 (87) on the
+  `baseline_research_0.4.82` snapshot. Completes
+  the dialog part left unprobed in 150/154.
+- **Root cause of the earlier failures found:**
+  the Rename-folder probe tapped at a hardcoded
+  x=540, which falls in the gap between the
+  popup's two action buttons (Ungroup at
+  x 260–526, Rename at x 611–865) — the gap
+  belongs to the wider Ungroup clickable row, so
+  every earlier tap dissolved the folder instead
+  of opening the dialog. Tapping the **text
+  node's own bounds center** (738,1460) opens
+  the dialog reliably.
+- **Dialog verified under the Vesna light
+  palette:** surface (232,233,222) at two
+  points, an EditText ("Folder"), Cancel/Save
+  buttons — a standard Material dialog following
+  the palette neutrals.
+- **Dialog verified under the Dark theme:**
+  surface **(40,43,36)** at the same points —
+  the dialog follows the theme's dark neutrals.
+- Restored: dialog cancelled, folder dissolved
+  via Ungroup (tapped by the label bounds),
+  members back to their exact baseline cells;
+  both launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity150-*`.
