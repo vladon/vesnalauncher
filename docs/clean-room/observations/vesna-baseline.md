@@ -4303,6 +4303,29 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity142-*`.
 
+## OBS-VESNA-155 follow-up — Limit apps to one row on Nova 9.0.1
+
+- Same environment (Nova 9.0.1 Prime,
+  v0.4.82 cycle). Settings → Settings tab →
+  search `limit apps` → **Limit apps to one
+  row** (checkbox, checked by default):
+  "For a better visual experience, only show
+  the first row of app results."
+- **Verified functional:** with the checkbox on,
+  a drawer query `ca` renders Camera and
+  Calendar on the **same y (309)** — one row of
+  app results; the matched apps that would fill
+  the second row are not shown. With the
+  checkbox off, the full result grid renders
+  (verified by toggling off and back on during
+  the probe).
+- Restore: checkbox left at its default (on).
+- Vesna comparison for #183: Vesna's drawer
+  search shows the full result grid with no
+  row-limit control. A "limit to one row"
+  toggle would match Nova's behavior.
+  Evidence: `EVI-VESNA-003/parity147-*`.
+
 ## OBS-VESNA-149 — Nova Web suggestions service affects the drawer on 9.0.1
 
 - Android 15 research AVD, `en-US`. Nova 9.0.1
