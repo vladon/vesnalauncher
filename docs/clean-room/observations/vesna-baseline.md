@@ -3412,47 +3412,6 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `release-0.4.75/`.
   [Stage 1 verification in #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7116536290).
 
-## OBS-VESNA-132 — Show dock switch on v0.4.76
-
-- Android 15 research AVD, `en-US`. Published
-  signed Vesna v0.4.76 (81), tag at PR #188
-  merge `5c45dca6bdda7530a32322aaf243f3fd6f80013f`,
-  APK SHA-256
-  `f7750a47739172de22854e9e0c40342b2eca5fcbad733250494cb488d2caf9b3`,
-  with the same verified v2 signer as v0.4.75.
-  Installed in place over the restored original
-  state; both original layouts survived the
-  upgrade. Nova 9.0.1 Prime (90100) was not
-  re-run: its dock visibility gesture is in 037
-  and the version is unchanged.
-- **Setting found:** Settings search for `dock`
-  offered **Vesna settings › Home screen › Show
-  dock** ("Favorite apps at the bottom of Home. A
-  hidden dock keeps its pins and returns with
-  them."), on by default.
-- **Hidden:** the dock disappeared, its space went
-  back to Home (a workspace cell grew from 339 px
-  to 566 px tall) and the bottom controls kept
-  **Home options** and **Open app drawer**. The
-  Home pin menu no longer offered **Add to dock**
-  (Remove from workspace, Edit name and App info
-  only).
-- **Hidden across restart:** after a force-stop
-  and relaunch the dock stayed hidden with the
-  same expanded cells.
-- **Re-shown:** the dock returned with the same
-  four pins in the same order and the workspace
-  cells restored to 339 px.
-- Not exercised: drag behaviour toward the hidden
-  dock area, Dark and compact RTL.
-- Restored Show dock on; the workspace equals the
-  default frame. Saved
-  `baseline_research_0.4.76`, proved that it
-  loads, and deleted the 0.4.75 baseline.
-  Evidence: `EVI-VESNA-003/parity130-*`,
-  `release-0.4.76/`.
-  [Visibility verification in #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7117127934).
-
 ## OBS-VESNA-131 — Home screen rotation
 
 - Android 15 research AVD, `en-US`, gesture
