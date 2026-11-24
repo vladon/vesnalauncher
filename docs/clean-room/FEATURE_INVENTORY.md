@@ -65,7 +65,7 @@ behavior, an ID is never reassigned to a different behavior.
 | DRAWER-013 | Uninstalled app handling | Both remove an uninstalled app's pins from Home, the dock and folders at once, keep the other pins and members, and drop it from the drawer; the same after restart. Reinstalling the app does not bring the pins back in either (signed Vesna v0.4.68/69; OBS-VESNA-113/115). |
 | DRAWER-014 | Work profile apps | discovered (Work apps in their own tab setting, checked) |
 | DRAWER-015 | Alphabetical index/scroller | discovered (Fast scrollbar) |
-| DRAWER-016 | Empty and error states | pending |
+| DRAWER-016 | Empty and error states | Nova 9.0.1 shows web suggestions and provider icons on a no-match query. Signed Vesna v0.4.76 shows **No matching apps** with no external suggestions (consistent with 028; #113). |
 
 ## DOCK — Dock / favorites bar
 

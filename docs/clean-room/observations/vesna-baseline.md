@@ -3560,3 +3560,24 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored through the baseline snapshot. Dock
   back to Calendar, Camera, Chrome, Clock.
   Evidence: `EVI-VESNA-003/parity131-*`.
+
+## OBS-VESNA-134 — Drawer search empty state on v0.4.76
+
+- Android 15 research AVD, `en-US`, gesture
+  navigation, default settings. Nova 9.0.1 Prime
+  (90100) and signed Vesna v0.4.76 (81).
+- **Query with no matches:** typing `zzzz` in the
+  drawer search field. Vesna shows the query with
+  **No matching apps** centred below the field and
+  nothing else. Nova shows the query with provider
+  icons (Google, Play Store, Wikipedia, Google
+  Maps, YouTube), web suggestions from Google
+  (`zzzz zzzz zzzz word` etc.) and a **Home**
+  button, with no local-app results.
+- This is consistent with 028: Nova separates
+  provider buttons from web suggestions while
+  Vesna shows only a no-results state. The
+  external providers and suggestions gap is
+  tracked in #113.
+- Restored both launchers to the baseline.
+  Evidence: `EVI-VESNA-003/parity132-*`.
