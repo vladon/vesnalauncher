@@ -4290,3 +4290,28 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: Web suggestions = Google; both
   launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity142-*`.
+
+## OBS-VESNA-150 — Palette reaches the folder popup on v0.4.81
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.81 (86) on the
+  `baseline_research_0.4.81` snapshot. Extends
+  the #155 surface probes (137) to popups.
+- A folder (Maps dropped onto Gmail) was opened
+  under the Vesna palette and again under Ocean:
+  the open-folder popup surface follows the
+  palette neutrals — Vesna (232,233,222) vs
+  Ocean (229,233,238) — same pixel point, and
+  the palette switch was applied live while the
+  popup reopened.
+- The popup's **Ungroup folder** action was
+  exercised twice more (once by accident via a
+  stale-coordinate tap between the two buttons):
+  every time the folder dissolved and both
+  members returned to their exact baseline
+  cells — the members' return positions are
+  stable, not "first free cell".
+- Restored: palette Vesna (dot green verified),
+  no folder (workspace equal to the baseline),
+  both launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity143-*`.
