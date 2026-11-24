@@ -3881,3 +3881,77 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   states verified), grid artwork back to
   126 px, both launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity138-*`.
+
+## OBS-VESNA-141 — Icon packs on v0.4.80
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.80 (85), main `edeaa956`
+  (PR #193 merge), APK SHA-256
+  `a65c96fd302a00c7b2dbe7dc7ec591f1b94dddd823abb56ad979455b6535baf9`,
+  same verified v2 signer. Installed in place
+  over the restored v0.4.79 original state; the
+  layouts survived the upgrade. Fixture:
+  official Arcticons Black 15.4.7
+  (`com.donnnno.arcticons.light`), installed
+  without opening it.
+- **Discovery and selection:** Settings search
+  `icon pack` jumps to **Appearance → Icon
+  pack**; Arcticons Black is discovered and
+  selectable; System (default) is selected out
+  of the box.
+- **Coverage.** With Arcticons selected: the
+  Home Gmail artwork, the dock Chrome artwork
+  and the drawer Calendar artwork all switch to
+  the pack's outline art (pixel diffs against
+  the pre-pack frames); the wallpaper, dock
+  scrim, empty cells and dock gaps are
+  pixel-identical; pin positions and the
+  workspace set are unchanged.
+- **Uncovered apps:** none found in this
+  fixture — Arcticons covers every installed
+  app on this AVD (SIM Toolkit changed too), so
+  the "ordinary artwork when a pack has no
+  match" case is untested, not passing.
+- **Shape interaction:** Icon shape → Rounded
+  square with the pack applied left the Gmail
+  pack artwork pixel-identical — no shape mask
+  on pack art, as the release note says.
+- **Persistence:** the pack artwork survived a
+  force-stop and relaunch pixel-identically.
+- **System restore:** selecting System restored
+  the original artwork to the exact pre-pack
+  pixels while Arcticons remained installed.
+- **Removed pack:** with Arcticons selected,
+  uninstalling it removed the row from the
+  picker; the stale pack artwork remained on
+  screen until a force-stop and relaunch, after
+  which Home and dock artwork fell back to the
+  exact system pixels. The transient stale icons
+  self-heal on restart.
+- Folder coverage is a release-note claim only
+  (untested, same caveat as #144's folder
+  verification).
+- **Snapshot-load note.** Loading
+  `baseline_research_0.4.80` after the cycle, the
+  SIM Toolkit pin was missing from the workspace
+  and drawer: the snapshot boot starts the
+  launcher while StkMain is still disabled (no
+  ICC yet), the live package handler hides the
+  pin, and once a real reboot initialized the
+  ICC the pin reappeared at its original cell
+  (the QA-003 keep-placement behaviour). Not a
+  v0.4.80 regression — a boot-order race of the
+  snapshot-load path; a normal reboot is clean.
+- Nova 9.0.1 comparison stands as filed in
+  [095](#obs-vesna-095--installed-icon-pack-on-home-dock-and-drawer)
+  (Look & feel → Icon style → Icon theme).
+  [Verification comment in
+  #157](https://github.com/vladon/vesnalauncher/issues/157#issuecomment-7120822290).
+- Restored: pack System, shape System, icon
+  pack picker back to System (default) only;
+  layouts equal to the baseline after a normal
+  reboot. Saved `baseline_research_0.4.80`,
+  proved that it loads, and deleted the 0.4.79
+  baseline. Evidence:
+  `EVI-VESNA-003/parity140-*`,
+  `release-0.4.80/`.
