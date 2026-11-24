@@ -3760,7 +3760,11 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - **Independent of the #155 palette:** with
   palette Ocean and drawer Rose, the drawer
   gutter stayed (254,247,253) while Home neutrals
-  follow Ocean — the settings do not fight.
+  follow Ocean — the settings do not fight. The
+  Home floating buttons likewise stayed
+  palette-surfaced ((232,233,222) under both
+  Follow theme and Rose), so the fixed drawer
+  background does not leak onto Home controls.
 - Nova 9.0.1 comparison: the same result is
   reached through Style → App drawer → Colors →
   Surface with system Material You swatches
