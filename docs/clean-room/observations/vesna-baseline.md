@@ -4108,3 +4108,61 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: no setting was changed (inventory
   only); both launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity140-*`.
+
+## OBS-VESNA-146 — Dock capacity and two-page overflow on v0.4.81
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.81 (86), main `7c7387d6`
+  (PR #194 merge), APK SHA-256
+  `514eb103fe1b6801ca4e8e484c892462edc6b84933f5b5843c7e3e673055396d`,
+  same verified v2 signer. Installed in place
+  over the restored v0.4.80 original state; the
+  layouts survived the upgrade. Completes #115
+  stage 3.
+- **Control:** Settings search `dock capacity` →
+  **Home screen → Dock capacity** ("Favorite
+  slots per dock page. Extra pins flow onto a
+  second page in order; a reduction is rejected
+  when it cannot hold every pin."), a 2–8 stop
+  slider, default **4 slots**.
+- **Dock-only geometry:** at 6 slots the four
+  pins relayout into six ~176 px slots while the
+  workspace is untouched; two drawer pins added
+  via **Add to dock** took slots 5 and 6 on the
+  same page (x = 10/186/362/539/716/893).
+- **Overflow:** reducing to 4 slots flowed Maps
+  and Gmail onto a **second dock page in order**
+  (Maps at x=10, Gmail at 275); page 1 kept
+  Calendar, Camera, Chrome, Clock.
+- **Dock-only paging:** a horizontal swipe
+  across the dock (900→150 at y=2220) flips dock
+  pages and back; the workspace page stayed
+  unchanged.
+- **Reduction rejection:** with 6 pins, a slider
+  move to 2 slots was rejected — the value
+  stayed **4 slots** and a snackbar read **"Fewer
+  slots cannot hold every pin"** (captured on
+  screen).
+- **Persistence:** after a force-stop and
+  relaunch the capacity, the page-1 order and
+  the page-2 overflow were intact; page-2 tiles
+  measured the same 265 px width as page 1 at
+  the default icon size.
+- Not exercised: the 8-slot stop (2/4/6
+  verified) and the Dock icon size on the
+  overflow page beyond the tile-width equality.
+- Nova comparison: Nova puts the overflow pin on
+  a second dock page as well
+  ([113](#obs-vesna-113--uninstalled-app-with-three-pins));
+  Vesna adds the explicit per-page capacity
+  slider Nova does not expose.
+  [Stage 3 verification in
+  #115](https://github.com/vladon/vesnalauncher/issues/115#issuecomment-7129600976).
+- Restored: Maps and Gmail removed from dock
+  page 2 via their menus; capacity left at 4;
+  both launchers equal to the baseline. Saved
+  `baseline_research_0.4.81`, proved that it
+  loads (after the usual post-boot inset settle
+  on the Nova bounds), and deleted the 0.4.80
+  baseline. Evidence: `EVI-VESNA-003/parity141-*`,
+  `release-0.4.81/`.
