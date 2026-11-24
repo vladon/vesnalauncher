@@ -125,8 +125,11 @@ The work profile is a **persistent, owner-approved expansion**
 --managed Work` (user 11), started with `am start-user -w 11`,
 profile owner set to the debug-signed research probe
 `com.vesnaresearch.iconprobe` 1.0 (installed for user 0 and 11;
-custom magenta icon no pack covers). The profile yields 17 work
-entries in the drawers (16 system apps + the probe). Do not remove
+custom magenta icon no pack covers). Nova's Work tab lists 17
+  work apps (16 system apps + the probe); Vesna's merged grid
+  shows 16 work tiles — it omits the work YouTube/YT Music
+  copies and shows a work Voice Search entry instead
+  (OBS-VESNA-157 set-diff). Do not remove
 the probe or the profile between cycles — later observations reuse
 them. Arcticons Black 15.4.7 (`com.donnnno.arcticons.light`) was
 installed for the OBS-156 fallback test and **uninstalled**

@@ -4667,9 +4667,28 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   renders them dimmed against the bright personal tiles; a tap
   on a paused work tile neither launches anything nor shows a
   message, and the drawer stays. Vesna offers no pause control
-  and no paused banner. (The work-profile-suspended screen also
-  renders in the dark scheme while the system is light; not
-  investigated further.) Turning the apps back on via Nova's
+  and no paused banner. Turning the apps back on via Nova's
   button cleared QUIET_MODE and restored the bright pairs and
   badges.
+- Environment note: during this cycle's captures the Vesna
+  drawer rendered in a dark scheme (background ≈ (17,20,14))
+  while the system stayed light (Night mode: no, Battery Saver
+  off, `low_power` 0). The dark scheme persisted across the
+  pause/resume cycles; the previous cycle's drawer frames were
+  light ((249,250,239)). The cause was not established — the
+  drawer-only background choice (OBS-VESNA-138) is the suspect
+  knob — and no setting was changed.
+- **Work-app enumeration differs.** Set-diff over the saved
+  dumps: Vesna's grid shows 16 work tiles — Calendar, Camera,
+  Chrome, Clock, Contacts, Drive, Files, Gmail, Google,
+  IconProbe, Maps, Messages, Phone, Photos, Safety, Voice
+  Search — while Nova's Work tab lists 17 apps: the same set
+  minus Voice Search, plus YouTube and YT Music. `pm list
+  packages --user 11` confirms youtube, youtube music and
+  googlequicksearchbox are installed and enabled for the work
+  profile (youtube `enabled=1`, music `enabled=0` = default, in
+  both users), so Vesna omits two enabled work apps and adds a
+  work Voice Search entry (an activity of the Google package;
+  Vesna lists Google as well). Nova's list matches the package
+  set one-to-one.
 - Evidence: `EVI-VESNA-003/parity153-*`.
