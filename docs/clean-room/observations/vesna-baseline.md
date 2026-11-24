@@ -4507,6 +4507,34 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity149-*`.
 
+## OBS-VESNA-154 follow-up — Web suggestions = None on Nova 9.0.1
+
+- Same environment (Nova 9.0.1 Prime, emulator,
+  v0.4.82 cycle). Settings search (`web
+  suggestions`) reaches the dropdown directly;
+  options **None / DuckDuckGo / Google**.
+- **None selected:** a no-match drawer query
+  ("zzzz") loses the **web query suggestions**
+  (only the keyboard strip and a Home button
+  remain) and the provider row **shrinks** —
+  Google, Play Store, Wikipedia, Google Maps,
+  YouTube (DuckDuckGo and Spotify drop out).
+  The **Search with row itself remains** — Nova
+  does not collapse to Vesna's minimal
+  "No matching apps" state even with web
+  suggestions off.
+- Restored: Web suggestions = Google; the
+  provider row returned to Google-first (the
+  used-provider memory kept DuckDuckGo as a
+  second icon from the earlier test).
+- Vesna comparison for #113: Vesna's
+  Search-actions-off state shows only "No
+  matching apps" — a stricter minimal state than
+  Nova's None mode. The Nova-side control
+  (a service dropdown incl. None) has no Vesna
+  counterpart.
+  Evidence: `EVI-VESNA-003/parity147-*`.
+
 ## OBS-VESNA-155 — Rename folder dialog palette/theme probe completed on v0.4.82
 
 - Android 15 research AVD, `en-US`. Signed Vesna
