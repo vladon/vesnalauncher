@@ -4638,3 +4638,38 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Nova reference behavior to Vesna's new selector.
 - Evidence: `EVI-VESNA-003/parity152-wp-*` and
   `EVI-VESNA-003/parity152-ndrawer-*`.
+
+## OBS-VESNA-157 — Drawer fast scroll and work-profile pause on v0.4.82
+
+- **Fast scroll exists in both drawers.** Vesna's drawer has a
+  right-edge seek strip (a11y "Jump to app letter", bounds
+  [954,430][1080,2337]): touching it shows a thumb and a letter
+  bubble (an "N" bubble was captured beside the thumb), and
+  dragging scrolls the grid with the finger; a fresh drawer
+  shows the thumb at the track top. The strip sits inboard
+  (thumb at x≈1009–1024) and synthetic input drives it fine.
+- Nova's **Fast scrollbar** setting is ON on this AVD; its
+  thumb renders at the extreme right edge (x≈1061–1079,
+  partially clipped by the screen edge). Synthetic drags
+  starting at that x never grabbed it — the gesture-edge zone
+  is the likely cause — so its drag-to-jump behavior was not
+  demonstrated; fling scrolling works (one fast fling moved the
+  Work list about eight rows, while a Vesna grid fling moves
+  the grid only about two; the current app set leaves the Vesna
+  drawer roughly two rows of scroll range, so its strip covers
+  most of the range).
+- **Work-profile pause.** Nova's Work tab offers *Turn off work
+  apps*, which suspends the profile immediately with no
+  confirmation (user 11 flags gain QUIET_MODE) and replaces the
+  list with "Work apps are paused", the reason text and a TURN
+  ON WORK APPS button. While paused Vesna keeps every work tile
+  in the merged grid — after a force-stop and restart too — but
+  renders them dimmed against the bright personal tiles; a tap
+  on a paused work tile neither launches anything nor shows a
+  message, and the drawer stays. Vesna offers no pause control
+  and no paused banner. (The work-profile-suspended screen also
+  renders in the dark scheme while the system is light; not
+  investigated further.) Turning the apps back on via Nova's
+  button cleared QUIET_MODE and restored the bright pairs and
+  badges.
+- Evidence: `EVI-VESNA-003/parity153-*`.
