@@ -4602,16 +4602,28 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   restored to System (radio re-checked) and the final drawer
   matches the pre-pack frame pixel-for-pixel.
 - **Vesna merges work apps inline:** the v0.4.82 drawer shows
-  16 work entries in the same alphabetical grid, each directly
-  after its personal twin (Calendar → Work Calendar, IconProbe
-  → Work IconProbe), labels prefixed `Work`, and no separate
-  Work tab exists. Nova 9.0.1 instead offers a dedicated Work
-  tab in the app drawer (Drawer groups: "All apps, excluding
-  hidden (Work profile)", "Work apps in their own tab" ON).
+  16 work entries in the same grid, each directly after its
+  personal twin (verified over both drawer dumps: 0 of 16
+  pairs violated the adjacency; Calendar → Work Calendar,
+  IconProbe → Work IconProbe). Visible labels keep the plain
+  app name — the badge is the only visual marker — while the
+  tiles' accessibility descriptions are prefixed `Work`
+  (Work Calendar, Work IconProbe). Vesna has no Work tab.
+  Nova 9.0.1 supports a Work tab only at the settings level
+  (App drawer: Tab bar placement Top, Drawer groups —
+  "Customize tabs and folders", an Apps | Work preview, and
+  "Work apps in their own tab" ON); its drawer on this AVD
+  currently renders the Cards surface instead of the A–Z grid
+  (search bar, frequently-used row, action chips, an Add card
+  block; no tab bar, no app rows, unchanged across a Nova
+  restart), so the tab itself was not directly observable.
+  Nova's drawer search for `icon` does list IconProbe.
 - **Work badge:** personal tiles carry no badge; each work tile
   shows a small blue badge (26,115,232), about 25×24 px, at the
   icon's bottom-right corner (555 probe pixels), unchanged
-  across pack install/uninstall.
+  across pack install/uninstall. The visible labels of a
+  personal/work pair are pixel-identical (IconProbe pair label
+  ink 5736/5736), confirming no visible prefix.
 - **Icon-pack fallback verified on v0.4.82** (Settings ›
   Appearance › Icon pack): with Arcticons Black selected,
   covered apps re-render (Chrome tile changed 13662 px against
@@ -4622,4 +4634,5 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   "Apps the pack does not cover keep their system artwork, and
   work badges stay as they are". This extends OBS-VESNA-108's
   Nova reference behavior to Vesna's new selector.
-- Evidence: `EVI-VESNA-003/parity152-wp-*`.
+- Evidence: `EVI-VESNA-003/parity152-wp-*` and
+  `EVI-VESNA-003/parity152-ndrawer-*`.
