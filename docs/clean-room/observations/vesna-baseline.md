@@ -4163,6 +4163,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   on the Nova bounds), and deleted the 0.4.80
   baseline. Evidence: `EVI-VESNA-003/parity141-*`,
   `release-0.4.81/`.
+- **Follow-up (v0.4.81, later the same day):**
+  the 8-slot stop was reached with a thumb drag
+  (track taps at x≥1000 do not engage it — the
+  value stayed 4; six slots relayout to ~132 px
+  tiles). The 8→4 reduction with **6 pins** was
+  re-exercised and behaves correctly: page 1
+  kept Calendar, Camera, Chrome, Clock and Maps
+  + Gmail flowed onto dock page 2 in order; no
+  data loss. An earlier session state that
+  looked like "the dock emptied and pins
+  vanished" was self-inflicted stale-coordinate
+  taps/drags on the home screen during a
+  confused sequence, not a product bug.
+  Evidence: `EVI-VESNA-003/parity141-*`
+  (frames `p146-*`),
+  `release-0.4.81/`.
 
 ## OBS-VESNA-147 — Cold-start latency: black screen before icons on v0.4.81
 
@@ -4340,3 +4356,56 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   the exact (249,250,239)), palette Vesna, theme
   System; both launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity144-*`.
+
+## OBS-VESNA-152 — Home screen orientation choice on v0.4.82
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.82 (87), main `b103262a`
+  (PR #196 merge), APK SHA-256
+  `9d3fa1aded06dfbf1c189a5e59dce0e355a7eb636cf614c8cc8c8ce06fc30e44`,
+  same verified v2 signer. Installed in place
+  over the restored v0.4.81 original state; the
+  layouts survived the upgrade. Closes #189.
+- **Control:** Settings search `orientation` →
+  Home screen → **Home screen orientation**
+  ("Rotate the workspace, dock and page controls
+  with the device, or keep Home portrait. Apps
+  launched from Home keep the device
+  orientation."), radios **Follow device**
+  (default, selected out of the box) and
+  **Portrait**.
+- **Portrait + forced landscape**
+  (`accelerometer_rotation 0` + `user_rotation
+  1`, `mCurrentRotation=ROTATION_90` verified):
+  the Home window stays **1080×2400** —
+  workspace, dock and the app drawer (its Search
+  apps field included) all remain portrait.
+- **Follow device + forced landscape:** Home
+  **and the drawer rotate** to [2400×1080] —
+  matching OBS-131/144's follow-device records.
+- **Apps launched from Home keep the device
+  orientation:** partially verified — the Clock
+  app stayed portrait (the Clock app itself
+  appears portrait-locked), so a freely rotating
+  third-party app test was not possible; Vesna's
+  own Settings activity rotated with Follow
+  device.
+- **Persistence:** Portrait survived
+  `am force-stop` + relaunch with the device
+  still forced landscape (home remained
+  portrait), then Follow device under the same
+  force rotated — both selections persist.
+- Probe caveat: the section renders inside the
+  teal "Search match" band, so colour-sampling
+  radio probes there read the band tint; verify
+  selection visually or functionally.
+- Restored: Follow device (default), the system
+  rotation back to auto (`user_rotation 0`,
+  `accelerometer_rotation 1`); both launchers
+  equal to the baseline. Saved
+  `baseline_research_0.4.82`, proved that it
+  loads, and deleted the 0.4.81 baseline.
+  Evidence: `EVI-VESNA-003/parity145-*`,
+  `release-0.4.82/`.
+  [Verification comment in
+  #189](https://github.com/vladon/vesnalauncher/issues/189#issuecomment-7139599369).
