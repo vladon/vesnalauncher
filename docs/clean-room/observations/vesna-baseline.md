@@ -4478,3 +4478,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: `adb unroot`; both launchers equal to
   the baseline. Evidence:
   `EVI-VESNA-003/parity146-*`.
+
+## OBS-VESNA-154 — Folder popup under Dark theme on v0.4.82
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.82 (87) on the
+  `baseline_research_0.4.82` snapshot. Extends
+  150's palette-reach probe to the Dark theme.
+- A folder (Maps dropped onto Gmail) was opened
+  under the Dark theme: the open-folder popup
+  surface reads **(40,43,36)** (the light-theme
+  Vesna palette read (232,233,222)) — the popup
+  follows the theme's dark neutrals. The popup's
+  Ungroup/Rename rows stay in place.
+- The **Rename folder dialog probe did not
+  complete**: the tap between the two popup
+  buttons landed on the adjacent **Ungroup
+  folder** action again (the clickable rows
+  extend past their labels), dissolving the
+  folder before the dialog opened. The dialog
+  shares the popup's Material surface, so the
+  popup probe stands as the palette/theme reach
+  evidence; the dialog itself remains unprobed.
+- Maps and Gmail returned to their exact
+  baseline cells (the Ungroup return positions
+  are stable, re-confirmed).
+- Restored: theme System, no folder; both
+  launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity149-*`.
