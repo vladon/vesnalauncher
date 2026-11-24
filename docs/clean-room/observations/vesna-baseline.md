@@ -4105,9 +4105,6 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   per-surface search bars) — the provider and
   persistent-bar gaps stay covered by #113 and
   #186; no new ticket.
-- Restored: no setting was changed (inventory
-  only); both launchers equal to the baseline.
-  Evidence: `EVI-VESNA-003/parity140-*`.
 
 ## OBS-VESNA-146 — Dock capacity and two-page overflow on v0.4.81
 
@@ -4166,3 +4163,57 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   on the Nova bounds), and deleted the 0.4.80
   baseline. Evidence: `EVI-VESNA-003/parity141-*`,
   `release-0.4.81/`.
+
+## OBS-VESNA-147 — Cold-start latency: black screen before icons on v0.4.81
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.81 (86) on the freshly loaded
+  `baseline_research_0.4.81` snapshot; published
+  signed v0.4.79 (84) on its own snapshot for
+  comparison. Nova 9.0.1 Prime (90100).
+  Reported by the product owner as "a cold start
+  thinks for a long time before the desktop
+  icons show".
+- **Method:** `am force-stop`, then
+  `am start -W -n dev.vladon.vesna.launcher/.ui.HomeActivity`,
+  with full-screen screencap frames every
+  ~1 s from launch; "settled" = the first frame
+  identical to the final frame (screencap latency
+  ~0.5–1 s, so settle times are upper bounds).
+- **v0.4.81, freshly booted system (two runs):**
+  `LaunchState: COLD, TotalTime: 1908 ms` and
+  `1815 ms` (`Displayed +1s815ms`); the frame at
+  2.1 s is a **fully black screen** (only the
+  status-bar clock); the workspace with icons
+  settled by **4.4 s** and **6.3 s**.
+- **v0.4.79, freshly booted system (two runs):**
+  `TotalTime: 1997 ms` / `1392 ms`; settled by
+  **4.4 s** / **4.9 s** — comparable, so the
+  latency is not a v0.4.80/81 regression.
+- **Warm system (v0.4.81, after hours of
+  uptime):** `TotalTime: 434 ms`
+  (`Displayed +610ms`); settled by **1.7 s** /
+  **2.4 s**. The cold-device penalty is the
+  boot-time state, and the gap the reporter sees
+  is the fresh-boot window.
+- During the window the previous screen is
+  either the previous home (warm start: Nova was
+  visible at 1.3 s in one warm run) or a black
+  screen (fresh boot).
+- **Nova comparison (warm):** after the same
+  force-stop/relaunch, Nova's workspace was
+  settled by **0.95 s** (the first captured
+  frame). A fresh-boot Nova number was not
+  taken.
+- Related Vesna acceptance suggestion (for the
+  implementer to size): from a force-stopped
+  cold start on a freshly booted API 35
+  emulator, the first launcher frame within
+  ~1 s and the icon-complete workspace within
+  ~2.5 s (measured: black ≥2 s and icons at
+  4.4–6.3 s; warm 434 ms / 1.7–2.4 s).
+- No launcher settings were changed. Restored:
+  both launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity140-*`
+  (frames `p142-vcold*`, `p142-v481-run*`,
+  `p142-v479-run*`).
