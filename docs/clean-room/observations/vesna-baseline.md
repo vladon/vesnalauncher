@@ -4008,3 +4008,45 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - No differences between the launchers on this
   path. Restored: both launchers equal to the
   baseline. Evidence: `EVI-VESNA-003/parity140-*`.
+
+## OBS-VESNA-144 — Rotation beyond Home on v0.4.80
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.80 (85) on the
+  `baseline_research_0.4.80` snapshot. Nova
+  9.0.1 Prime (90100), "Allow Home screen
+  rotation" off (the default). Completes the
+  remainder of HOME-014/SYS-006: 131 covered the
+  Home surfaces only.
+- Method: forced landscape
+  (`accelerometer_rotation 0` + `user_rotation
+  1`; verify the values stick — a put can be
+  lost if read back too late) and
+  `mCurrentRotation=ROTATION_90` in
+  `dumpsys window` as the ground truth.
+- **Vesna** (no rotation setting): Home, the app
+  drawer and Vesna settings all rotate to
+  [2400×1080]. The drawer keeps its grid and
+  Search apps field in landscape.
+- **Nova** (rotation toggle off): Home **and the
+  app drawer stay portrait** — the lock covers
+  both — while **Nova Settings rotates** to
+  [2400×1080]: Nova's own settings activity is
+  outside the Home-rotation lock. With the
+  toggle on, Nova's home and drawer rotate
+  ([2400×1080] both, re-verified in the same
+  forced-landscape pass).
+- Comparison summary: with the default Nova
+  state the two launchers differ on the drawer —
+  Vesna rotates it, Nova keeps it portrait —
+  while both rotate their settings pages. Vesna
+  offers no per-surface rotation control, which
+  is already filed as #189 (Home orientation
+  lock); the drawer-level difference is covered
+  by the same request.
+- Restored: Nova toggle off (functionally
+  verified — forced landscape leaves Nova home
+  portrait), `user_rotation 0`,
+  `accelerometer_rotation 1`, both launchers
+  equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity140-*`.
