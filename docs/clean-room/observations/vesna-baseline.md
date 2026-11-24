@@ -3573,10 +3573,142 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   no-results state.
 - Not exercised: the Maps and YouTube action
   rows, Dark and compact RTL.
-- Restored Search actions off; the workspace
+  Restored Search actions off; the workspace
   equals the default frame. Saved
   `baseline_research_0.4.77`, proved that it
   loads, and deleted the 0.4.76 baseline.
   Evidence: `EVI-VESNA-003/parity133-*`,
   `release-0.4.77/`.
   [Stage 1 verification in #113](https://github.com/vladon/vesnalauncher/issues/113#issuecomment-7117861015).
+
+## OBS-VESNA-136 — Dock pin drag inserts at the target on v0.4.77
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.77 (82) on a fresh baseline load. This
+  closes [OBS-VESNA-133](#obs-vesna-133--dock-pin-drag-swap-not-reproduced-on-v0476):
+  the "not reproduced" result there was a method
+  artifact. The `DROP` helper's 0.72 s hold does
+  not lift a dock pin; a hold of about 1.3 s with
+  0.22 s move steps and a 0.9 s pause over the
+  target reorders the dock on the same build.
+- **Insert semantics.** A dock-pin drag released
+  over another occupied dock tile removes the pin
+  from its slot and inserts it at the target
+  slot; the pins between shift one slot toward
+  the source. Verified commits (slot positions):
+  Camera 2→3 (Chrome shifted to 2), Calendar
+  1→3 (Chrome→1, Camera→2), Calendar 3→2
+  (Camera→3), Chrome 1→3, Clock 4→1, Clock 1→2,
+  Clock 2→4. An adjacent drop exchanges two pins
+  only, which is why the earlier sessions read it
+  as "swap on drop"; a non-adjacent drop shows
+  the shift.
+- **Drop targeting.** A release beyond the last
+  occupied tile resolves to the last occupied
+  slot: with three pins, Camera released at
+  x=937 committed at slot 3, while the same
+  release with Chrome as the source (already the
+  last pin) was a no-op. A release over the
+  pin's own tile is a no-op. Live dumps taken
+  during the hold read stale dock positions, so
+  the release point decides, not the held dump.
+- A free trailing slot is not a dock-internal
+  target: with three pins, dragging the last pin
+  to the free fourth slot left the order
+  unchanged. From the workspace the free slot is
+  honored: dragging Maps onto the free fourth
+  slot landed it there (tile at x=805).
+- **Full-dock rejection.** Dragging a workspace
+  pin onto an occupied slot of the full 4-pin
+  dock was rejected: the dock and the workspace
+  stayed unchanged. No rejection message was
+  caught in dumps taken about 0.7 s and 1.8 s
+  after the release, so the message promised by
+  the product README for a full dock was not
+  observed (possibly a toast shorter than the
+  dump cadence).
+- **Persistence.** Remove from dock (menu)
+  survived a force-stop and relaunch (Calendar
+  stayed out; the dock compacted), and Add to
+  dock from the drawer appended it to the free
+  last slot. A dock reorder (Clock to slot 1)
+  survived force-stop and relaunch too.
+- Nova 9.0.1 comparison: Nova has no insert.
+  Dropping a dock pin onto an occupied dock slot
+  creates a folder (observed with Phone+Chrome
+  and again with a 4-item folder), the same as
+  drops from the workspace or an open folder
+  popup. Nova does move a dock pin to a free
+  slot (Chrome from slot 4 to the free slot 5
+  after Camera was removed) and offers Remove in
+  the dock-pin long-press menu. So on an
+  occupied-slot drop Vesna reorders while Nova
+  folders — Vesna's insert behaviour matches the
+  product README's "drop onto a slot to insert
+  it there".
+- Both launchers were restored and verified
+  positionally (the dock helper sorts by name, so
+  an order check must compare bounds, not the
+  name list). Evidence:
+  `EVI-VESNA-003/parity135-*`.
+
+## OBS-VESNA-137 — Curated palettes on v0.4.78
+
+- Android 15 research AVD, `en-US`. Published
+  signed Vesna v0.4.78 (83), main `e8804f43`
+  (PR #155 merge), APK SHA-256
+  `5156a8653f0adb753b8667514555f17d6ecef91379498201d4b4bf7dfe87be3a`,
+  same verified v2 signer. Installed in place
+  over the restored v0.4.77 original state; the
+  Home, dock and drawer layouts survived the
+  upgrade.
+- **Setting:** Settings → Appearance shows a
+  **Palette** section with three inline radio
+  rows — **Vesna (default)**, **Ocean**,
+  **Sunset** — between Icon shape and Show app
+  names; Palette is a section header, not a
+  sub-page. Vesna is selected out of the box.
+- **Immediate switch.** Pixel probes on the
+  Appearance page: the selected radio dot and
+  the ON switch track follow the palette primary
+  — Vesna green (73,103,46), Ocean blue
+  (34,94,166), Sunset amber (144,72,2) — and the
+  Settings surface follows the palette neutrals
+  (249,250,239) / (246,250,255) / (253,248,246).
+- **Surfaces outside Settings:** the drawer
+  background and its search-field surface, and
+  the Home floating Home options / drawer-entry
+  buttons follow the palette; the dock's dark
+  scrim over the wallpaper and the wallpaper
+  itself are unaffected.
+- **Independent of Theme:** with Sunset
+  selected, Theme System → Dark kept Sunset
+  selected and switched its primary to the
+  dark-scheme amber (255,179,127) on a dark
+  surface (22,19,17); System and Light restore
+  the light-scheme values — one light and one
+  dark scheme per palette, as the release note
+  says.
+- **Persistence:** Sunset survived force-stop
+  and relaunch (radio still selected, colors
+  unchanged); re-selecting Vesna restored every
+  probed color.
+- Nova 9.0.1 comparison: Look & feel offers
+  **Palette: System** (System / Local Wallpaper
+  / Custom — derived, not curated fixed pairs),
+  **Mode: Follow system**, and per-surface color
+  pages (Home screen, App drawer, Folders,
+  Popup menu, Nova Now each with Surface / Text
+  / Accent color). Vesna ships three curated
+  whole-launcher palettes with per-palette
+  Light/Dark schemes; per-surface overrides stay
+  outside the scope [as filed in
+  #155](https://github.com/vladon/vesnalauncher/issues/155).
+  [Verification comment in
+  #155](https://github.com/vladon/vesnalauncher/issues/155#issuecomment-7119194129).
+- Restored palette Vesna and Theme System; the
+  layout equals the baseline. Saved
+  `baseline_research_0.4.78`, proved that it
+  loads, and deleted the 0.4.77 baseline.
+  Evidence: `EVI-VESNA-003/parity136-*`,
+  `release-0.4.78/`.
