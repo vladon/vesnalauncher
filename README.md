@@ -27,10 +27,12 @@ The Android package name is `dev.vladon.vesna.launcher`.
 ## Features
 
 - **Home and dock.** Add, switch, and reorder Home pages. Move shortcuts and
-  folders between pages and keep up to four favorites in the dock. Vesna saves
-  your layout locally and restores it after a restart. Turn **Show dock** off
-  in Home screen settings to hide the dock; it keeps its pins and returns with
-  them when you turn it back on.
+  folders between pages. Keep favorites in the dock: **Dock capacity** in Home
+  screen settings picks the slots per dock page (2–8), extra pins flow onto a
+  second dock page in order, and a swipe across the dock flips pages. Vesna
+  saves your layout locally and restores it after a restart. Turn **Show dock**
+  off in Home screen settings to hide the dock; it keeps its pins and returns
+  with them when you turn it back on.
   Removing the last app shortcut from a secondary page also removes that page
   if it has no other saved content. Empty pages you add manually stay until
   you remove them or populate and empty them this way.

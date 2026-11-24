@@ -102,18 +102,18 @@ class WorkspaceRepositoryDockFolderTest {
         assertEquals(3, clock.cellIndex)
     }
 
-    /** A dock with four top-level entries is genuinely full and rejects appends. */
+    /** A dock with both pages' top-level entries is genuinely full and rejects appends. */
     @Test
     fun fullDockStillRejectsAddToDock() = runBlocking {
         val folderId = db.folderDao().insert(FolderEntity(title = "Folder", cellIndex = 14))
-        seedDockRow("com.google.android.calendar", 0)
-        seedDockRow("com.android.camera2", 1)
-        seedDockRow("com.android.chrome", 2)
-        seedDockRow("dev.vladon.qa.lifecyclefixture", 3)
-        seedDockRow("com.google.android.deskclock", 3, folderId)
+        repeat(DockPages.totalCapacity(DockPages.DEFAULT_CAPACITY)) { index ->
+            seedDockRow("dev.vladon.qa.dock$index", index)
+        }
+        // A hidden folder member never counts toward the two-page capacity.
+        seedDockRow("com.google.android.deskclock", 8, folderId)
 
         assertFalse(repo.addToDock(app("com.other.app")))
-        assertEquals(5, dao.getAll().count { it.container == "DOCK" })
+        assertEquals(DockPages.totalCapacity(DockPages.DEFAULT_CAPACITY) + 1, dao.getAll().count { it.container == "DOCK" })
     }
 
     @Test

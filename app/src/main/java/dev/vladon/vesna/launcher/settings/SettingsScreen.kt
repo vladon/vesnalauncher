@@ -101,6 +101,7 @@ import dev.vladon.vesna.launcher.platform.IconPackInfo
 import dev.vladon.vesna.launcher.search.searchKey
 import dev.vladon.vesna.launcher.ui.VesnaFocusRingOutset
 import dev.vladon.vesna.launcher.ui.vesnaFocusRing
+import dev.vladon.vesna.launcher.workspace.DockPages
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.GridResizeResult
 import kotlinx.coroutines.launch
@@ -140,6 +141,8 @@ internal fun SettingsScreen(
     onHideHomeAppNamesChanged: (Boolean) -> Unit,
     showDock: Boolean,
     onShowDockChanged: (Boolean) -> Unit,
+    dockCapacity: Int,
+    onDockCapacityChanged: (Int) -> Unit,
     homeIconPercent: Int,
     onHomeIconPercentChanged: (Int) -> Unit,
     dockIconPercent: Int,
@@ -293,6 +296,10 @@ internal fun SettingsScreen(
                                         R.string.settings_show_dock, R.string.settings_show_dock_detail,
                                         showDock, onShowDockChanged,
                                     )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_dock_capacity) {
+                                    DockCapacitySettings(dockCapacity, onDockCapacityChanged)
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_home_icon_size) {
@@ -458,6 +465,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_lock_layout, R.string.settings_lock_layout_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_pin_new_apps, R.string.settings_pin_new_apps_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_show_dock, R.string.settings_show_dock_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_capacity, R.string.settings_dock_capacity_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_icon_size, R.string.settings_home_icon_size_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_icon_size, R.string.settings_dock_icon_size_detail),
@@ -730,6 +738,46 @@ private fun SettingsSlider(
             valueRange = IconScale.steps.first().toFloat()..IconScale.steps.last().toFloat(),
             steps = IconScale.steps.size - 2,
             enabled = enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { contentDescription = description; stateDescription = value },
+        )
+    }
+}
+
+/** Favorite slots per dock page; an impossible reduction snaps back with a toast. */
+@Composable
+private fun DockCapacitySettings(
+    capacity: Int,
+    onCapacityChanged: (Int) -> Unit,
+) {
+    // The slider previews while dragging; only a finished, accepted value commits,
+    // so a rejected reduction reverts instead of leaving an impossible state.
+    var preview by remember(capacity) { mutableIntStateOf(capacity) }
+    val description = stringResource(R.string.settings_dock_capacity)
+    val value = stringResource(R.string.settings_dock_capacity_value, preview)
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            stringResource(R.string.settings_dock_capacity),
+            Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.settings_dock_capacity_detail),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(value, style = MaterialTheme.typography.titleSmall)
+        Slider(
+            value = preview.toFloat(),
+            onValueChange = { preview = it.toInt() },
+            onValueChangeFinished = {
+                onCapacityChanged(preview)
+                preview = capacity
+            },
+            valueRange = DockPages.MIN_CAPACITY.toFloat()..DockPages.MAX_CAPACITY.toFloat(),
+            steps = DockPages.MAX_CAPACITY - DockPages.MIN_CAPACITY - 1,
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics { contentDescription = description; stateDescription = value },

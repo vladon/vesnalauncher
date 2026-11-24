@@ -14,6 +14,7 @@ import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
 import dev.vladon.vesna.launcher.data.WorkspacePageEntity
 import dev.vladon.vesna.launcher.data.toDomain
 import dev.vladon.vesna.launcher.data.toEntity
+import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import java.text.Collator
 import java.util.Locale
@@ -73,6 +74,10 @@ class WorkspaceRepository(
 ) {
     private val workspacePreferences = WorkspacePreferences(prefs)
     private val gridDao = db.workspaceGridDao()
+
+    /** Favorite slots per dock page; shared with Settings and Home through [DockPreferences]. */
+    private val dockCapacityPerPage: Int
+        get() = DockPreferences(prefs).capacity
 
     // Serializes read-modify-write operations so two quick actions (for example two
     // "add to dock" taps) cannot both compute placements from the same snapshot.
@@ -488,7 +493,7 @@ class WorkspaceRepository(
      */
     suspend fun addToDock(app: LauncherApp): Boolean = mutationMutex.withLock {
         val dock = dao.getAll().filter { it.container == Container.DOCK.name && it.folderId == null }
-        if (dock.size >= GridCanvas.DOCK_CAPACITY) return@withLock false
+        if (dock.size >= DockPages.totalCapacity(dockCapacityPerPage)) return@withLock false
         val order = (dock.maxOfOrNull { it.cellIndex } ?: -1) + 1
         dao.insert(pinEntity(app.key, Container.DOCK, order, publisherLabel = actionPinLabel(app)))
         true
@@ -704,7 +709,7 @@ class WorkspaceRepository(
         db.withTransaction {
             val dock = dao.getAll().filter { it.container == Container.DOCK.name && it.folderId == null }
                 .sortedBy { it.cellIndex }
-            if (dock.size >= GridCanvas.DOCK_CAPACITY) return@withTransaction false
+            if (dock.size >= DockPages.totalCapacity(dockCapacityPerPage)) return@withTransaction false
 
             val insertSlot = slot.coerceIn(0, dock.size)
             dao.insert(
@@ -734,7 +739,7 @@ class WorkspaceRepository(
         val dockIds = items.filter { it.container == Container.DOCK.name && it.folderId == null }
             .sortedBy { it.cellIndex }
             .map { it.id }
-        if (dockIds.size >= GridCanvas.DOCK_CAPACITY) return@withLock DockMoveResult.FULL
+        if (dockIds.size >= DockPages.totalCapacity(dockCapacityPerPage)) return@withLock DockMoveResult.FULL
         val order = DockOrdering.insertAt(dockIds, source.id, slot)
         db.withTransaction {
             order.forEachIndexed { index, id -> dao.updatePlacement(id, Container.DOCK.name, index, pageId = null) }

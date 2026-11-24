@@ -142,7 +142,7 @@ class WorkspaceRepositoryWorkspaceMoveTest {
     fun workspaceToDockRejectsStaleSourceAndFullDockWithoutChangingLayout() = runBlocking {
         val contacts = app("com.example.contacts")
         seedPin(contacts.packageName, cellIndex = 0)
-        repeat(GridCanvas.DOCK_CAPACITY) { assertTrue(repo.addToDock(app("com.example.dock$it"))) }
+        repeat(DockPages.totalCapacity(GridCanvas.DOCK_CAPACITY)) { assertTrue(repo.addToDock(app("com.example.dock$it"))) }
         val before = dao.getAll()
 
         assertEquals(DockMoveResult.SOURCE_MISSING, repo.moveWorkspaceToDock(contacts, fromCell = 5, slot = 0))

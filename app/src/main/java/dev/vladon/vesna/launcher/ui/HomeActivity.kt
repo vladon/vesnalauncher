@@ -65,6 +65,7 @@ import dev.vladon.vesna.launcher.settings.ThemeMode
 import dev.vladon.vesna.launcher.settings.VesnaTheme
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Container
+import dev.vladon.vesna.launcher.workspace.DockPages
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.FolderRemovalResult
 import dev.vladon.vesna.launcher.workspace.FolderRestoreResult
@@ -381,6 +382,7 @@ class HomeActivity : ComponentActivity() {
         drawer.keyboardOnOpen = drawerPreferences.keyboardOnOpen
         drawer.externalSearchActions = drawerPreferences.externalSearchActions
         applyDockVisibility()
+        applyDockCapacity()
         applyIconScales()
 
         // Open before hierarchy restoration so Android can restore the search text and focus.
@@ -442,6 +444,7 @@ class HomeActivity : ComponentActivity() {
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES,
         )
         applyDockVisibility()
+        applyDockCapacity()
         applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {
@@ -457,6 +460,11 @@ class HomeActivity : ComponentActivity() {
     private fun applyDockVisibility() {
         dock.visibility = if (dockPreferences.visible) View.VISIBLE else View.GONE
         updateWorkspaceBottom()
+    }
+
+    /** Slots per dock page; the next render rebinds so overflow reflows onto pages. */
+    private fun applyDockCapacity() {
+        dock.capacity = dockPreferences.capacity
     }
 
     /** Artwork only: the grid, dock, labels and saved placements are not resized. */
@@ -621,7 +629,7 @@ class HomeActivity : ComponentActivity() {
             }
         }
         val tile = dock.focusedChild ?: return null
-        return state.dock.pins.getOrNull(dock.indexOfChild(tile))?.let { ShortcutFocus.Dock(it.id) }
+        return state.dock.pins.getOrNull(dock.pinIndexAt(dock.indexOfChild(tile)))?.let { ShortcutFocus.Dock(it.id) }
     }
 
     private fun restoreHomeShortcut(state: LauncherUiState) {
@@ -647,7 +655,7 @@ class HomeActivity : ComponentActivity() {
                     current.activePageId == focus.pageId &&
                         (current.workspaceCells[focus.cell] as? CellContent.FolderCell)?.folder?.id == focus.id
                 }
-                is ShortcutFocus.Dock -> dock.getChildAt(current.dock.pins.indexOfFirst { it.id == focus.id })
+                is ShortcutFocus.Dock -> dock.childAtPin(current.dock.pins.indexOfFirst { it.id == focus.id })
             }
             tile?.requestFocus()
         }
@@ -949,7 +957,11 @@ class HomeActivity : ComponentActivity() {
         dock.isVisible && x >= dock.left && x < dock.right && y < dock.bottom - dockBottomInset
 
     private fun dockDropColumn(source: DragSource, x: Float): Int? =
-        renderedState.dock.dropColumn(dock.slotAtLocalX(x - dock.left), reordering = source.container == Container.DOCK)
+        renderedState.dock.dropColumn(
+            DockPages.globalSlot(dock.currentPage, dock.slotAtLocalX(x - dock.left), dockPreferences.capacity),
+            reordering = source.container == Container.DOCK,
+            capacityPerPage = dockPreferences.capacity,
+        )
 
     private fun workspaceDropCell(source: DragSource, x: Float, y: Float): Int? {
         val cell = workspace.cellAtLocal(x - workspace.left, y - workspace.top) ?: return null
