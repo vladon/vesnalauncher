@@ -4050,3 +4050,61 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `accelerometer_rotation 1`, both launchers
   equal to the baseline.
   Evidence: `EVI-VESNA-003/parity140-*`.
+
+## OBS-VESNA-145 — Nova Search settings inventory on 9.0.1
+
+- Android 15 research AVD, `en-US`. Nova 9.0.1
+  Prime (90100). Fills the HOME-010 inventory:
+  Settings root (Settings tab) → **Search**.
+- **Rows observed** (top to bottom): a live
+  **search preview** ("Nova", the Nova Launcher
+  app result and a "Nova Launcher: Settings"
+  shortcut); **Search with** — a provider icon
+  row (Google, Play Store, Wikipedia, Google
+  Maps, Spotify, YouTube); **Contact card view**
+  ("Display contacts as card results with
+  additional interaction options."); **API
+  Integrations** ("Connect other apps and
+  services to get more searchable links");
+  **Web suggestions** (a dropdown, value
+  **Google**, "The service to query when
+  searching the web"); **Search More providers**
+  ("Google, Play Store, Wikipedia, Google Maps,
+  Spotify, YouTube"); **Nova AI in search**
+  (dropdown, value **Tap to open**, "Choose how
+  Nova AI appears in drawer search results");
+  **Make shortcuts from my recent searches**
+  (checkbox, on); **Private keyboard** (checkbox,
+  on); **Layout → Mode: Immersive**; **Limit apps
+  to one row** ("only show the first row of app
+  results"); **Nova Microresults** ("Instant
+  on-device calculations, unit conversions,
+  direct links for package tracking numbers and
+  more."); **Folders** ("Search for your Nova
+  folders"); **Shortcut Search** ("Local
+  on-device indexing of app shortcuts and
+  contacts"); and per-surface entries **Desktop
+  search bar**, **Drawer search bar**, **Nova Now
+  search bar**.
+- **State-change observation:** mid-inventory the
+  five source rows (Contact card view, API
+  Integrations, Web suggestions, Search More
+  providers, Nova AI in search) and the Layout /
+  Microresults / Folders / Shortcut Search rows
+  disappeared from the page between two dumps,
+  leaving only the preview, Search with, the two
+  checkboxes and the three search-bar entries;
+  scrolls did not bring them back and BACK left
+  the page. No ANR; the process stayed idle. The
+  trigger was not determined (the re-entered page
+  renders a reduced variant), so the full list
+  above stands as captured, and the collapsed
+  variant is recorded as an observation.
+- Vesna comparison: none of these controls exist
+  (no providers, no AI, no microresults, no
+  per-surface search bars) — the provider and
+  persistent-bar gaps stay covered by #113 and
+  #186; no new ticket.
+- Restored: no setting was changed (inventory
+  only); both launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity140-*`.
