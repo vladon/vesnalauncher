@@ -3841,3 +3841,43 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   settings were re-verified afterwards. Cause
   unknown.
 - Evidence: `EVI-VESNA-003/parity138-*`.
+
+## OBS-VESNA-140 — Drawer icon size across drawer layouts on v0.4.79
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.79 (84) on the `baseline_research_0.4.79`
+  snapshot. Completes the #146 picture: the
+  Drawer icon size was only ever measured on the
+  default Vertical grid.
+- **Vertical grid** (Clock, DRAWERART):
+  101 px at 80 %, 126 px at 100 %, 164 px at
+  130 % — the known scale.
+- **Vertical list**: 101 px at 80 %, 126 px at
+  100 %, **138 px** at 130 % — the two lower
+  steps match the grid, the top step does not
+  (138 vs 164). The row height stayed 168 px at
+  every size and the label moved beside the icon
+  (ImageView left, TextView right), so cells and
+  touch targets are unchanged; the 130 % cap
+  looks like a fit-to-row limit on this layout.
+- **Horizontal pages**: the AX icon viewport was
+  101×101 at 80 % and 164×123 at 130 % — the
+  height is capped by the page cell, so the
+  visible artwork grows much less than in the
+  grid; recorded as Partially Observed (the
+  visible diameter reads about 96 px at 130 %
+  from the screenshot, a pixel-level per-icon
+  measurement was not taken).
+- **Match Home icon size** (default on) keeps the
+  drawer slider disabled while on — track drags
+  are no-ops until it is turned off; the kept
+  value shows in the label ("100%", "130%").
+- Sliders note: a thumb drag must start inside
+  the track — a drag starting at x≈1015 (5 px
+  from the screen edge) fires the system back
+  gesture instead.
+- Restored: layout Vertical grid, Drawer icon
+  size 100 %, Match Home icon size on (all three
+  states verified), grid artwork back to
+  126 px, both launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity138-*`.
