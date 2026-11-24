@@ -4609,15 +4609,17 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   app name — the badge is the only visual marker — while the
   tiles' accessibility descriptions are prefixed `Work`
   (Work Calendar, Work IconProbe). Vesna has no Work tab.
-  Nova 9.0.1 supports a Work tab only at the settings level
-  (App drawer: Tab bar placement Top, Drawer groups —
-  "Customize tabs and folders", an Apps | Work preview, and
-  "Work apps in their own tab" ON); its drawer on this AVD
-  currently renders the Cards surface instead of the A–Z grid
-  (search bar, frequently-used row, action chips, an Add card
-  block; no tab bar, no app rows, unchanged across a Nova
-  restart), so the tab itself was not directly observable.
-  Nova's drawer search for `icon` does list IconProbe.
+  Nova's app drawer does have one, reached with the vertical
+  swipe-up from the workspace (its "Open App Drawer: Swipe"
+  binding): a full-width **Apps | Work** tab bar under the
+  frequent row, and the Work tab lists only the work-profile
+  apps — Calendar, Camera, Chrome, Clock, Contacts, Drive,
+  Files, Gmail, Google, IconProbe, Maps, Messages, Phone,
+  Photos, Safety, YouTube, YT Music — with plain labels and the
+  work badge on each icon, plus a "Turn off work apps" button.
+  The horizontal right-swipe used first opens a different
+  surface (Nova Search/Now: search bar, frequently-used row,
+  action chips, an Add card block) — not the drawer.
 - **Work badge:** personal tiles carry no badge; each work tile
   shows a small blue badge (26,115,232), about 25×24 px, at the
   icon's bottom-right corner (555 probe pixels), unchanged

@@ -111,7 +111,31 @@ All observations cite one of the environments below via an environment ID
 
 ## Rotation / secondary environments
 
-Available AVDs on the host (unused so far in this session):
+### Research AVD — `emulator-5588` (`Nova_Reboot_API35`), persistent expansion (2026-11-25)
+
+| Property | Value (verified) |
+|---|---|
+| Type | AVD (`Nova_Reboot_API35`), serial `emulator-5588` |
+| Android / API | 15 / 35 (`sdk_gphone64_x86_64`) |
+| Users | 0 Owner (running), 11 Work (running) |
+| Launcher | Vesna v0.4.82 (87) + Nova 9.0.1 Prime (90100) |
+
+The work profile is a **persistent, owner-approved expansion**
+(OBS-VESNA-156): created with `pm create-user --profileOf 0
+--managed Work` (user 11), started with `am start-user -w 11`,
+profile owner set to the debug-signed research probe
+`com.vesnaresearch.iconprobe` 1.0 (installed for user 0 and 11;
+custom magenta icon no pack covers). The profile yields 17 work
+entries in the drawers (16 system apps + the probe). Do not remove
+the probe or the profile between cycles — later observations reuse
+them. Arcticons Black 15.4.7 (`com.donnnno.arcticons.light`) was
+installed for the OBS-156 fallback test and **uninstalled**
+afterwards; the Vesna Icon pack was restored to System.
+
+If a pre-expansion snapshot is ever restored, the profile and probe
+are lost with it: recreate with the same three commands (create,
+start, install for both users) and re-verify OBS-156's evidence
+before citing the environment again.
 
 | AVD | API level | State |
 |---|---|---|
