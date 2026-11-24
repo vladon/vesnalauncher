@@ -4587,3 +4587,39 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   members back to their exact baseline cells;
   both launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity150-*`.
+
+## OBS-VESNA-156 — Work-profile apps and icon-pack fallback on v0.4.82
+
+- Research-AVD expansion (persists by owner request): a real
+  managed work profile was created (`pm create-user --profileOf
+  0 --managed Work`, user 11) and the debug-signed research
+  probe `com.vesnaresearch.iconprobe` 1.0 was installed for
+  user 0 and 11, set as profile owner (`dpm set-profile-owner`).
+  The probe has a custom magenta icon no pack covers; the
+  profile holds its only user app. Official Arcticons Black
+  15.4.7 (`com.donnnno.arcticons.light`) was installed for the
+  probe run and uninstalled afterwards; the Vesna Icon pack was
+  restored to System (radio re-checked) and the final drawer
+  matches the pre-pack frame pixel-for-pixel.
+- **Vesna merges work apps inline:** the v0.4.82 drawer shows
+  16 work entries in the same alphabetical grid, each directly
+  after its personal twin (Calendar → Work Calendar, IconProbe
+  → Work IconProbe), labels prefixed `Work`, and no separate
+  Work tab exists. Nova 9.0.1 instead offers a dedicated Work
+  tab in the app drawer (Drawer groups: "All apps, excluding
+  hidden (Work profile)", "Work apps in their own tab" ON).
+- **Work badge:** personal tiles carry no badge; each work tile
+  shows a small blue badge (26,115,232), about 25×24 px, at the
+  icon's bottom-right corner (555 probe pixels), unchanged
+  across pack install/uninstall.
+- **Icon-pack fallback verified on v0.4.82** (Settings ›
+  Appearance › Icon pack): with Arcticons Black selected,
+  covered apps re-render (Chrome tile changed 13662 px against
+  the pre-pack frame) while the probe's personal and work
+  artwork stayed pixel-identical (0 of 35700 px compared
+  crop-to-crop; magenta counts 9928/8355 unchanged) and the
+  work badge stayed — matching the selector's own subtitle
+  "Apps the pack does not cover keep their system artwork, and
+  work badges stay as they are". This extends OBS-VESNA-108's
+  Nova reference behavior to Vesna's new selector.
+- Evidence: `EVI-VESNA-003/parity152-wp-*`.
