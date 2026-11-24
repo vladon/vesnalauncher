@@ -4409,3 +4409,44 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   `release-0.4.82/`.
   [Verification comment in
   #189](https://github.com/vladon/vesnalauncher/issues/189#issuecomment-7139599369).
+
+## OBS-VESNA-153 — Nova gesture bindings inventory and pinch-in default on 9.0.1
+
+- Android 15 research AVD, `en-US`. Nova 9.0.1
+  Prime (90100). Settings → Gestures & inputs →
+  Gestures, full list with defaults: **Swipe up →
+  App drawer**; **Swipe down → Expand
+  notifications / Settings** (a nested choice);
+  **Swipe left → None**; **Swipe right → None**;
+  **Double tap → None**; **Double tap + swipe up →
+  None**; **Double tap + swipe down → None**;
+  **Two finger swipe up → Nova Settings**;
+  **Two finger swipe down → Nova Search**;
+  **Pinch in → Desktop previews**; **Pinch out →
+  Recent apps**; **Two finger rotation
+  (counterclockwise) → None**; **Two finger
+  rotation (clockwise) → None**.
+- **Pinch in → Desktop previews is a bound
+  default**: Nova 9.0.1 has a desktop-previews
+  surface behind the pinch-in gesture. This
+  corrects the implication left by 125's
+  multi-touch attempts (customize-screen
+  reactions, "no page overview"): the attempt
+  never reproduced a recognized pinch — an
+  input-method limitation, not evidence that
+  Nova lacks the surface. Three synthetic
+  pinch-in attempts (converging horizontal tracks
+  in empty workspace cells, root injection via
+  event2) still did not open Desktop previews —
+  Nova does not recognize the synthetic stream as
+  a pinch.
+- The gesture rows scroll below the fold (Pinch
+  in/out and the rotations are past 'Two finger
+  swipe down'; one more full-page scroll reveals
+  them).
+- Vesna comparison: no gesture settings and no
+  Desktop-previews surface — the reference
+  defaults for #183.
+- Restored: `adb unroot`; both launchers equal to
+  the baseline. Evidence:
+  `EVI-VESNA-003/parity146-*`.
