@@ -3780,3 +3780,64 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   it loads, and deleted the 0.4.78 baseline.
   Evidence: `EVI-VESNA-003/parity137-*`,
   `release-0.4.79/`.
+
+## OBS-VESNA-139 — Search action rows and the dock drop-from-workspace on v0.4.79
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.79 (84) on the `baseline_research_0.4.79`
+  snapshot. Nova 9.0.1 Prime (90100). This
+  completes [OBS-135](#obs-vesna-135--search-actions-on-v0477)'s
+  "Not exercised" rows.
+- **Search in Maps** (with Search actions on and
+  a no-match query): opens the Maps app
+  (`com.google.android.apps.maps`) with the
+  query in its search box and live suggestions.
+  Returning takes two BACK presses (Maps consumes
+  the first); the Vesna drawer keeps the query
+  and the three action rows across the round
+  trip.
+- **Search in YouTube**: opened **Chrome**
+  (`com.android.chrome`), which was on its
+  first-run "Welcome to Chrome" screen — not the
+  installed YouTube app
+  (`com.google.android.youtube`). Platform
+  diagnostics: both YouTube's `.UrlActivity` and
+  Chrome's `IntentDispatcher` register as
+  handlers for the youtube-results URL with
+  `isDefault=true`, so a plain VIEW of that URL
+  would be ambiguous (a chooser), while the
+  observed action resolved straight to Chrome;
+  the fired intent is not observable from the
+  UI. Recorded as an observation, not a defect
+  call.
+- Nova comparison: with the same query, Nova's
+  drawer shows the **Google Maps** provider
+  icon; tapping it opens the Maps app with the
+  query — the same target the Vesna Maps row
+  reaches. Nova's drawer keeps the query in the
+  overlay after returning.
+- Search actions restored off (the default).
+- **Dock:** the last untested drop path — a
+  workspace pin (Maps) dropped onto an occupied
+  dock slot while a trailing slot was free (dock
+  Calendar/Camera/Chrome plus free slot 4) —
+  **inserts** at the target slot: Maps took
+  slot 2 and Camera/Chrome shifted one slot
+  right, matching the product README's "drop
+  onto a slot to insert it there"; with a full
+  dock the same drop was rejected (136).
+- Restored through the dock menus and drawer
+  re-adds (Maps back to its original workspace
+  cell, Clock appended to slot 4); both
+  launchers verified positionally.
+- **Incident.** Between the Nova probe and the
+  final assertion the Vesna package disappeared
+  from the device (`pm path` empty, dumpsys
+  "Unable to find package", uptime about
+  17 minutes, no reboot; no uninstall commands
+  were run on this side). Recovered by loading
+  `baseline_research_0.4.79`, which contains the
+  app and its data; version, layouts and
+  settings were re-verified afterwards. Cause
+  unknown.
+- Evidence: `EVI-VESNA-003/parity138-*`.
