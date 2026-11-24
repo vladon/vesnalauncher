@@ -1,0 +1,1 @@
+Dock capacity: choose the favorite slots per dock page (2–8, default 4). Extra pins flow onto a second dock page in order; swipe across the dock to flip pages. A reduction that could not hold every pin is rejected.

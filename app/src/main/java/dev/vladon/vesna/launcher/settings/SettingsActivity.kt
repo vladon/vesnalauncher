@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,11 +26,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.platform.IconPackInfo
 import dev.vladon.vesna.launcher.platform.IconPackResolver
+import dev.vladon.vesna.launcher.workspace.DockPages
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,6 +59,8 @@ class SettingsActivity : ComponentActivity() {
     private var pinNewApps by mutableStateOf(false)
     private var hideHomeAppNames by mutableStateOf(false)
     private var showDock by mutableStateOf(true)
+    private var dockCapacity by mutableStateOf(DockPages.DEFAULT_CAPACITY)
+    private var dockPinCount by mutableStateOf(0)
     private var homeIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var dockIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerLayoutMode by mutableStateOf(DrawerLayoutMode.GRID)
@@ -91,10 +96,13 @@ class SettingsActivity : ComponentActivity() {
                     workspaceRepository.grid.collect { grid = it }
                 }
             }
-            if (navigation.page == SettingsPage.APP_DRAWER) {
+            if (navigation.page == SettingsPage.APP_DRAWER || navigation.page == SettingsPage.HOME_SCREEN) {
                 LaunchedEffect(Unit) {
                     repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        VesnaApplication.graph(this@SettingsActivity).controller.state.collect { drawerApps = it.apps }
+                        VesnaApplication.graph(this@SettingsActivity).controller.state.collect {
+                            drawerApps = it.apps
+                            dockPinCount = it.dock.savedOrder.size
+                        }
                     }
                 }
             }
@@ -150,6 +158,8 @@ class SettingsActivity : ComponentActivity() {
                             dockPreferences.visible = visible
                             showDock = visible
                         },
+                        dockCapacity = dockCapacity,
+                        onDockCapacityChanged = ::changeDockCapacity,
                         homeIconPercent = homeIconPercent,
                         onHomeIconPercentChanged = { percent ->
                             workspace.iconScalePercent = percent
@@ -240,6 +250,7 @@ class SettingsActivity : ComponentActivity() {
         pinNewApps = workspace.pinNewApps
         hideHomeAppNames = workspace.hideHomeAppNames
         showDock = dockPreferences.visible
+        dockCapacity = dockPreferences.capacity
         drawerLayoutMode = drawerPreferences.layoutMode
         closeDrawerOnLaunch = drawerPreferences.closeOnLaunch
         rememberDrawerPosition = drawerPreferences.rememberPosition
@@ -286,6 +297,17 @@ class SettingsActivity : ComponentActivity() {
     private fun changeAppNameVisibility(visible: Boolean) {
         appearance.showAppNames = visible
         showAppNames = visible
+    }
+
+    /** Rejects a reduction the two dock pages could not hold, keeping the saved slots. */
+    private fun changeDockCapacity(slots: Int) {
+        if (slots == dockCapacity) return
+        if (!DockPages.canHold(dockPinCount, slots)) {
+            Toast.makeText(this, R.string.toast_dock_capacity_pins, Toast.LENGTH_LONG).show()
+            return
+        }
+        dockPreferences.capacity = slots
+        dockCapacity = slots
     }
 
     private fun changeDrawerLayoutMode(mode: DrawerLayoutMode) {

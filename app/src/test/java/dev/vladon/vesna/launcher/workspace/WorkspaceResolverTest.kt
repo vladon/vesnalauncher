@@ -58,7 +58,19 @@ class WorkspaceResolverTest {
         )
         val dock = WorkspaceResolver.dockLayout(items, mapOf(keyA to app(keyA), keyB to app(keyB)))
         assertEquals(listOf(DockPin(3, app(keyA)), DockPin(1, app(keyB)), DockPin(4, app(keyA))), dock.pins)
-        assertNull("The hidden pin still occupies the fourth saved slot", dock.dropColumn(3, reordering = false))
+        // Four saved entries leave four slots on the second page, so a drop at the
+        // trailing column is still an append.
+        assertEquals(3, dock.dropColumn(3, reordering = false))
+        val saturated = WorkspaceResolver.dockLayout(
+            items + listOf(
+                WorkspaceItem(5, keyB, Container.DOCK, cellIndex = 4),
+                WorkspaceItem(6, keyB, Container.DOCK, cellIndex = 5),
+                WorkspaceItem(7, keyB, Container.DOCK, cellIndex = 6),
+                WorkspaceItem(8, keyB, Container.DOCK, cellIndex = 7),
+            ),
+            mapOf(keyA to app(keyA), keyB to app(keyB)),
+        )
+        assertNull("Eight saved entries fill both pages", saturated.dropColumn(8, reordering = false))
 
         val destination = requireNotNull(dock.dropColumn(3, reordering = true))
         val reordered = DockOrdering.moveTo(dock.savedOrder, fromSlot = 0, toSlot = dock.savedSlot(destination))
@@ -89,6 +101,21 @@ class WorkspaceResolverTest {
         )
         val resolved = WorkspaceResolver.workspaceLayout(items, mapOf(keyA to app(keyA), keyB to app(keyB)), emptyList()).cells
         assertEquals(CellContent.App(app(keyA)), resolved.getValue(2))
+    }
+
+    @Test
+    fun `drop columns respect the two page capacity`() {
+        fun dock(vararg ids: Long): DockLayout = WorkspaceResolver.dockLayout(
+            ids.mapIndexed { index, id -> WorkspaceItem(id, keyA, Container.DOCK, cellIndex = index) },
+            mapOf(keyA to app(keyA)),
+        )
+        val full = dock(1, 2, 3, 4, 5, 6, 7, 8)
+        assertNull("Eight pins fill two four-slot pages", full.dropColumn(5, reordering = false))
+        assertNull("Eight pins also exceed two three-slot pages", full.dropColumn(5, reordering = false, capacityPerPage = 3))
+        assertEquals("Reordering clamps instead of appending", 7, requireNotNull(full.dropColumn(99, reordering = true)))
+        val overflow = dock(1, 2, 3, 4, 5)
+        assertEquals("The overflow page offers append positions", 5, requireNotNull(overflow.dropColumn(5, reordering = false)))
+        assertEquals("A three-slot dock holds six pins across two pages", 5, requireNotNull(overflow.dropColumn(5, reordering = false, capacityPerPage = 3)))
     }
 
     @Test

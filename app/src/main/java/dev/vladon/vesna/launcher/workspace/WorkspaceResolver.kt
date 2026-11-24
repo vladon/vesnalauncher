@@ -11,9 +11,13 @@ data class FolderPin(val id: Long, val app: LauncherApp)
 
 /** Saved order includes unavailable pins; the visible dock packs the remaining icons. */
 data class DockLayout(val savedOrder: List<Long>, val pins: List<DockPin>) {
-    internal fun dropColumn(column: Int, reordering: Boolean): Int? {
+    internal fun dropColumn(
+        column: Int,
+        reordering: Boolean,
+        capacityPerPage: Int = GridCanvas.DOCK_CAPACITY,
+    ): Int? {
         val last = if (reordering) pins.lastIndex else {
-            if (savedOrder.size >= GridCanvas.DOCK_CAPACITY) return null
+            if (savedOrder.size >= DockPages.totalCapacity(capacityPerPage)) return null
             pins.size
         }
         return if (last < 0) null else column.coerceIn(0, last)
