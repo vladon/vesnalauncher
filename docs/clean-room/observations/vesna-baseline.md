@@ -4258,3 +4258,35 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   pixels, and Arcticons was uninstalled; both
   launchers equal to the baseline.
   Evidence: `EVI-VESNA-003/parity142-*`.
+
+## OBS-VESNA-149 — Nova Web suggestions service affects the drawer on 9.0.1
+
+- Android 15 research AVD, `en-US`. Nova 9.0.1
+  Prime (90100). Completes the functional part
+  of the Search-settings inventory (145): the
+  **Web suggestions** dropdown offers **None,
+  DuckDuckGo, Google** (default Google) and is
+  reachable through the settings search
+  ("web suggestions" jumps straight to the row;
+  note the settings root has two "Search"
+  nodes — a search field at the top and the
+  Search row lower down).
+- **Service change reaches the drawer:** after
+  selecting DuckDuckGo, a no-match drawer query
+  ("zzzz") showed the **Search with provider row
+  leading with DuckDuckGo** (DuckDuckGo, Google,
+  Play Store, Wikipedia, Google Maps, YouTube —
+  DuckDuckGo replaced Spotify's slot position)
+  and the query suggestions changed set
+  ("zzzz sound effect", "zzzzv", "zzzzx" vs
+  Google's "zzzz sleep", "zzzz best").
+- **Restore:** selecting Google returned the row
+  to Google-first and kept DuckDuckGo as an
+  added second icon (the used provider stays in
+  the row). The drawer suggestions reverted to
+  the Google-flavoured set.
+- Vesna comparison: no web-suggestion service
+  exists — covered by #113 (provider gap).
+- Restored: Web suggestions = Google; both
+  launchers equal to the baseline.
+  Evidence: `EVI-VESNA-003/parity142-*`.
