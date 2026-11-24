@@ -4179,6 +4179,25 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Evidence: `EVI-VESNA-003/parity141-*`
   (frames `p146-*`),
   `release-0.4.81/`.
+- **Follow-up 2 (v0.4.82):** the Dock icon size on
+  the overflow page was exercised at 130 % with
+  6 pins at capacity 4 (4 on page 1, Maps + Gmail
+  overflowing to page 2): dock **artwork measured
+  163×163 px on both pages** while the slot width
+  stayed 265 px — the icon size scales the
+  artwork only, uniformly across dock pages.
+  Identifying the right slider on a search-jump
+  page requires the near-text check (three
+  sliders: Dock capacity, Home icon size, Dock
+  icon size sit on one page); an earlier "4
+  slots"/"130 %" pair of reads was correct, but
+  an intermediate dock re-capture misread the
+  layout as capacity-8/100 % because a capacity
+  tap earlier in the cycle had set 8 slots.
+  Restored: Dock icon size 100 %, Maps and Gmail
+  removed from dock page 2; both launchers equal
+  to the baseline.
+  Evidence: `EVI-VESNA-003/parity147-*`.
 
 ## OBS-VESNA-147 — Cold-start latency: black screen before icons on v0.4.81
 
