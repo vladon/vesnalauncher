@@ -3985,3 +3985,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: Show dock on, the grid back to
   339 px cells, both launchers equal to the
   baseline. Evidence: `EVI-VESNA-003/parity140-*`.
+
+## OBS-VESNA-143 — Launching from the drawer on v0.4.80
+
+- Android 15 research AVD, `en-US`. Signed Vesna
+  v0.4.80 (85) on the
+  `baseline_research_0.4.80` snapshot. Nova
+  9.0.1 Prime (90100). Completes DRAWER-011.
+- **Grid tap.** Tapping Clock in the drawer opens
+  the Clock app (`com.google.android.deskclock`)
+  on both launchers. After pressing HOME both
+  show the workspace with the **drawer closed**
+  (Vesna's `singleTask`/`onNewIntent` return), and
+  reopening the drawer starts from the top
+  (alphabetical grid; Vesna's Remember position is
+  off by default, and Nova likewise shows the
+  unfiltered list).
+- **Search-result launch (Vesna).** Typing `clock`
+  and tapping the result row opens the Clock app
+  the same way; after HOME the workspace is
+  baseline-identical and the drawer is closed.
+- No differences between the launchers on this
+  path. Restored: both launchers equal to the
+  baseline. Evidence: `EVI-VESNA-003/parity140-*`.
