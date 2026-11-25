@@ -39,6 +39,23 @@ the new Export/Restore rows and their search targets — pass individually.
 | Corrupt and unsupported input | A hand-written file with `cell: 999` is rejected with "File rejected — This file is not a valid layout export. Your current layout is unchanged." plus the validation reason ("pins carries cell 999 outside the grid"); the layout stays unchanged. `layout-restore-rejected.png`. |
 | Failure containment | Covered by the restore transaction (single `db.withTransaction`) and the preview gate; the UI shows a failure dialog and keeps the previous layout if the apply throws. |
 
+## Design-system acceptance (AGENTS.md, added after release)
+
+Run on the same AVD against the **signed release APK** (installed over the
+uninstalled debug build; `DEBUGGABLE` absent), device locale Russian
+(surface strings render in the shipped values-ru translations):
+
+| Check | Result |
+| --- | --- |
+| Dark theme | Rows and the restore preview dialog render on the Vesna dark surface (sampled (17,20,14)); buttons and titles follow the dark palette. `layout-rows-dark.png`, `layout-preview-dark.png`. |
+| Russian labels | «Экспорт макета» / «Восстановить макет» rows, the dialog title, summary («страниц — 1, значков на рабочем столе — 15, в доке — 4, папок — 0») and buttons render in Russian. |
+| Enlarged font (1.5×) | The page and both rows wrap and scale without clipping; the dialog was verified at 1.0× only. `layout-rows-dark-font15.png`, `layout-rows-font15.png`. |
+| Touch targets | The row containers measure 88 dp and 121 dp high (minimum 48 dp). |
+| D-pad focus | **Partially verified**: DPAD moves within the page but the focus ring on the new rows was not conclusively captured on this pass; the rows use the same `vesnaFocusRing` modifier as the verified sibling rows. A dedicated focus pass remains open. |
+| TalkBack | Not run (needs a manual gesture pass); the rows are standard M3 `ListItem`s with headline/supporting text and a clickable action. |
+
+The AVD state (font scale 1.0, night mode off) was restored after the pass.
+
 ## Limitations
 
 - Single AVD instance, debug build; the SAF flows ran on Downloads only.
