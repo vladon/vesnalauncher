@@ -4777,3 +4777,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   navigation overlay and mode were restored to their original
   state (gestural overlay, mode 0).
 - Evidence: `EVI-VESNA-003/parity154-*`.
+
+## OBS-VESNA-160 — System display size change (SYS-007)
+
+- Cycle start: no new release; main unchanged at 510c895f (#195
+  cold-start fix merged, not yet in a release — device
+  verification deferred until v0.4.83+). Scenario picked from
+  the matrix's untested rows.
+- `wm density 420 → 460` on the AVD. **Both launchers preserved
+  their full layouts**: Nova kept the complete pin set
+  (Photos / Nova Settings / Gmail + the five dock pins) with a
+  small re-layout (the Gmail cell moved from
+  [270,797][540,1240] to [270,779][540,1210]); Vesna kept its
+  workspace set and the drawer's 57 tiles with all 16 work
+  tiles. After a force-stop and restart of each launcher at 460
+  the sets stayed unchanged (Nova's Gmail bounds stable).
+- `wm density reset` returned the system to 420 and both
+  launchers to their exact pre-change state: Nova's Gmail cell
+  back at [270,797][540,1240] with the full baseline set
+  verified against the saved dump, and Vesna's workspace set
+  identical to the baseline capture. Parity confirmed — neither
+  launcher lost pins or broke its drawer; no difference to
+  file.
+- Evidence: `EVI-VESNA-003/parity155-*`.
