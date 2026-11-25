@@ -66,5 +66,14 @@
                 <data android:scheme="vesna" android:host="settings" android:path="/about" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".notifications.VesnaNotificationListener"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

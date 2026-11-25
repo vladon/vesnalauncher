@@ -40,6 +40,11 @@
     <string name="layout_export_failed">Не удалось записать макет в выбранный файл.</string>
     <string name="settings_dock_capacity">Вместимость дока</string>
     <string name="settings_dock_capacity_detail">Ячейки избранного на странице дока. Лишние ярлыки по порядку уходят на вторую страницу; уменьшение отклоняется, если оно не сможет вместить все ярлыки.</string>
+    <string name="settings_notification_dots">Показывать точки уведомлений</string>
+    <string name="settings_notification_dots_detail">Точка на значке приложения с непрочитанным уведомлением. Считываются только имена пакетов — текст уведомлений никогда.</string>
+    <string name="settings_notification_access">Доступ к уведомлениям</string>
+    <string name="settings_notification_access_granted">Предоставлен для Vesna.</string>
+    <string name="settings_notification_access_needed">Выдайте доступ в настройках системы, чтобы точки появлялись.</string>
     <string name="settings_dock_capacity_value">Ячеек: %1$d</string>
     <string name="toast_dock_capacity_pins">Меньше ячеек не вместит все ярлыки</string>
     <string name="drawer_work_paused">Рабочие приложения приостановлены. Включите их, чтобы запускать и получать уведомления.</string>

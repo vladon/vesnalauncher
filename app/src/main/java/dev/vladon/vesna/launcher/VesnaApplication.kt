@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.os.LocaleList
 import dev.vladon.vesna.launcher.data.FolderDao
 import dev.vladon.vesna.launcher.data.LauncherDatabase
+import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import dev.vladon.vesna.launcher.platform.AppDiscovery
 import dev.vladon.vesna.launcher.platform.AppLauncher
 import dev.vladon.vesna.launcher.platform.HomeRoleChecker
@@ -65,6 +66,7 @@ class VesnaApplication : Application() {
         super.onCreate()
         appLocales = resources.configuration.locales
         graph = LauncherGraph(this)
+        NotificationBadges.init(this)
         // Registered for the whole process lifetime, which is how launchers observe
         // install and uninstall storms without restarting.
         graph.packageChangeMonitor.start()

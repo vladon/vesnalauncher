@@ -47,6 +47,11 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(WORK_TAB, false)
         set(value) = prefs.edit { putBoolean(WORK_TAB, value) }
 
+    /** Notification badge dots (#200); dots render only with the listener granted. */
+    var notificationDots: Boolean
+        get() = prefs.getBoolean(NOTIFICATION_DOTS, false)
+        set(value) = prefs.edit { putBoolean(NOTIFICATION_DOTS, value) }
+
     var background: DrawerBackgroundMode
         get() {
             val saved = prefs.getString(BACKGROUND, null)
@@ -80,6 +85,7 @@ internal class DrawerPreferences(context: Context) {
         private const val LAYOUT_MODE = "drawer_layout_mode"
         private const val REMEMBER_POSITION = "drawer_remember_position"
         private const val WORK_TAB = "drawer_work_tab"
+        private const val NOTIFICATION_DOTS = "notification_dots_enabled"
         private const val BACKGROUND = "drawer_background"
     }
 }

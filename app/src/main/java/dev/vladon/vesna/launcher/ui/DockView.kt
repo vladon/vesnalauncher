@@ -298,6 +298,11 @@ class DockView @JvmOverloads constructor(
         renderPage()
     }
 
+    /** Re-renders the current dock page so notification dots follow the badge state (#200). */
+    internal fun refreshNotificationDots() {
+        renderPage()
+    }
+
     private fun renderPage() {
         removeAllViews()
         for (pin in DockPages.page(pins, currentPage, capacity)) {
