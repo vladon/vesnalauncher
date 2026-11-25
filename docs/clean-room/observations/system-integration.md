@@ -258,3 +258,11 @@ identify controls.
 - Recovery: `powershell Stop-Process` on the zombie **qemu child** (killing `emulator.exe` alone is insufficient), delete `hardware-qemu.ini.lock` + `multiinstance.lock`, cold boot `-no-snapshot`, then re-grant POST_NOTIFICATIONS. Full userdata image backup (`userdata-qemu.img.qcow2` 6.3 GB + base `userdata-qemu.img`) taken BEFORE the kill; `qemu-img check` clean (1 leaked cluster, no errors). Work profile user 11 intact after restart (232 packages).
 - Never launch a second emulator for the same AVD; if wedged, back up userdata → kill qemu child → clear locks → cold boot.
 - Confidence: Observed (recovery verified end to end).
+
+
+## OBS-SYS-118 — Post-reboot AVD: launcher a11y instrumentation flakes (operational)
+
+- Date / Env: 2026-11-25 / Nova_Reboot_API35 (emulator-5588) + Vesna_QA_Menu_API_35 (emulator-5560), after full AVD reboots.
+- After an AVD reboot, keyboard/accessibility-dependent instrumentation tests (drawer holds, folder-rename dialogs, settings search Tab flows) fail in batch runs regardless of the launcher code under test — verified by A/B: the unmodified v0.4.84 baseline build reproduces the same failures (15/24 in three classes) on the same session. The same suites were green on the long-uptime system before the reboots. Isolated reruns of the same tests pass.
+- Operational rule: treat post-reboot batch a11y/keyboard failures as environmental unless the same tests pass on a warmed session; warm the AVD (open drawers, exercise dialogs) before judging a code change by batch instrumentation.
+- Confidence: Observed (two AVDs, A/B on code).
