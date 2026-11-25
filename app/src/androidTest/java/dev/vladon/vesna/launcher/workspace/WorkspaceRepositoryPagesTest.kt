@@ -441,13 +441,16 @@ class WorkspaceRepositoryPagesTest {
             assertFalse(placed.canRemoveActivePage)
 
             // Selecting another page re-projects that page's own cells.
+            // Page selection re-projects from the same catalogue without a
+            // rediscovery; the two cold-start phases (#195) own the two calls.
+            val callsBeforePageSwitch = discovery.calls
             controller.selectWorkspacePage(DEFAULT_WORKSPACE_PAGE_ID)
             val backOnDefault = controller.state.first {
                 it.activePageId == DEFAULT_WORKSPACE_PAGE_ID &&
                     it.workspaceCells.getValue(1) == CellContent.App(apps[5])
             }
             assertEquals(CellContent.App(apps[4]), backOnDefault.workspaceCells.getValue(0))
-            assertEquals(1, discovery.calls)
+            assertEquals(callsBeforePageSwitch, discovery.calls)
 
             // Removal is scoped to the supplied page and does not discard a hidden pin.
             val unavailable = LauncherApp(AppKey("qa.unavailable", "Main"), "Unavailable", null)
@@ -475,7 +478,7 @@ class WorkspaceRepositoryPagesTest {
             assertEquals(DEFAULT_WORKSPACE_PAGE_ID, afterRemoval.activePageId)
             assertEquals(backOnDefault.workspaceCells, afterRemoval.workspaceCells)
             assertEquals(backOnDefault.dock, afterRemoval.dock)
-            assertEquals(1, discovery.calls)
+            assertEquals(callsBeforePageSwitch, discovery.calls)
         } finally {
             scope.cancel()
             db.close()
@@ -992,7 +995,7 @@ class WorkspaceRepositoryPagesTest {
         var calls = 0
             private set
 
-        override fun discover(): List<LauncherApp> {
+        override fun discover(decodeIconsFor: Set<AppKey>?): List<LauncherApp> {
             calls++
             return apps
         }
