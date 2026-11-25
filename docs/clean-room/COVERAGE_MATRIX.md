@@ -58,7 +58,7 @@ Last updated: 2026-11-18 (rounds 1–5; ENV-1 Nova 8.9.9 — free era rounds
 | SYS-003 | Notification badges | Discovered (Nova full config, OBS-SYS-112/113) | Signed v0.4.82: no badge setting (searches return nothing) and no NotificationListenerService in the APK, so notification badges are structurally impossible; Nova has master switch, style (Dynamic/notification dots/numeric dots), size radio, popup-menu content toggle and a test button (158) | Not Started | Not Started | Not Started |
 | SYS-007 | Display size changes | Discovered | `wm density` 420→460: both launchers preserve their full pin/workspace sets and re-layout (Nova's Gmail cell reflows slightly); sets survive a launcher restart at the new density; reset returns both to exact baselines (160) | Not Started | Not Started | Observed (one density step, no restart of the system UI) |
 | BACKUP-001..006 | Backup/restore detail | Completed (section) | Partial (see BACKUP-100..102) | Covered by BACKUP-100..102 | Completed | Observed/Partially |
-| NF-001..005 | Nonfunctional | Not Started (anecdotes only: startup, scroll, stability unmeasured) | Not Started | Not Started | Not Started | Not Tested |
+| NF-001..005 | Nonfunctional | Partial (startup measured: OBS-SYS-112 era and 162) | Cold start (force-stop launch → settled workspace, frame-settle): Nova ~0.91–1.2 s; Vesna v0.4.82 measured 2.11–2.14 s in an earlier session, v0.4.83 (with the #195 first-frame fix) 0.73–1.02 s on the same warm AVD — total-time A/B environment-sensitive, first-frame fix behavior confirmed (162). Scroll and stability unmeasured. | Not Started | Not Started | Partially Observed |
 
 ## Coverage notes
 
