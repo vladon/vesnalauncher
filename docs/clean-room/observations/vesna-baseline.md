@@ -4948,3 +4948,41 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: ProbeB uninstalled (its tile removed live again);
   workspace and rotation at baseline (portrait, auto-rotate on).
 - Evidence: `EVI-VESNA-003/parity156-*`.
+
+## OBS-VESNA-166 — v0.4.84 upgrade: complete work enumeration and the pause flow (#199 device verification)
+
+- v0.4.84 (89) — the release carrying the #199 catalogue
+  enumeration work (tag → commit 60c0704d, `fix(catalogue):
+  refresh on work-profile suspension events (#199)`; the
+  release body: "Enumeration verified complete on a managed
+  work profile (YouTube, YT Music and every launchable activity
+  listed; one entry per launchable activity, badges and
+  adjacency kept)") — was installed over v0.4.83 (signer
+  verified). Both workspace sets and the drawer survived.
+- **Enumeration verified complete on this AVD's work profile**
+  (the exact apps from the #199 set-diff): the drawer's work set
+  is now **19 names** — the OBS-VESNA-156 set of 16 (Calendar,
+  Camera, Chrome, Clock, Contacts, Drive, Files, Gmail, Google,
+  IconProbe, Maps, Messages, Phone, Photos, Safety, Voice
+  Search) plus **Work YouTube, Work YT Music and Work EnumDiag**,
+  matching the profile's launchable work apps one-to-one; the
+  v0.4.82 omission of the work YouTube/YT Music copies did not
+  reproduce on v0.4.84 (the app state was unchanged between the
+  observations, so the difference is not explained by app state;
+  the release body indicates the enumeration side was addressed
+  in this release). Personal side: 23 names including
+  EnumDiag. Pairs adjacency and the work badges hold (visible in
+  the settled capture).
+- **The pause flow on v0.4.84** (work paused via Nova's Work tab
+  → Turn off, QUIET_MODE verified): the work tiles remain in the
+  drawer, bright with badges (no dimming, no banner — the
+  same-conditions v0.4.82 behavior); tapping a paused work tile
+  opens the system **"Unpause work apps?"** dialog (Cancel /
+  Unpause) — not silent; choosing Unpause resumes the profile
+  (QUIET_MODE cleared) and the pending launch then completes
+  (Google Calendar's splash fired right after). Tap behavior on
+  v0.4.82 remains unverified (the earlier attempt raced).
+- Restored: work resumed via the dialog's Unpause button; the
+  drawer at baseline (work set 19, badges, adjacency); ProbeB
+  remains uninstalled.
+- Evidence: `EVI-VESNA-003/parity156-*` (v084-*).
