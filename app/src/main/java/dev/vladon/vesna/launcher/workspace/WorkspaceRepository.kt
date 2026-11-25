@@ -228,6 +228,14 @@ class WorkspaceRepository(
         true
     }
 
+    /**
+     * #176: after an item moves away from [pageId], drops the page when the
+     * move emptied it. The default page and non-empty pages are kept.
+     */
+    internal suspend fun autoRemoveIfEmptied(pageId: Long) = mutationMutex.withLock {
+        deleteEmptyExtraPage(pageId)
+    }
+
     private suspend fun deleteEmptyExtraPage(pageId: Long): Boolean =
         pageId != DEFAULT_WORKSPACE_PAGE_ID && db.workspacePageDao().deleteIfEmpty(pageId) != 0
 
