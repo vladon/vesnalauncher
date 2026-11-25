@@ -4883,6 +4883,13 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   this cycle via `cmd role get-role-holders
   android.app.role.HOME` and recorded in TEST_ENVIRONMENTS.md);
   Vesna is relaunched to the front explicitly.
+  Correction (next cycle): the rotation restore above did not
+  persist — its settings writes landed in the already-wedging
+  provider (cached reads returned the restored values while the
+  disk kept the forced-landscape ones, which resurfaced after
+  the framework restart). The true portrait restore happened in
+  the next cycle (OBS-VESNA-164's session: `accelerometer_rotation 1`,
+  `user_rotation 0`, verified by frame size and a fresh dump).
 - Evidence: `EVI-VESNA-003/parity156-*`.
 
 ## OBS-VESNA-164 — Drawer list staleness: newly installed apps appear only after a framework restart
@@ -4896,7 +4903,10 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   2026-11-25 01:16:45 — about 8.5 h before the v0.4.82 drawer
   capture — and the work YouTube/YT Music copies at
   2026-11-24 21:35 — about 12 h before it. The v0.4.82 drawer
-  (22 personal + 16 work names) contained none of them.
+  contained none of them (the pre-change name sets: 22 personal
+  + 16 work names; the dump's 57 tile nodes reflect the
+  accessibility tree's duplication, so set comparisons in this
+  entry use names).
 - The apps appeared only after a framework-level restart
   (`adb root` + `stop` + `start`, performed to clear an
   unrelated settings-provider wedge). Neither the installs
@@ -4918,3 +4928,23 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: nothing to restore; all layouts and settings at
   baseline.
 - Evidence: `EVI-VESNA-003/parity155-*`, `parity156-*`.
+
+## OBS-VESNA-165 — Drawer refresh triggers on v0.4.83 (#203 follow-up)
+
+- On v0.4.83 (88), after the framework restart from
+  OBS-VESNA-164's session: **a live refresh is confirmed**. With
+  the drawer open, uninstalling the research fixture ProbeB
+  (`com.vesnaresearch.iconprobeb`) removed its tile live, and
+  reinstalling it brought the tile back — both while the drawer
+  stayed open. Earlier in the same session an install made with
+  the drawer closed appeared on the first drawer build (ProbeB
+  present at the next open, 57 tile nodes).
+- The v0.4.82 staleness (OBS-VESNA-164 — newly installed apps
+  missing for 8.5–12 h across launcher restarts and the
+  package-replace upgrade) did not reproduce on v0.4.83 in this
+  configuration: #203's acceptance clause "appear on
+  package-added while running" is satisfied on v0.4.83; the
+  v0.4.82 defect remains the historical finding to fix.
+- Restored: ProbeB uninstalled (its tile removed live again);
+  workspace and rotation at baseline (portrait, auto-rotate on).
+- Evidence: `EVI-VESNA-003/parity156-*`.
