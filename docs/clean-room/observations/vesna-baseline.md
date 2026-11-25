@@ -5122,3 +5122,27 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   so the regression window is v0.4.86–88 — the releases carrying the Work-tab slice
   refactor (PR #208). Filed as facts on #199; not counted against #197's acceptance.
 - Evidence: `EVI-VESNA-003/parity159-*`.
+
+### OBS-170 addendum (same cycle, review follow-up) — intermittent broken tab-slice render captured
+
+- While re-exercising the Apps tab for a full-height exclusion sweep, the drawer was
+  captured in a broken state: the tab bar rendered with the **Work pill selected**
+  (pill-half mean signature matches the known Work-active reference
+  `parity159-C-worktab-fresh2`: apps-half lighter, work-half darker) but the grid below
+  rendered the **merged personal+work catalogue** — adjacent pairs with badges
+  (Contacts | Work Contacts | Drive | Work Drive …), no *Turn off work apps* row — and
+  stayed broken across the whole scroll sweep
+  (`parity159-Q-s0…s4`, `parity159-R-now`; crops `apps-sweep-crop.png`, `R-crop.png`).
+- As captured, the state violates the #197 acceptance's Apps-exclusion criterion: work
+  tiles with badges render on the tab surface regardless of which slice it claims.
+- **Not reproduced in three replays**: plain reopen (E1: clean Apps, personal-only,
+  no badges), explicit Work tap → close → reopen (E2b: clean Work, 17 + Turn-off row),
+  and an exact settings OFF→ON → BACK → first-open replay (P3: clean Work). The clean
+  states were pixel-verified, not only dump-read.
+- The broken render also re-confirms the inline-surface omission independently: the
+  merged pairs enumerate Work Calendar…Safety only — Work YouTube/YT Music absent
+  there as well (see the #199 facts above).
+- Suspected race between tab restore and slice application on the first drawer open
+  after enabling the switch; needs developer attention.
+- Restored afterwards: switch off, drawer inline (no tab bar), 14 work tiles visible —
+  baseline as at cycle start.
