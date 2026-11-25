@@ -4829,3 +4829,33 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   permissions granted or revoked. DRAWER-103's enable flow
   remains untestable on Vesna until contact search exists.
 - Evidence: `EVI-VESNA-003/parity155-*`.
+
+## OBS-VESNA-162 — Cold start on v0.4.83 (#195 device verification)
+
+- v0.4.83 (88) — the release carrying the #195 first-frame fix —
+  was installed over the verified v0.4.82 state (signer
+  21a9fb9c… verified); both workspace sets and the drawer's
+  57/16 tiles survived the upgrade.
+- **Force-stop cold launches, frame-settle measurement**
+  (screenrecord around `am start`, settle = first static frame
+  window matching the final frame): v0.4.83 settled the
+  workspace in **0.73–1.02 s** across six runs (drawer-restore
+  and workspace-restore pre-states both). A same-protocol A/B
+  on the downgraded v0.4.82 (install -r -d, three runs, then
+  re-upgrade) measured **0.76–0.99 s** — the earlier 2.11–2.14 s
+  v0.4.82 numbers and the release note's ~2.1 s baseline do not
+  reproduce on today's warm AVD (work profile present, caches
+  warm), so the total-time A/B is inconclusive here.
+- **Qualitative first-frame evidence supports the fix**: at
+  ~0.25 s after launch the v0.4.82 recording still showed the
+  Nova fallback screen, while the v0.4.83 recording already
+  showed the cross-fade into Vesna's content (captured frames
+  parity155-firstframe-082/083.png).
+- Environment note: the cold-launch landing surface follows the
+  pre-force-stop state — with the drawer open it reopens the
+  drawer (drawer-settled runs), from the workspace it restores
+  the workspace (workspace-settled runs).
+- Restored: v0.4.83 remains installed; density, navigation,
+  listeners, theme and layouts all at baseline.
+- Evidence: `EVI-VESNA-003/parity155-*` (cs1–3, cw4–6,
+  cold{a–f}, firstframe-082/083).
