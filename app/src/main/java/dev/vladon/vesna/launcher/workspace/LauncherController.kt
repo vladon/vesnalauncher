@@ -368,7 +368,13 @@ class LauncherController(
 
     /** Adds a dragged app into an existing folder. */
     internal fun addToFolder(app: LauncherApp, folderId: Long, source: WorkspaceRepository.FolderDropSource) {
-        scope.launch { workspaceRepository.addToFolder(app, folderId, source) }
+        scope.launch {
+            if (workspaceRepository.addToFolder(app, folderId, source) &&
+                source is WorkspaceRepository.FolderDropSource.Workspace
+            ) {
+                autoRemoveEmptiedPage(source.pageId)
+            }
+        }
     }
 
     /** Awaits an edge-preview drop so Home keeps the preview until the folder change is saved. */
@@ -493,7 +499,9 @@ class LauncherController(
 
     internal fun movePinToPage(pinId: Long, cell: Int, pageId: Long, destinationId: Long) {
         scope.launch {
-            reportPageMove(workspaceRepository.movePinToPage(pinId, cell, pageId, destinationId), LauncherMessage.SHORTCUT_MOVED)
+            val result = workspaceRepository.movePinToPage(pinId, cell, pageId, destinationId)
+            reportPageMove(result, LauncherMessage.SHORTCUT_MOVED)
+            if (result == PageMoveResult.MOVED) autoRemoveEmptiedPage(pageId)
         }
     }
 
@@ -502,12 +510,24 @@ class LauncherController(
 
     internal fun moveFolderToPage(folder: Folder, destinationId: Long) {
         scope.launch {
-            reportPageMove(workspaceRepository.moveFolderToPage(folder, destinationId), LauncherMessage.FOLDER_MOVED)
+            val result = workspaceRepository.moveFolderToPage(folder, destinationId)
+            reportPageMove(result, LauncherMessage.FOLDER_MOVED)
+            if (result == PageMoveResult.MOVED) autoRemoveEmptiedPage(folder.pageId)
         }
     }
 
-    internal suspend fun moveFolderToCell(folder: Folder, pageId: Long, cell: Int, grid: GridCanvas): Boolean =
-        workspaceRepository.moveFolderToCell(folder, pageId, cell, grid)
+    internal suspend fun moveFolderToCell(folder: Folder, pageId: Long, cell: Int, grid: GridCanvas): Boolean {
+        val moved = workspaceRepository.moveFolderToCell(folder, pageId, cell, grid)
+        if (moved) autoRemoveEmptiedPage(folder.pageId)
+        return moved
+    }
+
+    /** #176: after an item leaves a page, drop the page when the move emptied it. */
+    private suspend fun autoRemoveEmptiedPage(sourcePage: Long) {
+        if (workspaceRepository.autoRemoveIfEmptied(sourcePage) && pageSelection.value.saved == sourcePage) {
+            pageSelection.value = PageSelection(DEFAULT_WORKSPACE_PAGE_ID)
+        }
+    }
 
     private fun reportPageMove(result: PageMoveResult, success: LauncherMessage) {
         _messages.tryEmit(when (result) {
@@ -596,8 +616,11 @@ class LauncherController(
         scope.launch(Dispatchers.IO) {
             if (app.key.shortcutId == null) {
                 pageActionMutex.withLock {
-                    if (workspaceRepository.removeFromWorkspace(app, cell, pageId) && pageSelection.value.saved == pageId) {
-                        pageSelection.value = PageSelection(DEFAULT_WORKSPACE_PAGE_ID)
+                    if (workspaceRepository.removeFromWorkspace(app, cell, pageId)) {
+                        if (pageSelection.value.saved == pageId) {
+                            pageSelection.value = PageSelection(DEFAULT_WORKSPACE_PAGE_ID)
+                        }
+                        autoRemoveEmptiedPage(pageId)
                     }
                 }
             } else {
