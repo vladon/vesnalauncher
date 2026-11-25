@@ -4989,3 +4989,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   drawer at baseline (work set 19, badges, adjacency); ProbeB
   remains uninstalled.
 - Evidence: `EVI-VESNA-003/parity156-*` (v084-*).
+
+## OBS-VESNA-167 — Nova badge-dot render attempt on the AVD (#200 Nova-side data)
+
+- Nova's listener was granted on the AVD (`cmd notification
+  allow_listener`; binding verified), the probe's real
+  notification was posted live (importance high, no group
+  flags), and Nova's badge config was ON (Dynamic badges,
+  Small). **No badge dot was observed** on the checked surfaces:
+  the app's tiles in the drawer's category sections nor in the
+  drawer search results (the personal and work copies both
+  dotless; the work copy carries only the briefcase badge).
+  Nova 9.0.1's search-results surface may simply not be a badge
+  surface; combined with OBS-SYS-114's inconclusive matrix,
+  Nova-side dot rendering stays undemonstrated on this AVD.
+- Restored: listener disallowed (AiAi + Pixel Launcher remain),
+  the notification cancelled via the probe's CANCEL action.
+- Evidence: `EVI-VESNA-003/parity156-*` (nova-badge-check,
+  nova-enum-search). Posted to #200 as the Nova-side reference
+  for the product decision.
