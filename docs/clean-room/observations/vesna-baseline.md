@@ -5048,11 +5048,16 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   work apps?"** dialog (Cancel / Unpause); Unpause resumes the
   profile (QUIET_MODE cleared) — the earlier silent no-op is
   resolved in v0.4.85.
-- The banner's TURN ON WORK APPS button tap did not engage the
-  resume in two attempts (fresh-dump coordinates each time; the
-  foreground stayed Vesna) — the system dialog route (tap the
-  paused tile → Unpause) works reliably and was used for the
-  restore. Recorded for the developer's attention.
+- The banner's TURN ON WORK APPS button tap routes to the
+  system Settings confirm flow by design: with Nova as the HOME
+  role holder, Vesna's quiet-mode request throws
+  SecurityException and Vesna intentionally sends the user to
+  system Settings (the developer's #198 closing note). In this
+  pass the Settings confirm was not completed; the resume was
+  instead exercised through the paused-tile tap → the system
+  Unpause dialog (above), which works reliably. The earlier
+  "did not engage the resume" framing was a misread of this
+  designed routing.
 - Restored: work resumed via the dialog's Unpause; the drawer at
   baseline (19 work names, badges, adjacency); ProbeB remains
   uninstalled.
