@@ -1,11 +1,11 @@
 # ADR-BACKUP-1 — Layout export and restore; backup and privacy policy
 
-**Status:** Revised for review (2026-11-25) — covers the approved
-[#116](https://github.com/vladon/vesnalauncher/issues/116) file
-export/restore scope; the Android device-to-device transfer section remains
-a draft. Not implemented. Implementation starts only after this revision is
-reviewed. Supersedes the 2026-11-19 draft, which scoped device-to-device
-transfer only.
+**Status:** Part 1 accepted and implemented (2026-11-25 loop session;
+revision merged as #213, implementation released in v0.4.88) — covers the
+approved [#116](https://github.com/vladon/vesnalauncher/issues/116) file
+export/restore scope; the Android device-to-device transfer section (part 2)
+remains a draft, gated on review and transport verification. Supersedes the
+2026-11-19 draft, which scoped device-to-device transfer only.
 
 **Gates:** [ENG-106](../engineering/BACKLOG.md#eng-106-backuprestore-policy) ·
 Scope decision: the [BACKLOG product-decisions
