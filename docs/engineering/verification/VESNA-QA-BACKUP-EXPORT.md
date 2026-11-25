@@ -49,9 +49,9 @@ uninstalled debug build; `DEBUGGABLE` absent), device locale Russian
 | --- | --- |
 | Dark theme | Rows and the restore preview dialog render on the Vesna dark surface (sampled (17,20,14)); buttons and titles follow the dark palette. `layout-rows-dark.png`, `layout-preview-dark.png`. |
 | Russian labels | «Экспорт макета» / «Восстановить макет» rows, the dialog title, summary («страниц — 1, значков на рабочем столе — 15, в доке — 4, папок — 0») and buttons render in Russian. |
-| Enlarged font (1.5×) | The page and both rows wrap and scale without clipping; the dialog was verified at 1.0× only. `layout-rows-dark-font15.png`, `layout-rows-font15.png`. |
+| Enlarged font (1.5×) | Rows and the preview dialog wrap and scale without clipping: the longest Russian disclosure renders fully inside the AlertDialog with both buttons visible. `layout-rows-dark-font15.png`, `layout-preview-dark-font15.png`. |
 | Touch targets | The row containers measure 88 dp and 121 dp high (minimum 48 dp). |
-| D-pad focus | **Partially verified**: DPAD moves within the page but the focus ring on the new rows was not conclusively captured on this pass; the rows use the same `vesnaFocusRing` modifier as the verified sibling rows. A dedicated focus pass remains open. |
+| D-pad focus | **Partially verified**: synthetic DPAD after touch input only re-focuses the window root (the a11y dump shows `focused="true"` on the window, never on a row), so the ring on the new rows was not conclusively exercised; the rows use the same `vesnaFocusRing` modifier as the verified sibling rows. A hardware-keyboard focus pass remains open. |
 | TalkBack | Not run (needs a manual gesture pass); the rows are standard M3 `ListItem`s with headline/supporting text and a clickable action. |
 
 The AVD state (font scale 1.0, night mode off) was restored after the pass.
