@@ -5078,11 +5078,17 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Tab bar: switch on → the drawer gains an **Apps | Work** tab bar directly under the
   search field ([42,441][540,567] / [540,441][1038,567]); switch off → no tab bar and the
   inline merge returns (50 visible tiles / 14 `Work ` a11y tiles, same as cycle start).
-- Work tab contents: exactly the OBS-VESNA-157 managed set — 17 apps, Calendar …
-  YT Music — alphabetical, plain visible labels ("Calendar" under the Work Calendar
-  tile), a11y descriptions prefixed `Work`, and the blue badge (26,115,232): the first
+- Work tab contents: 17 managed apps, Calendar … YT Music — alphabetical, plain visible
+  labels ("Calendar" under the Work Calendar tile), a11y descriptions prefixed `Work`,
+  and the blue badge (26,115,232): the first
   screen shows 15 uniform 24×24 badge blocks (~467 solid px each) at one fixed tile
   offset (+142..166, +101..125); a first-row screenshot shows the badge on every icon.
+  Composition equals the profile's launchable work set: OBS-VESNA-157's 17 minus Google
+  plus EnumDiag. Google is installed and enabled in user 11 (`installed=true
+  hidden=false suspended=false`) but has **no LAUNCHER activity in user 11**
+  (`cmd package resolve-activity --user 11 -c LAUNCHER` → "No activity found", while
+  YouTube resolves) — so both launchers' work lists legitimately omit it today; the
+  OBS-157-era Google presence reflects earlier profile state.
 - Apps-tab exclusion: the live Apps grid carries no badge-slot blocks — every
   exact-blue cluster is icon artwork at non-badge offsets (e.g. a 47×47 block inside a
   tile, never a 24×24 slot at the fixed offset). The EnumDiag/IconProbe entries in the
@@ -5107,4 +5113,12 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: switch off (track grey), Work Calendar unhidden, work profile resumed,
   drawer inline at 50/14 as at cycle start; no snapshot refresh needed (the v0.4.88
   baseline already exists from the dev's upgrade cycle).
+- **Residual defect found (kin #199): the inline merge on v0.4.88 enumerates only 15
+  work copies — Work YouTube and Work YT Music are missing** — while the same release's
+  Work tab lists both and `pm`/`resolve-activity` show them installed, enabled,
+  non-hidden and LAUNCHER-resolvable in user 11. The live inline list provably ends at
+  Work Safety (scroll-stabilized bottom row y≈1909 at the live pitch; 3 consecutive
+  no-new-name captures). v0.4.84/85 enumerated the full inline set (OBS-VESNA-164/166),
+  so the regression window is v0.4.86–88 — the releases carrying the Work-tab slice
+  refactor (PR #208). Filed as facts on #199; not counted against #197's acceptance.
 - Evidence: `EVI-VESNA-003/parity159-*`.
