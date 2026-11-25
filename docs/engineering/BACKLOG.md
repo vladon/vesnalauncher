@@ -196,12 +196,15 @@ the placeholder until the decision exists
 
 ### ENG-106: Backup/restore policy
 
-Resolve the backup/privacy policy via **ADR-BACKUP-1**: the ADR may conclude to
-**keep platform backup enabled and define its scope** — an explicit in-app
-backup/restore feature is one option, not a requirement. Today the manifest
-sets `allowBackup="true"` without a feature; that is a default, not a decision.
-Settings **reset** also lands here (research `BACKUP-101`, partial coverage);
-it needs its research scenario completed via
+The [#116](https://github.com/vladon/vesnalauncher/issues/116) scope decision
+approved an explicit user-selected-file export and restore (no
+launcher-managed cloud backup). **ADR-BACKUP-1** is revised for that scope
+([ADR 0002](../adr/0002-backup-and-privacy.md), 2026-11-25 revision: part 1
+file export/restore per the decision, part 2 Android device-to-device
+transfer still a draft). Implementation of #116 starts after the revision is
+reviewed. The manifest's `allowBackup="true"` default stays untouched until
+part 2 is decided. Settings **reset** also lands here (research
+`BACKUP-101`, partial coverage); it needs its research scenario completed via
 [ENG-107](#eng-107-research-matrix-fix-ups-research-branch-not-trunk). Related
 research gap: `BACKUP-102` has no dedicated scenario.
 
@@ -284,14 +287,15 @@ cleanup on removal, and restart recovery. It gates ENG-102.
 
 ### ADR-BACKUP-1: Backup and privacy policy
 
-[ADR 0002 — Backup and privacy](../adr/0002-backup-and-privacy.md) drafts scoped
-Android device-to-device transfer only. No cloud backup, analytics, tracking,
-or in-app export. Implementation remains gated on review and transport tests.
-The [#116](https://github.com/vladon/vesnalauncher/issues/116) decision above
-approves export to a user-selected file and restore from it, which this draft
-excludes. Revise and review ADR 0002 for that scope before any #116 work; its
-other exclusions, including cloud backup, analytics, and tracking, are
-unchanged.
+[ADR 0002 — Backup and privacy](../adr/0002-backup-and-privacy.md) is
+revised (2026-11-25) for the approved
+[#116](https://github.com/vladon/vesnalauncher/issues/116) scope: part 1
+records the user-selected-file export and restore (preview, validation,
+atomic replace after explicit confirmation, failure leaves the layout
+unchanged); part 2 keeps Android device-to-device transfer as a draft. The
+privacy exclusions (no cloud backup, analytics, tracking, profile serials)
+are unchanged. The revision awaits review; #116 implementation starts only
+after that review.
 
 ---
 
