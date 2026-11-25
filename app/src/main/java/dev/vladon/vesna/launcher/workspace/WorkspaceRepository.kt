@@ -5,9 +5,14 @@ import androidx.core.content.edit
 import androidx.room.withTransaction
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.data.DockPinSnapshot
 import dev.vladon.vesna.launcher.data.FolderDao
 import dev.vladon.vesna.launcher.data.FolderEntity
+import dev.vladon.vesna.launcher.data.FolderSnapshot
 import dev.vladon.vesna.launcher.data.LauncherDatabase
+import dev.vladon.vesna.launcher.data.LayoutSnapshotException
+import dev.vladon.vesna.launcher.data.LayoutSnapshotV1
+import dev.vladon.vesna.launcher.data.PinSnapshot
 import dev.vladon.vesna.launcher.data.WorkspaceGridEntity
 import dev.vladon.vesna.launcher.data.WorkspaceItemDao
 import dev.vladon.vesna.launcher.data.WorkspaceItemEntity
@@ -59,6 +64,30 @@ internal class SavedLayout(
     val pageIds: List<Long>,
     val grid: GridCanvas,
 )
+
+/**
+ * What a #116 layout restore would apply, shown for the explicit
+ * confirmation before anything changes (ADR-BACKUP-1 part 1).
+ */
+internal data class LayoutRestorePreview(
+    val snapshot: LayoutSnapshotV1,
+    val pageCount: Int,
+    val workspacePinCount: Int,
+    val dockPinCount: Int,
+    val folderCount: Int,
+    val folderTitles: List<String>,
+    val unavailablePackages: List<String>,
+    val replacedPinCount: Int,
+)
+
+/** Outcome of opening a snapshot file for a #116 restore. */
+internal sealed interface LayoutRestoreAttempt {
+    /** Validated preview awaiting the explicit confirmation. */
+    data class Ready(val preview: LayoutRestorePreview) : LayoutRestoreAttempt
+
+    /** Rejected file; [reason] carries the validation failure for the dialog. */
+    data class Rejected(val reason: String? = null) : LayoutRestoreAttempt
+}
 
 /** Hard cap on workspace pages; removing an empty extra page frees a slot. */
 internal const val MAX_WORKSPACE_PAGES = 8
@@ -114,7 +143,7 @@ class WorkspaceRepository(
             val previous = readGrid()
             if (previous == target) return@withTransaction GridResizeResult.APPLIED
             val pageDao = db.workspacePageDao()
-            val pages = pageDao.getAll()
+            val pages = db.workspacePageDao().getAll()
             val pageIndices = pages.withIndex().associate { (index, page) -> page.id to index }
             fun pageIndex(id: Long?): Int = if (id == null) -1 else pageIndices[id] ?: -1
             val placements = mutableListOf<GridPlacement>()
@@ -133,7 +162,7 @@ class WorkspaceRepository(
             val lastRank = pages.lastOrNull()?.rank ?: -1
             for (index in pageIds.indices) {
                 pageIds[index] = if (index < pages.size) pages[index].id else {
-                    pageDao.insert(WorkspacePageEntity(rank = lastRank + index - pages.lastIndex))
+                    db.workspacePageDao().insert(WorkspacePageEntity(rank = lastRank + index - pages.lastIndex))
                 }
             }
             for (placement in placements) {
@@ -217,7 +246,7 @@ class WorkspaceRepository(
             ) return@withLock false
 
             val pageDao = db.workspacePageDao()
-            val pages = pageDao.getAll()
+            val pages = db.workspacePageDao().getAll()
             // The chooser names positions, so reject a choice from an older order.
             if (pages.size != displayedOrder.size || pages.indices.any { pages[it].id != displayedOrder[it] }) {
                 return@withLock false
@@ -611,14 +640,28 @@ class WorkspaceRepository(
             dao.deleteByPackage(packageName, userSerial)
             for (folderId in affectedFolders) dissolveIfSparse(folderId)
         }
+        // An explicit uninstall also ends any restored-pin protection.
+        val pendingKey = "$packageName:$userSerial"
+        val pending = prefs.getStringSet(KEY_RESTORED_PENDING, null).orEmpty()
+        if (pendingKey in pending) {
+            prefs.edit { putStringSet(KEY_RESTORED_PENDING, pending - pendingKey) }
+        }
     }
 
-    /** Removes pins only for uninstalled packages; unavailable pins keep their positions. */
+    /**
+     * Removes pins only for uninstalled packages; unavailable pins keep their
+     * positions. Pins recorded in [KEY_RESTORED_PENDING] survive this cleanup
+     * while their package is still absent (the #116 restore may land before
+     * setup finishes installing the apps); the protection ends once the
+     * package turns up installed.
+     */
     suspend fun pruneUninstalled(
         launchableKeys: Set<AppKey>,
         isPackageInstalled: (String, Long) -> Boolean,
     ) = mutationMutex.withLock {
         // Check package availability before opening the database write transaction.
+        val restoredPending = prefs.getStringSet(KEY_RESTORED_PENDING, null).orEmpty()
+        var pending = restoredPending
         val uninstalledPins = ArrayList<Long>()
         val packageInstalled = HashMap<Pair<String, Long>, Boolean>()
         for (item in dao.getAll()) {
@@ -626,17 +669,200 @@ class WorkspaceRepository(
             val installed = packageInstalled.getOrPut(item.packageName to item.userSerial) {
                 isPackageInstalled(item.packageName, item.userSerial)
             }
+            val pendingKey = "${item.packageName}:${item.userSerial}"
+            if (pendingKey in pending) {
+                if (installed) {
+                    // The restored package arrived: end its protection so later
+                    // prunes treat the pin like any other.
+                    pending = pending - pendingKey
+                }
+                continue
+            }
             if (!installed) uninstalledPins.add(item.id)
         }
         db.withTransaction {
             for (id in uninstalledPins) dao.deleteById(id)
             normalizeFolders()
         }
+        if (pending !== restoredPending) {
+            prefs.edit { putStringSet(KEY_RESTORED_PENDING, pending) }
+        }
     }
 
     /** Dissolves folders that hold fewer than two members. */
     private suspend fun normalizeFolders() {
         for (folder in folderDao.getAll()) dissolveIfSparse(folder.id)
+    }
+
+    /**
+     * Reads the personal layout as a versioned export snapshot (ADR-BACKUP-1
+     * part 1, #116). One consistent read under the mutation mutex: pages in
+     * display order, personal-profile pins only, dock in order, folders with
+     * their titles, and the seeding flag. Work-profile pins never cross the
+     * file.
+     */
+    internal suspend fun exportLayout(): LayoutSnapshotV1 = mutationMutex.withLock {
+        val grid = readGrid()
+        val pages = db.workspacePageDao().getAll()
+        val pagePositions = pages.withIndex().associate { (index, page) -> page.id to index }
+        val allItems = dao.getAll().filter { it.userSerial == 0L }
+        val folders = folderDao.getAll()
+        val exportedMembers = allItems.filter { it.folderId != null }
+        // Keep folders that a personal pin references or that hold no member at
+        // all (an empty folder tile is layout structure); drop folders whose
+        // members are exclusively work-profile rows the file never carries.
+        val folderOrder = folders
+            .filter { folder -> folder.id in exportedMembers.mapNotNull { it.folderId } || dao.firstTwoFolderMembers(folder.id).isEmpty() }
+            .sortedWith(compareBy({ pagePositions[it.pageId] ?: Int.MAX_VALUE }, { it.cellIndex }))
+        val folderPositions = folderOrder.withIndex().associate { (index, folder) -> folder.id to index }
+        LayoutSnapshotV1(
+            columns = grid.columns,
+            rows = grid.rows,
+            seeded = isSeeded(),
+            pages = pages.map { it.rank },
+            dock = allItems
+                .filter { it.container == Container.DOCK.name }
+                .sortedBy { it.cellIndex }
+                .map {
+                    DockPinSnapshot(it.packageName, it.className, it.shortcutId, it.customLabel, it.shortcutLabel)
+                },
+            folders = folderOrder.map { folder ->
+                FolderSnapshot(
+                    title = folder.title,
+                    pagePosition = pagePositions[folder.pageId] ?: 0,
+                    cell = folder.cellIndex,
+                )
+            },
+            pins = allItems
+                .filter { it.container != Container.DOCK.name }
+                .mapNotNull { item ->
+                    val pagePosition = pagePositions[item.pageId]
+                    val folderIndex = item.folderId?.let { folderId -> folderPositions[folderId] }
+                    if (item.folderId == null && pagePosition == null) {
+                        null // Malformed row without a page or folder: never export it.
+                    } else if (folderIndex == null && item.folderId != null) {
+                        null // Member of a folder that holds only work rows.
+                    } else {
+                        PinSnapshot(
+                            packageName = item.packageName,
+                            className = item.className,
+                            pagePosition = pagePosition ?: 0,
+                            cell = item.cellIndex,
+                            folderIndex = folderIndex,
+                            shortcutId = item.shortcutId,
+                            customLabel = item.customLabel,
+                            shortcutLabel = item.shortcutLabel,
+                        )
+                    }
+                },
+        )
+    }
+
+    /**
+     * Validates the snapshot and describes what a restore would apply: counts,
+     * folder titles, the packages that are not installed here, and how many
+     * current pins the restore replaces. Throws [LayoutSnapshotException] for
+     * corrupt or unsupported input; the layout is untouched.
+     */
+    internal suspend fun restorePreview(
+        snapshot: LayoutSnapshotV1,
+        isPackageInstalled: (String) -> Boolean,
+    ): LayoutRestorePreview = mutationMutex.withLock {
+        requireDockFits(snapshot)
+        val unavailable = snapshot.packages().filterNot(isPackageInstalled).sorted()
+        LayoutRestorePreview(
+            snapshot = snapshot,
+            pageCount = snapshot.pages.size,
+            workspacePinCount = snapshot.pins.size,
+            dockPinCount = snapshot.dock.size,
+            folderCount = snapshot.folders.size,
+            folderTitles = snapshot.folders.map { it.title },
+            unavailablePackages = unavailable,
+            replacedPinCount = dao.getAll().size,
+        )
+    }
+
+    /**
+     * The dock capacity is a destination setting the snapshot never carries, so
+     * a file from a larger dock is unsupported here and the whole restore is
+     * rejected rather than stranding overflow rows beyond the last dock page.
+     */
+    private fun requireDockFits(snapshot: LayoutSnapshotV1) {
+        val capacity = DockPages.totalCapacity(dockCapacityPerPage)
+        if (snapshot.dock.size > capacity) {
+            throw LayoutSnapshotException(
+                "Dock holds ${snapshot.dock.size} pins, over this device's dock capacity $capacity",
+            )
+        }
+    }
+
+    /**
+     * Replaces the whole layout with the snapshot in one transaction: pages in
+     * display order, personal pins, dock, folders with membership, grid, and
+     * the seeding flag. Absent packages land in [KEY_RESTORED_PENDING] so
+     * [pruneUninstalled] keeps their pins until the packages arrive. Runs
+     * after the previewed explicit confirmation; any failure rolls back to the
+     * previous layout.
+     */
+    internal suspend fun applyRestore(
+        snapshot: LayoutSnapshotV1,
+        isPackageInstalled: (String) -> Boolean,
+    ): Unit = mutationMutex.withLock {
+        // The capacity may have moved since the preview; the apply is just as
+        // all-or-nothing about it.
+        requireDockFits(snapshot)
+        val restoredPending = snapshot.packages()
+            .filterNot(isPackageInstalled)
+            .map { "$it:0" }
+            .toSet()
+        db.withTransaction {
+            val pageDao = db.workspacePageDao()
+            dao.deleteAll()
+            folderDao.deleteAll()
+            pageDao.deleteAll()
+            val pageIds = snapshot.pages.map { rank -> db.workspacePageDao().insert(WorkspacePageEntity(rank = rank)) }
+            val folderIds = snapshot.folders.map { folder ->
+                folderDao.insert(
+                    FolderEntity(title = folder.title, cellIndex = folder.cell, pageId = pageIds[folder.pagePosition])
+                )
+            }
+            snapshot.dock.forEachIndexed { order, dockPin ->
+                dao.insert(
+                    WorkspaceItemEntity(
+                        packageName = dockPin.packageName,
+                        className = dockPin.className,
+                        container = Container.DOCK.name,
+                        cellIndex = order,
+                        userSerial = 0L,
+                        shortcutId = dockPin.shortcutId,
+                        customLabel = dockPin.customLabel,
+                        shortcutLabel = dockPin.shortcutLabel,
+                    )
+                )
+            }
+            snapshot.pins.forEach { pin ->
+                val inFolder = pin.folderIndex != null
+                dao.insert(
+                    WorkspaceItemEntity(
+                        packageName = pin.packageName,
+                        className = pin.className,
+                        container = Container.WORKSPACE.name,
+                        cellIndex = pin.cell,
+                        userSerial = 0L,
+                        folderId = pin.folderIndex?.let { folderIds[it] },
+                        pageId = if (inFolder) null else pageIds[pin.pagePosition],
+                        shortcutId = pin.shortcutId,
+                        customLabel = pin.customLabel,
+                        shortcutLabel = pin.shortcutLabel,
+                    )
+                )
+            }
+            gridDao.set(WorkspaceGridEntity(columnCount = snapshot.columns, rowCount = snapshot.rows))
+        }
+        prefs.edit {
+            putBoolean(KEY_SEEDED, snapshot.seeded)
+            putStringSet(KEY_RESTORED_PENDING, restoredPending)
+        }
     }
 
     /**
@@ -1124,5 +1350,8 @@ class WorkspaceRepository(
     private companion object {
         const val KEY_SEEDED = "workspace_seeded"
         const val KEY_ACTIVE_PAGE = "workspace_active_page"
+
+        /** Package:serial pairs whose restored pins survive [pruneUninstalled] until the package arrives. */
+        const val KEY_RESTORED_PENDING = "restored_pending_packages"
     }
 }

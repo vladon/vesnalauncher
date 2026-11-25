@@ -4,6 +4,8 @@ import android.content.Intent
 import android.view.View
 import android.widget.ImageView
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,6 +39,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,8 +56,9 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
@@ -102,6 +106,8 @@ import dev.vladon.vesna.launcher.search.searchKey
 import dev.vladon.vesna.launcher.ui.VesnaFocusRingOutset
 import dev.vladon.vesna.launcher.ui.vesnaFocusRing
 import dev.vladon.vesna.launcher.workspace.DockPages
+import dev.vladon.vesna.launcher.workspace.LayoutRestoreAttempt
+import dev.vladon.vesna.launcher.workspace.LayoutRestorePreview
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.GridResizeResult
 import kotlinx.coroutines.launch
@@ -149,6 +155,9 @@ internal fun SettingsScreen(
     onHomeIconPercentChanged: (Int) -> Unit,
     dockIconPercent: Int,
     onDockIconPercentChanged: (Int) -> Unit,
+    onExportLayout: suspend (String) -> Boolean,
+    onRestoreLayout: suspend (String) -> LayoutRestoreAttempt,
+    onConfirmRestore: suspend (LayoutRestorePreview) -> Boolean,
     drawerLayoutMode: DrawerLayoutMode,
     onDrawerLayoutModeSelected: (DrawerLayoutMode) -> Unit,
     closeDrawerOnLaunch: Boolean,
@@ -329,6 +338,12 @@ internal fun SettingsScreen(
                                         dockIconPercent, onDockIconPercentChanged,
                                     )
                                 }
+                                Spacer(Modifier.height(8.dp))
+                                LayoutBackupSettings(
+                                    onExportLayout, onRestoreLayout, onConfirmRestore,
+                                    searchTarget == R.string.settings_layout_export,
+                                    searchTarget == R.string.settings_layout_restore,
+                                )
                             }
                             SettingsPage.APP_DRAWER -> DrawerAppSettings(
                                 drawerLayoutMode, onDrawerLayoutModeSelected,
@@ -735,6 +750,166 @@ private fun SettingsSwitch(
             .vesnaFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
+}
+
+/**
+ * Export and restore of the workspace layout to a user-picked file
+ * (ADR-BACKUP-1 part 1, #116). Export writes through the system file picker;
+ * restore validates first and only applies after the previewed confirmation,
+ * so cancel, an invalid file, or a failure always leaves the layout as it was.
+ */
+@Composable
+private fun LayoutBackupSettings(
+    onExportLayout: suspend (String) -> Boolean,
+    onRestoreLayout: suspend (String) -> LayoutRestoreAttempt,
+    onConfirmRestore: suspend (LayoutRestorePreview) -> Boolean,
+    exportTargeted: Boolean,
+    restoreTargeted: Boolean,
+) {
+    val scope = rememberCoroutineScope()
+    var pendingRestore by remember { mutableStateOf<LayoutRestoreAttempt.Ready?>(null) }
+    var rejectedReason by remember { mutableStateOf<String?>(null) }
+    var showRejected by remember { mutableStateOf(false) }
+    var showInvalidExport by remember { mutableStateOf(false) }
+    var showRestoreFailed by remember { mutableStateOf(false) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                showInvalidExport = !onExportLayout(uri.toString())
+            }
+        }
+    }
+    val restoreLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                when (val attempt = onRestoreLayout(uri.toString())) {
+                    is LayoutRestoreAttempt.Ready -> pendingRestore = attempt
+                    is LayoutRestoreAttempt.Rejected -> {
+                        rejectedReason = attempt.reason
+                        showRejected = true
+                    }
+                }
+            }
+        }
+    }
+
+    Column {
+        SearchTarget(exportTargeted) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_layout_export)) },
+                supportingContent = { Text(stringResource(R.string.settings_layout_export_detail)) },
+                modifier = Modifier
+                    .vesnaFocusRing(radius = 12.dp)
+                    .clickable { exportLauncher.launch("vesna-layout.json") },
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        SearchTarget(restoreTargeted) {
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_layout_restore)) },
+                supportingContent = { Text(stringResource(R.string.settings_layout_restore_detail)) },
+                modifier = Modifier
+                    .vesnaFocusRing(radius = 12.dp)
+                    .clickable { restoreLauncher.launch(arrayOf("application/json")) },
+            )
+        }
+    }
+
+    pendingRestore?.let { attempt ->
+        val preview = attempt.preview
+        AlertDialog(
+            onDismissRequest = { pendingRestore = null },
+            title = { Text(stringResource(R.string.layout_restore_title)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.layout_restore_summary, preview.pageCount, preview.workspacePinCount, preview.dockPinCount, preview.folderCount))
+                    if (preview.folderTitles.isNotEmpty()) {
+                        Text(
+                            stringResource(R.string.layout_restore_folders, preview.folderTitles.joinToString(", ")),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    if (preview.unavailablePackages.isNotEmpty()) {
+                        Text(
+                            stringResource(R.string.layout_restore_unavailable, preview.unavailablePackages.joinToString(", ")),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    Text(
+                        stringResource(R.string.layout_restore_replaces, preview.replacedPinCount),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val target = attempt
+                    pendingRestore = null
+                    scope.launch {
+                        if (!onConfirmRestore(target.preview)) {
+                            showRestoreFailed = true
+                        }
+                    }
+                }) { Text(stringResource(R.string.layout_restore_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRestore = null }) {
+                    Text(stringResource(R.string.settings_workspace_grid_cancel))
+                }
+            },
+        )
+    }
+
+    if (showRejected) {
+        AlertDialog(
+            onDismissRequest = { showRejected = false },
+            title = { Text(stringResource(R.string.layout_restore_invalid_title)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.layout_restore_invalid))
+                    rejectedReason?.let { reason ->
+                        Text(reason, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showRejected = false }) {
+                    Text(stringResource(R.string.settings_workspace_grid_cancel))
+                }
+            },
+        )
+    }
+
+    if (showInvalidExport) {
+        AlertDialog(
+            onDismissRequest = { showInvalidExport = false },
+            title = { Text(stringResource(R.string.layout_export_failed_title)) },
+            text = { Text(stringResource(R.string.layout_export_failed)) },
+            confirmButton = {
+                TextButton(onClick = { showInvalidExport = false }) {
+                    Text(stringResource(R.string.settings_workspace_grid_cancel))
+                }
+            },
+        )
+    }
+
+    if (showRestoreFailed) {
+        AlertDialog(
+            onDismissRequest = { showRestoreFailed = false },
+            title = { Text(stringResource(R.string.layout_restore_failed_title)) },
+            text = { Text(stringResource(R.string.layout_restore_failed)) },
+            confirmButton = {
+                TextButton(onClick = { showRestoreFailed = false }) {
+                    Text(stringResource(R.string.settings_workspace_grid_cancel))
+                }
+            },
+        )
+    }
 }
 
 /** A discrete size choice over the offered percentage steps; the artwork alone changes. */

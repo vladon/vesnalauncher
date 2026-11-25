@@ -201,12 +201,16 @@ approved an explicit user-selected-file export and restore (no
 launcher-managed cloud backup). **ADR-BACKUP-1** is revised for that scope
 ([ADR 0002](../adr/0002-backup-and-privacy.md), 2026-11-25 revision: part 1
 file export/restore per the decision, part 2 Android device-to-device
-transfer still a draft). Implementation of #116 starts after the revision is
-reviewed. The manifest's `allowBackup="true"` default stays untouched until
-part 2 is decided. Settings **reset** also lands here (research
+transfer still a draft). **Part 1 is implemented (v0.4.88)**: Settings ›
+Home screen › Export layout / Restore layout, with the previewed
+confirmation, all-or-nothing validation (including the destination dock
+capacity), and pending-pin protection against stale-item cleanup; recorded
+in [VESNA-QA-BACKUP-EXPORT](verification/VESNA-QA-BACKUP-EXPORT.md). The
+manifest's `allowBackup="true"` default stays untouched until part 2 is
+decided. Settings **reset** also lands here (research
 `BACKUP-101`, partial coverage); it needs its research scenario completed via
 [ENG-107](#eng-107-research-matrix-fix-ups-research-branch-not-trunk). Related
-research gap: `BACKUP-102` has no dedicated scenario.
+research gap: `BACKUP-102` has no dedicated managed-profile scenario.
 
 ### ENG-107: Research-matrix fix-ups (research branch, not trunk)
 
@@ -294,8 +298,9 @@ records the user-selected-file export and restore (preview, validation,
 atomic replace after explicit confirmation, failure leaves the layout
 unchanged); part 2 keeps Android device-to-device transfer as a draft. The
 privacy exclusions (no cloud backup, analytics, tracking, profile serials)
-are unchanged. The revision awaits review; #116 implementation starts only
-after that review.
+are unchanged. Part 1 is implemented in v0.4.88 and recorded in
+[VESNA-QA-BACKUP-EXPORT](verification/VESNA-QA-BACKUP-EXPORT.md); part 2
+remains gated on review and transport verification.
 
 ---
 

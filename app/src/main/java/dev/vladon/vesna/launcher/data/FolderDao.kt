@@ -35,4 +35,8 @@ interface FolderDao {
 
     @Query("DELETE FROM folders WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    /** Clears every folder; only the restore transaction may wipe the table. */
+    @Query("DELETE FROM folders")
+    suspend fun deleteAll()
 }

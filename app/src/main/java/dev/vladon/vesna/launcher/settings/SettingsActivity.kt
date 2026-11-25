@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher.settings
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.UserManager
 import android.view.ViewGroup
@@ -31,11 +32,15 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.VesnaApplication
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.data.LayoutSnapshotV1
+import dev.vladon.vesna.launcher.data.LayoutSnapshotException
 import dev.vladon.vesna.launcher.platform.IconPackInfo
 import dev.vladon.vesna.launcher.platform.IconPackResolver
 import dev.vladon.vesna.launcher.settings.HomeOrientation
 import dev.vladon.vesna.launcher.workspace.DockPages
 import dev.vladon.vesna.launcher.workspace.GridCanvas
+import dev.vladon.vesna.launcher.workspace.LayoutRestoreAttempt
+import dev.vladon.vesna.launcher.workspace.WorkspaceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -177,6 +182,14 @@ class SettingsActivity : ComponentActivity() {
                         onDockIconPercentChanged = { percent ->
                             dockPreferences.iconScalePercent = percent
                             dockIconPercent = percent
+                        },
+                        onExportLayout = { uriText -> exportLayout(workspaceRepository, uriText) },
+                        onRestoreLayout = { uriText -> openRestore(workspaceRepository, uriText) },
+                        onConfirmRestore = { preview ->
+                            workspaceRepository.applyRestore(preview.snapshot) { pkg ->
+                                packageManager.getLaunchIntentForPackage(pkg) != null
+                            }
+                            true
                         },
                         drawerLayoutMode = drawerLayoutMode,
                         onDrawerLayoutModeSelected = ::changeDrawerLayoutMode,
@@ -365,6 +378,43 @@ class SettingsActivity : ComponentActivity() {
         packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
     } catch (e: PackageManager.NameNotFoundException) {
         ""
+    }
+
+    /**
+     * Writes the exported snapshot to the SAF location the user picked
+     * (ADR-BACKUP-1 part 1). The document is written in one pass from the
+     * fully built snapshot, so a failed write never leaves a torn layout
+     * behind — the restore side validates the file again anyway.
+     */
+    private suspend fun exportLayout(repository: WorkspaceRepository, uriText: String): Boolean = try {
+        val json = repository.exportLayout().toJson()
+        contentResolver.openOutputStream(Uri.parse(uriText))?.use { stream ->
+            stream.write(json.toByteArray(Charsets.UTF_8))
+            stream.flush()
+        } != null
+    } catch (e: Exception) {
+        false
+    }
+
+    /**
+     * Reads and validates a snapshot file for the restore preview. Any parse
+     * or validation failure maps to a rejection; the layout stays untouched
+     * until the previewed confirmation.
+     */
+    private suspend fun openRestore(repository: WorkspaceRepository, uriText: String): LayoutRestoreAttempt = try {
+        val text = contentResolver.openInputStream(Uri.parse(uriText))?.use { stream ->
+            stream.readBytes().toString(Charsets.UTF_8)
+        } ?: return LayoutRestoreAttempt.Rejected()
+        val snapshot = LayoutSnapshotV1.fromJson(text)
+        LayoutRestoreAttempt.Ready(
+            repository.restorePreview(snapshot) { pkg ->
+                packageManager.getLaunchIntentForPackage(pkg) != null
+            }
+        )
+    } catch (e: LayoutSnapshotException) {
+        LayoutRestoreAttempt.Rejected(e.message)
+    } catch (e: Exception) {
+        LayoutRestoreAttempt.Rejected()
     }
 }
 
