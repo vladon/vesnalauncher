@@ -4879,7 +4879,8 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: `accelerometer_rotation 1`, `user_rotation 0` — the
   display returned to portrait and Vesna's workspace matched the
   baseline exactly. Environment note: on a configuration change
-  the system re-surfaces the HOME role holder (Nova, per
-  OBS-VESNA-158-era role record); Vesna is relaunched to the
-  front explicitly.
+  the system re-surfaces the HOME role holder (Nova — verified
+  this cycle via `cmd role get-role-holders
+  android.app.role.HOME` and recorded in TEST_ENVIRONMENTS.md);
+  Vesna is relaunched to the front explicitly.
 - Evidence: `EVI-VESNA-003/parity156-*`.
