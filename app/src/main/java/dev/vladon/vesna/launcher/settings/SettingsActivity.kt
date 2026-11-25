@@ -3,6 +3,7 @@ package dev.vladon.vesna.launcher.settings
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.UserManager
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -41,6 +42,7 @@ import kotlinx.coroutines.withContext
 
 /** Entry point for Vesna's settings directory and named pages. */
 class SettingsActivity : ComponentActivity() {
+    private val userManager by lazy { getSystemService(UserManager::class.java) }
     private lateinit var workspace: WorkspacePreferences
     private lateinit var appearance: AppearancePreferences
     private lateinit var dockPreferences: DockPreferences
@@ -73,6 +75,8 @@ class SettingsActivity : ComponentActivity() {
     private var drawerBackground by mutableStateOf(DrawerBackgroundMode.THEME)
     private var drawerIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerFollowsHome by mutableStateOf(true)
+    private var workTabEnabled by mutableStateOf(false)
+    private var hasWorkProfile by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
     private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
@@ -211,6 +215,12 @@ class SettingsActivity : ComponentActivity() {
                             drawerPreferences.followsHomeIconScale = follow
                             drawerFollowsHome = follow
                         },
+                        workTabEnabled = workTabEnabled,
+                        hasWorkProfile = hasWorkProfile,
+                        onWorkTabEnabledChanged = { enabled ->
+                            drawerPreferences.workTabEnabled = enabled
+                            workTabEnabled = enabled
+                        },
                         drawerApps = drawerApps,
                         hiddenDrawerApps = hiddenDrawerApps,
                         onDrawerAppHiddenChanged = ::changeDrawerVisibility,
@@ -266,6 +276,8 @@ class SettingsActivity : ComponentActivity() {
         dockIconPercent = dockPreferences.iconScalePercent
         drawerIconPercent = drawerPreferences.iconScalePercent
         drawerFollowsHome = drawerPreferences.followsHomeIconScale
+        workTabEnabled = drawerPreferences.workTabEnabled
+        hasWorkProfile = userManager.userProfiles.any { it != android.os.Process.myUserHandle() }
         hiddenDrawerApps = drawerPreferences.hiddenApps
         lifecycleScope.launch {
             iconPackOptions = withContext(Dispatchers.IO) {

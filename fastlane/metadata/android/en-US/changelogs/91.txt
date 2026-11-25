@@ -1,0 +1,1 @@
+Work-profile apps can move to a dedicated Work tab in the app drawer (Settings › App drawer › Work apps in their own tab): the tab lists only managed-profile apps alphabetically with their badges, carries the pause affordance, and the drawer is unchanged when no work profile exists.

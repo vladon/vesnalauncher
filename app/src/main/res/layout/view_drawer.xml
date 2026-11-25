@@ -80,6 +80,42 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/drawer_work_tab_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/search_field_background"
+            android:minHeight="48dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/drawer_tab_apps"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:contentDescription="@string/drawer_tab_apps"
+                android:fontFamily="@font/inter_regular"
+                android:gravity="center"
+                android:text="@string/drawer_tab_apps"
+                android:textColor="@color/home_control_on_surface"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/drawer_tab_work"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:contentDescription="@string/drawer_tab_work"
+                android:fontFamily="@font/inter_regular"
+                android:gravity="center"
+                android:text="@string/drawer_tab_work"
+                android:textColor="@color/vesna_on_surface_variant"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/drawer_work_paused"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -128,6 +164,23 @@
             android:orientation="vertical"
             android:paddingBottom="8dp"
             android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/drawer_turn_off_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingBottom="12dp"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/drawer_turn_off_work"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/drawer_turn_off_work"
+                android:fontFamily="@font/inter_regular"
+                android:text="@string/drawer_turn_off_work" />
+        </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"

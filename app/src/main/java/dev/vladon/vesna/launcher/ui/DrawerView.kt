@@ -129,10 +129,61 @@ class DrawerView @JvmOverloads constructor(
         set(value) {
             if (workPausedBanner.isVisible == value) return
             workPausedBanner.isVisible = value
+            turnOffRow.isVisible = workTabActive && !value && onTurnOffWorkApps != null
         }
 
     /** Invoked by the banner's resume action; the caller toggles the profile's quiet mode off. */
     internal var onResumeWorkApps: (() -> Unit)? = null
+
+    /** Invoked by the Work tab's Turn off action; the caller pauses the profile. */
+    internal var onTurnOffWorkApps: (() -> Unit)? = null
+        set(value) {
+            field = value
+            turnOffRow.isVisible = workTabActive && !workAppsPaused && value != null
+        }
+
+    /**
+     * The managed-profile serial backing the Work tab (#197); null when the device
+     * has no managed profile and the drawer must stay a single untabbed list.
+     */
+    internal var workProfileUserSerial: Long? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            workTabBar.isVisible = value != null && workTabEnabled
+            if (workTabActive) {
+                workTabActive = false
+                applyFilter(resetScroll = true)
+            }
+        }
+
+    /** Whether the drawer shows the Apps | Work tab bar (the #197 opt-in switch). */
+    internal var workTabEnabled: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            workTabBar.isVisible = value && workProfileUserSerial != null
+            if (workTabActive) {
+                workTabActive = false
+                applyFilter(resetScroll = true)
+            }
+        }
+
+    /** True while the Work tab is selected (only managed-profile apps are listed). */
+    var workTabActive: Boolean = false
+        private set
+
+    /** The apps the drawer currently shows (already tab- and search-filtered). */
+    internal val visibleApps: List<LauncherApp>
+        get() = adapter.currentList
+
+    /** Selects the tab the way the click handlers do (tests and focus restoration). */
+    internal fun selectWorkTab(active: Boolean) {
+        if (workTabActive == active) return
+        workTabActive = active
+        styleTabs()
+        applyFilter(resetScroll = true)
+    }
 
     private val list: RecyclerView
     private val pager: DrawerPager
@@ -153,6 +204,10 @@ class DrawerView @JvmOverloads constructor(
     private val noResultsView: TextView
     private val workPausedBanner: View
     private val workResumeButton: Button
+    private val workTabBar: View
+    private val tabApps: TextView
+    private val tabWork: TextView
+    private val turnOffRow: View
     private val searchActionsView: LinearLayout
     private val adapter: DrawerAppsAdapter
     private val density = resources.displayMetrics.density
@@ -247,6 +302,25 @@ class DrawerView @JvmOverloads constructor(
         workPausedBanner = findViewById(R.id.drawer_work_paused)
         workResumeButton = findViewById(R.id.drawer_work_resume)
         workResumeButton.setOnClickListener { onResumeWorkApps?.invoke() }
+        workTabBar = findViewById(R.id.drawer_work_tab_bar)
+        tabApps = findViewById(R.id.drawer_tab_apps)
+        tabWork = findViewById(R.id.drawer_tab_work)
+        turnOffRow = findViewById(R.id.drawer_turn_off_row)
+        tabApps.setOnClickListener {
+            if (workTabActive) {
+                workTabActive = false
+                styleTabs()
+                applyFilter(resetScroll = true)
+            }
+        }
+        tabWork.setOnClickListener {
+            if (!workTabActive) {
+                workTabActive = true
+                styleTabs()
+                applyFilter(resetScroll = true)
+            }
+        }
+        findViewById<Button>(R.id.drawer_turn_off_work).setOnClickListener { onTurnOffWorkApps?.invoke() }
         searchActionsView = findViewById(R.id.drawer_search_actions)
         searchField = findViewById(R.id.drawer_search)
         searchBar = findViewById(R.id.drawer_search_bar)
@@ -333,6 +407,22 @@ class DrawerView @JvmOverloads constructor(
         return super.dispatchKeyEvent(event)
     }
 
+    /** Selected tab carries the surface color; the other stays plain. */
+    private fun styleTabs() {
+        tabApps.setTextColor(
+            context.getColor(
+                if (!workTabActive) R.color.home_control_on_surface else R.color.vesna_on_surface_variant,
+            ),
+        )
+        tabWork.setTextColor(
+            context.getColor(
+                if (workTabActive) R.color.home_control_on_surface else R.color.vesna_on_surface_variant,
+            ),
+        )
+        tabApps.isSelected = !workTabActive
+        tabWork.isSelected = workTabActive
+    }
+
     private fun applyFilter(resetScroll: Boolean) {
         // A package refresh can supersede a pending search diff. Carry the reset
         // forward to the result list that actually commits.
@@ -342,7 +432,9 @@ class DrawerView @JvmOverloads constructor(
         }
         val query = searchField.text?.toString().orEmpty()
         val search = appSearch
-        val filtered = search?.filter(query).orEmpty()
+        var filtered = search?.filter(query).orEmpty()
+        // The Work tab lists only managed-profile apps; Apps shows everything else.
+        filtered = WorkTabSlice.apply(filtered, workTabEnabled, workProfileUserSerial, workTabActive)
         val showPages = layoutMode == DrawerLayoutMode.PAGED && query.isEmpty()
         pager.isVisible = showPages
         list.isVisible = !showPages
@@ -369,6 +461,7 @@ class DrawerView @JvmOverloads constructor(
         } else {
             adapter.submitList(filtered, if (resetScrollOnCommit) commitScrollReset else null)
         }
+        turnOffRow.isVisible = workTabActive && !workAppsPaused && onTurnOffWorkApps != null
         clearSearchButton.isVisible = query.isNotEmpty()
         noResultsView.isVisible = query.isNotBlank() && filtered.isEmpty()
         updateSearchActions(query, show = externalSearchActions && query.isNotBlank() && filtered.isEmpty())

@@ -477,6 +477,7 @@ class HomeActivity : ComponentActivity() {
         applyDockCapacity()
         applyHomeOrientation()
         applyWorkPausedState()
+        applyWorkTabState()
         applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {
@@ -506,6 +507,29 @@ class HomeActivity : ComponentActivity() {
      * refresh the catalogue. Re-checked on resume so a pause made while Vesna
      * was backgrounded is picked up.
      */
+    /** Wires the drawer's Work tab (#197): the managed profile's serial and pause toggle. */
+    private fun applyWorkTabState() {
+        drawer.workTabEnabled = drawerPreferences.workTabEnabled
+        val profile = userManager.userProfiles.firstOrNull { it != Process.myUserHandle() }
+        drawer.workProfileUserSerial = profile?.let { userManager.getSerialNumberForUser(it) }
+        // The quiet-mode APIs need API 28; on older devices the Work tab ships
+        // without the Turn-off affordance (the row hides itself).
+        drawer.onTurnOffWorkApps = profile
+            ?.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.P }
+            ?.let { handle ->
+            {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    try {
+                        userManager.requestQuietModeEnabled(true, handle)
+                        applyWorkPausedState()
+                    } catch (e: SecurityException) {
+                        startActivity(Intent(Settings.ACTION_SETTINGS))
+                    }
+                }
+            }
+        }
+    }
+
     private fun applyWorkPausedState() {
         // The quiet-mode APIs require API 28; API 26/27 devices keep the plain
         // dimmed tiles (no banner, no resume affordance).
