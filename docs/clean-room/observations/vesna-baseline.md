@@ -4896,9 +4896,7 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   session: `accelerometer_rotation 1`, `user_rotation 0`,
   verified by frame size and a fresh dump).
 - Evidence: `EVI-VESNA-003/parity156-*`.
-
 ## OBS-VESNA-164 — Drawer list staleness: newly installed apps appear only after a framework restart
-
 - A comparison pass surfaced three apps missing from the drawer
   sets: EnumDiag (personal + work) and the work-profile copies
   of YouTube and YT Music. Package records date their installs
@@ -5013,3 +5011,21 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Evidence: `EVI-VESNA-003/parity156-*` (nova-badge-check,
   nova-enum-search). Posted to #200 as the Nova-side reference
   for the product decision.
+
+## OBS-VESNA-168 — Rotation with the drawer open (SYS-006 deep-pass, v0.4.84)
+
+- With Vesna's drawer open (portrait, 57 tiles), forcing
+  landscape (`accelerometer_rotation 0` + `user_rotation 1`)
+  re-lays the drawer out live: 2400×1080, the tile set intact
+  (37 visible incl. 8 work tiles), and returning to portrait
+  restores the full 57-tile/16-work state in the 1080×2400
+  frame. The drawer survives the rotation with no state loss.
+- **Nova reference:** with Nova's drawer open (the Apps tab,
+  Smart-Folders category list), the same forced landscape leaves
+  the frame at 1080×2400 with the identical portrait layout —
+  Nova's drawer does not re-layout in forced landscape on this
+  build. A launcher-side rendering difference on this axis
+  (Vesna re-lays out; Nova keeps the portrait drawer layout).
+- Restored: `accelerometer_rotation 1`, `user_rotation 0` —
+  Vesna's workspace verified against the saved baseline.
+- Evidence: `EVI-VESNA-003/parity157-*`.
