@@ -4744,3 +4744,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   installed for user 0 and 11. The test notification was
   dismissed after the check. No launcher setting was changed.
 - Evidence: `EVI-VESNA-003/parity154-*`.
+
+## OBS-VESNA-159 — Badge render attempt and Nova scrollbar drag on the AVD
+
+- **Badge render (Nova side) not reproduced.** Nova's listener was
+  granted on the AVD (`cmd notification allow_listener`; binding
+  verified by a live INotificationListener proxy), the probe's
+  real notification was re-posted (importance=4, no group flags),
+  and IconProbe was pinned to Nova's Home via the search-drag
+  route. No badge rendered on the Home pin or the drawer
+  category row, before and after a Nova process restart. This
+  matches OBS-SYS-114's inconclusive third-party badge matrix:
+  Nova-side badge rendering stays unconfirmed on this AVD
+  (Vesna's absence is structural — OBS-VESNA-158). Restored:
+  listener disallowed (the list is back to AiAi + Pixel
+  Launcher), the pin removed, the notification dismissed.
+- **Nova scrollbar drag not reproduced synthetically.** With the
+  drawer open the scrollbar thumb is persistently visible at the
+  right edge (x≈1061–1074); touching it enlarges it, but neither
+  the thumb nor the list followed a synthetic drag — precise hits
+  on the thumb, smooth interpolated moves, in 3-button
+  navigation throughout. The gesture-edge-zone hypothesis from
+  OBS-VESNA-157 is wrong: navigation_mode was already 0
+  (3-button) before the attempt. Nova's drag-to-scroll therefore
+  stays functionally undemonstrated, while Vesna's inboard strip
+  responded to the same input method (OBS-VESNA-157). The
+  navigation overlay and mode were restored to their original
+  state (gestural overlay, mode 0).
+- Evidence: `EVI-VESNA-003/parity154-*`.
