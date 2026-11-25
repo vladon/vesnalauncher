@@ -57,6 +57,11 @@ interface WorkspaceItemDao {
     @Query("DELETE FROM workspace_items WHERE id = :id")
     suspend fun deleteById(id: Long)
 
+    /** Clears every pin; only the restore transaction may wipe the table. */
+    @Query("DELETE FROM workspace_items")
+    suspend fun deleteAll()
+
+
     @Query("DELETE FROM workspace_items WHERE folderId = :folderId")
     suspend fun deleteFolderMembers(folderId: Long)
 

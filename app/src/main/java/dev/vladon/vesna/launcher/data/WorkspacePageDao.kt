@@ -27,4 +27,8 @@ interface WorkspacePageDao {
 
     @Query("UPDATE workspace_pages SET rank = :rank WHERE id = :id")
     suspend fun updateRank(id: Long, rank: Int)
+
+    /** Clears every page; only the restore transaction may wipe the table. */
+    @Query("DELETE FROM workspace_pages")
+    suspend fun deleteAll()
 }

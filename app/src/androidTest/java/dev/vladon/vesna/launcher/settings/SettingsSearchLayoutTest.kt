@@ -25,6 +25,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.workspace.GridCanvas
+import dev.vladon.vesna.launcher.workspace.LayoutRestoreAttempt
 import dev.vladon.vesna.launcher.workspace.GridResizeResult
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertTrue
@@ -89,6 +90,9 @@ class SettingsSearchLayoutTest {
                                 onHomeIconPercentChanged = {},
                                 dockIconPercent = 100,
                                 onDockIconPercentChanged = {},
+                                onExportLayout = { true },
+                                onRestoreLayout = { LayoutRestoreAttempt.Rejected() },
+                                onConfirmRestore = { true },
                                 drawerLayoutMode = DrawerLayoutMode.GRID,
                                 onDrawerLayoutModeSelected = {},
                                 closeDrawerOnLaunch = false,
@@ -584,6 +588,9 @@ class SettingsSearchLayoutTest {
                                         onHomeIconPercentChanged = {},
                                         dockIconPercent = 100,
                                         onDockIconPercentChanged = {},
+                                        onExportLayout = { true },
+                                        onRestoreLayout = { LayoutRestoreAttempt.Rejected() },
+                                        onConfirmRestore = { true },
                                         drawerLayoutMode = DrawerLayoutMode.GRID,
                                         onDrawerLayoutModeSelected = {},
                                         closeDrawerOnLaunch = false,
@@ -718,6 +725,9 @@ class SettingsSearchLayoutTest {
                             onHomeIconPercentChanged = {},
                             dockIconPercent = 100,
                             onDockIconPercentChanged = {},
+                            onExportLayout = { true },
+                            onRestoreLayout = { LayoutRestoreAttempt.Rejected() },
+                            onConfirmRestore = { true },
                             drawerLayoutMode = DrawerLayoutMode.GRID,
                             onDrawerLayoutModeSelected = {},
                             closeDrawerOnLaunch = false,
