@@ -4885,29 +4885,36 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Vesna is relaunched to the front explicitly.
 - Evidence: `EVI-VESNA-003/parity156-*`.
 
-## OBS-VESNA-164 — Work-app enumeration changed on v0.4.83 (follow-up to #199)
+## OBS-VESNA-164 — Drawer list staleness: newly installed apps appear only after a framework restart
 
-- The landscape scroll pass (previous entry) surfaced work tiles
-  that the v0.4.82-era enumeration lacked. Verified on v0.4.83
-  (88): the drawer's work set now includes **Work YouTube** and
-  **Work YT Music** — the two apps whose work copies v0.4.82
-  omitted (OBS-VESNA-156 set-diff). The app state did not
-  change between the observations (`dumpsys package
-  com.google.android.youtube`: user 11 `installed=true
-  enabled=1` in both eras), so the omission did not reproduce on
-  v0.4.83 — the work-set enumeration differs between the two
-  versions. The release notes document only the #195 cold-start
-  change; no enumeration change is mentioned.
-- The comparison set also gained **EnumDiag** (personal +
-  work entries): the package `com.vesnaresearch.enumdiag` 1.0
-  was installed at 2026-11-25 01:16:45 for both users by an
-  external party (installer unknown; not installed by this
-  research session). It is treated as an environment fixture,
-  excluded from launcher-behavior conclusions, and left
-  installed; future drawer set-comparisons must account for it.
-- Both observations were taken with the drawer scrolled
-  (landscape) and in a fresh full dump; the rest of the work set
-  matches OBS-VESNA-156 (Calendar, Camera, Chrome, Clock,
-  Contacts, Drive, Files, IconProbe, Maps, Messages, Phone,
-  Photos, Safety, Voice Search + the newly seen entries).
-- Evidence: `EVI-VESNA-003/parity156-*`.
+- A comparison pass surfaced three apps missing from the drawer
+  sets: EnumDiag (personal + work) and the work-profile copies
+  of YouTube and YT Music. Package records date their installs
+  well before the observations: the EnumDiag fixture
+  (`com.vesnaresearch.enumdiag` 1.0, installed by an external
+  party — not this research session) at device-time
+  2026-11-25 01:16:45 — about 8.5 h before the v0.4.82 drawer
+  capture — and the work YouTube/YT Music copies at
+  2026-11-24 21:35 — about 12 h before it. The v0.4.82 drawer
+  (22 personal + 16 work names) contained none of them.
+- The apps appeared only after a framework-level restart
+  (`adb root` + `stop` + `start`, performed to clear an
+  unrelated settings-provider wedge). Neither the installs
+  themselves nor the v0.4.82→v0.4.83 package-replace upgrade had
+  refreshed the list: the post-upgrade drawer verification still
+  showed the old set (57 tile nodes = the pre-change name sets).
+  On the restarted v0.4.83 the refreshed drawer matches the
+  package records: 23 personal names (including EnumDiag) and
+  19 work names (the OBS-VESNA-156 set + Work EnumDiag + Work
+  YouTube + Work YT Music). The same staleness spanned a
+  launcher force-stop + restart during the work-profile cycle,
+  so a launcher restart alone did not refresh it either — only
+  the framework restart did.
+- Nova's behavior on this axis was not established on this AVD
+  (its Work-tab captures did not cover the late-installed apps).
+- Environment note: the EnumDiag fixture (installer unknown,
+  both users) is treated as environment and must be accounted
+  for in future drawer set-comparisons.
+- Restored: nothing to restore; all layouts and settings at
+  baseline.
+- Evidence: `EVI-VESNA-003/parity155-*`, `parity156-*`.
