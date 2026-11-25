@@ -39,6 +39,7 @@ class AppIconView @JvmOverloads constructor(
     private var keepsDefaultHeight = false
     private var showOptions: ((View) -> Unit)? = null
     private var dragOnHold: ((View) -> Unit)? = null
+    private var notificationDotVisible = false
 
     init {
         orientation = VERTICAL
@@ -208,6 +209,13 @@ class AppIconView @JvmOverloads constructor(
 
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(info)
+        if (notificationDotVisible) {
+            // TalkBack must announce the badge state the dot encodes (#200).
+            info.contentDescription = listOfNotNull(
+                contentDescription,
+                context.getString(R.string.accessibility_notification_dot),
+            ).joinToString(", ")
+        }
         if (isEnabled && showOptions != null) {
             info.removeAction(AccessibilityAction.ACTION_LONG_CLICK)
             info.addAction(AccessibilityAction(
@@ -260,6 +268,7 @@ class AppIconView @JvmOverloads constructor(
      * (#200: dots only — one dot per package, no counts and no text).
      */
     fun setNotificationDot(show: Boolean) {
+        notificationDotVisible = show
         iconView.foreground = if (show) {
             context.getDrawable(R.drawable.notification_dot)
         } else {
@@ -267,11 +276,17 @@ class AppIconView @JvmOverloads constructor(
         }
     }
 
+    /** Test/inspection hook: whether the badge dot foreground is present. */
+    internal val notificationDotShowing: Boolean
+        get() = iconView.foreground != null
+
     /** Low-level bind for non-app content (folders). */
     fun bindContent(icon: Drawable?, label: String, description: String) {
         iconView.setImageDrawable(freshDrawable(icon))
         labelView.text = label
         contentDescription = description
+        // A tile recycled from a dotted app must not keep its dot as a folder.
+        setNotificationDot(false)
     }
 
     private fun freshDrawable(drawable: Drawable?): Drawable? {

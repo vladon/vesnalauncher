@@ -289,6 +289,12 @@ defines stable page IDs, page-local cells, and Room schema version 4.
 [ADR 0003](../adr/0003-widget-host-lifecycle.md) proposes widget ID allocation,
 cleanup on removal, and restart recovery. It gates ENG-102.
 
+### ADR-NOTIF-1: Notification dot badges and privacy
+
+Accepted and implemented: [ADR 0004](../adr/0004-notification-dots.md)
+records the approved #200 pipeline (presence-only package names, dots off
+by default, the listener grant as the privacy control) and its limits.
+
 ### ADR-BACKUP-1: Backup and privacy policy
 
 [ADR 0002 — Backup and privacy](../adr/0002-backup-and-privacy.md) is
@@ -353,4 +359,4 @@ remains gated on review and transport verification.
 | VESNA-QA-009 launch-state timing verification | [VESNA-QA-009-LAUNCH-STATES](verification/VESNA-QA-009-LAUNCH-STATES.md) (2026-11-19, [PR #40](https://github.com/vladon/vesnalauncher/pull/40)): paired cold and warm ActivityManager timings for one Android 15 debug-emulator configuration |
 | VESNA-QA-010 Android 12 (API 31) smoke verification | [VESNA-QA-010-API31](verification/VESNA-QA-010-API31.md) (2026-11-19, [PR #43](https://github.com/vladon/vesnalauncher/pull/43)): 12/12 instrumentation tests on the dedicated API 31 AVD at the debug `75ca3ed` candidate from [PR #39](https://github.com/vladon/vesnalauncher/pull/39); workspace/drawer render; HOME-registration check kept the stock HOME; boot fallback and teardown in the record. The follow-up passed 16/16 on the same API 31 AVD at `1b5dc2e`. |
 | NT-BACKUP-01: user-controlled layout export and restore ([#116](https://github.com/vladon/vesnalauncher/issues/116)) | Shipped in [0.4.88](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.88) via [PR #214](https://github.com/vladon/vesnalauncher/pull/214) + [#215](https://github.com/vladon/vesnalauncher/pull/215), per the recorded scope decision and [ADR-BACKUP-1 part 1](../adr/0002-backup-and-privacy.md) (revision [PR #213](https://github.com/vladon/vesnalauncher/pull/213)). Verified in [VESNA-QA-BACKUP-EXPORT](verification/VESNA-QA-BACKUP-EXPORT.md): LayoutTransferTest 10/10, workspace package 101/101, E2E export/restore round trip byte-equal on the API 35 AVD, preview and rejection dialogs captured, pending-pin protection and the destination dock-capacity rejection covered. |
-| NT-BADGE-01: notification badge dots ([#200](https://github.com/vladon/vesnalauncher/issues/200)) | Shipped in [0.4.89](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.89) via [PR #219](https://github.com/vladon/vesnalauncher/pull/219), per the recorded scope decision (dots only, no notification text). Verified in [VESNA-QA-BADGE-DOTS](verification/VESNA-QA-BADGE-DOTS.md): NotificationListenerBadgeTest 5/5, E2E on the API 35 AVD — the dot appears on tiles with an active notification and clears when it is removed; RU and EN settings surface; per-profile grants recorded as the open work-profile extension. |
+| NT-BADGE-01: notification badge dots ([#200](https://github.com/vladon/vesnalauncher/issues/200)) | Shipped in [0.4.89](https://github.com/vladon/vesnalauncher/releases/tag/v0.4.89) via [PR #219](https://github.com/vladon/vesnalauncher/pull/219), per the recorded scope decision (dots only, no notification text); the follow-ups (the recycled-tile dot fix, the dark-theme token, the TalkBack suffix, [ADR 0004](../adr/0004-notification-dots.md)) in 0.4.90. Verified in [VESNA-QA-BADGE-DOTS](verification/VESNA-QA-BADGE-DOTS.md): NotificationListenerBadgeTest 6/6, E2E on the API 35 AVD — the dot appears on tiles with an active notification and clears when it is removed; RU and EN settings surface; per-profile grants recorded as the open work-profile extension. |
