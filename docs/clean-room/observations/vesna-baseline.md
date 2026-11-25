@@ -5029,3 +5029,31 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - Restored: `accelerometer_rotation 1`, `user_rotation 0` —
   Vesna's workspace verified against the saved baseline.
 - Evidence: `EVI-VESNA-003/parity157-*`.
+
+## OBS-VESNA-169 — v0.4.85 upgrade: the #198 paused-work flow device-verified
+
+- v0.4.85 (90) — the release carrying the #198 paused-work
+  banner/resume implementation (branch fix/work-paused-banner +
+  the paused-work surface completion, merged as 7c53474f and
+  df871dbc) — was installed over v0.4.84 (signer verified).
+  Both workspace sets and the drawer survived the upgrade.
+- **The paused-work surface device-verified** (profile paused
+  via Nova's Work tab → Turn off, QUIET_MODE verified): the
+  drawer shows the banner **"Work apps are paused. Resume to
+  launch them and receive their notifications."** with a **TURN
+  ON WORK APPS** button above the app grid; all work tiles stay
+  in place, bright with badges (14 visible in the A–F window;
+  the full 19-name work set verified after resume). Tapping a
+  paused work tile (Work Calendar) opens the system **"Unpause
+  work apps?"** dialog (Cancel / Unpause); Unpause resumes the
+  profile (QUIET_MODE cleared) — the earlier silent no-op is
+  resolved in v0.4.85.
+- The banner's TURN ON WORK APPS button tap did not engage the
+  resume in two attempts (fresh-dump coordinates each time; the
+  foreground stayed Vesna) — the system dialog route (tap the
+  paused tile → Unpause) works reliably and was used for the
+  restore. Recorded for the developer's attention.
+- Restored: work resumed via the dialog's Unpause; the drawer at
+  baseline (19 work names, badges, adjacency); ProbeB remains
+  uninstalled.
+- Evidence: `EVI-VESNA-003/parity158-*`.
