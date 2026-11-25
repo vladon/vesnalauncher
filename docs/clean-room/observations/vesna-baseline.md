@@ -4887,9 +4887,14 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   persist — its settings writes landed in the already-wedging
   provider (cached reads returned the restored values while the
   disk kept the forced-landscape ones, which resurfaced after
-  the framework restart). The true portrait restore happened in
-  the next cycle (OBS-VESNA-164's session: `accelerometer_rotation 1`,
-  `user_rotation 0`, verified by frame size and a fresh dump).
+  the framework restart). The wedge matches the overlapping
+  parallel QA-loop session's second-emulator experiment on this
+  AVD (recorded as OBS-SYS-117 on the developer's side, PR
+  #205's enumdiag fixture window); the framework restart
+  (`adb root` + `stop` + `start`) cleared it, and the true
+  portrait restore happened in the next cycle (OBS-VESNA-164's
+  session: `accelerometer_rotation 1`, `user_rotation 0`,
+  verified by frame size and a fresh dump).
 - Evidence: `EVI-VESNA-003/parity156-*`.
 
 ## OBS-VESNA-164 — Drawer list staleness: newly installed apps appear only after a framework restart
