@@ -2,9 +2,12 @@
 
 Time-to-interactivity measurement on the same setup as
 [VESNA-QA-LAUNCH-0.4.87](VESNA-QA-LAUNCH-0.4.87.md): `Vesna_QA_Menu_API_35`
-(emulator-5560, Android 15/API 35), debug 0.4.87 build, six process-cold and
-six process-resident launches minutes after the timing series, on the same
-settled boot. Operatonal definition: wall time from the `am start` invocation
+(emulator-5560, Android 15/API 35), debug 0.4.87 build (versionCode 92 tree,
+installed 2026-11-25 06:47), six process-cold and six process-resident
+launches later the same day on the same settled boot. Both series measured
+the debug variant; this run's tree is the version-bumped final release tree
+versus that doc's versionCode 91 candidate tree, code-equivalent. Operational
+definition: wall time from the `am start` invocation
 until the system reports `mCurrentFocus` naming the launcher, polled every
 50 ms concurrently with `am start -W` (which separately reports
 `TotalTime`, the ActivityManager first-frame-drawn duration).
@@ -33,8 +36,9 @@ half the reported warm duration. Warm interactivity (median 365 ms) is well
 inside the 100 ms perceived-instant band, and the warm gap between focus and
 the reported TotalTime (≈400 ms) is dominated by background completion that
 does not block input. Paired TotalTime medians from this run (2,170 /
-768.5) sit within the QA-LAUNCH-0.4.87 spread (2,146.5 / 1,040 warm median
-slightly higher there), confirming the environment stayed comparable.
+768.5) sit alongside QA-LAUNCH-0.4.87's series (2,146.5 / 1,040 warm median
+slightly higher there): same variant and methodology, version-bumped tree
+only, so the environment stayed comparable.
 
 ## Limitations
 

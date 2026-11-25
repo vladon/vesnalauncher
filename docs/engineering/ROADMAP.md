@@ -134,7 +134,7 @@ roadmap only records what unblocks them.
    re-ran the QA-009 cold/warm methodology on the current line with the
    two-phase catalogue (cold median 2,146.5 ms). [Time to
    interactivity](verification/VESNA-QA-TTI-0.4.87.md) measured on the same
-   setup: focus medians 1,701.5 ms cold / 365 ms warm, both before the
+   AVD: focus medians 1,701.5 ms cold / 365 ms warm, both before the
    reported TotalTime completes. Physical-device touch-to-display latency
    still needs measurement.
 2. **API 36.1 verification** — **done**.
