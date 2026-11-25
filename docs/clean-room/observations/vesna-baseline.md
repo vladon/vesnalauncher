@@ -4859,3 +4859,27 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   listeners, theme and layouts all at baseline.
 - Evidence: `EVI-VESNA-003/parity155-*` (cs1–3, cw4–6,
   cold{a–f}, firstframe-082/083).
+
+## OBS-VESNA-163 — Forced landscape on v0.4.83 (SYS-006 update-touch)
+
+- Scenario picked because the #195 first-frame decode change
+  could touch non-portrait rendering. Rotation was forced after
+  fixing a post-snapshot-load environment wedge: the settings
+  provider hung across a reboot until a framework restart
+  (`adb root` + `stop` + `start`) unwedged it — recorded as an
+  environment fault of the snapshot-loaded state, not a launcher
+  behavior.
+- With auto-rotate locked (`accelerometer_rotation 0`) and
+  `user_rotation 1`: v0.4.83 (88) renders its workspace in
+  landscape (2400×1080) with the complete pin set (all 23
+  workspace nodes verified against the saved baseline), opens
+  the drawer (37 visible tiles; the full 57/16 set was verified
+  in portrait this cycle), and Nova renders its single-page
+  Home with the same pins in the same landscape.
+- Restored: `accelerometer_rotation 1`, `user_rotation 0` — the
+  display returned to portrait and Vesna's workspace matched the
+  baseline exactly. Environment note: on a configuration change
+  the system re-surfaces the HOME role holder (Nova, per
+  OBS-VESNA-158-era role record); Vesna is relaunched to the
+  front explicitly.
+- Evidence: `EVI-VESNA-003/parity156-*`.

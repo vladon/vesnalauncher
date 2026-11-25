@@ -165,7 +165,7 @@ behavior, an ID is never reassigned to a different behavior.
 | SYS-003 | Notification badges | discovered (Nova full config; Vesna none, no listener service) |
 | SYS-004 | Permission flows | discovered (contacts flow: Nova denied USER_FIXED, Vesna has no contact capability) |
 | SYS-005 | Work profile handling | pending |
-| SYS-006 | Screen rotation | pending |
+| SYS-006 | Screen rotation | discovered (forced landscape parity on v0.4.83) |
 | SYS-007 | Display size changes | discovered (density 420→460 parity observed) |
 | SYS-008 | Android version differences | pending |
 | SYS-009 | Accessibility integration | pending |
