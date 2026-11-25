@@ -24,7 +24,7 @@ Devices: the research AVD `Nova_Reboot_API35` (emulator-5588, managed work profi
 
 ## Gates
 
-68 JVM tests (the new `DrawerWorkTabSliceTest` slice cases), lintDebug. Instrumentation on the candidate: workspace 90/90, platform 1/1, ui 78 (incl. `WorkTabDrawerTest` 4/4 and `WorkPausedBannerTest` 2/2), settings 15. The ui/settings suites add 4 + 9 keyboard/a11y failures on this **freshly cold-booted AVD session** that reproduce identically against the unmodified v0.4.84 baseline code (A/B: the same three classes, 15/24 failures on the baseline build — documented in [VESNA-QA-WORK-PAUSED](VESNA-QA-WORK-PAUSED.md) and [VESNA-QA-COLD-START](VESNA-QA-COLD-START.md)); the same suites were green on the warmed system in earlier releases.
+68 JVM tests (the new `DrawerWorkTabSliceTest` slice cases), lintDebug. Instrumentation on the final merged tree: workspace 90/90, platform 1/1, ui 78 (incl. `WorkTabDrawerTest` 4/4 and `WorkPausedBannerTest` 2/2), settings 15. The ui/settings suites add 4 + 9 keyboard/a11y failures on this **freshly cold-booted AVD session**; the same tests pass individually in isolation and reproduce identically against the unmodified v0.4.84 baseline code (A/B: the same three classes, 15/24 failures on the baseline build — documented in [VESNA-QA-WORK-PAUSED](VESNA-QA-WORK-PAUSED.md) and [VESNA-QA-COLD-START](VESNA-QA-COLD-START.md)); the same suites were green on the warmed system in earlier releases.
 
 ## Limitations
 
