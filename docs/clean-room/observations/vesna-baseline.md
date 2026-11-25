@@ -4884,3 +4884,30 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   android.app.role.HOME` and recorded in TEST_ENVIRONMENTS.md);
   Vesna is relaunched to the front explicitly.
 - Evidence: `EVI-VESNA-003/parity156-*`.
+
+## OBS-VESNA-164 — Work-app enumeration changed on v0.4.83 (follow-up to #199)
+
+- The landscape scroll pass (previous entry) surfaced work tiles
+  that the v0.4.82-era enumeration lacked. Verified on v0.4.83
+  (88): the drawer's work set now includes **Work YouTube** and
+  **Work YT Music** — the two apps whose work copies v0.4.82
+  omitted (OBS-VESNA-156 set-diff). The app state did not
+  change between the observations (`dumpsys package
+  com.google.android.youtube`: user 11 `installed=true
+  enabled=1` in both eras), so the omission did not reproduce on
+  v0.4.83 — the work-set enumeration differs between the two
+  versions. The release notes document only the #195 cold-start
+  change; no enumeration change is mentioned.
+- The comparison set also gained **EnumDiag** (personal +
+  work entries): the package `com.vesnaresearch.enumdiag` 1.0
+  was installed at 2026-11-25 01:16:45 for both users by an
+  external party (installer unknown; not installed by this
+  research session). It is treated as an environment fixture,
+  excluded from launcher-behavior conclusions, and left
+  installed; future drawer set-comparisons must account for it.
+- Both observations were taken with the drawer scrolled
+  (landscape) and in a fresh full dump; the rest of the work set
+  matches OBS-VESNA-156 (Calendar, Camera, Chrome, Clock,
+  Contacts, Drive, Files, IconProbe, Maps, Messages, Phone,
+  Photos, Safety, Voice Search + the newly seen entries).
+- Evidence: `EVI-VESNA-003/parity156-*`.
