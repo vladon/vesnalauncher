@@ -132,8 +132,11 @@ roadmap only records what unblocks them.
    compares the first populated drawer row after cold launch with a repeat open
    on Android 15. The [0.4.87 refresh](verification/VESNA-QA-LAUNCH-0.4.87.md)
    re-ran the QA-009 cold/warm methodology on the current line with the
-   two-phase catalogue (cold median 2,146.5 ms). Time to interactivity and
-   physical-device touch-to-display latency still need measurement.
+   two-phase catalogue (cold median 2,146.5 ms). [Time to
+   interactivity](verification/VESNA-QA-TTI-0.4.87.md) measured on the same
+   AVD: focus medians 1,701.5 ms cold / 365 ms warm, both before the
+   reported TotalTime completes. Physical-device touch-to-display latency
+   still needs measurement.
 2. **API 36.1 verification** — **done**.
    [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at
