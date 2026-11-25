@@ -5230,3 +5230,17 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   ~0.5-1 s makes frame timestamps upper bounds (QA-009 limitation).
 - Evidence: `EVI-VESNA-003/parity160-settle-00..04.png`, `settle-f0/f1.png`;
   `.tmp/launch_pairs.py`.
+
+### OBS-172 addendum 2 — the snapshot-restore path (the slow one)
+
+- Third path measured: kill + relaunch with `-snapshot baseline_research_0.4.91`
+  (restore +27 s to boot_completed, Nova focused at +37.5 s — its desktop was already
+  rendered inside the snapshot), then the first Vesna `am start`:
+  - TotalTime **2288 ms** (vs 809/1071 ms post-reboot, 435 ms warm) — 3-5× the other paths;
+  - screencap loop: content still changing at +4.36 s → +6.12 s, **fully settled by
+    +7.82 s** (frames 3-4 identical; `parity160-snapsettle-00..04.png`).
+- This is the only launch path that still overshoots the #195 acceptance sizing
+  (~1 s frame / ~2.5 s icons), and the plausible scenario behind "the first cold load
+  is slow": Nova reads as instant because its rendered desktop is part of the snapshot
+  itself. PackageManager/IconCache/LauncherApps handshakes re-run against a restored
+  system on this path, so the discovery-first state emission pays full price.
