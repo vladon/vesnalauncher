@@ -26,7 +26,7 @@ failed 9 + 5 in class context and pass individually on both this build and
 the unmodified `d10abe9` baseline (the baseline class run crashed the app
 process outright, worse than this build), reproducing the documented
 post-reboot instrumentation interference
-([OBS-SYS-118](../../../research/research-log.md)); the changed surfaces —
+(OBS-SYS-118, vesna-research branch); the changed surfaces —
 the new Export/Restore rows and their search targets — pass individually.
 
 ## End-to-end (UI, evidence in EVI-VESNA-003)
