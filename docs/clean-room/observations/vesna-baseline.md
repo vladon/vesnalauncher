@@ -4800,3 +4800,32 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   launcher lost pins or broke its drawer; no difference to
   file.
 - Evidence: `EVI-VESNA-003/parity155-*`.
+
+## OBS-VESNA-161 — Contact search and the permission flow (SYS-004, DRAWER-103)
+
+- Cycle start: v0.4.82 still the latest release; main unchanged
+  (510c895f). Scenario: the DRAWER-103 enable flow (contact
+  search is opt-in per R-DRAWER-103.1, derived from Nova's
+  "Tap to enable contact suggestions" bar, OBS-DRAWER-001).
+- A real contact ("Jenny Badge") was inserted via the content
+  provider; the contacts DB held exactly that entry.
+- **Vesna v0.4.82 has no contact search at all.** Drawer search
+  for `Jenny` shows only "No matching apps" — no enable offer
+  (R-DRAWER-103.1 is not implemented); settings search
+  `contact` returns **No settings found**; structurally the APK
+  contains no `READ_CONTACTS`, no `ContactsContract` and no
+  `contacts` string at all, and the manifest declares only the
+  self-defined DYNAMIC_RECEIVER permission. As with
+  notification badges (OBS-VESNA-158), the capability is
+  structurally absent rather than merely hidden.
+- **Nova reference on this AVD:** READ_CONTACTS is
+  `granted=false` with USER_SET|USER_FIXED flags (a "Don't
+  allow" dismissal from an earlier session), so Nova Search for
+  `Jenny` shows the web-suggestion rows and no contact results,
+  with no re-prompt; the enable route is the system App info.
+  Nova's drawer contact-suggestions bar itself is not visible on
+  9.0.1's drawer.
+- Restored: the test contact deleted (contacts DB empty), no
+  permissions granted or revoked. DRAWER-103's enable flow
+  remains untestable on Vesna until contact search exists.
+- Evidence: `EVI-VESNA-003/parity155-*`.
