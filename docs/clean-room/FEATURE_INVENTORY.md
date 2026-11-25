@@ -162,11 +162,11 @@ behavior, an ID is never reassigned to a different behavior.
 |---|---|---|
 | SYS-001 | Default launcher selection / HOME role | pending |
 | SYS-002 | App shortcuts (long-press launcher shortcuts) | pending |
-| SYS-003 | Notification badges | pending |
+| SYS-003 | Notification badges | discovered (Nova full config; Vesna none, no listener service) |
 | SYS-004 | Permission flows | pending |
 | SYS-005 | Work profile handling | pending |
 | SYS-006 | Screen rotation | pending |
-| SYS-007 | Display size changes | pending |
+| SYS-007 | Display size changes | discovered (density 420→460 parity observed) |
 | SYS-008 | Android version differences | pending |
 | SYS-009 | Accessibility integration | pending |
 | SYS-010 | Package install/remove events | pending |
