@@ -4924,7 +4924,10 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   (its Work-tab captures did not cover the late-installed apps).
 - Environment note: the EnumDiag fixture (installer unknown,
   both users) is treated as environment and must be accounted
-  for in future drawer set-comparisons.
+  for in future drawer set-comparisons. Provenance note (next
+  cycle): PR #205 identifies it as the developer's QA-loop
+  fixture (`com.vesnaresearch.enumdiag`, ROADMAP P3.3
+  badge-compat verification on this AVD).
 - Restored: nothing to restore; all layouts and settings at
   baseline.
 - Evidence: `EVI-VESNA-003/parity155-*`, `parity156-*`.
