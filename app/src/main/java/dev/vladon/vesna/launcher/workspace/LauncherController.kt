@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -96,6 +98,14 @@ class LauncherController(
     }
 
     private val appCatalogue = MutableStateFlow(AppCatalogue(emptyList()))
+
+    /**
+     * The catalogue the drawer shows. It starts on the fast phase-1 list (labels
+     * with pending icons) and is replaced by the fully decoded one after the
+     * first frame — the workspace never rebinds for it.
+     */
+    private val drawerCatalogue = MutableStateFlow<List<LauncherApp>>(emptyList())
+    val drawerApps: StateFlow<List<LauncherApp>> = drawerCatalogue.asStateFlow()
 
     private sealed interface DragPagePreview {
         data class Existing(val pageId: Long) : DragPagePreview
@@ -622,19 +632,27 @@ class LauncherController(
     /** A locale change updates app metadata, not the saved layout. */
     internal fun refreshLocalizedApps() {
         scope.launch {
-            refreshMutex.withLock { appCatalogue.value = discoverApps() }
+            refreshMutex.withLock {
+                val catalogue = discoverApps()
+                appCatalogue.value = catalogue
+                drawerCatalogue.value = catalogue.apps
+            }
         }
     }
 
     /** An icon-pack change updates app artwork, not the saved layout. */
     internal fun refreshAppArtwork() {
         scope.launch {
-            refreshMutex.withLock { appCatalogue.value = discoverApps() }
+            refreshMutex.withLock {
+                val catalogue = discoverApps()
+                appCatalogue.value = catalogue
+                drawerCatalogue.value = catalogue.apps
+            }
         }
     }
 
-    private suspend fun discoverApps(): AppCatalogue =
-        withContext(Dispatchers.IO) { AppCatalogue(discovery.discover()) }
+    private suspend fun discoverApps(decodeIconsFor: Set<AppKey>? = null): AppCatalogue =
+        withContext(Dispatchers.IO) { AppCatalogue(discovery.discover(decodeIconsFor)) }
 
     /**
      * Refreshes launchable apps, seeds the layout on first run, and removes pins
@@ -642,10 +660,20 @@ class LauncherController(
      * Serialized with a mutex so overlapping package events cannot double-seed;
      * [WorkspaceRepository.seedOrAdopt] additionally keeps the adopt-or-seed
      * decision atomic against pins placed before the first seed completes.
+     *
+     * Two phases: the first catalogue decodes icons only for the saved layout
+     * (the tiles the first frame shows) so Home renders without waiting for one
+     * launcher IPC per app; the drawer's icons then arrive in a second pass.
      */
     private suspend fun refresh(added: PackageEvent.Added? = null): Unit = refreshMutex.withLock {
-        val catalogue = discoverApps()
+        // The saved-layout flow is collected eagerly from process start, so its first
+        // value is usually ready already; the fast catalogue decodes icons only for
+        // the tiles it shows and the drawer's icons arrive in the second pass.
+        val saved = workspaceRepository.savedLayout.first()
+        val savedKeys = saved.items.mapTo(HashSet()) { it.key }
+        val catalogue = discoverApps(savedKeys)
         appCatalogue.value = catalogue
+        drawerCatalogue.value = catalogue.apps
         if (!workspaceRepository.isSeeded() && catalogue.apps.isNotEmpty()) {
             workspaceRepository.seedOrAdopt(catalogue.apps)
         }
@@ -657,6 +685,14 @@ class LauncherController(
                 it.key.packageName == added.packageName && it.key.userSerial == added.userSerial
             }
             if (app != null) workspaceRepository.pinNewlyInstalledApp(app)
+        }
+        val deferred = catalogue.apps.count { it.icon == null }
+        if (deferred > 0) {
+            // Let the fast catalogue propagate to Home before the slower full decode.
+            // Only the drawer takes the fully decoded list — the workspace keeps the
+            // fast one, so its tiles never rebind for artwork alone.
+            yield()
+            drawerCatalogue.value = discoverApps(decodeIconsFor = null).apps
         }
     }
 }

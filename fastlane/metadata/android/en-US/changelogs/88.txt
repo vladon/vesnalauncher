@@ -1,0 +1,1 @@
+Cold start: the first Home frame decodes icons only for the saved layout; the drawer's artwork fills in right behind it. Measured on an Android 15 emulator: the icon-complete workspace settles ~2.1 s -> ~1.2-1.6 s after a force-stopped cold launch, on the way to the recorded Nova ~1 s.

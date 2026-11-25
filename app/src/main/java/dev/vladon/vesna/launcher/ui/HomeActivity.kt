@@ -140,6 +140,9 @@ class HomeActivity : ComponentActivity() {
     private var dragSource: DragSource? = null
     private var rootDragMoved = false
     private var dockBottomInset = 0
+
+    /** The catalogue the drawer currently shows (fast at start, fully decoded right after). */
+    private var drawerCatalogue: List<LauncherApp> = emptyList()
     private var drawerReturnFocus: View? = null
     private var activePopup: VesnaPopupMenu? = null
     private var pendingPageMenu: Job? = null
@@ -397,6 +400,21 @@ class HomeActivity : ComponentActivity() {
                     controller.state.collect { render(it) }
                 }
                 launch {
+                    // The drawer shows the fully decoded catalogue; the workspace
+                    // state keeps the fast one so its tiles never rebind for
+                    // artwork alone.
+                    controller.drawerApps.collect { apps ->
+                        val source = dragSource
+                        if (source?.fromDrawer == true && apps.none { it.key == source.app.key }) {
+                            // The root may already own the touch stream; losing a drawer tile
+                            // cannot cancel that stream on its own.
+                            onRootDragCancelled()
+                        }
+                        drawerCatalogue = apps
+                        drawer.submitApps(apps, hiddenDrawerApps)
+                    }
+                }
+                launch {
                     controller.messages.collect { message -> showMessage(message) }
                 }
             }
@@ -453,7 +471,7 @@ class HomeActivity : ComponentActivity() {
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {
             hiddenDrawerApps = hiddenApps
-            drawer.submitApps(renderedState.apps, hiddenDrawerApps)
+            drawer.submitApps(drawerCatalogue, hiddenDrawerApps)
         }
         // The Home role can change while Home is on the back stack; reconcile
         // the saved action pins with what Android still reports.
@@ -595,7 +613,6 @@ class HomeActivity : ComponentActivity() {
             workspace.bind(state.grid, state.workspaceCells, state.isDragPagePreview)
         }
         if (state.dock.pins != previous.dock.pins) dock.bind(state.dock.pins)
-        if (state.apps != previous.apps) updateAppCatalogue(state.apps)
         val appendAfter = state.newPagePreviewAfter
         emptyHint.isVisible = state.isWorkspaceEmpty && appendAfter == null
         if (state.pageIds != previous.pageIds || state.activePageId != previous.activePageId ||
@@ -631,6 +648,7 @@ class HomeActivity : ComponentActivity() {
             // cannot cancel that stream on its own.
             onRootDragCancelled()
         }
+        drawerCatalogue = apps
         drawer.submitApps(apps, hiddenDrawerApps)
     }
 

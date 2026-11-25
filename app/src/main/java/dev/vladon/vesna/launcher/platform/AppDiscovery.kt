@@ -23,7 +23,13 @@ import java.util.Locale
  * Implementations must be callable from any thread.
  */
 interface AppDiscovery {
-    fun discover(): List<LauncherApp>
+    /**
+     * Enumerates launchable apps. [decodeIconsFor] limits icon decoding to those
+     * keys: entries outside the set carry a null icon and are filled in by a
+     * second pass, which keeps the first workspace render off the cold-start
+     * critical path. `null` decodes every icon.
+     */
+    fun discover(decodeIconsFor: Set<AppKey>? = null): List<LauncherApp>
 
     /** Checks installation independently of whether a package is launchable. */
     fun isPackageInstalled(packageName: String, userSerial: Long): Boolean
@@ -41,7 +47,7 @@ internal class LauncherAppsAppDiscovery(
         check(launcherApps != null) { "LauncherApps system service is unavailable" }
     }
 
-    override fun discover(): List<LauncherApp> {
+    override fun discover(decodeIconsFor: Set<AppKey>?): List<LauncherApp> {
         val result = ArrayList<LauncherApp>()
         val packageManager = appContext.packageManager
         val densityDpi = appContext.resources.displayMetrics.densityDpi
@@ -55,20 +61,26 @@ internal class LauncherAppsAppDiscovery(
                 // Vesna's own settings entry is reachable from the workspace menu; it
                 // does not belong in the drawer.
                 if (component.packageName == appContext.packageName) continue
+                val key = AppKey(component.packageName, component.className, userSerial)
                 val label = activity.label.toString().ifBlank { component.packageName }
                 val profileLabel = if (badgeLabels) packageManager.getUserBadgedLabel(label, profile) else label
                 badgeLabels = profileLabel !== label
                 // Pack artwork replaces the system icon before badging, so a work
                 // profile still shows its badge on top of the pack's drawing.
                 val packIcon = iconPacks.selectedDrawableFor(component.packageName, component.className, densityDpi)
-                val icon = if (packIcon != null) {
+                // The cold start decodes only the icons the saved layout puts on
+                // screen; the drawer's icons are filled in by a second pass so the
+                // first frame does not wait for one launcher IPC per app.
+                val icon = if (decodeIconsFor != null && key !in decodeIconsFor) {
+                    null
+                } else if (packIcon != null) {
                     packageManager.getUserBadgedIcon(packIcon, profile)
                 } else {
                     activity.getBadgedIcon(densityDpi)
                 }
                 result.add(
                     LauncherApp(
-                        key = AppKey(component.packageName, component.className, userSerial),
+                        key = key,
                         label = label,
                         icon = icon,
                         badgedLabel = if (badgeLabels) profileLabel.toString() else null,

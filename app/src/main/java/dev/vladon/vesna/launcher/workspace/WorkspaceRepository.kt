@@ -18,6 +18,7 @@ import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
 import java.text.Collator
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
