@@ -1,0 +1,1 @@
+Work-profile suspension events now refresh the app catalogue like installs do, so pause/resume cycles around work profiles keep the drawer's catalogue current. Enumeration verified complete on a managed work profile (YouTube, YT Music and every launchable activity listed; one entry per launchable activity, badges and adjacency kept).

@@ -27,9 +27,14 @@ sealed interface PackageEvent {
 }
 
 /**
- * Observes install, update, and uninstall events for the launcher process across
- * all accessible Android profiles via [LauncherApps.registerPackageCallback], which
- * supersedes the single-profile PACKAGE_* broadcasts.
+ * Observes install, update, uninstall, availability, and suspension events for the
+ * launcher process across all accessible Android profiles via
+ * [LauncherApps.registerPackageCallback], which supersedes the single-profile
+ * PACKAGE_* broadcasts.
+ *
+ * Work-profile suspension (quiet mode) is part of this surface: a paused profile
+ * changes which activities launch, so every suspend/unsuspend callback refreshes
+ * the catalogue the same way an install does.
  */
 class PackageChangeMonitor(private val appContext: Context) {
 
@@ -42,7 +47,8 @@ class PackageChangeMonitor(private val appContext: Context) {
     )
     val events: SharedFlow<PackageEvent> = _events.asSharedFlow()
 
-    private val callback = object : LauncherApps.Callback() {
+    /** Exposed for tests: the callbacks are invoked exactly as LauncherApps delivers them. */
+    internal val callback = object : LauncherApps.Callback() {
         override fun onPackageAdded(packageName: String, user: UserHandle) {
             _events.tryEmit(PackageEvent.Added(packageName, userManager.getSerialNumberForUser(user)))
         }
@@ -67,6 +73,10 @@ class PackageChangeMonitor(private val appContext: Context) {
             user: UserHandle,
             replacing: Boolean,
         ) = onAvailabilityChanged(packageNames)
+
+        override fun onPackagesSuspended(packageNames: Array<out String?>, user: UserHandle) = catalogueChanged()
+
+        override fun onPackagesUnsuspended(packageNames: Array<out String?>, user: UserHandle) = catalogueChanged()
 
         override fun onShortcutsChanged(packageName: String, shortcuts: MutableList<ShortcutInfo>, user: UserHandle) {
             _events.tryEmit(PackageEvent.ShortcutsChanged)
