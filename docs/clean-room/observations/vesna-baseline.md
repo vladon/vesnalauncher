@@ -5146,3 +5146,47 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   after enabling the switch; needs developer attention.
 - Restored afterwards: switch off, drawer inline (no tab bar), 14 work tiles visible —
   baseline as at cycle start.
+
+## OBS-VESNA-171 — v0.4.89–91 upgrade + the #200 notification dots device-verified
+
+- Upgrade cycle: `baseline_research_0.4.91` saved on the healthy post-install VM
+  (v0.4.91, versionCode 96; asset SHA-256 `34c9f915…91e898`, release cert
+  `21a9fb9c…e1c58`), proved by kill + relaunch with `-snapshot baseline_research_0.4.91`
+  (versionName 0.4.91, Nova HOME, sw411dp config) and `baseline_research_0.4.88`
+  deleted. Release content: v0.4.89 = notification dot badges (#200, PR #219);
+  v0.4.90 = badge fixes (recycle-safe, dark token, a11y suffix, #220); v0.4.91 =
+  closed-folder drop onto an app displaces it (#169, PR #221). No drawer/enumeration
+  commits — the #199 inline YT* omission and the OBS-170-addendum intermittent render
+  are not fixed in these releases.
+- Settings surface (en-US): App drawer → **Show notification dots** ("Draw a dot on app
+  tiles that have an unread notification. Only package names are read — never
+  notification text.", default off) + **Notification access** deep-link row. Both sit
+  below the Hide-apps list; note the settings search does not surface them (searches
+  for `notification`/`dot` return No settings found) — row-walking only.
+- Grant: the deep-link opens the system *Notification read, reply & control* page;
+  Vesna Launcher → Allow + the system confirmation dialog. `enabled_notification_listeners`
+  gains `dev.vladon.vesna.launcher/.notifications.VesnaNotificationListener`.
+- Dot appears: a running Clock timer (30s set, real deskclock notification) lights
+  **red #BA1A1A dots on both Clock copies** — the personal and the Work tile in the
+  drawer (two 492-px 26×26 solid blocks at one tile offset), visible in the inline
+  merge with the switch off, and the **dock copy's** a11y description also announces it.
+  Screenshot evidence: dots co-render with the work briefcase badge on the Work Clock
+  icon (the acceptance's icon-pack/work-badge pixel-consistency point).
+- A11y: dotted tiles' content descriptions gain the localized suffix —
+  `Clock, has notifications` / `Work Clock, has notifications` (PR #220's announcement).
+- Dot clears: stopping the timer removes the notification; the drawer re-renders with
+  **zero** #BA1A1A pixels on screen.
+- Not exercised on device: group-summary skip and hidden-app respect (covered by the
+  dev's `NotificationListenerBadgeTest` 5/5 + slice tests, QA record
+  VESNA-QA-BADGE-DOTS); per-profile dots need a work-profile grant (recorded limitation);
+  a live Nova-dot style comparison was skipped — the timer's heads-up card covered
+  Nova's icon top, and the #200 scope decision went dot-only by design, so no style
+  parity claim is made (Nova's pipeline itself is documented in OBS-SYS-112/113).
+- EnumDiag probe note: its POST/CANCEL broadcasts completed result=0 but posted no
+  active NotificationRecord — not usable as a badge source; the Clock timer (the dev
+  QA's own source) was used instead.
+- Env deltas kept after the pass (documented): Vesna's listener granted and dots
+  enabled in the live VM; the saved snapshot keeps shipped defaults (dots off,
+  un-granted) so future cycles re-verify default-off. Settings-search misses for the
+  dots rows recorded above.
+- Evidence: `EVI-VESNA-003/parity160-*`.
