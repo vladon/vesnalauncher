@@ -491,11 +491,52 @@ class WorkspaceRepository(
         cell: Int,
         grid: GridCanvas,
     ): Boolean = mutationMutex.withLock {
+        // The caller's placement is matched literally: a stale drag source
+        // (the UI always refreshes between drags) must not teleport the
+        // folder — the move rejects instead (the stale-drop safety the
+        // PagesTest suite asserts).
         if (workspacePreferences.layoutLocked || !grid.isValidCell(cell) ||
             (pageId == folder.pageId && cell == folder.cellIndex) || readGrid() != grid ||
             workspacePreferences.layoutLocked
         ) return@withLock false
-        folderDao.moveToEmptyCell(folder.id, folder.pageId, folder.cellIndex, pageId, cell) == 1
+        val items = dao.getAll()
+        android.util.Log.d("FolderMove169", "in: caller=${folder.pageId}/${folder.cellIndex} -> $pageId/$cell grid=$grid items=${items.size}")
+        // #169: a closed folder dropped onto an occupied cell displaces the
+        // single top-level pin sitting there to the nearest free cell (the
+        // folder's own source cell counts as free — it vacates). Without a
+        // free cell the drop is rejected whole.
+        val occupant = items.firstOrNull {
+            it.container == Container.WORKSPACE.name && it.folderId == null &&
+                it.pageId == pageId && it.cellIndex == cell
+        } ?: return@withLock folderDao.moveToEmptyCell(folder.id, folder.pageId, folder.cellIndex, pageId, cell).also { android.util.Log.d("FolderMove169", "empty-move=$it") } == 1
+        val occupied = buildSet {
+            items.forEach { item ->
+                if (item.id != occupant.id && item.container == Container.WORKSPACE.name && item.folderId == null) {
+                    item.pageId?.let { add(it to item.cellIndex) }
+                }
+            }
+            folderDao.getAll().forEach { placedFolder ->
+                if (placedFolder.id != folder.id) placedFolder.pageId?.let { add(it to placedFolder.cellIndex) }
+            }
+        }
+        val pageCellCount = grid.rows * grid.columns
+        var freeCell = -1
+        for (step in 1 until pageCellCount) {
+            val candidate = (cell + step) % pageCellCount
+            if ((pageId to candidate) !in occupied) {
+                freeCell = candidate
+                break
+            }
+        }
+        if (freeCell < 0) return@withLock false
+        db.withTransaction {
+            dao.updateCellIndex(occupant.id, freeCell)
+            if (folderDao.moveToEmptyCell(folder.id, folder.pageId, folder.cellIndex, pageId, cell) != 1) {
+                // Rolled back with the transaction; the drop is rejected.
+                throw IllegalStateException("Folder placement lost its target cell")
+            }
+        }
+        true
     }
 
     private fun List<FolderEntity>.atPlacement(folder: Folder): FolderEntity? =
