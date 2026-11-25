@@ -35,7 +35,6 @@ class VesnaNotificationListener : NotificationListenerService() {
 
     private fun rebuild() {
         val set = activeNotifications.orEmpty().map { it.packageName }.toSet()
-        android.util.Log.d("VesnaBadges", "rebuild: $set")
         NotificationBadges.setPackages(set)
     }
 }

@@ -500,7 +500,6 @@ class WorkspaceRepository(
             workspacePreferences.layoutLocked
         ) return@withLock false
         val items = dao.getAll()
-        android.util.Log.d("FolderMove169", "in: caller=${folder.pageId}/${folder.cellIndex} -> $pageId/$cell grid=$grid items=${items.size}")
         // #169: a closed folder dropped onto an occupied cell displaces the
         // single top-level pin sitting there to the nearest free cell (the
         // folder's own source cell counts as free — it vacates). Without a
@@ -508,7 +507,7 @@ class WorkspaceRepository(
         val occupant = items.firstOrNull {
             it.container == Container.WORKSPACE.name && it.folderId == null &&
                 it.pageId == pageId && it.cellIndex == cell
-        } ?: return@withLock folderDao.moveToEmptyCell(folder.id, folder.pageId, folder.cellIndex, pageId, cell).also { android.util.Log.d("FolderMove169", "empty-move=$it") } == 1
+        } ?: return@withLock folderDao.moveToEmptyCell(folder.id, folder.pageId, folder.cellIndex, pageId, cell) == 1
         val occupied = buildSet {
             items.forEach { item ->
                 if (item.id != occupant.id && item.container == Container.WORKSPACE.name && item.folderId == null) {

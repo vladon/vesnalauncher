@@ -32,8 +32,9 @@ the whole set.
 - After `adb install -r` of an update the already-connected listener kept
   serving from the pre-update process; a force-stop re-bound it into the
   fresh process. Production updates trigger the same system rebind.
-- Debug logging (`VesnaBadges`) in the listener's rebuild stays in the
-  debug builds for the next QA pass.
+- The debug logging added for this pass (`VesnaBadges` in the listener's
+  rebuild, `FolderMove169` in the folder move) was removed from main after
+  the diagnosis; it shipped briefly in v0.4.91 as `Log.d` noise.
 
 ## v0.4.90 follow-ups (recycling, dark variant, a11y)
 
