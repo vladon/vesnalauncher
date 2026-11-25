@@ -3,6 +3,7 @@ package dev.vladon.vesna.launcher.platform
 import android.os.Process
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -26,10 +27,16 @@ class PackageChangeMonitorSuspendTest {
         monitor.start()
         try {
             val user = Process.myUserHandle()
+            // UNDISPATCHED: subscribe before the callbacks emit (the flow has no replay).
+            val events = mutableListOf<PackageEvent>()
+            val job = launch(start = CoroutineStart.UNDISPATCHED) { monitor.events.take(2).toList(events) }
             monitor.callback.onPackagesSuspended(arrayOf("qa.suspended" as String?), user)
-            assertEquals(PackageEvent.CatalogueChanged, withTimeout(5_000) { monitor.events.first() })
             monitor.callback.onPackagesUnsuspended(arrayOf("qa.suspended" as String?), user)
-            assertEquals(PackageEvent.CatalogueChanged, withTimeout(5_000) { monitor.events.first() })
+            withTimeout(5_000) { job.join() }
+            assertEquals(
+                listOf(PackageEvent.CatalogueChanged, PackageEvent.CatalogueChanged),
+                events,
+            )
         } finally {
             monitor.stop()
         }

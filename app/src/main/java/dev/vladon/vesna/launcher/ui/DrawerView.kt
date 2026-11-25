@@ -20,6 +20,7 @@ import android.view.animation.PathInterpolator
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -122,6 +123,17 @@ class DrawerView @JvmOverloads constructor(
             pager.iconScale = value
         }
 
+    /** Shows the paused-work banner with a resume action (work profile in quiet mode). */
+    internal var workAppsPaused: Boolean
+        get() = workPausedBanner.isVisible
+        set(value) {
+            if (workPausedBanner.isVisible == value) return
+            workPausedBanner.isVisible = value
+        }
+
+    /** Invoked by the banner's resume action; the caller toggles the profile's quiet mode off. */
+    internal var onResumeWorkApps: (() -> Unit)? = null
+
     private val list: RecyclerView
     private val pager: DrawerPager
     private val fastScroller: DrawerFastScroller
@@ -139,6 +151,8 @@ class DrawerView @JvmOverloads constructor(
     private var showsSearchIcon = true
     private val clearSearchButton: View
     private val noResultsView: TextView
+    private val workPausedBanner: View
+    private val workResumeButton: Button
     private val searchActionsView: LinearLayout
     private val adapter: DrawerAppsAdapter
     private val density = resources.displayMetrics.density
@@ -230,6 +244,9 @@ class DrawerView @JvmOverloads constructor(
         installDrawerFlingToClose(pager)
 
         noResultsView = findViewById(R.id.drawer_no_results)
+        workPausedBanner = findViewById(R.id.drawer_work_paused)
+        workResumeButton = findViewById(R.id.drawer_work_resume)
+        workResumeButton.setOnClickListener { onResumeWorkApps?.invoke() }
         searchActionsView = findViewById(R.id.drawer_search_actions)
         searchField = findViewById(R.id.drawer_search)
         searchBar = findViewById(R.id.drawer_search_bar)

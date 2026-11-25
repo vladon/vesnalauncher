@@ -1,0 +1,1 @@
+Paused work profiles are now explicit: when a managed profile is paused, the drawer shows a "Work apps are paused" notice with a Turn on work apps action above the dimmed tiles, and tapping a paused work tile explains the pause instead of failing silently. Resuming restores the tiles exactly. (Android 12+; the banner requires API 28+.)
