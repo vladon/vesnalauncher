@@ -35,13 +35,26 @@ the whole set.
 - Debug logging (`VesnaBadges`) in the listener's rebuild stays in the
   debug builds for the next QA pass.
 
+## v0.4.90 follow-ups (recycling, dark variant, a11y)
+
+The v0.4.89 review surfaced three gaps, fixed and verified in v0.4.90:
+
+| Fix | Verification |
+| --- | --- |
+| Stale dot on recycled tiles | `bindContent` (folders and any non-app content) resets the dot: a tile recycled from a dotted app into a folder loses it. Covered by `folderRecycleClearsTheDot` (the suite grew to 6/6). |
+| Dark-theme dot color | `values-night/colors.xml` adds the dark error token (#FFB4AB); the dark drawer verified live — both BadgeProbe tiles render the dot (`badge-dot-dark-0490.png`), and the uninstall-driven clear leaves zero dot pixels (`badge-dot-dark-cleared.png`). |
+| TalkBack announcement | The tile's content description gains a localized «есть уведомления» suffix while the dot shows (`accessibility_notification_dot`), so the badge state is announced. |
+
+The record also notes [ADR-NOTIF-1](../../adr/0004-notification-dots.md)
+(written for this surface per the ADR-BACKUP-1 pattern) and the E2E detail
+that the drawer's RU collation places Latin names (BadgeProbe) next to their
+Cyrillic neighbours, which made the live dot visible without scrolling.
+
 ## Limitations
 
 - Per-profile dots: the listener runs per Android user; a work-profile dot
   requires granting notification access to Vesna inside the work profile.
   Without it, work-profile tiles light up only through name-based matching
   of a personal-side notification of the same package.
-- TalkBack announcement of the dot state is not added (the dot is
-  decorative; the tile's content description is unchanged).
 - The D-pad focus pass for the new settings rows remains open (recorded in
   [VESNA-QA-BACKUP-EXPORT](VESNA-QA-BACKUP-EXPORT.md)).

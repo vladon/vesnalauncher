@@ -40,6 +40,7 @@
     <string name="layout_export_failed">The layout could not be written to the selected file.</string>
     <string name="settings_notification_dots">Show notification dots</string>
     <string name="settings_notification_dots_detail">Draw a dot on app tiles that have an unread notification. Only package names are read — never notification text.</string>
+    <string name="accessibility_notification_dot">has notifications</string>
     <string name="settings_notification_access">Notification access</string>
     <string name="settings_notification_access_granted">Granted for Vesna.</string>
     <string name="settings_notification_access_needed">Grant access in system settings so dots can appear.</string>

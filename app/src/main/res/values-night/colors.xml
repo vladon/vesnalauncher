@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification badge dot: the design system's dark-theme error token. -->
+    <color name="notification_dot">#FFB4AB</color>
+</resources>

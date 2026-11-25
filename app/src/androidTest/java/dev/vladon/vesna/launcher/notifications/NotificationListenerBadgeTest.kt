@@ -71,4 +71,15 @@ class NotificationListenerBadgeTest {
         assertTrue(NotificationBadges.shows("qa.a"))
         assertFalse(NotificationBadges.shows(context.packageName))
     }
+
+    @Test
+    fun folderRecycleClearsTheDot() {
+        // A tile recycled from a dotted app into non-app content (a folder)
+        // must not keep the stale dot (the v0.4.90 fix).
+        val tile = dev.vladon.vesna.launcher.ui.AppIconView(context)
+        tile.setNotificationDot(true)
+        assertTrue(tile.notificationDotShowing)
+        tile.bindContent(null, "Folder", "Folder")
+        assertFalse("The recycled tile loses the stale dot", tile.notificationDotShowing)
+    }
 }
