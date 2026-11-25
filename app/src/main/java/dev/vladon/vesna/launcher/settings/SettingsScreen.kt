@@ -165,6 +165,9 @@ internal fun SettingsScreen(
     onDrawerIconPercentChanged: (Int) -> Unit,
     drawerFollowsHome: Boolean,
     onDrawerFollowsHomeChanged: (Boolean) -> Unit,
+    workTabEnabled: Boolean,
+    hasWorkProfile: Boolean,
+    onWorkTabEnabledChanged: (Boolean) -> Unit,
     drawerApps: List<LauncherApp>,
     hiddenDrawerApps: Set<AppKey>,
     onDrawerAppHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -259,7 +262,12 @@ internal fun SettingsScreen(
                             ),
                     ) {
                         when (page) {
-                            SettingsPage.ROOT -> SettingsDirectory(defaultHome, query, onNavigate)
+                            SettingsPage.ROOT -> SettingsDirectory(
+                                defaultHome = defaultHome,
+                                query = query,
+                                onNavigate = onNavigate,
+                                hasWorkProfile = hasWorkProfile,
+                            )
                             SettingsPage.DEFAULT_LAUNCHER -> SearchTarget(searchTarget == R.string.settings_default_launcher) {
                                 DefaultLauncherSetup(defaultHome, onSetDefaultHome)
                             }
@@ -331,6 +339,7 @@ internal fun SettingsScreen(
                                 drawerSearchActions, onDrawerSearchActionsChanged,
                                 drawerIconPercent, onDrawerIconPercentChanged,
                                 drawerFollowsHome, onDrawerFollowsHomeChanged,
+                                workTabEnabled, hasWorkProfile, onWorkTabEnabledChanged,
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
                                 searchTarget == R.string.settings_hide_drawer_apps,
                                 searchTarget == R.string.settings_drawer_layout,
@@ -340,6 +349,7 @@ internal fun SettingsScreen(
                                 searchTarget == R.string.settings_drawer_show_keyboard,
                                 searchTarget == R.string.settings_search_actions,
                                 searchTarget == R.string.settings_drawer_follow_home,
+                                searchTarget == R.string.settings_work_tab,
                                 searchTarget == R.string.settings_drawer_icon_size,
                             )
                             SettingsPage.APPEARANCE -> {
@@ -446,6 +456,7 @@ private fun SettingsDirectory(
     defaultHome: DefaultHomeState,
     query: String,
     onNavigate: (SettingsPage, Int?) -> Unit,
+    hasWorkProfile: Boolean,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -483,6 +494,17 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_search_actions, R.string.settings_search_actions_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_background, R.string.settings_drawer_background_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_follow_home, R.string.settings_drawer_follow_home_detail),
+                ) + buildList {
+                    if (hasWorkProfile) {
+                        add(
+                            SearchEntry(
+                                SettingsPage.APP_DRAWER,
+                                R.string.settings_work_tab,
+                                R.string.settings_work_tab_detail,
+                            ),
+                        )
+                    }
+                } + listOf(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_icon_size, R.string.settings_drawer_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
@@ -849,6 +871,9 @@ private fun DrawerAppSettings(
     onIconPercentChanged: (Int) -> Unit,
     followHome: Boolean,
     onFollowHomeChanged: (Boolean) -> Unit,
+    workTabEnabled: Boolean,
+    hasWorkProfile: Boolean,
+    onWorkTabEnabledChanged: (Boolean) -> Unit,
     apps: List<LauncherApp>,
     hiddenApps: Set<AppKey>,
     onHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -860,12 +885,14 @@ private fun DrawerAppSettings(
     showKeyboardHighlighted: Boolean,
     searchActionsHighlighted: Boolean,
     followHomeHighlighted: Boolean,
+    workTabHighlighted: Boolean,
     iconSizeHighlighted: Boolean,
 ) {
     // A search target may not be composed yet in a short, scaled viewport.
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = when {
-        hideHighlighted -> 8
-        iconSizeHighlighted -> 7
+        hideHighlighted -> if (hasWorkProfile) 9 else 8
+        iconSizeHighlighted -> if (hasWorkProfile) 8 else 7
+        workTabHighlighted -> 7
         followHomeHighlighted -> 6
         searchActionsHighlighted -> 5
         showKeyboardHighlighted -> 4
@@ -923,6 +950,16 @@ private fun DrawerAppSettings(
                     R.string.settings_drawer_follow_home, R.string.settings_drawer_follow_home_detail,
                     followHome, onFollowHomeChanged,
                 )
+            }
+        }
+        if (hasWorkProfile) {
+            item(key = "work-tab") {
+                SearchTarget(workTabHighlighted) {
+                    SettingsSwitch(
+                        R.string.settings_work_tab, R.string.settings_work_tab_detail,
+                        workTabEnabled, onWorkTabEnabledChanged,
+                    )
+                }
             }
         }
         item(key = "icon-size") {

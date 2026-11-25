@@ -42,6 +42,11 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(EXTERNAL_SEARCH_ACTIONS, false)
         set(value) = prefs.edit { putBoolean(EXTERNAL_SEARCH_ACTIONS, value) }
 
+    /** Whether work-profile apps move to a dedicated Work tab in the drawer (#197). */
+    var workTabEnabled: Boolean
+        get() = prefs.getBoolean(WORK_TAB, false)
+        set(value) = prefs.edit { putBoolean(WORK_TAB, value) }
+
     var background: DrawerBackgroundMode
         get() {
             val saved = prefs.getString(BACKGROUND, null)
@@ -74,6 +79,7 @@ internal class DrawerPreferences(context: Context) {
         private const val ICON_SCALE_PERCENT = "drawer_icon_scale_percent"
         private const val LAYOUT_MODE = "drawer_layout_mode"
         private const val REMEMBER_POSITION = "drawer_remember_position"
+        private const val WORK_TAB = "drawer_work_tab"
         private const val BACKGROUND = "drawer_background"
     }
 }
