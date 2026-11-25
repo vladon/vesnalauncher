@@ -239,3 +239,22 @@ identify controls.
   chrome-loopback, drawer-chrome-badge), dumpsys package chrome grant
   lines, Downloads screenshot
 - Confidence: Observed
+
+## OBS-SYS-116 — Deterministic badge-compat probe; popup content absent on Work-tab row
+
+- Date / Env: 2026-11-25 / Nova_Reboot_API35 (emulator-5588, cold boot from userdata, work profile user 11 RUNNING_UNLOCKED; Nova 9.0.1 Prime foreground) — the ROADMAP P3.3 deterministic re-run promised by OBS-SYS-114/115, enabled by the new work-profile QA inventory.
+- Probe: `com.vesnaresearch.enumdiag` v2 (raw-SDK build; manifest `<queries>` MAIN/LAUNCHER identical to Vesna's; exported receiver actions POST/CANCEL). POST creates channel `badge` (IMPORTANCE_HIGH, `mShowBadge=true` confirmed in `dumpsys notification`) and posts notification id=42 "BadgeTest / Deterministic badge-compat probe notification" — no group, flags=0. POST_NOTIFICATIONS granted headlessly (`pm grant`) for user 0 and user 11.
+- Active record verified: `key=0|com.vesnaresearch.enumdiag|42|null|10213` importance=4 channel=badge flags=0 (user 0); later `key=11|…|1110213` (user 11). This closes OBS-SYS-114's blocker — a deterministic, adb-triggerable, badgeable third-party notification exists.
+- **Vesna v0.4.84:** drawer tiles (personal + work) render with NO notification badge and the work briefcase badge intact — live confirmation of the structural conclusion (no NotificationListenerService in the APK; #200 blocked on privacy).
+- **Nova:** its NotificationListenerService is grantable headlessly (`cmd notification allow_listener …notificationlistener.NotificationListener`; binding recorded in `dumpsys notification`) — OBS-SYS-159's manual disallow/restore step is now scripted. With the listener connected and the notification active, Nova's **Work-tab** long-press popup on the EnumDiag row shows only Edit / Hide / App info / Uninstall — **no notification content section and no badge observed** on the plain-list row. The personal-side grid tile could not be exercised: Nova's drawer groups collapse app rows into collapsed categories (Entertainment/Finance/…), leaving no direct grid tile for a newly installed app without further Nova settings surgery. Popup-menu notification content therefore remains UNCONFIRMED on Nova's own surfaces — now bounded: the Work-tab row path shows no content even with a live badgeable notification.
+- Cleanup: CANCEL action removes both records (records count 0 verified); `cmd notification disallow_listener` restored the listener set to AiAi + Pixel Launcher exactly as before.
+- Evidence: EVI-SYS-003 (vesna-drawer-badge, vesna-enumdiag-tiles, nova-hold2, nova-popup2), `dumpsys notification` key lines quoted above.
+- Confidence: Observed (attempts + records); Nova badge rendering and popup content Not Tested further on Nova's own surfaces.
+
+## OBS-SYS-117 — AVD wedge: multi-instance race corrupts adb + package manager
+
+- Date / Env: 2026-11-25 / Nova_Reboot_API35 — operational (recovery recorded for future cycles).
+- A second `emulator -avd Nova_Reboot_API35` launch against a running instance wedged the AVD: adb flapped `offline`, `pm install` streamed installs hung >300 s, `dumpsys package --user 11 <pkg>` timed out, and a stale `qemu-system-x86_64.exe` child (PID 45600) survived its dead `emulator.exe` parent holding the AVD locks.
+- Recovery: `powershell Stop-Process` on the zombie **qemu child** (killing `emulator.exe` alone is insufficient), delete `hardware-qemu.ini.lock` + `multiinstance.lock`, cold boot `-no-snapshot`, then re-grant POST_NOTIFICATIONS. Full userdata image backup (`userdata-qemu.img.qcow2` 6.3 GB + base `userdata-qemu.img`) taken BEFORE the kill; `qemu-img check` clean (1 leaked cluster, no errors). Work profile user 11 intact after restart (232 packages).
+- Never launch a second emulator for the same AVD; if wedged, back up userdata → kill qemu child → clear locks → cold boot.
+- Confidence: Observed (recovery verified end to end).
