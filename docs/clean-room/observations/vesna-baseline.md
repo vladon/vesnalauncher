@@ -5190,3 +5190,43 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   un-granted) so future cycles re-verify default-off. Settings-search misses for the
   dots rows recorded above.
 - Evidence: `EVI-VESNA-003/parity160-*`.
+
+## OBS-VESNA-172 — launch-timing pairs + post-reboot first load on v0.4.91 (QA-009 refresh, #195 data point)
+
+- Warm-system force-stop pairs (6×, emulator-5588, concurrent `mCurrentFocus` TTI polling
+  per the QA-009 refresh; TotalTime / concurrent TTI):
+  - Vesna v0.4.91 (96): COLD med **435.5 ms** (min 376 / max 471), cold TTI med **224 ms**;
+    WARM med **274 ms**, warm TTI med 130.5 ms.
+  - Nova 9.0.1: COLD TotalTime reported 0 ms in all six pairs (the system treats the
+    task as resumed — the known TotalTime-reads-zero accounting); its concurrent TTI
+    cold med **125 ms**; WARM TTI med 88.5 ms.
+  - v0.4.91's warm-system cold (435 ms) is ~5× better than the v0.4.81 era (1908 ms) and
+    matches the #195 warm reference (434 ms).
+- Post-reboot first load (two full `adb reboot` runs, boot_completed-gated):
+  - run 1: Vesna first-launch TotalTime **809 ms**;
+  - run 2: TotalTime **1071 ms**, with a 5-frame screencap loop (~0.35 s cadence + ~0.5-1 s
+    capture latency): the frame at +2.1 s still showed **Nova's workspace**, and the next
+    frame (~2.5-3 s) showed **Vesna's home fully settled with every icon**, byte-identical
+    to all later frames (screencap diff 0.00). Nova's own desktop appeared sub-second after
+    `boot_completed` (system-driven HOME start — this is why Nova reads as "instant":
+    its cold load runs inside the boot sequence before the user can observe it).
+  - Versus the #195-era v0.4.81 numbers (TotalTime 1.8-1.9 s, icons at 4.4-6.3 s):
+    v0.4.91 is ~2× faster on the first frame and settles within ~2.5-3 s, meeting the
+    ticket's acceptance (~1 s first frame / ~2.5 s icons) at the margin.
+- Source-side root cause for the remaining settle gap (research-tree read, vladon/
+  vesna-research): `AppDiscovery.discover()` calls `activity.getBadgedIcon(dpi)` for every
+  activity of every `launcherApps.profiles` entry (~190 calls across user 0 + user 11 on
+  this AVD), and `LauncherController.state = combine(_apps, workspaceRepository.items)`
+  stays at the empty default until the whole discovery pass completes — so the first
+  frame renders with whatever is on screen until discovery finishes, and the icon-complete
+  grid arrives in one jump. Nova (Launcher3 heritage) renders its first frame from its
+  persisted launcher DB and refreshes discovery async, which is the structural difference
+  the reporter perceives. Fix direction (dev's call): persist the app catalogue + icon
+  cache across launches, render the first frame from cache, and refresh discovery
+  incrementally off-thread (the v0.4.87 resume self-heal already runs off-thread; the
+  gate is the discovery-first state emission).
+- Method notes: Nova TotalTime reads 0 on force-stop relaunch (resumed-task accounting) —
+  use concurrent focus TTI for cross-launcher comparisons; screencap capture latency
+  ~0.5-1 s makes frame timestamps upper bounds (QA-009 limitation).
+- Evidence: `EVI-VESNA-003/parity160-settle-00..04.png`, `settle-f0/f1.png`;
+  `.tmp/launch_pairs.py`.
