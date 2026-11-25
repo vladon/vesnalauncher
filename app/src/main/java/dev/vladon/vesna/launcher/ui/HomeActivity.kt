@@ -5,7 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
+import android.provider.Settings
+import android.os.Process
+import android.os.UserHandle
+import android.os.UserManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
@@ -143,6 +148,9 @@ class HomeActivity : ComponentActivity() {
 
     /** The catalogue the drawer currently shows (fast at start, fully decoded right after). */
     private var drawerCatalogue: List<LauncherApp> = emptyList()
+
+    /** The managed profile currently in quiet mode, if any (the paused banner's target). */
+    private var pausedWorkProfile: UserHandle? = null
     private var drawerReturnFocus: View? = null
     private var activePopup: VesnaPopupMenu? = null
     private var pendingPageMenu: Job? = null
@@ -200,6 +208,7 @@ class HomeActivity : ComponentActivity() {
     private var renderedState = LauncherUiState()
     private val workspacePreferences by lazy { WorkspacePreferences(this) }
     private val dockPreferences by lazy { DockPreferences(this) }
+    private val userManager by lazy { getSystemService(UserManager::class.java) }
     private val drawerPreferences by lazy { DrawerPreferences(this) }
     private var hiddenDrawerApps = emptySet<AppKey>()
     private var layoutLocked = false
@@ -488,6 +497,37 @@ class HomeActivity : ComponentActivity() {
     /** Slots per dock page; the next render rebinds so overflow reflows onto pages. */
     private fun applyDockCapacity() {
         dock.capacity = dockPreferences.capacity
+    }
+
+    /**
+     * The work-profile pause state for the drawer's paused banner (#198): any
+     * managed profile in quiet mode shows the banner with a resume action; the
+     * action requests quiet mode off, and the resulting suspend/unsuspend events
+     * refresh the catalogue. Re-checked on resume so a pause made while Vesna
+     * was backgrounded is picked up.
+     */
+    private fun applyWorkPausedState() {
+        // The quiet-mode APIs require API 28; API 26/27 devices keep the plain
+        // dimmed tiles (no banner, no resume affordance).
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return
+        pausedWorkProfile = userManager.userProfiles.firstOrNull { profile ->
+            profile != Process.myUserHandle() && userManager.isQuietModeEnabled(profile)
+        }
+        drawer.workAppsPaused = pausedWorkProfile != null
+        drawer.onResumeWorkApps = pausedWorkProfile?.let { profile ->
+            {
+                try {
+                    // Quiet mode is toggleable only by the foreground default
+                    // launcher (Vesna's normal role) or privileged callers.
+                    userManager.requestQuietModeEnabled(false, profile)
+                    applyWorkPausedState()
+                } catch (e: SecurityException) {
+                    // Not the default launcher here: route to the system control
+                    // that resumes the profile (the acceptance's allowed route).
+                    startActivity(Intent(Settings.ACTION_SETTINGS))
+                }
+            }
+        }
     }
 
     /**
@@ -1420,7 +1460,13 @@ class HomeActivity : ComponentActivity() {
 
     private fun launchApp(app: LauncherApp): Boolean {
         if (controller.launch(app)) return true
-        showSnackbar(R.string.app_launch_failed, folderDialog)
+        val pausedProfile = pausedWorkProfile
+        val pausedLaunch = pausedProfile != null &&
+            userManager.getSerialNumberForUser(pausedProfile) == app.key.userSerial
+        showSnackbar(
+            if (pausedLaunch) R.string.drawer_work_paused else R.string.app_launch_failed,
+            folderDialog,
+        )
         return false
     }
 

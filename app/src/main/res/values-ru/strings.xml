@@ -26,6 +26,8 @@
     <string name="settings_dock_capacity_detail">Ячейки избранного на странице дока. Лишние ярлыки по порядку уходят на вторую страницу; уменьшение отклоняется, если оно не сможет вместить все ярлыки.</string>
     <string name="settings_dock_capacity_value">Ячеек: %1$d</string>
     <string name="toast_dock_capacity_pins">Меньше ячеек не вместит все ярлыки</string>
+    <string name="drawer_work_paused">Рабочие приложения приостановлены. Включите их, чтобы запускать и получать уведомления.</string>
+    <string name="drawer_work_resume">Включить рабочие приложения</string>
     <string name="settings_home_orientation">Ориентация главного экрана</string>
     <string name="settings_home_orientation_detail">Рабочий стол, док и кнопки страниц поворачиваются вместе с устройством, или главный экран остаётся портретным. Запущенные из него приложения сохраняют ориентацию устройства.</string>
     <string name="settings_home_orientation_follow">Следовать устройству</string>
