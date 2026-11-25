@@ -38,6 +38,11 @@
     <string name="layout_restore_failed">The layout could not be restored. Your current layout is unchanged.</string>
     <string name="layout_export_failed_title">Export failed</string>
     <string name="layout_export_failed">The layout could not be written to the selected file.</string>
+    <string name="settings_notification_dots">Show notification dots</string>
+    <string name="settings_notification_dots_detail">Draw a dot on app tiles that have an unread notification. Only package names are read — never notification text.</string>
+    <string name="settings_notification_access">Notification access</string>
+    <string name="settings_notification_access_granted">Granted for Vesna.</string>
+    <string name="settings_notification_access_needed">Grant access in system settings so dots can appear.</string>
     <string name="settings_dock_capacity">Dock capacity</string>
     <string name="settings_dock_capacity_detail">Favorite slots per dock page. Extra pins flow onto a second page in order; a reduction is rejected when it cannot hold every pin.</string>
     <string name="settings_dock_capacity_value">%1$d slots</string>

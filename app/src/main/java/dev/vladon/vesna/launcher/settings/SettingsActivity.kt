@@ -1,10 +1,13 @@
 package dev.vladon.vesna.launcher.settings
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.Settings
 import android.os.Bundle
 import android.os.UserManager
+import androidx.core.app.NotificationManagerCompat
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -35,6 +38,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.data.LayoutSnapshotV1
 import dev.vladon.vesna.launcher.data.LayoutSnapshotException
 import dev.vladon.vesna.launcher.platform.IconPackInfo
+import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import dev.vladon.vesna.launcher.platform.IconPackResolver
 import dev.vladon.vesna.launcher.settings.HomeOrientation
 import dev.vladon.vesna.launcher.workspace.DockPages
@@ -82,6 +86,8 @@ class SettingsActivity : ComponentActivity() {
     private var drawerFollowsHome by mutableStateOf(true)
     private var workTabEnabled by mutableStateOf(false)
     private var hasWorkProfile by mutableStateOf(false)
+    private var notificationDots by mutableStateOf(false)
+    private var notificationAccessGranted by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
     private var hiddenDrawerApps by mutableStateOf<Set<AppKey>>(emptySet())
@@ -234,6 +240,21 @@ class SettingsActivity : ComponentActivity() {
                             drawerPreferences.workTabEnabled = enabled
                             workTabEnabled = enabled
                         },
+                        notificationDots = notificationDots,
+                        onNotificationDotsChanged = { enabled ->
+                            // One pref writer: the badge store owns the key and
+                            // bumps the update flow so tiles rebind immediately.
+                            NotificationBadges.enabled = enabled
+                            notificationDots = enabled
+                        },
+                        notificationAccessGranted = notificationAccessGranted,
+                        onNotificationAccessClicked = {
+                            try {
+                                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                            } catch (e: ActivityNotFoundException) {
+                                // The notification-access page is missing on this build.
+                            }
+                        },
                         drawerApps = drawerApps,
                         hiddenDrawerApps = hiddenDrawerApps,
                         onDrawerAppHiddenChanged = ::changeDrawerVisibility,
@@ -256,6 +277,10 @@ class SettingsActivity : ComponentActivity() {
         super.onResume()
         readPreferences()
         refreshDefaultHome()
+        // The grant flips in the system page this row deep-links to.
+        notificationAccessGranted = NotificationManagerCompat
+            .getEnabledListenerPackages(this)
+            .contains(packageName)
     }
 
     private fun parkWindowFocus() {
@@ -291,6 +316,7 @@ class SettingsActivity : ComponentActivity() {
         drawerFollowsHome = drawerPreferences.followsHomeIconScale
         workTabEnabled = drawerPreferences.workTabEnabled
         hasWorkProfile = userManager.userProfiles.any { it != android.os.Process.myUserHandle() }
+        notificationDots = drawerPreferences.notificationDots
         hiddenDrawerApps = drawerPreferences.hiddenApps
         lifecycleScope.launch {
             iconPackOptions = withContext(Dispatchers.IO) {

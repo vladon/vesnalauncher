@@ -177,6 +177,10 @@ internal fun SettingsScreen(
     workTabEnabled: Boolean,
     hasWorkProfile: Boolean,
     onWorkTabEnabledChanged: (Boolean) -> Unit,
+    notificationDots: Boolean,
+    onNotificationDotsChanged: (Boolean) -> Unit,
+    notificationAccessGranted: Boolean,
+    onNotificationAccessClicked: () -> Unit,
     drawerApps: List<LauncherApp>,
     hiddenDrawerApps: Set<AppKey>,
     onDrawerAppHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -355,6 +359,8 @@ internal fun SettingsScreen(
                                 drawerIconPercent, onDrawerIconPercentChanged,
                                 drawerFollowsHome, onDrawerFollowsHomeChanged,
                                 workTabEnabled, hasWorkProfile, onWorkTabEnabledChanged,
+                                notificationDots, onNotificationDotsChanged,
+                                notificationAccessGranted, onNotificationAccessClicked,
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
                                 searchTarget == R.string.settings_hide_drawer_apps,
                                 searchTarget == R.string.settings_drawer_layout,
@@ -365,6 +371,7 @@ internal fun SettingsScreen(
                                 searchTarget == R.string.settings_search_actions,
                                 searchTarget == R.string.settings_drawer_follow_home,
                                 searchTarget == R.string.settings_work_tab,
+                                searchTarget == R.string.settings_notification_dots,
                                 searchTarget == R.string.settings_drawer_icon_size,
                             )
                             SettingsPage.APPEARANCE -> {
@@ -752,6 +759,18 @@ private fun SettingsSwitch(
     )
 }
 
+/** A tappable settings row without state of its own (deep links, one-shot actions). */
+@Composable
+private fun SettingsActionRow(title: String, detail: String, onClick: () -> Unit) {
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = { Text(detail) },
+        modifier = Modifier
+            .vesnaFocusRing(radius = 12.dp)
+            .clickable(onClick = onClick),
+    )
+}
+
 /**
  * Export and restore of the workspace layout to a user-picked file
  * (ADR-BACKUP-1 part 1, #116). Export writes through the system file picker;
@@ -1049,6 +1068,10 @@ private fun DrawerAppSettings(
     workTabEnabled: Boolean,
     hasWorkProfile: Boolean,
     onWorkTabEnabledChanged: (Boolean) -> Unit,
+    notificationDots: Boolean,
+    onNotificationDotsChanged: (Boolean) -> Unit,
+    notificationAccessGranted: Boolean,
+    onNotificationAccessClicked: () -> Unit,
     apps: List<LauncherApp>,
     hiddenApps: Set<AppKey>,
     onHiddenChanged: (AppKey, Boolean) -> Unit,
@@ -1061,6 +1084,7 @@ private fun DrawerAppSettings(
     searchActionsHighlighted: Boolean,
     followHomeHighlighted: Boolean,
     workTabHighlighted: Boolean,
+    notificationDotsHighlighted: Boolean,
     iconSizeHighlighted: Boolean,
 ) {
     // A search target may not be composed yet in a short, scaled viewport.
@@ -1136,6 +1160,26 @@ private fun DrawerAppSettings(
                     )
                 }
             }
+        }
+        item(key = "notification-dots") {
+            SearchTarget(notificationDotsHighlighted) {
+                SettingsSwitch(
+                    R.string.settings_notification_dots, R.string.settings_notification_dots_detail,
+                    notificationDots, onNotificationDotsChanged,
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            SettingsActionRow(
+                title = stringResource(R.string.settings_notification_access),
+                detail = stringResource(
+                    if (notificationAccessGranted) {
+                        R.string.settings_notification_access_granted
+                    } else {
+                        R.string.settings_notification_access_needed
+                    },
+                ),
+                onClick = onNotificationAccessClicked,
+            )
         }
         item(key = "icon-size") {
             SearchTarget(iconSizeHighlighted) {

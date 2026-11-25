@@ -177,6 +177,11 @@ class DrawerView @JvmOverloads constructor(
     internal val visibleApps: List<LauncherApp>
         get() = adapter.currentList
 
+    /** Rebinds visible tiles so notification dots follow the badge state (#200). */
+    internal fun refreshNotificationDots() {
+        adapter.notifyDataSetChanged()
+    }
+
     /** Selects the tab the way the click handlers do (tests and focus restoration). */
     internal fun selectWorkTab(active: Boolean) {
         if (workTabActive == active) return

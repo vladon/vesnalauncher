@@ -252,6 +252,19 @@ class AppIconView @JvmOverloads constructor(
             label = app.label,
             description = app.accessibilityLabel,
         )
+        setNotificationDot(dev.vladon.vesna.launcher.notifications.NotificationBadges.shows(app.packageName))
+    }
+
+    /**
+     * Draws the notification badge dot at the artwork's top-end corner
+     * (#200: dots only — one dot per package, no counts and no text).
+     */
+    fun setNotificationDot(show: Boolean) {
+        iconView.foreground = if (show) {
+            context.getDrawable(R.drawable.notification_dot)
+        } else {
+            null
+        }
     }
 
     /** Low-level bind for non-app content (folders). */

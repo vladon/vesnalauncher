@@ -86,6 +86,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -425,6 +426,16 @@ class HomeActivity : ComponentActivity() {
                 }
                 launch {
                     controller.messages.collect { message -> showMessage(message) }
+                }
+                launch {
+                    // Notification dots (#200): rebind the visible tiles on every
+                    // badge-state change (a posted or removed notification, the
+                    // toggle, or a grant change).
+                    NotificationBadges.updates.collect {
+                        drawer.refreshNotificationDots()
+                        dock.refreshNotificationDots()
+                        workspace.refreshNotificationDots()
+                    }
                 }
             }
         }

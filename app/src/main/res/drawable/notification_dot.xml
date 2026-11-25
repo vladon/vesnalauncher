@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The notification badge dot pinned to an app artwork's top-end corner
+     (ADR-free: the dot color is the design system's error token #BA1A1A). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="10dp"
+        android:height="10dp"
+        android:gravity="top|end">
+        <shape android:shape="oval">
+            <solid android:color="@color/notification_dot" />
+        </shape>
+    </item>
+</layer-list>

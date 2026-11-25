@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.ViewConfiguration
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
@@ -476,6 +477,18 @@ class WorkspaceView @JvmOverloads constructor(
                         onTouchHold = { anchor -> beginDrag(cell, content, anchor) },
                     )
                 }
+            }
+        }
+    }
+
+    /** Rebinds notification dots on the existing workspace tiles (#200). */
+    internal fun refreshNotificationDots() {
+        for (i in 0 until childCount) {
+            val view = getChildAt(i) as? AppIconView ?: continue
+            val cell = view.tag as? Int ?: continue
+            val content = boundContent[cell] ?: continue
+            if (content is CellContent.App) {
+                view.setNotificationDot(NotificationBadges.shows(content.app.packageName))
             }
         }
     }
