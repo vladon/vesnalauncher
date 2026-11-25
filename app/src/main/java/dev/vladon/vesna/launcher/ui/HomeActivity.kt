@@ -467,6 +467,7 @@ class HomeActivity : ComponentActivity() {
         applyDockVisibility()
         applyDockCapacity()
         applyHomeOrientation()
+        applyWorkPausedState()
         applyIconScales()
         val hiddenApps = drawerPreferences.hiddenApps
         if (hiddenApps != hiddenDrawerApps) {

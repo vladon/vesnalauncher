@@ -79,6 +79,34 @@
             </LinearLayout>
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/drawer_work_paused"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/drawer_work_paused_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/inter_regular"
+                android:text="@string/drawer_work_paused"
+                android:textColor="@color/vesna_on_surface_variant"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/drawer_work_resume"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:contentDescription="@string/drawer_work_resume"
+                android:fontFamily="@font/inter_regular"
+                android:text="@string/drawer_work_resume" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/drawer_no_results"
             android:layout_width="match_parent"
