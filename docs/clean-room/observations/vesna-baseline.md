@@ -4758,7 +4758,12 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Nova-side badge rendering stays unconfirmed on this AVD
   (Vesna's absence is structural — OBS-VESNA-158). Restored:
   listener disallowed (the list is back to AiAi + Pixel
-  Launcher), the pin removed, the notification dismissed.
+  Launcher) and the pin removed. The notification itself
+  remained active during every badge observation (verified by
+  its key `0|com.vesnaresearch.iconprobe|1001|null|10212`), so
+  the no-badge conclusions stand; it was cancelled afterwards
+  via the probe's own cancel action after shade swipes proved
+  unreliable.
 - **Nova scrollbar drag not reproduced synthetically.** With the
   drawer open the scrollbar thumb is persistently visible at the
   right edge (x≈1061–1074); touching it enlarges it, but neither
