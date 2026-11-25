@@ -5062,3 +5062,49 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   baseline (19 work names, badges, adjacency); ProbeB remains
   uninstalled.
 - Evidence: `EVI-VESNA-003/parity158-*`.
+
+## OBS-VESNA-170 — v0.4.88 install + the #197 Work tab device-verified (option A)
+
+- Build provenance: the AVD already ran v0.4.88 (93) from the dev's upgrade cycle; the
+  pulled `base.apk` is byte-identical to the release asset
+  (`VesnaLauncher-0.4.88.apk`, SHA-256 `88a74e7e…8b220d`, 2 118 476 bytes) and the APK
+  verifies v2-only under the release certificate `21a9fb9c…e1c58` — the checked bits are
+  the published release, not a local build.
+- Switch: Settings → App drawer → **Work apps in their own tab** renders only on the
+  managed-profile AVD (user 11 present), subtitle "Move work-profile apps to a dedicated
+  Work tab in the drawer", default off; the row sits below the fold under Drawer icon
+  size / Hide apps. Toggling flips the track grey (226,227,217) → green (73,103,46).
+  The state persists across `am force-stop` + relaunch.
+- Tab bar: switch on → the drawer gains an **Apps | Work** tab bar directly under the
+  search field ([42,441][540,567] / [540,441][1038,567]); switch off → no tab bar and the
+  inline merge returns (50 visible tiles / 14 `Work ` a11y tiles, same as cycle start).
+- Work tab contents: exactly the OBS-VESNA-157 managed set — 17 apps, Calendar …
+  YT Music — alphabetical, plain visible labels ("Calendar" under the Work Calendar
+  tile), a11y descriptions prefixed `Work`, and the blue badge (26,115,232): the first
+  screen shows 15 uniform 24×24 badge blocks (~467 solid px each) at one fixed tile
+  offset (+142..166, +101..125); a first-row screenshot shows the badge on every icon.
+- Apps-tab exclusion: the live Apps grid carries no badge-slot blocks — every
+  exact-blue cluster is icon artwork at non-badge offsets (e.g. a 47×47 block inside a
+  tile, never a 24×24 slot at the fixed offset). The EnumDiag/IconProbe entries in the
+  Apps grid are their user-0 copies (`pm list packages --user 0/11` shows both).
+- Pause affordance: the Work tab carries **Turn off work apps** above the tiles; with
+  Nova as the HOME role holder the tap opens `com.android.settings` (the #198 quiet-mode
+  fallback), no pause initiated and user 11 stayed running.
+- Search per tab: query `ca` typed on Apps re-arms in the Work tab's focused field
+  (`EditText 'ca'`) and filters it (Work Calendar/Work Camera only).
+- Hidden work apps: Hide apps is an inline per-profile-copy switch list on the same
+  settings page (Calendar/Work Calendar/Camera/Work Camera/… rows). Work Calendar
+  hidden → the Work tab's first row becomes Camera/Chrome/Clock/Contacts (screenshot:
+  plain labels + badges, no Calendar); unhidden → restored.
+- Scroll-reset unexercised: the 17-tile Work tab fits without scrolling on this AVD
+  (5 rows, no overflow), so the PR's scroll-reset claim has no device surface here.
+- Not device-testable: the no-profile drawer-unchanged case (single managed-profile
+  AVD); PR #208 covers it with view tests — kept as release-side evidence only.
+- Method note: uiautomator dumps again returned a merged tree — the previous tab's grid
+  persisted as a stale layer alongside the live one (personal rows at y=167 sit above
+  the tab bar, proving they are not rendered). All conclusions above were pixel- or
+  screenshot-verified; dump structure was used only for navigation.
+- Restored: switch off (track grey), Work Calendar unhidden, work profile resumed,
+  drawer inline at 50/14 as at cycle start; no snapshot refresh needed (the v0.4.88
+  baseline already exists from the dev's upgrade cycle).
+- Evidence: `EVI-VESNA-003/parity159-*`.
