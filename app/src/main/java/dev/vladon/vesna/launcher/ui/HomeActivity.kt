@@ -487,6 +487,11 @@ class HomeActivity : ComponentActivity() {
         // The Home role can change while Home is on the back stack; reconcile
         // the saved action pins with what Android still reports.
         controller.recheckAppActions()
+        // Re-enumerate the catalogue outside the package-event pipeline (#203):
+        // a framework that loses package events (observed on a wedged AVD session)
+        // self-heals here instead of needing a framework restart. Full pass: no
+        // pending-icon flicker on the already-rendered drawer.
+        controller.refreshCatalogue()
     }
 
     /** Shows or hides the dock strip; hidden docks keep their pins. */

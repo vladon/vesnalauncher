@@ -216,7 +216,7 @@ class LauncherController(
                         workspaceRepository.removeAllForPackage(event.packageName, event.userSerial)
                     }
                 }
-                refresh(event as? PackageEvent.Added)
+                refresh(added = event as? PackageEvent.Added)
             }
         }
     }
@@ -655,6 +655,17 @@ class LauncherController(
         withContext(Dispatchers.IO) { AppCatalogue(discovery.discover(decodeIconsFor)) }
 
     /**
+     * Re-enumerates the catalogue outside the package-event pipeline (#203): a
+     * framework that loses or withholds package events (observed on a wedged AVD
+     * session where installs stopped emitting and only a framework restart
+     * refreshed the drawer) self-heals on the next call. Runs the full pass so
+     * the emission carries complete icons and lands as a single update.
+     */
+    fun refreshCatalogue() {
+        scope.launch { refreshMutex.withLock { refresh(quickPhase = false) } }
+    }
+
+    /**
      * Refreshes launchable apps, seeds the layout on first run, and removes pins
      * for packages uninstalled while the launcher was not running.
      * Serialized with a mutex so overlapping package events cannot double-seed;
@@ -665,13 +676,14 @@ class LauncherController(
      * (the tiles the first frame shows) so Home renders without waiting for one
      * launcher IPC per app; the drawer's icons then arrive in a second pass.
      */
-    private suspend fun refresh(added: PackageEvent.Added? = null): Unit = refreshMutex.withLock {
-        // The saved-layout flow is collected eagerly from process start, so its first
-        // value is usually ready already; the fast catalogue decodes icons only for
-        // the tiles it shows and the drawer's icons arrive in the second pass.
-        val saved = workspaceRepository.savedLayout.first()
-        val savedKeys = saved.items.mapTo(HashSet()) { it.key }
-        val catalogue = discoverApps(savedKeys)
+    private suspend fun refresh(quickPhase: Boolean = true, added: PackageEvent.Added? = null): Unit = refreshMutex.withLock {
+        // The fast phase (process init) decodes icons only for the tiles the first
+        // frame shows and fills the drawer in a second pass. A mid-session refresh
+        // (lost package events, #203) runs the full pass: the catalogue is already
+        // warm, and a single complete emission avoids the pending-icon flicker.
+        val saved = if (quickPhase) workspaceRepository.savedLayout.first() else null
+        val savedKeys = saved?.items?.mapTo(HashSet()) { it.key }
+        val catalogue = discoverApps(savedKeys ?: emptySet())
         appCatalogue.value = catalogue
         drawerCatalogue.value = catalogue.apps
         if (!workspaceRepository.isSeeded() && catalogue.apps.isNotEmpty()) {
@@ -686,7 +698,7 @@ class LauncherController(
             }
             if (app != null) workspaceRepository.pinNewlyInstalledApp(app)
         }
-        val deferred = catalogue.apps.count { it.icon == null }
+        val deferred = if (quickPhase) catalogue.apps.count { it.icon == null } else 0
         if (deferred > 0) {
             // Let the fast catalogue propagate to Home before the slower full decode.
             // Only the drawer takes the fully decoded list — the workspace keeps the
