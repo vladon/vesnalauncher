@@ -118,7 +118,8 @@ All observations cite one of the environments below via an environment ID
 | Type | AVD (`Nova_Reboot_API35`), serial `emulator-5588` |
 | Android / API | 15 / 35 (`sdk_gphone64_x86_64`) |
 | Users | 0 Owner (running), 11 Work (running) |
-| Launcher | Vesna v0.4.82 (87) + Nova 9.0.1 Prime (90100) |
+| Launcher | Vesna v0.4.83 (88) + Nova 9.0.1 Prime (90100) |
+| HOME role | `com.teslacoilsw.launcher` (Nova) — verified via `cmd role get-role-holders android.app.role.HOME` (2026-11-25, after the v0.4.83 upgrade round-trip); research flows always target launchers explicitly, so the role is recorded but not relied upon |
 
 The work profile is a **persistent, owner-approved expansion**
 (OBS-VESNA-156): created with `pm create-user --profileOf 0
