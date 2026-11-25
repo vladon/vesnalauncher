@@ -140,8 +140,12 @@ roadmap only records what unblocks them.
    The [signed follow-up](verification/VESNA-QA-API36-1-SIGNED.md) verified
    an in-place 0.4.9 → 0.4.10 update and current Home and drawer behavior
    on the same AVD configuration without changing the default HOME role.
-3. **Badge compatibility** — re-run the inconclusive research probe as a
-   deterministic checklist once a work-profile AVD is part of the QA inventory.
+3. **Badge compatibility** — **done** (2026-11-25): the inconclusive research
+   probe re-run as a deterministic checklist on the managed-profile AVDs;
+   conclusions recorded in
+   [VESNA-QA-BADGE-COMPAT](verification/VESNA-QA-BADGE-COMPAT.md) and
+   [RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md). Any notification-badge FEATURE
+   remains #200 (privacy/product gated).
 4. **Accessibility, foldables, work-profile UX** — larger-surface candidates
    ([CAND-205..207](BACKLOG.md#candidate-items-unapproved)); unscheduled and
    research-gated like everything else without approval.

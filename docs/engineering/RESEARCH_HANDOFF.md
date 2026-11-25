@@ -78,7 +78,7 @@ that consumes the research matrix:
 | `DRAWER-105` / `R-DRAWER-103.1` | `DRAWER-105` mistakenly reuses the ID `R-DRAWER-103.1` (which is **contact opt-in**). The duplication must be repaired in the research matrix; contact opt-in remains an independent item, separate from the cards conflict below. |
 | `CARDS-100` | Condition-triggered content. The location/manual-fallback privacy question is open; notification indicators are a separate item. Requires a product/privacy decision before any work. |
 | Gestures | Follow-up commit `ee15ed5` documents a separate drawer-open setting and gesture assignment configuration; live binding-value validation is still pending. |
-| Badge compatibility | Inconclusive; no working conclusion. |
+| Badge compatibility | **Concluded 2026-11-25** (ROADMAP P3.3 deterministic checklist, [VESNA-QA-BADGE-COMPAT](verification/VESNA-QA-BADGE-COMPAT.md); research OBS-SYS-116): a deterministic badgeable notification probe (importance HIGH, no group) now exists; Vesna v0.4.84 renders no notification badge (structural: no NotificationListenerService, #200) with work badges intact; Nova’s listener is grantable headlessly and its Work-tab popup shows no notification content even with a live record (Nova-side rendering/popup content remains unconfirmed on Nova’s own surfaces). |
 | Performance | No measured data anywhere in the research track. |
 
 **Inventory discipline:** ID references on trunk (in code comments, tests, and
