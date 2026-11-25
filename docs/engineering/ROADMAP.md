@@ -130,8 +130,10 @@ roadmap only records what unblocks them.
    event delivery to compositor presentation after the drag reaches Home.
    The [signed 0.4.8 first-open baseline](verification/VESNA-QA-DRAWER-FIRST-OPEN.md)
    compares the first populated drawer row after cold launch with a repeat open
-   on Android 15. Time to interactivity and physical-device touch-to-display
-   latency still need measurement.
+   on Android 15. The [0.4.87 refresh](verification/VESNA-QA-LAUNCH-0.4.87.md)
+   re-ran the QA-009 cold/warm methodology on the current line with the
+   two-phase catalogue (cold median 2,146.5 ms). Time to interactivity and
+   physical-device touch-to-display latency still need measurement.
 2. **API 36.1 verification** — **done**.
    [VESNA-QA-006-API36-1](verification/VESNA-QA-006-API36-1.md)
    (2026-11-19, Windows AVD, Android 16 / API 36.1): instrumentation 5/5 at
