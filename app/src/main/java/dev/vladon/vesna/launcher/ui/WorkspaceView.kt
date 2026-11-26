@@ -1,6 +1,7 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
@@ -483,6 +484,16 @@ class WorkspaceView @JvmOverloads constructor(
                 }
             }
         }
+    }
+
+    /**
+     * #180: captures the current page rendering as a bitmap for the slide
+     * transition. Call before switching the page content.
+     */
+    fun capturePageBitmap(): Bitmap {
+        val bitmap = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+        draw(Canvas(bitmap))
+        return bitmap
     }
 
     /** Rebinds label typography on the existing workspace tiles (#173). */

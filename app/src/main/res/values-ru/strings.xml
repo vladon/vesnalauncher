@@ -100,6 +100,9 @@
     <string name="settings_search_bar_below">Под панелью избранного</string>
     <string name="settings_search_bar_above">Над панелью избранного</string>
     <string name="settings_search_bar_off">Выключена</string>
+    <string name="settings_page_transition">Эффект перехода страниц</string>
+    <string name="settings_page_transition_instant">Мгновенно (по умолчанию)</string>
+    <string name="settings_page_transition_slide">Скольжение</string>
     <string name="settings_app_drawer">Список приложений</string>
     <string name="settings_app_drawer_detail">Какие приложения видны при просмотре</string>
     <string name="settings_drawer_layout">Вид списка приложений</string>

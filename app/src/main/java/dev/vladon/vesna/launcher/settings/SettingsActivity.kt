@@ -38,6 +38,7 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.data.LayoutSnapshotV1
 import dev.vladon.vesna.launcher.data.LayoutSnapshotException
 import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
+import dev.vladon.vesna.launcher.settings.PageTransition
 import dev.vladon.vesna.launcher.settings.LabelFont
 import dev.vladon.vesna.launcher.settings.LabelFontScale
 import dev.vladon.vesna.launcher.platform.IconPackInfo
@@ -71,6 +72,7 @@ class SettingsActivity : ComponentActivity() {
     private var layoutLocked by mutableStateOf(false)
     private var autoRelock by mutableStateOf(true)
     private var searchBarPlacement by mutableStateOf(HomeSearchBarPlacement.BELOW_DOCK)
+    private var pageTransition by mutableStateOf(PageTransition.INSTANT)
     private var labelFontScalePercent by mutableStateOf(LabelFontScale.DEFAULT)
     private var labelFont by mutableStateOf(LabelFont.INTER_MEDIUM)
     /** Null until the persisted grid arrives; the row must not flash the default. */
@@ -174,6 +176,11 @@ class SettingsActivity : ComponentActivity() {
                         onSearchBarPlacementChanged = { placement ->
                             workspace.searchBarPlacement = placement
                             searchBarPlacement = placement
+                        },
+                        pageTransition = pageTransition,
+                        onPageTransitionChanged = { transition ->
+                            workspace.pageTransition = transition
+                            pageTransition = transition
                         },
                         labelFontScalePercent = labelFontScalePercent,
                         onLabelFontScaleChanged = { percent ->
@@ -328,6 +335,8 @@ class SettingsActivity : ComponentActivity() {
         layoutLocked = workspace.layoutLocked
         autoRelock = workspace.autoRelock
         searchBarPlacement = workspace.searchBarPlacement
+        pageTransition = workspace.pageTransition
+        pageTransition = workspace.pageTransition
         labelFontScalePercent = workspace.labelFontScalePercent
         labelFont = workspace.labelFont
         pinNewApps = workspace.pinNewApps

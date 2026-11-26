@@ -31,6 +31,11 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = HomeSearchBarPlacement.fromPreference(prefs.getString(SEARCH_BAR_PLACEMENT, null))
         set(value) = prefs.edit { putString(SEARCH_BAR_PLACEMENT, value.preferenceValue) }
 
+    /** #180: the Home page transition effect (Instant by default). */
+    var pageTransition: PageTransition
+        get() = PageTransition.fromPreference(prefs.getString(PAGE_TRANSITION, null))
+        set(value) = prefs.edit { putString(PAGE_TRANSITION, value.preferenceValue) }
+
     /**
      * #173: Home and dock label size, as a percent of the default text.
      */
@@ -80,6 +85,7 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         /** #177: whether an unlocked session relocks after an app launch or the screen turning off. */
         const val AUTO_RELOCK = "workspace_auto_relock"
         const val SEARCH_BAR_PLACEMENT = "home_search_bar_placement"
+        const val PAGE_TRANSITION = "home_page_transition"
         const val LABEL_FONT_SCALE_PERCENT = "home_label_font_scale_percent"
         const val LABEL_FONT = "home_label_font"
     }

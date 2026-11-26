@@ -96,6 +96,9 @@
     <string name="settings_search_bar_below">Below the dock</string>
     <string name="settings_search_bar_above">Above the dock</string>
     <string name="settings_search_bar_off">Off</string>
+    <string name="settings_page_transition">Page transition effect</string>
+    <string name="settings_page_transition_instant">Instant (default)</string>
+    <string name="settings_page_transition_slide">Slide</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>
