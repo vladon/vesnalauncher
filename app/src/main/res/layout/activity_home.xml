@@ -31,11 +31,18 @@
             android:textColor="@color/icon_label_color"
             android:textSize="14sp" />
 
-        <dev.vladon.vesna.launcher.ui.DockView
-            android:id="@+id/dock"
+        <LinearLayout
+            android:id="@+id/home_dock_area"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom" />
+            android:layout_gravity="bottom"
+            android:orientation="vertical">
+
+            <dev.vladon.vesna.launcher.ui.DockView
+                android:id="@+id/dock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
         <dev.vladon.vesna.launcher.ui.HomeControls
             android:id="@+id/home_controls"
