@@ -66,6 +66,7 @@ class SettingsActivity : ComponentActivity() {
     private var iconPackOptions by mutableStateOf<List<IconPackInfo>>(emptyList())
     private var palette by mutableStateOf(LauncherPalette.VESNA)
     private var layoutLocked by mutableStateOf(false)
+    private var autoRelock by mutableStateOf(true)
     /** Null until the persisted grid arrives; the row must not flash the default. */
     private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
@@ -157,6 +158,11 @@ class SettingsActivity : ComponentActivity() {
                         onLayoutLockedChanged = { locked ->
                             workspace.layoutLocked = locked
                             layoutLocked = locked
+                        },
+                        autoRelock = autoRelock,
+                        onAutoRelockChanged = { enabled ->
+                            workspace.autoRelock = enabled
+                            autoRelock = enabled
                         },
                         grid = grid,
                         onApplyGridResize = { target -> workspaceRepository.resizeGrid(target) },
@@ -299,6 +305,7 @@ class SettingsActivity : ComponentActivity() {
         palette = appearance.palette
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
+        autoRelock = workspace.autoRelock
         pinNewApps = workspace.pinNewApps
         hideHomeAppNames = workspace.hideHomeAppNames
         showDock = dockPreferences.visible

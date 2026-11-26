@@ -1,8 +1,10 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.provider.Settings
@@ -35,9 +37,12 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarVisuals
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -213,6 +218,14 @@ class HomeActivity : ComponentActivity() {
     private val drawerPreferences by lazy { DrawerPreferences(this) }
     private var hiddenDrawerApps = emptySet<AppKey>()
     private var layoutLocked = false
+
+    /** #177: the current session's unlock — in-memory only, never persisted. */
+    private var sessionUnlocked by mutableStateOf(false)
+    private val screenOffReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_SCREEN_OFF) relockWorkspaceForSession()
+        }
+    }
     private val workspacePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == WorkspacePreferences.LAYOUT_LOCKED) applyWorkspaceLock()
     }
@@ -297,9 +310,9 @@ class HomeActivity : ComponentActivity() {
         val graph = VesnaApplication.graph(this)
         val controller = graph.controller
 
-        workspace.isLayoutLocked = { layoutLocked }
-        dock.isLayoutLocked = { layoutLocked }
-        drawer.isLayoutLocked = { layoutLocked }
+        workspace.isLayoutLocked = { effectiveLayoutLocked() }
+        dock.isLayoutLocked = { effectiveLayoutLocked() }
+        drawer.isLayoutLocked = { effectiveLayoutLocked() }
 
         workspace.onAppClick = { launchApp(it) }
         workspace.onAppOptions = { cell, app, anchor ->
@@ -312,7 +325,7 @@ class HomeActivity : ComponentActivity() {
         workspace.onFolderDragProgress = ::updateWholeFolderDrag
         workspace.onFolderDragReleased = ::finishWholeFolderDrag
         workspace.onEmptyAreaLongClick = {
-            if (layoutLocked) showSnackbar(R.string.workspace_layout_locked, null)
+            if (effectiveLayoutLocked()) showLockedWorkspaceSnackbar()
             else showLauncherMenu()
         }
         workspace.onSwipeUp = ::openDrawer
@@ -594,12 +607,59 @@ class HomeActivity : ComponentActivity() {
 
     override fun onDestroy() {
         clearEdgeDrag()
+        unregisterScreenOffRelock()
         workspacePreferences.unregisterListener(workspacePreferenceListener)
         super.onDestroy()
     }
 
+    /** #177: the persisted lock gated by the current session's unlock. */
+    private fun effectiveLayoutLocked(): Boolean =
+        workspacePreferences.layoutLocked && !sessionUnlocked
+
+    /** #177: unlocks layout editing for the current session (never persisted). */
+    private fun unlockWorkspaceForSession() {
+        sessionUnlocked = true
+        applyWorkspaceLock()
+        registerScreenOffRelock()
+        showSnackbar(R.string.workspace_session_unlocked, null)
+    }
+
+    /** #177: relocks after an app launch or the display turning off. */
+    private fun relockWorkspaceForSession() {
+        if (!sessionUnlocked) return
+        sessionUnlocked = false
+        applyWorkspaceLock()
+        unregisterScreenOffRelock()
+        showSnackbar(R.string.workspace_relocked, null)
+    }
+
+    private fun registerScreenOffRelock() {
+        registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+    }
+
+    private fun unregisterScreenOffRelock() {
+        try {
+            unregisterReceiver(screenOffReceiver)
+        } catch (e: IllegalArgumentException) {
+            // Already unregistered.
+        }
+    }
+
+    /** The locked-workspace notice with the deliberate Unlock action (#177). */
+    private fun showLockedWorkspaceSnackbar() {
+        snackbarJob?.cancel()
+        snackbarJob = lifecycleScope.launch {
+            val result = homeSnackbar.showSnackbar(
+                getString(R.string.workspace_layout_locked),
+                actionLabel = getString(R.string.workspace_unlock_action),
+                duration = SnackbarDuration.Long,
+            )
+            if (result == SnackbarResult.ActionPerformed) unlockWorkspaceForSession()
+        }
+    }
+
     private fun applyWorkspaceLock() {
-        val locked = workspacePreferences.layoutLocked
+        val locked = effectiveLayoutLocked()
         if (layoutLocked == locked) return
         layoutLocked = locked
         activePopup?.dismiss()
@@ -1499,7 +1559,12 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun launchApp(app: LauncherApp): Boolean {
-        if (controller.launch(app)) return true
+        val launched = controller.launch(app)
+        if (launched && sessionUnlocked && workspacePreferences.autoRelock) {
+            // #177: launching an app relocks an automatically-relocking session.
+            relockWorkspaceForSession()
+        }
+        if (launched) return true
         val pausedProfile = pausedWorkProfile
         val pausedLaunch = pausedProfile != null &&
             userManager.getSerialNumberForUser(pausedProfile) == app.key.userSerial
