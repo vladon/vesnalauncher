@@ -24,6 +24,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LayoutRestoreAttempt
 import dev.vladon.vesna.launcher.workspace.GridResizeResult
@@ -76,6 +77,8 @@ class SettingsSearchLayoutTest {
                                 onLayoutLockedChanged = {},
                                 autoRelock = false,
                                 onAutoRelockChanged = {},
+    searchBarPlacement = HomeSearchBarPlacement.BELOW_DOCK,
+    onSearchBarPlacementChanged = {},
                                 grid = GridCanvas.DEFAULT,
                                 onApplyGridResize = { GridResizeResult.APPLIED },
                                 pinNewApps = false,
@@ -580,6 +583,8 @@ class SettingsSearchLayoutTest {
                                         onLayoutLockedChanged = {},
                                         autoRelock = false,
                                         onAutoRelockChanged = {},
+    searchBarPlacement = HomeSearchBarPlacement.BELOW_DOCK,
+    onSearchBarPlacementChanged = {},
                                         grid = GridCanvas.DEFAULT,
                                         onApplyGridResize = { GridResizeResult.APPLIED },
                                         pinNewApps = false,
@@ -723,6 +728,8 @@ class SettingsSearchLayoutTest {
                             onLayoutLockedChanged = {},
                             autoRelock = false,
                             onAutoRelockChanged = {},
+    searchBarPlacement = HomeSearchBarPlacement.BELOW_DOCK,
+    onSearchBarPlacementChanged = {},
                             grid = grid.value,
                             onApplyGridResize = resize,
                             pinNewApps = false,
