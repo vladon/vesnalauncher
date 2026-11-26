@@ -973,6 +973,12 @@ class HomeActivity : ComponentActivity() {
         val state = renderedState
         val current = state.pageIds.indexOf(state.activePageId)
         if (current < 0) return
+        // #179: the outward swipe on the first page opens the drawer (the
+        // mirrored direction is handled by the view's RTL-aware forward).
+        if (!forward && current == 0) {
+            drawer.open()
+            return
+        }
         val step = if (forward) 1 else -1
         state.pageIds.getOrNull(current + step)?.let(controller::selectWorkspacePage)
     }
