@@ -5362,3 +5362,22 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   Off, restored layout), and `baseline_research_0.4.92` deleted.
 - Evidence: `parity161-A0-bottom.png` vs `parity161-K7-bottom.png` (full-resolution
   dock-row crops), `R5-bottom.png` (post-Off state).
+
+### OBS-175 addendum 2 — bisected: the breaking commit is #229 (79b72ec); fix branch delivered
+
+- Downgrade-bisect with fresh-seeded docks (pm clear per version; release assets,
+  `install -r -d`; crops `parity162-bisect-v92..95.png`): dock labels render FULL on
+  v0.4.92/93/94 and truncate («Ca…» ×4, ~2× glyph size) exactly on v0.4.95 —
+  **breaking commit `79b72ec` (#229, label typography)**, the only functional commit
+  in that range.
+- Root cause: px/sp unit bug — `AppIconView.applyLabelTypography()` passes a PX-captured
+  `baseLabelTextSizePx` into `TextView.setTextSize(Float)` (SP units) → dock labels
+  render at density-times size (~2.6× at 420 dpi) and ellipsize. Pixel glyph growth
+  matches the density factor.
+- Fix delivered on the parity-worktree branch
+  [`parity/pills-removal`](https://github.com/vladon/vesnalauncher/tree/parity/pills-removal)
+  commit `1893658` (one line: `TypedValue.COMPLEX_UNIT_PX`; `compileDebugKotlin` green).
+  Facts + branch posted on #231.
+- End state on the AVD: release v0.4.95, fresh-seeded workspace (the 17-pin parity
+  layout was consumed by the bisect wipes; the exact layout is restorable from the
+  `parity161-baseline.json` map + the saved snapshot lineage if needed).
