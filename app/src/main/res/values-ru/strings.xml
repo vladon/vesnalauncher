@@ -14,6 +14,12 @@
     <string name="settings_lock_layout_detail">Запретить изменение ярлыков, папок, панели избранного и страниц.</string>
     <string name="settings_auto_relock">Блокировать автоматически</string>
     <string name="settings_auto_relock_detail">Снова блокировать макет после запуска приложения или выключения экрана.</string>
+    <string name="settings_label_font_size">Размер подписей</string>
+    <string name="settings_label_font_size_detail">Размер текста подписей приложений на главном экране и в панели избранного. Значки и ячейки не меняются.</string>
+    <string name="settings_label_font">Шрифт подписей</string>
+    <string name="settings_label_font_inter_medium">Inter Medium (по умолчанию)</string>
+    <string name="settings_label_font_inter_regular">Inter Regular</string>
+    <string name="settings_label_font_nunito">Nunito</string>
     <string name="settings_pin_new_apps">Добавлять новые приложения на главный экран</string>
     <string name="settings_pin_new_apps_detail">Пока Vesna запущена, добавлять ярлык нового приложения, если на текущей странице есть место и расположение не заблокировано.</string>
     <string name="settings_hide_home_app_names">Скрыть названия на главном экране</string>

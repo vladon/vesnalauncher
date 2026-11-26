@@ -143,6 +143,10 @@ internal fun SettingsScreen(
     autoRelock: Boolean,
     onAutoRelockChanged: (Boolean) -> Unit,
     searchBarPlacement: HomeSearchBarPlacement,
+    labelFontScalePercent: Int,
+    onLabelFontScaleChanged: (Int) -> Unit,
+    labelFont: LabelFont,
+    onLabelFontChanged: (LabelFont) -> Unit,
     onSearchBarPlacementChanged: (HomeSearchBarPlacement) -> Unit,
     grid: GridCanvas?,
     onApplyGridResize: suspend (GridCanvas) -> GridResizeResult,
@@ -310,6 +314,17 @@ internal fun SettingsScreen(
                                         R.string.settings_auto_relock, R.string.settings_auto_relock_detail,
                                         autoRelock, onAutoRelockChanged,
                                     )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_label_font_size) {
+                                    SettingsSlider(
+                                        R.string.settings_label_font_size, R.string.settings_label_font_size_detail,
+                                        labelFontScalePercent, onLabelFontScaleChanged,
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_label_font) {
+                                    LabelFontRow(labelFont, onLabelFontChanged)
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_search_bar) {
@@ -773,6 +788,41 @@ private fun SettingsSwitch(
             .vesnaFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
+}
+
+/** #173: the Home and dock label font choice (radio rows). */
+@Composable
+private fun LabelFontRow(font: LabelFont, onSelect: (LabelFont) -> Unit) {
+    Column {
+        Text(
+            text = stringResource(R.string.settings_label_font),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(4.dp))
+        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val choices = listOf(
+                LabelFont.INTER_MEDIUM to R.string.settings_label_font_inter_medium,
+                LabelFont.INTER_REGULAR to R.string.settings_label_font_inter_regular,
+                LabelFont.NUNITO_REGULAR to R.string.settings_label_font_nunito,
+            )
+            for ((choice, label) in choices) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .selectable(
+                            selected = font == choice,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(choice) },
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = font == choice, onClick = null)
+                    Text(stringResource(label), Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+    }
 }
 
 /** #186: the persistent Home search bar placement choice (radio rows). */

@@ -74,6 +74,8 @@ import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.DrawerPreferences
 import dev.vladon.vesna.launcher.settings.HomeOrientation
 import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
+import dev.vladon.vesna.launcher.settings.LabelFont
+import dev.vladon.vesna.launcher.settings.LabelFontScale
 import dev.vladon.vesna.launcher.settings.IconShapeMode
 import dev.vladon.vesna.launcher.settings.LauncherPalette
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
@@ -226,6 +228,8 @@ class HomeActivity : ComponentActivity() {
     /** #177: the current session's unlock — in-memory only, never persisted. */
     private var sessionUnlocked by mutableStateOf(false)
     private var searchBar: LinearLayout? = null
+    private var labelFontScalePercent = LabelFontScale.DEFAULT
+    private var labelFont = LabelFont.INTER_MEDIUM
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) relockWorkspaceForSession()
@@ -234,6 +238,7 @@ class HomeActivity : ComponentActivity() {
     private val workspacePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == WorkspacePreferences.LAYOUT_LOCKED) applyWorkspaceLock()
         if (key == WorkspacePreferences.SEARCH_BAR_PLACEMENT) applySearchBarPlacement()
+        if (key == WorkspacePreferences.LABEL_FONT_SCALE_PERCENT || key == WorkspacePreferences.LABEL_FONT) applyLabelTypography()
     }
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
@@ -317,6 +322,10 @@ class HomeActivity : ComponentActivity() {
         val graph = VesnaApplication.graph(this)
         val controller = graph.controller
 
+        workspace.labelFontScalePercent = labelFontScalePercent
+        workspace.labelFont = labelFont
+        dock.labelFontScalePercent = labelFontScalePercent
+        dock.labelFont = labelFont
         workspace.isLayoutLocked = { effectiveLayoutLocked() }
         dock.isLayoutLocked = { effectiveLayoutLocked() }
         drawer.isLayoutLocked = { effectiveLayoutLocked() }
@@ -726,6 +735,18 @@ class HomeActivity : ComponentActivity() {
         if (dragSource == null && !workspace.isDragging && edgePageDrag == null && !renderedState.isDragPagePreview) {
             drawer.open(showKeyboard = true)
         }
+    }
+
+    /** #173: applies the label typography to the workspace and dock tiles. */
+    private fun applyLabelTypography() {
+        labelFontScalePercent = workspacePreferences.labelFontScalePercent
+        labelFont = workspacePreferences.labelFont
+        workspace.labelFontScalePercent = labelFontScalePercent
+        workspace.labelFont = labelFont
+        dock.labelFontScalePercent = labelFontScalePercent
+        dock.labelFont = labelFont
+        workspace.refreshLabelTypography(labelFontScalePercent, labelFont)
+        dock.refreshLabelTypography(labelFontScalePercent, labelFont)
     }
 
     private fun applyWorkspaceLock() {

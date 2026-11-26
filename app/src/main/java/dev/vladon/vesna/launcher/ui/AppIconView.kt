@@ -1,7 +1,10 @@
 package dev.vladon.vesna.launcher.ui
 
 import android.content.Context
+import android.graphics.Typeface
 import android.graphics.drawable.AdaptiveIconDrawable
+import androidx.core.content.res.ResourcesCompat
+import dev.vladon.vesna.launcher.settings.LabelFont
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.AttributeSet
@@ -34,12 +37,15 @@ class AppIconView @JvmOverloads constructor(
     private var inlineLabel = false
     private var pointerDown = false
     private val baseArtSize: Int
+    private var baseLabelTextSizePx = 0f
     /** Upper bound for the artwork's height in drawer list rows, whose height stays fixed. */
     private var artHeightCap = Int.MAX_VALUE
     private var keepsDefaultHeight = false
     private var showOptions: ((View) -> Unit)? = null
     private var dragOnHold: ((View) -> Unit)? = null
     private var notificationDotVisible = false
+    private var labelFontScalePercent = 100
+    private var labelTypeface: Typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
 
     init {
         orientation = VERTICAL
@@ -51,6 +57,7 @@ class AppIconView @JvmOverloads constructor(
         iconView = findViewById(R.id.app_icon)
         baseArtSize = iconView.layoutParams.width
         labelView = findViewById(R.id.app_label)
+        baseLabelTextSizePx = labelView.textSize
         labelGap = (labelView.layoutParams as MarginLayoutParams).topMargin
     }
 
@@ -274,6 +281,29 @@ class AppIconView @JvmOverloads constructor(
         } else {
             null
         }
+    }
+
+    /**
+     * #173: sets the Home/dock label typography — the text size as a percent
+     * of the layout default and the font face. Icons, cells and touch targets
+     * are never affected.
+     */
+    fun setLabelTypography(scalePercent: Int, font: LabelFont) {
+        labelFontScalePercent = scalePercent
+        labelTypeface = when (font) {
+            LabelFont.INTER_MEDIUM -> ResourcesCompat.getFont(context, R.font.inter_medium)
+                ?: Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            LabelFont.INTER_REGULAR -> ResourcesCompat.getFont(context, R.font.inter_regular)
+                ?: Typeface.create("sans-serif", Typeface.NORMAL)
+            LabelFont.NUNITO_REGULAR -> ResourcesCompat.getFont(context, R.font.nunito_regular)
+                ?: Typeface.create("sans-serif", Typeface.NORMAL)
+        }
+        applyLabelTypography()
+    }
+
+    private fun applyLabelTypography() {
+        labelView.textSize = baseLabelTextSizePx * labelFontScalePercent / 100f
+        labelView.typeface = labelTypeface
     }
 
     /** Test/inspection hook: whether the badge dot foreground is present. */

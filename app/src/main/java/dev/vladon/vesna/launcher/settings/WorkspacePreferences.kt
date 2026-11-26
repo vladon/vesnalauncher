@@ -31,6 +31,20 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = HomeSearchBarPlacement.fromPreference(prefs.getString(SEARCH_BAR_PLACEMENT, null))
         set(value) = prefs.edit { putString(SEARCH_BAR_PLACEMENT, value.preferenceValue) }
 
+    /**
+     * #173: Home and dock label size, as a percent of the default text.
+     */
+    var labelFontScalePercent: Int
+        get() = LabelFontScale.coerce(prefs.getInt(LABEL_FONT_SCALE_PERCENT, LabelFontScale.DEFAULT))
+        set(value) = prefs.edit { putInt(LABEL_FONT_SCALE_PERCENT, LabelFontScale.coerce(value)) }
+
+    /**
+     * #173: Home and dock label font face.
+     */
+    var labelFont: LabelFont
+        get() = LabelFont.fromPreference(prefs.getString(LABEL_FONT, null))
+        set(value) = prefs.edit { putString(LABEL_FONT, value.preferenceValue) }
+
     var hideHomeAppNames: Boolean
         get() = prefs.getBoolean(HIDE_HOME_APP_NAMES, false)
         set(value) = prefs.edit { putBoolean(HIDE_HOME_APP_NAMES, value) }
@@ -66,5 +80,7 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         /** #177: whether an unlocked session relocks after an app launch or the screen turning off. */
         const val AUTO_RELOCK = "workspace_auto_relock"
         const val SEARCH_BAR_PLACEMENT = "home_search_bar_placement"
+        const val LABEL_FONT_SCALE_PERCENT = "home_label_font_scale_percent"
+        const val LABEL_FONT = "home_label_font"
     }
 }

@@ -11,6 +11,7 @@ import android.view.ViewConfiguration
 import android.widget.LinearLayout
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.settings.LabelFont
 import dev.vladon.vesna.launcher.workspace.DockPages
 import dev.vladon.vesna.launcher.workspace.DockPin
 import kotlin.math.abs
@@ -30,6 +31,9 @@ class DockView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : LinearLayout(context, attrs) {
+
+    var labelFontScalePercent: Int = 100
+    var labelFont: LabelFont = LabelFont.INTER_MEDIUM
 
     var onAppClick: ((LauncherApp) -> Unit)? = null
     internal var onAppOptions: ((DockPin, View) -> Unit)? = null
@@ -303,6 +307,13 @@ class DockView @JvmOverloads constructor(
         renderPage()
     }
 
+    /** Re-renders the current page so label typography follows (#173). */
+    internal fun refreshLabelTypography(percent: Int, font: LabelFont) {
+        labelFontScalePercent = percent
+        labelFont = font
+        renderPage()
+    }
+
     private fun renderPage() {
         removeAllViews()
         for (pin in DockPages.page(pins, currentPage, capacity)) {
@@ -310,6 +321,7 @@ class DockView @JvmOverloads constructor(
             val view = AppIconView(context)
             view.layoutParams = LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f)
             view.bind(app)
+            view.setLabelTypography(labelFontScalePercent, labelFont)
             view.artworkScale = iconScale
             view.setAppNameVisible(showAppNames)
             view.setOnClickListener { onAppClick?.invoke(app) }
