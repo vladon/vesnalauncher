@@ -10,6 +10,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -141,6 +142,8 @@ internal fun SettingsScreen(
     onLayoutLockedChanged: (Boolean) -> Unit,
     autoRelock: Boolean,
     onAutoRelockChanged: (Boolean) -> Unit,
+    searchBarPlacement: HomeSearchBarPlacement,
+    onSearchBarPlacementChanged: (HomeSearchBarPlacement) -> Unit,
     grid: GridCanvas?,
     onApplyGridResize: suspend (GridCanvas) -> GridResizeResult,
     pinNewApps: Boolean,
@@ -307,6 +310,10 @@ internal fun SettingsScreen(
                                         R.string.settings_auto_relock, R.string.settings_auto_relock_detail,
                                         autoRelock, onAutoRelockChanged,
                                     )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_search_bar) {
+                                    SearchBarPlacementRow(searchBarPlacement, onSearchBarPlacementChanged)
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_pin_new_apps) {
@@ -766,6 +773,44 @@ private fun SettingsSwitch(
             .vesnaFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
+}
+
+/** #186: the persistent Home search bar placement choice (radio rows). */
+@Composable
+private fun SearchBarPlacementRow(
+    placement: HomeSearchBarPlacement,
+    onSelect: (HomeSearchBarPlacement) -> Unit,
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.settings_search_bar),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(4.dp))
+        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val choices = listOf(
+                HomeSearchBarPlacement.BELOW_DOCK to R.string.settings_search_bar_below,
+                HomeSearchBarPlacement.ABOVE_DOCK to R.string.settings_search_bar_above,
+                HomeSearchBarPlacement.OFF to R.string.settings_search_bar_off,
+            )
+            for ((choice, label) in choices) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .selectable(
+                            selected = placement == choice,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(choice) },
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = placement == choice, onClick = null)
+                    Text(stringResource(label), Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+    }
 }
 
 /** A tappable settings row without state of its own (deep links, one-shot actions). */

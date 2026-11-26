@@ -24,6 +24,13 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean(WorkspacePreferences.AUTO_RELOCK, true)
         set(value) = prefs.edit { putBoolean(WorkspacePreferences.AUTO_RELOCK, value) }
 
+    /**
+     * #186: placement of the optional persistent search bar on Home.
+     */
+    var searchBarPlacement: HomeSearchBarPlacement
+        get() = HomeSearchBarPlacement.fromPreference(prefs.getString(SEARCH_BAR_PLACEMENT, null))
+        set(value) = prefs.edit { putString(SEARCH_BAR_PLACEMENT, value.preferenceValue) }
+
     var hideHomeAppNames: Boolean
         get() = prefs.getBoolean(HIDE_HOME_APP_NAMES, false)
         set(value) = prefs.edit { putBoolean(HIDE_HOME_APP_NAMES, value) }
@@ -58,5 +65,6 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
 
         /** #177: whether an unlocked session relocks after an app launch or the screen turning off. */
         const val AUTO_RELOCK = "workspace_auto_relock"
+        const val SEARCH_BAR_PLACEMENT = "home_search_bar_placement"
     }
 }

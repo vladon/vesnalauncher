@@ -37,6 +37,7 @@ import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.data.LayoutSnapshotV1
 import dev.vladon.vesna.launcher.data.LayoutSnapshotException
+import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
 import dev.vladon.vesna.launcher.platform.IconPackInfo
 import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import dev.vladon.vesna.launcher.platform.IconPackResolver
@@ -67,6 +68,7 @@ class SettingsActivity : ComponentActivity() {
     private var palette by mutableStateOf(LauncherPalette.VESNA)
     private var layoutLocked by mutableStateOf(false)
     private var autoRelock by mutableStateOf(true)
+    private var searchBarPlacement by mutableStateOf(HomeSearchBarPlacement.BELOW_DOCK)
     /** Null until the persisted grid arrives; the row must not flash the default. */
     private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
@@ -163,6 +165,11 @@ class SettingsActivity : ComponentActivity() {
                         onAutoRelockChanged = { enabled ->
                             workspace.autoRelock = enabled
                             autoRelock = enabled
+                        },
+                        searchBarPlacement = searchBarPlacement,
+                        onSearchBarPlacementChanged = { placement ->
+                            workspace.searchBarPlacement = placement
+                            searchBarPlacement = placement
                         },
                         grid = grid,
                         onApplyGridResize = { target -> workspaceRepository.resizeGrid(target) },
@@ -306,6 +313,7 @@ class SettingsActivity : ComponentActivity() {
         showAppNames = appearance.showAppNames
         layoutLocked = workspace.layoutLocked
         autoRelock = workspace.autoRelock
+        searchBarPlacement = workspace.searchBarPlacement
         pinNewApps = workspace.pinNewApps
         hideHomeAppNames = workspace.hideHomeAppNames
         showDock = dockPreferences.visible

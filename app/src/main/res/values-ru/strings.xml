@@ -87,6 +87,11 @@
     <string name="workspace_unlock_action">Разблокировать</string>
     <string name="workspace_session_unlocked">Расположение разблокировано до конца сессии</string>
     <string name="workspace_relocked">Расположение снова заблокировано</string>
+    <string name="search_bar_hint">Поиск приложений</string>
+    <string name="settings_search_bar">Строка поиска на главном экране</string>
+    <string name="settings_search_bar_below">Под панелью избранного</string>
+    <string name="settings_search_bar_above">Над панелью избранного</string>
+    <string name="settings_search_bar_off">Выключена</string>
     <string name="settings_app_drawer">Список приложений</string>
     <string name="settings_app_drawer_detail">Какие приложения видны при просмотре</string>
     <string name="settings_drawer_layout">Вид списка приложений</string>

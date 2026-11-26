@@ -18,6 +18,8 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -51,6 +53,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
@@ -70,6 +73,7 @@ import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.DrawerPreferences
 import dev.vladon.vesna.launcher.settings.HomeOrientation
+import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
 import dev.vladon.vesna.launcher.settings.IconShapeMode
 import dev.vladon.vesna.launcher.settings.LauncherPalette
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
@@ -221,6 +225,7 @@ class HomeActivity : ComponentActivity() {
 
     /** #177: the current session's unlock — in-memory only, never persisted. */
     private var sessionUnlocked by mutableStateOf(false)
+    private var searchBar: LinearLayout? = null
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) relockWorkspaceForSession()
@@ -228,6 +233,7 @@ class HomeActivity : ComponentActivity() {
     }
     private val workspacePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == WorkspacePreferences.LAYOUT_LOCKED) applyWorkspaceLock()
+        if (key == WorkspacePreferences.SEARCH_BAR_PLACEMENT) applySearchBarPlacement()
     }
     private lateinit var appearance: AppearancePreferences
     private lateinit var themeMode: ThemeMode
@@ -284,6 +290,7 @@ class HomeActivity : ComponentActivity() {
         workspace = findViewById(R.id.workspace)
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
+        setupSearchBar()
         drawer.applyDrawerBackground(
             drawerPreferences.background,
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES,
@@ -655,6 +662,69 @@ class HomeActivity : ComponentActivity() {
                 duration = SnackbarDuration.Long,
             )
             if (result == SnackbarResult.ActionPerformed) unlockWorkspaceForSession()
+        }
+    }
+
+    /** #186: builds the persistent search bar and places it per the setting. */
+    private fun setupSearchBar() {
+        val area = findViewById<LinearLayout>(R.id.home_dock_area)
+        val bar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = getDrawable(R.drawable.home_search_bar)
+            val horizontal = (16 * resources.displayMetrics.density).toInt()
+            setPadding(horizontal, (10 * resources.displayMetrics.density).toInt(), horizontal, (10 * resources.displayMetrics.density).toInt())
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                setMargins(horizontal, (6 * resources.displayMetrics.density).toInt(), horizontal, (6 * resources.displayMetrics.density).toInt())
+            }
+            addView(ImageView(this@HomeActivity).apply {
+                setImageResource(R.drawable.ic_search)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            })
+            addView(TextView(this@HomeActivity).apply {
+                text = getString(R.string.search_bar_hint)
+                textSize = 14f
+                setTextColor(ContextCompat.getColor(this@HomeActivity, R.color.vesna_on_surface_variant))
+            })
+            contentDescription = getString(R.string.search_bar_hint)
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+            setOnClickListener { openDrawerWithSearch() }
+        }
+        searchBar = bar
+        area.addView(bar)
+        applySearchBarPlacement()
+    }
+
+    /** #186: applies the saved search bar placement (below/above the dock or off). */
+    private fun applySearchBarPlacement() {
+        val bar = searchBar ?: return
+        val area = bar.parent as? LinearLayout ?: return
+        when (workspacePreferences.searchBarPlacement) {
+            HomeSearchBarPlacement.BELOW_DOCK -> {
+                bar.visibility = View.VISIBLE
+                if (area.indexOfChild(bar) < area.indexOfChild(dock)) {
+                    area.removeView(bar)
+                    area.addView(bar)
+                }
+            }
+            HomeSearchBarPlacement.ABOVE_DOCK -> {
+                bar.visibility = View.VISIBLE
+                if (area.indexOfChild(bar) > area.indexOfChild(dock)) {
+                    area.removeView(bar)
+                    area.addView(bar, 0)
+                }
+            }
+            HomeSearchBarPlacement.OFF -> bar.visibility = View.GONE
+        }
+    }
+
+    /** #186: opens the drawer with the search field focused. */
+    private fun openDrawerWithSearch() {
+        if (dragSource == null && !workspace.isDragging && edgePageDrag == null && !renderedState.isDragPagePreview) {
+            drawer.open(showKeyboard = true)
         }
     }
 

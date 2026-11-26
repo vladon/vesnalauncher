@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The persistent Home search bar pill (#186): the dock surface token with
+     the search glyph and hint text drawn by the parent view. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/home_control_surface" />
+    <corners android:radius="24dp" />
+</shape>

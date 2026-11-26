@@ -83,6 +83,11 @@
     <string name="workspace_unlock_action">Unlock</string>
     <string name="workspace_session_unlocked">Workspace unlocked for this session</string>
     <string name="workspace_relocked">Workspace layout locked again</string>
+    <string name="search_bar_hint">Search apps</string>
+    <string name="settings_search_bar">Search bar on Home</string>
+    <string name="settings_search_bar_below">Below the dock</string>
+    <string name="settings_search_bar_above">Above the dock</string>
+    <string name="settings_search_bar_off">Off</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>
