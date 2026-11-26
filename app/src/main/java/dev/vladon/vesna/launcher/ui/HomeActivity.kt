@@ -15,10 +15,12 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.ViewGroup
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.graphics.Bitmap
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -76,6 +78,7 @@ import dev.vladon.vesna.launcher.settings.HomeOrientation
 import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
 import dev.vladon.vesna.launcher.settings.LabelFont
 import dev.vladon.vesna.launcher.settings.LabelFontScale
+import dev.vladon.vesna.launcher.settings.PageTransition
 import dev.vladon.vesna.launcher.settings.IconShapeMode
 import dev.vladon.vesna.launcher.settings.LauncherPalette
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
@@ -980,7 +983,36 @@ class HomeActivity : ComponentActivity() {
             return
         }
         val step = if (forward) 1 else -1
-        state.pageIds.getOrNull(current + step)?.let(controller::selectWorkspacePage)
+        val target = state.pageIds.getOrNull(current + step) ?: return
+        // #180: the Slide effect animates the outgoing page over the incoming
+        // one; Instant switches as before. Both respect the animator scale
+        // and the Remove animations accessibility setting.
+        val scale = Settings.Global.getFloat(
+            contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        ) * if (Settings.Secure.getInt(contentResolver, "accessibility_remove_animations", 0) == 1) 0f else 1f
+        if (workspacePreferences.pageTransition == PageTransition.SLIDE && scale > 0f) {
+            animatePageSlide(forward, scale)
+        }
+        controller.selectWorkspacePage(target)
+    }
+
+    /** #180: slides a snapshot of the current page toward the swipe direction. */
+    private fun animatePageSlide(forward: Boolean, scale: Float) {
+        val snapshot = workspace.capturePageBitmap()
+        val overlay = ImageView(this).apply {
+            setImageBitmap(snapshot)
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+        (findViewById<View>(R.id.home_content) as ViewGroup).addView(overlay)
+        overlay.post {
+            overlay.animate()
+                .translationX((if (forward) -1 else 1) * overlay.width.toFloat())
+                .setDuration((300 * scale).toLong())
+                .withEndAction { (overlay.parent as? ViewGroup)?.removeView(overlay) }
+                .start()
+        }
     }
 
     private fun showPagePicker(anchor: View) {

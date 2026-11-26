@@ -148,6 +148,8 @@ internal fun SettingsScreen(
     labelFont: LabelFont,
     onLabelFontChanged: (LabelFont) -> Unit,
     onSearchBarPlacementChanged: (HomeSearchBarPlacement) -> Unit,
+    pageTransition: PageTransition,
+    onPageTransitionChanged: (PageTransition) -> Unit,
     grid: GridCanvas?,
     onApplyGridResize: suspend (GridCanvas) -> GridResizeResult,
     pinNewApps: Boolean,
@@ -329,6 +331,10 @@ internal fun SettingsScreen(
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_search_bar) {
                                     SearchBarPlacementRow(searchBarPlacement, onSearchBarPlacementChanged)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_page_transition) {
+                                    PageTransitionRow(pageTransition, onPageTransitionChanged)
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_pin_new_apps) {
@@ -788,6 +794,40 @@ private fun SettingsSwitch(
             .vesnaFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
+}
+
+/** #180: the Home page transition effect choice (radio rows). */
+@Composable
+private fun PageTransitionRow(transition: PageTransition, onSelect: (PageTransition) -> Unit) {
+    Column {
+        Text(
+            text = stringResource(R.string.settings_page_transition),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(4.dp))
+        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val choices = listOf(
+                PageTransition.INSTANT to R.string.settings_page_transition_instant,
+                PageTransition.SLIDE to R.string.settings_page_transition_slide,
+            )
+            for ((choice, label) in choices) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .selectable(
+                            selected = transition == choice,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(choice) },
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = transition == choice, onClick = null)
+                    Text(stringResource(label), Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+    }
 }
 
 /** #173: the Home and dock label font choice (radio rows). */
