@@ -5302,3 +5302,13 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   icon + more button)"); no prior ticket. Decision request filed as **#228** (keep /
   gesture-only / first-run-hint middle ground).
 - Evidence: `EVI-VESNA-003/parity161-K7-final.png` (pills on the single-page workspace).
+
+### OBS-174 addendum — decision recorded: the pills go (full Nova parity)
+
+- The product owner recorded the decision on #228 (2026-11-26): full Nova parity —
+  the persistent Home options / Open app drawer pills are removed; the workspace goes
+  gesture-only (swipe-up drawer, long-press empty space for the Home options menu).
+  Implementation acceptance criteria posted on #228 (no pill nodes on any page state,
+  both gesture routes preserved, TalkBack path documented, counter/navigation
+  regressions watched). Implementation now on the dev queue; device verification of the
+  removal follows in a later cycle.
