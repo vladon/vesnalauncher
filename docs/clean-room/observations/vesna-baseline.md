@@ -5339,3 +5339,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   0.4.95, snapshot deletion of 0.4.92 after triage.
 - Evidence: `EVI-VESNA-003/parity162-A0-95.png` (saved as parity161-A0-95.png by the
   in-kernel PFX), `A0-view.png`.
+
+### OBS-175 addendum — triage corrections and the dock-label defect (#231)
+
+- CORRECTION to the entry above: the workspace/dock **grid** labels are NOT truncated on
+  v0.4.95 — the label zones are pixel-identical to v0.4.92 (1372 text px, same extents).
+  The "truncated labels" reading was an artifact of viewing downscaled screenshots.
+- The REAL defects, pixel-measured on the dock row:
+  1. **Dock labels truncate** («Ca…» / «Ch…» / «Cl…» ~110 px boxes vs full
+     «Calendar» / «Chrome» / «Clock» ~140 px on v0.4.92) — dock-label-specific; the
+     grid labels are unaffected. Persists with the search bar Off (Label size 100%,
+     Inter Medium defaults). Filed as **#231**.
+  2. **Pill/dock collision with the search bar shown** (placement Below the dock,
+     default): the Home options (⋯) pill repositions onto the Camera dock icon and the
+     drawer-grid pill onto Chrome. Search bar = **Off** clears the overlap — and per
+     the #228 full-copy directive (Nova has no bottom search bar) the Off state is the
+     parity state, so the search bar was set to Off permanently on this AVD.
+- The 15 px tile-height shrink and the ~75 px bottom-block rise vs v0.4.92 remain
+  visible with the bar Off — cosmetic deltas of the #226/#229 passes, recorded but not
+  defect-filed.
+- Snapshots: `baseline_research_0.4.95` re-saved over the triaged state (search bar
+  Off, restored layout), and `baseline_research_0.4.92` deleted.
+- Evidence: `parity161-A0-bottom.png` vs `parity161-K7-bottom.png` (full-resolution
+  dock-row crops), `R5-bottom.png` (post-Off state).
