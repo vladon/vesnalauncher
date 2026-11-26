@@ -5312,3 +5312,30 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   both gesture routes preserved, TalkBack path documented, counter/navigation
   regressions watched). Implementation now on the dev queue; device verification of the
   removal follows in a later cycle.
+
+## OBS-VESNA-175 — v0.4.93-95 upgrade pass; truncated labels + bottom search bar on 0.4.95 (triage pending)
+
+- Upgrade: signed v0.4.95 (100) installed (asset SHA-256 `a036c271…413`, release cert
+  `21a9fb9c…e1c58`), `baseline_research_0.4.95` saved (state includes the observations
+  below — triage pending), `baseline_research_0.4.92` NOT yet deleted pending triage.
+  Release content: v0.4.93 = unlock from the locked notice, session-scoped + auto-relock
+  (#177/#224); v0.4.94/95 = optional persistent search bar opening the drawer search
+  (#186/#226); v0.4.95 = label size and font for Home/dock labels (#173/#229). My open
+  defects (#199/#176/intermittent) were NOT addressed in 93-95.
+- **New divergence on 0.4.95 — truncated labels**: every workspace/dock label truncates
+  to 1-3 characters + ellipsis («C…», «Dr…», «Y…») where Nova renders full labels
+  (Contacts/Drive/Files…). Suspected link: the #229 label size/font defaults interacting
+  with the 4-column grid width. Screenshot `parity161-A0-95.png`.
+- **New surface — persistent bottom search bar** (#226): a `Search apps` field now
+  renders below the dock, full width. Nova has no such bottom bar (its drawer search is
+  inside the drawer). Full-copy question: keep (if considered Nova-like) or remove.
+- **Geometry shift**: tile heights shrank (~15 px), the grid ends higher, the dock row
+  and the Home options/drawer pills moved up into near-collision with dock icons
+  (`Home options` [403,1902] vs dock Clock [805,1893]); the grid pill visually overlaps
+  Chrome's dock icon in the screenshot.
+- Settings search gap RE-VERIFIED on 0.4.95: `notification` → No settings found.
+- Triage pending next cycle: truncated labels (defect vs label-size default), dock/pill
+  collision, search-bar keep-or-remove vs Nova, re-verify #176/#199/intermittent on
+  0.4.95, snapshot deletion of 0.4.92 after triage.
+- Evidence: `EVI-VESNA-003/parity162-A0-95.png` (saved as parity161-A0-95.png by the
+  in-kernel PFX), `A0-view.png`.
