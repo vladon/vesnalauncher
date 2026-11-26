@@ -302,7 +302,10 @@ class AppIconView @JvmOverloads constructor(
     }
 
     private fun applyLabelTypography() {
-        labelView.textSize = baseLabelTextSizePx * labelFontScalePercent / 100f
+        // #231: TextView.setTextSize(Float) interprets the value as SP while
+        // baseLabelTextSizePx is captured in PX — pass the px value with an
+        // explicit PX unit or the dock labels render at density-times size.
+        labelView.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseLabelTextSizePx * labelFontScalePercent / 100f)
         labelView.typeface = labelTypeface
     }
 
