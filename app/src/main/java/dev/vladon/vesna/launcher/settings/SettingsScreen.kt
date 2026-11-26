@@ -139,6 +139,8 @@ internal fun SettingsScreen(
     onShowAppNamesChanged: (Boolean) -> Unit,
     layoutLocked: Boolean,
     onLayoutLockedChanged: (Boolean) -> Unit,
+    autoRelock: Boolean,
+    onAutoRelockChanged: (Boolean) -> Unit,
     grid: GridCanvas?,
     onApplyGridResize: suspend (GridCanvas) -> GridResizeResult,
     pinNewApps: Boolean,
@@ -297,6 +299,13 @@ internal fun SettingsScreen(
                                     SettingsSwitch(
                                         R.string.settings_lock_layout, R.string.settings_lock_layout_detail,
                                         layoutLocked, onLayoutLockedChanged,
+                                    )
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                SearchTarget(searchTarget == R.string.settings_auto_relock) {
+                                    SettingsSwitch(
+                                        R.string.settings_auto_relock, R.string.settings_auto_relock_detail,
+                                        autoRelock, onAutoRelockChanged,
                                     )
                                 }
                                 Spacer(Modifier.height(8.dp))

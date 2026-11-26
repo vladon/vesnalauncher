@@ -15,6 +15,15 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean(PIN_NEW_APPS, false)
         set(value) = prefs.edit { putBoolean(PIN_NEW_APPS, value) }
 
+    /**
+     * #177: whether an unlocked session relocks after launching an app or
+     * turning the display off. On by default; the stored layout lock itself
+     * is never touched by the relock.
+     */
+    var autoRelock: Boolean
+        get() = prefs.getBoolean(WorkspacePreferences.AUTO_RELOCK, true)
+        set(value) = prefs.edit { putBoolean(WorkspacePreferences.AUTO_RELOCK, value) }
+
     var hideHomeAppNames: Boolean
         get() = prefs.getBoolean(HIDE_HOME_APP_NAMES, false)
         set(value) = prefs.edit { putBoolean(HIDE_HOME_APP_NAMES, value) }
@@ -46,5 +55,8 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         private const val HIDE_HOME_APP_NAMES = "workspace_hide_app_names"
         private const val ICON_SCALE_PERCENT = "workspace_icon_scale_percent"
         private const val HOME_ORIENTATION = "home_orientation"
+
+        /** #177: whether an unlocked session relocks after an app launch or the screen turning off. */
+        const val AUTO_RELOCK = "workspace_auto_relock"
     }
 }

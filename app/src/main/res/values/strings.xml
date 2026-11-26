@@ -12,6 +12,8 @@
     <string name="settings_home_screen_detail">Workspace layout</string>
     <string name="settings_lock_layout">Lock workspace layout</string>
     <string name="settings_lock_layout_detail">Prevent changes to shortcuts, folders, dock, and pages.</string>
+    <string name="settings_auto_relock">Automatically relock</string>
+    <string name="settings_auto_relock_detail">Lock the layout again after launching an app or turning the screen off.</string>
     <string name="settings_pin_new_apps">Add new apps to Home</string>
     <string name="settings_pin_new_apps_detail">When Vesna is running, add a shortcut for a newly installed app if the current page has space and the layout is unlocked.</string>
     <string name="settings_hide_home_app_names">Hide app names on Home</string>
@@ -78,6 +80,9 @@
         <item quantity="other">%1$d rows</item>
     </plurals>
     <string name="workspace_layout_locked">Workspace layout is locked</string>
+    <string name="workspace_unlock_action">Unlock</string>
+    <string name="workspace_session_unlocked">Workspace unlocked for this session</string>
+    <string name="workspace_relocked">Workspace layout locked again</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>
