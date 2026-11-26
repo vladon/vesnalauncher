@@ -114,7 +114,7 @@ class LauncherController(
 
     private data class PageSelection(val saved: Long, val dragPreview: DragPagePreview? = null)
 
-    private val pageSelection = MutableStateFlow(PageSelection(workspaceRepository.savedActivePageId()))
+    private val pageSelection = MutableStateFlow(PageSelection(workspaceRepository.mainPageId()))
 
     private val _messages = MutableSharedFlow<LauncherMessage>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val messages: SharedFlow<LauncherMessage> = _messages.asSharedFlow()
@@ -523,6 +523,24 @@ class LauncherController(
     }
 
     /** #176: after an item leaves a page, drop the page when the move emptied it. */
+    /** #184: makes the given page the main one (Home press/start/restart open it). */
+    fun makePageMain(pageId: Long) {
+        scope.launch { workspaceRepository.setMainPage(pageId) }
+    }
+
+    /** #184: the main page id, or the default when none was chosen. */
+    fun mainPageId(): Long = workspaceRepository.mainPageId()
+
+    /** #184: opens the main page (the Home press, a launcher start, a restart). */
+    suspend fun selectMainPage(): Boolean {
+        val main = workspaceRepository.mainPageId()
+        if (workspaceRepository.selectPage(main)) {
+            pageSelection.value = PageSelection(main)
+            return true
+        }
+        return false
+    }
+
     private suspend fun autoRemoveEmptiedPage(sourcePage: Long) {
         if (workspaceRepository.autoRemoveIfEmptied(sourcePage) && pageSelection.value.saved == sourcePage) {
             pageSelection.value = PageSelection(DEFAULT_WORKSPACE_PAGE_ID)
@@ -619,6 +637,10 @@ class LauncherController(
                     if (workspaceRepository.removeFromWorkspace(app, cell, pageId)) {
                         if (pageSelection.value.saved == pageId) {
                             pageSelection.value = PageSelection(DEFAULT_WORKSPACE_PAGE_ID)
+                        }
+                        if (mainPageId() == pageId) {
+                            // The removed page was the main one: fall back to the default.
+                            workspaceRepository.setMainPage(DEFAULT_WORKSPACE_PAGE_ID)
                         }
                         autoRemoveEmptiedPage(pageId)
                     }

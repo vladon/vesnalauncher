@@ -90,6 +90,8 @@
         <item quantity="other">%1$d строки</item>
     </plurals>
     <string name="workspace_layout_locked">Расположение заблокировано</string>
+    <string name="menu_make_main_page">Сделать главной страницей</string>
+    <string name="menu_make_main_page_done">Эта страница теперь главная</string>
     <string name="workspace_unlock_action">Разблокировать</string>
     <string name="workspace_session_unlocked">Расположение разблокировано до конца сессии</string>
     <string name="workspace_relocked">Расположение снова заблокировано</string>
