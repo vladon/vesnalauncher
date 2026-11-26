@@ -5244,3 +5244,46 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   is slow": Nova reads as instant because its rendered desktop is part of the snapshot
   itself. PackageManager/IconCache/LauncherApps handshakes re-run against a restored
   system on this path, so the discovery-first state emission pays full price.
+
+## OBS-VESNA-173 — v0.4.92 upgrade + the #176 empty-page auto-removal FAILS on edge-drag moves
+
+- Upgrade: signed v0.4.92 (97) release asset installed over the snapshot-restored VM
+  (SHA-256 `fd430bf9…4e3d966`, release cert `21a9fb9c…e1c58`), `baseline_research_0.4.92`
+  saved, prove-loaded (gate iter 1: versionName 0.4.92, HomeActivity focused, HOME=Nova),
+  `baseline_research_0.4.91` deleted. Workspace baseline before tests: one Home page,
+  19 pins (incl. YT Music at [31,1603] and Voice Search at [549,1244]), dock 4.
+- **The #176 acceptance criterion FAILS on device**: moving the last pin off a secondary
+  Home page by an edge-drag does NOT remove the emptied page.
+  - Case 1 (YT Music): drag to the right edge created page 2 with the single pin
+    (`Home page 2 of 2`); dragging it back to page 1 through the left edge landed the pin
+    in its origin cell but left page 2 in place — the counter stayed `Home page 1 of 2`,
+    the `Next home page` arrow rendered real content, a swipe reached the still-empty
+    page, and the empty page **survived a launcher force-stop + restart** (it even came
+    back as the active page).
+  - Case 2 (Voice Search, clean re-test in the same session): same two-move sequence —
+    the emptied page 2 again persisted.
+  - Manual `Remove empty page` (Home options on the emptied page) still works and was
+    used for cleanup — that keeper of the acceptance is intact.
+- PR #223's stated triggers include "pin page moves", and `PageAutoRemovalTest` 5/5
+  passed on the candidate — so the drag-commit path exercised by real edge-drag moves
+  appears not to reach the auto-removal trigger the instrumentation covers. Suggest
+  checking the cross-page drag commit route (the existing-neighbor edge route, #163)
+  against the trigger wiring.
+- Recovery notes (test-harness damage, all repaired and visually verified):
+  the restore drop of YT Music landed on a folder pin that had appeared in YT's origin
+  cell during the moves (folder join, #156 semantics), and a second restore mistake
+  removed the Voice Search pin from the workspace instead of moving it. Final state:
+  re-added Voice Search from the drawer (Add to workspace → placed at [549,1244]),
+  extracted YT Music from the folder (Remove from folder → placed at [31,1603] after
+  the emptied folder auto-removed), deleted the extra Voice Search copy
+  (Remove from workspace), removed the empty page 2 manually. Layout asserted EXACT
+  against the saved baseline (JSON diff clean; remaining "diff" entries were the dock
+  leaking into the compare set and the TMoble↔SIM Toolkit label mapping).
+- uiautomator dumps were unreliable throughout this pass (stale layers kept reporting
+  both `Folder` and `YT Music` at the same cell, and missed rows entirely); every
+  conclusion above is pixel- or screenshot-verified (`parity161-*` crops and full
+  screenshots).
+- Nova cross-check: Nova's desktop is byte-identical before/after the cycle
+  (settle-00 vs post-pass diff 0.02) — untouched, its emptied-page auto-removal
+  behavior was already documented in #176's comparison.
+- Evidence: `EVI-VESNA-003/parity161-*`.
