@@ -14,6 +14,12 @@
     <string name="settings_lock_layout_detail">Prevent changes to shortcuts, folders, dock, and pages.</string>
     <string name="settings_auto_relock">Automatically relock</string>
     <string name="settings_auto_relock_detail">Lock the layout again after launching an app or turning the screen off.</string>
+    <string name="settings_label_font_size">Label size</string>
+    <string name="settings_label_font_size_detail">The text size of the app labels on Home and in the dock. Icons and cells are unaffected.</string>
+    <string name="settings_label_font">Label font</string>
+    <string name="settings_label_font_inter_medium">Inter Medium (default)</string>
+    <string name="settings_label_font_inter_regular">Inter Regular</string>
+    <string name="settings_label_font_nunito">Nunito</string>
     <string name="settings_pin_new_apps">Add new apps to Home</string>
     <string name="settings_pin_new_apps_detail">When Vesna is running, add a shortcut for a newly installed app if the current page has space and the layout is unlocked.</string>
     <string name="settings_hide_home_app_names">Hide app names on Home</string>

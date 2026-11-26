@@ -13,6 +13,7 @@ import android.view.ViewConfiguration
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.notifications.NotificationBadges
+import dev.vladon.vesna.launcher.settings.LabelFont
 import dev.vladon.vesna.launcher.workspace.CellContent
 import dev.vladon.vesna.launcher.workspace.Folder
 import dev.vladon.vesna.launcher.workspace.GridCanvas
@@ -48,6 +49,8 @@ class WorkspaceView @JvmOverloads constructor(
     /** A workspace cell was tapped: an app (launch) or a folder (open). */
     var onCellClick: ((CellContent) -> Unit)? = null
     var isLayoutLocked: () -> Boolean = { false }
+    var labelFontScalePercent: Int = 100
+    var labelFont: LabelFont = LabelFont.INTER_MEDIUM
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
     var onSwipePage: ((forward: Boolean) -> Unit)? = null
@@ -456,6 +459,7 @@ class WorkspaceView @JvmOverloads constructor(
             when (content) {
                 is CellContent.App -> {
                     view.bind(content.app)
+                    view.setLabelTypography(labelFontScalePercent, labelFont)
                     view.setAppNameVisible(showAppNames)
                     view.setOnClickListener { onAppClick?.invoke(content.app) }
                     view.bindOptions(
@@ -478,6 +482,15 @@ class WorkspaceView @JvmOverloads constructor(
                     )
                 }
             }
+        }
+    }
+
+    /** Rebinds label typography on the existing workspace tiles (#173). */
+    internal fun refreshLabelTypography(percent: Int, font: LabelFont) {
+        labelFontScalePercent = percent
+        labelFont = font
+        for (i in 0 until childCount) {
+            (getChildAt(i) as? AppIconView)?.setLabelTypography(percent, font)
         }
     }
 

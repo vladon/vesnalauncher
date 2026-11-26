@@ -25,6 +25,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
+import dev.vladon.vesna.launcher.settings.LabelFont
 import dev.vladon.vesna.launcher.workspace.GridCanvas
 import dev.vladon.vesna.launcher.workspace.LayoutRestoreAttempt
 import dev.vladon.vesna.launcher.workspace.GridResizeResult
@@ -79,6 +80,10 @@ class SettingsSearchLayoutTest {
                                 onAutoRelockChanged = {},
     searchBarPlacement = HomeSearchBarPlacement.BELOW_DOCK,
     onSearchBarPlacementChanged = {},
+    labelFontScalePercent = 100,
+    onLabelFontScaleChanged = {},
+    labelFont = LabelFont.INTER_MEDIUM,
+    onLabelFontChanged = {},
                                 grid = GridCanvas.DEFAULT,
                                 onApplyGridResize = { GridResizeResult.APPLIED },
                                 pinNewApps = false,
@@ -585,6 +590,10 @@ class SettingsSearchLayoutTest {
                                         onAutoRelockChanged = {},
     searchBarPlacement = HomeSearchBarPlacement.BELOW_DOCK,
     onSearchBarPlacementChanged = {},
+    labelFontScalePercent = 100,
+    onLabelFontScaleChanged = {},
+    labelFont = LabelFont.INTER_MEDIUM,
+    onLabelFontChanged = {},
                                         grid = GridCanvas.DEFAULT,
                                         onApplyGridResize = { GridResizeResult.APPLIED },
                                         pinNewApps = false,
@@ -730,6 +739,10 @@ class SettingsSearchLayoutTest {
                             onAutoRelockChanged = {},
     searchBarPlacement = HomeSearchBarPlacement.BELOW_DOCK,
     onSearchBarPlacementChanged = {},
+    labelFontScalePercent = 100,
+    onLabelFontScaleChanged = {},
+    labelFont = LabelFont.INTER_MEDIUM,
+    onLabelFontChanged = {},
                             grid = grid.value,
                             onApplyGridResize = resize,
                             pinNewApps = false,

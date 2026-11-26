@@ -38,6 +38,8 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 import dev.vladon.vesna.launcher.data.LayoutSnapshotV1
 import dev.vladon.vesna.launcher.data.LayoutSnapshotException
 import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
+import dev.vladon.vesna.launcher.settings.LabelFont
+import dev.vladon.vesna.launcher.settings.LabelFontScale
 import dev.vladon.vesna.launcher.platform.IconPackInfo
 import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import dev.vladon.vesna.launcher.platform.IconPackResolver
@@ -69,6 +71,8 @@ class SettingsActivity : ComponentActivity() {
     private var layoutLocked by mutableStateOf(false)
     private var autoRelock by mutableStateOf(true)
     private var searchBarPlacement by mutableStateOf(HomeSearchBarPlacement.BELOW_DOCK)
+    private var labelFontScalePercent by mutableStateOf(LabelFontScale.DEFAULT)
+    private var labelFont by mutableStateOf(LabelFont.INTER_MEDIUM)
     /** Null until the persisted grid arrives; the row must not flash the default. */
     private var grid by mutableStateOf<GridCanvas?>(null)
     private var pinNewApps by mutableStateOf(false)
@@ -170,6 +174,16 @@ class SettingsActivity : ComponentActivity() {
                         onSearchBarPlacementChanged = { placement ->
                             workspace.searchBarPlacement = placement
                             searchBarPlacement = placement
+                        },
+                        labelFontScalePercent = labelFontScalePercent,
+                        onLabelFontScaleChanged = { percent ->
+                            workspace.labelFontScalePercent = percent
+                            labelFontScalePercent = percent
+                        },
+                        labelFont = labelFont,
+                        onLabelFontChanged = { font ->
+                            workspace.labelFont = font
+                            labelFont = font
                         },
                         grid = grid,
                         onApplyGridResize = { target -> workspaceRepository.resizeGrid(target) },
@@ -314,6 +328,8 @@ class SettingsActivity : ComponentActivity() {
         layoutLocked = workspace.layoutLocked
         autoRelock = workspace.autoRelock
         searchBarPlacement = workspace.searchBarPlacement
+        labelFontScalePercent = workspace.labelFontScalePercent
+        labelFont = workspace.labelFont
         pinNewApps = workspace.pinNewApps
         hideHomeAppNames = workspace.hideHomeAppNames
         showDock = dockPreferences.visible
