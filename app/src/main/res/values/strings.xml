@@ -86,6 +86,8 @@
         <item quantity="other">%1$d rows</item>
     </plurals>
     <string name="workspace_layout_locked">Workspace layout is locked</string>
+    <string name="menu_make_main_page">Make this the main page</string>
+    <string name="menu_make_main_page_done">This page is now the main one</string>
     <string name="workspace_unlock_action">Unlock</string>
     <string name="workspace_session_unlocked">Workspace unlocked for this session</string>
     <string name="workspace_relocked">Workspace layout locked again</string>

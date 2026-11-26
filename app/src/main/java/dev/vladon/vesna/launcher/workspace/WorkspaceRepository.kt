@@ -276,6 +276,16 @@ class WorkspaceRepository(
     /** The page selected in the last session; the default page until one is stored. */
     fun savedActivePageId(): Long = prefs.getLong(KEY_ACTIVE_PAGE, DEFAULT_WORKSPACE_PAGE_ID)
 
+    /** #184: the page the Home press, a launcher start and a restart open. */
+    fun mainPageId(): Long = prefs.getLong(KEY_MAIN_PAGE, DEFAULT_WORKSPACE_PAGE_ID)
+
+    /** #184: makes [pageId] the main page; false when the page does not exist. */
+    suspend fun setMainPage(pageId: Long): Boolean = mutationMutex.withLock {
+        if (db.workspacePageDao().getById(pageId) == null) return@withLock false
+        prefs.edit { putLong(KEY_MAIN_PAGE, pageId) }
+        true
+    }
+
     /**
      * Persists [pageId] as the selected page under its own preference key and
      * returns false when the page does not exist.
@@ -1398,6 +1408,9 @@ class WorkspaceRepository(
     private companion object {
         const val KEY_SEEDED = "workspace_seeded"
         const val KEY_ACTIVE_PAGE = "workspace_active_page"
+
+        /** #184: the page the Home press, a launcher start and a restart open. */
+        const val KEY_MAIN_PAGE = "workspace_main_page"
 
         /** Package:serial pairs whose restored pins survive [pruneUninstalled] until the package arrives. */
         const val KEY_RESTORED_PENDING = "restored_pending_packages"

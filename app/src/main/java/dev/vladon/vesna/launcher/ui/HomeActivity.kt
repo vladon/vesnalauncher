@@ -322,6 +322,11 @@ class HomeActivity : ComponentActivity() {
         val graph = VesnaApplication.graph(this)
         val controller = graph.controller
 
+        // #184: the Home press, a launcher start and a restart open the main page.
+        lifecycleScope.launch {
+            controller.selectMainPage()
+        }
+
         workspace.labelFontScalePercent = labelFontScalePercent
         workspace.labelFont = labelFont
         dock.labelFontScalePercent = labelFontScalePercent
@@ -1948,6 +1953,13 @@ class HomeActivity : ComponentActivity() {
         val page = renderedState
         if (page.pageIds.size > 1) {
             popup.add(R.string.workspace_choose_page) { schedulePageMenu { showPagePicker(homeOptionsButton) } }
+        }
+        val mainPage = controller.mainPageId()
+        if (page.activePageId != mainPage) {
+            popup.add(R.string.menu_make_main_page) {
+                controller.makePageMain(page.activePageId)
+                showSnackbar(R.string.menu_make_main_page_done, null)
+            }
         }
         if (!layoutLocked) {
             if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
