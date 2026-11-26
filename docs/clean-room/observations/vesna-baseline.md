@@ -5287,3 +5287,18 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   (settle-00 vs post-pass diff 0.02) — untouched, its emptied-page auto-removal
   behavior was already documented in #176's comparison.
 - Evidence: `EVI-VESNA-003/parity161-*`.
+
+## OBS-VESNA-174 — the persistent bottom pills are Vesna-only; decision request filed (#228)
+
+- The workspace always renders two bottom pills: `⋯` = Home options (wallpaper, Add home
+  page, Go to page…, Remove empty page, Vesna settings, Default launcher) and the 3×3
+  grid = Open app drawer. They never hide (a11y descs `Home options` / `Open app
+  drawer`), on every page. Nova 9.0.1 has no persistent buttons: drawer = swipe up,
+  settings menu = long-press on empty space.
+- The pills are additive: the drawer also opens via the upward swipe, and long-press on
+  empty space opens the same Home options menu (`HomeActivity.onEmptyAreaLongClick`) —
+  removing them would remove visible entry points, not capabilities.
+- First documented in the OBS-VESNA-001-era baseline description ("search pill (grid
+  icon + more button)"); no prior ticket. Decision request filed as **#228** (keep /
+  gesture-only / first-run-hint middle ground).
+- Evidence: `EVI-VESNA-003/parity161-K7-final.png` (pills on the single-page workspace).
