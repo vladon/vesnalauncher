@@ -27,6 +27,16 @@ the whole set.
 | Dot clears | Stopping the timer removes the notification: the same tiles re-render without the dot (pixel scan: zero matching pixels, `badge-dot-cleared.png`). |
 | Presence-only | One dot per package by name; both the personal and the work-profile copy of an app light up when the personal side has a notification (name-based matching; per-profile dots need a per-profile grant — see Limitations). |
 
+## Session unlock acceptance (#177, v0.4.93, API 35 AVD, RU locale)
+
+| Trigger | Result |
+| --- | --- |
+| The locked notice with the Unlock action | The empty-area long-press shows «Расположение заблокировано» with «Разблокировать» (`locked-snackbar-0493.png`); tapping the action unlocks editing for the session. |
+| Unlocked editing | The next empty-area long-press opens the launcher menu (`unlocked-menu-0493.png`) instead of the locked notice. |
+| App-launch relock | Launching Chrome from the dock relocks the session: the next long-press shows the locked notice again. |
+| Screen-off relock | With the session unlocked and no app launched, POWER off → POWER on → the empty-area long-press shows the locked notice again (isolated screen-off trigger; `screenoff-relock-final-0493.png`). |
+| The stored setting | The layout-lock preference stays on through both relock paths; only the in-memory session flag resets. |
+
 ## Process notes
 
 - After `adb install -r` of an update the already-connected listener kept
