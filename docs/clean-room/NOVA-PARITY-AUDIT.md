@@ -22,7 +22,7 @@ ticket set (#195/#197/#199/#200/#203/#228). Items are classified:
 | 3 | Work-tab slice rendering | Stable per-tab slices | Intermittent broken render: Work pill selected, merged pairs rendered below, no Turn-off row (captured once, unreproduced in 3 replays) | OBS-170 addendum; #197 follow-up |
 | 4 | First-launch speed | Desktop loads inside the boot sequence; sub-second to a settled desktop | Post-reboot TotalTime 809/1071 ms, settle ~2.5-3 s; snapshot-restore first load 2288 ms / settle ~7.8 s. Root cause: `AppDiscovery.getBadgedIcon` × ~190 gates the first state emission; no persisted catalogue/icon cache | OBS-172; #195 |
 | 5 | Persistent bottom pills | None (gesture-only desktop) | `Home options` (⋯) + `Open app drawer` (grid) always render | OBS-174; #228 — decision recorded: remove |
-| 6 | Settings search coverage | Settings rows findable by search | The dots rows (`Show notification dots`, `Notification access`) return *No settings found* for `notification`/`dot` | OBS-171; #200 comment |
+| 6 | Settings search coverage | Settings rows findable by search | The dots rows (`Show notification dots`, `Notification access`) return *No settings found* for `notification`/`dot` — **re-verified on v0.4.92 (97): persists** | OBS-171; #200 comment |
 
 ## 2. Feature/config gaps (Nova has the surface, Vesna lacks or partially)
 
@@ -34,14 +34,14 @@ ticket set (#195/#197/#199/#200/#203/#228). Items are classified:
 | 10 | Per-surface appearance | Per-surface text tones with minimum-contrast slider; Settings/drawer recolor independently | Not started | [D] APPPEAR-004/006/012 |
 | 11 | Page behavior extras | Infinite page looping, page-indicator style options, page-change animations + nine transition effects, wallpaper scroll On/Off/Reverse | None of these | [D] HOME-001..015 (#174 adjacent) |
 | 12 | Gesture configuration | Gesture settings surface with configurable actions (swipe/pinch/double-tap bindings), outward swipe on first page | Fixed gestures only (swipe-up = drawer); no config surface | [D] GESTURE-001..006/112 |
-| 13 | Drawer native context actions | Clock's native actions open from drawer search/menus | Only on Home tiles, not in drawer menus | [D] DRAWER-010 |
+| 13 | Drawer native context actions | Clock's native actions open from drawer search/menus | Only on Home tiles; **re-verified on v0.4.92: drawer long-press menu = Add to dock / Add to workspace / App info only** | [V] DRAWER-010 |
 | 14 | Fresh-app suggestion row | Recently launched apps enter the drawer suggestion row | Alphabetical grid, no suggestion row | [D] DRAWER-100 (OBS-050) |
 | 15 | Hidden-app prefix search | Hidden app reachable via prefix search | Not exposed on prefix search | [D] DRAWER-008 (#119) |
 | 16 | Offline place handoff | Offline place query hands off to Maps with an offline notice | Local no-match for place queries | [D] DRAWER-005 |
 | 17 | Vertical list position on search clear | Retains position | Resets to top | [D] DRAWER-003 (#108 — verify on current release) |
 | 18 | Dock landscape paging | Dock pages vertically in landscape | Keeps a single bottom row | [D] DOCK (OBS-040/047) |
 | 19 | Dock overlap | Creates a dock folder on overlap | Swaps pins | [D] DOCK (OBS-041) |
-| 20 | Label edit + Back | Back keeps the Home label edit | Discards it | [D] HOME-102 (OBS-042/053) |
+| 20 | Label edit + Back | Back keeps the Home label edit | Discards it | [D] HOME-102 (OBS-042/053; informal probe on v0.4.92 inconclusive — dump-layer unreliability, controlled rerun pending) |
 | 21 | Lock sheet affordances | Padlock-to-unlock + automatic relock switch in the sheet | Message without action | [D] HOME-013/107 |
 | 22 | Widget picker | Widget catalog with provider filter, sizes, empty-state return | No picker entry found (v0.4.60/61 era; #149) | [D] WIDGET-001..008 |
 | 23 | Nova Now cards ecosystem | Day/time/weather/Bluetooth/map cards, custom card builder, overlay affordances (deep links, gears, overflow) | Partial (CARDS-100/103/104/105 present; custom builder + overlays + calendar connect not started) | [D] CARDS-101/102/103 |
