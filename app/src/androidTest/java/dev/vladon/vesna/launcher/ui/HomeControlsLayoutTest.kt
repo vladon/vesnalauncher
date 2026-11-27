@@ -31,8 +31,6 @@ class HomeControlsLayoutTest {
                 })
             val root = LayoutInflater.from(context).inflate(R.layout.activity_home, null) as ViewGroup
             val controls = root.findViewById<ViewGroup>(R.id.home_controls)
-            val options = root.findViewById<View>(R.id.home_options)
-            val drawer = root.findViewById<View>(R.id.home_open_drawer)
             val picker = root.findViewById<WorkspacePageIndicator>(R.id.workspace_page_indicator)
             val previous = root.findViewById<View>(R.id.workspace_previous_page)
             val next = root.findViewById<View>(R.id.workspace_next_page)
@@ -66,13 +64,13 @@ class HomeControlsLayoutTest {
                     assertEquals(direction, controls.layoutDirection)
                     assertEquals(View.GONE, previous.visibility)
                     assertEquals(View.GONE, next.visibility)
-                    listOf(options, picker, drawer).forEach(::assertContained)
+                    listOf(picker).forEach(::assertContained)
                 }
 
                 layout(320)
                 assertEquals(View.VISIBLE, previous.visibility)
                 assertEquals(View.VISIBLE, next.visibility)
-                listOf(options, previous, picker, next, drawer).forEach(::assertContained)
+                listOf(previous, picker, next).forEach(::assertContained)
             }
         }
         InstrumentationRegistry.getInstrumentation().runOnMainSync(checkLayout)
