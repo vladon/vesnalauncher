@@ -565,7 +565,6 @@ class HomeActivity : ComponentActivity() {
      */
     /** Wires the drawer's Work tab (#197): the managed profile's serial and pause toggle. */
     private fun applyWorkTabState() {
-        drawer.workTabEnabled = drawerPreferences.workTabEnabled
         val profile = userManager.userProfiles.firstOrNull { it != Process.myUserHandle() }
         drawer.workProfileUserSerial = profile?.let { userManager.getSerialNumberForUser(it) }
         // The quiet-mode APIs need API 28; on older devices the Work tab ships
