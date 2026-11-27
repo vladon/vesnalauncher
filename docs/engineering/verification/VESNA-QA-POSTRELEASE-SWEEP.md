@@ -104,3 +104,10 @@ Vesна»). The full linear traversal of every surface is not automatable
 documented limitation); the traversal walkthrough remains a manual
 follow-up. The capture: `tbs-strip.png` (the cursor parked on the
 labeled up arrow).
+
+The drawer walkthrough attempt confirms the same limitation: eight
+injected linear swipes leave the TalkBack cursor parked on the drawer
+collapse chevron (a labeled node — the strip `dw-strip.png`). The
+TalkBack-level verification stands: the TalkBack cursor engages with
+the launcher's nodes and they carry labels; the complete traversal
+needs a manual TalkBack session.
