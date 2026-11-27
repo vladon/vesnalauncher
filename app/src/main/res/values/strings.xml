@@ -275,4 +275,7 @@
     <string name="widget_removed_undo">Undo</string>
     <string name="widget_picker_close">Close</string>
     <string name="widget_picker_search_hint">Search widgets</string>
+    <string name="widget_move">Move</string>
+    <string name="widget_move_pick_cell">Tap a free cell to place the widget</string>
+    <string name="widget_move_no_room">No room for the widget here</string>
 </resources>
