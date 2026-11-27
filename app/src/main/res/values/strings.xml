@@ -105,6 +105,16 @@
     <string name="settings_page_indicator_line">Line</string>
     <string name="settings_wallpaper_scroll">Wallpaper scrolling</string>
     <string name="settings_wallpaper_scroll_detail">The wallpaper shifts with the pages: the first page shows its left edge, the last one its right edge.</string>
+    <string name="settings_gestures">Gestures &amp; input</string>
+    <string name="settings_gestures_detail">Assign actions to Home screen gestures.</string>
+    <string name="settings_gesture_double_tap">Double-tap on empty space</string>
+    <string name="settings_gesture_two_finger_up">Two-finger swipe up</string>
+    <string name="settings_gesture_pinch_in">Pinch in</string>
+    <string name="settings_gesture_pinch_out">Pinch out</string>
+    <string name="settings_gesture_action_none">Unassigned</string>
+    <string name="settings_gesture_action_drawer">Open the app drawer</string>
+    <string name="settings_gesture_action_search">Open search</string>
+    <string name="settings_gesture_action_settings">Open Settings</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>

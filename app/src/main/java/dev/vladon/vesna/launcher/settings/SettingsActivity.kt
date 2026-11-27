@@ -76,6 +76,7 @@ class SettingsActivity : ComponentActivity() {
     private var pageLoop by mutableStateOf(false)
     private var pageIndicator by mutableStateOf(PageIndicator.COUNTER)
     private var wallpaperScroll by mutableStateOf(true)
+    private var gestureBindings by mutableStateOf(emptyMap<GestureId, GestureAction>())
     private var labelFontScalePercent by mutableStateOf(LabelFontScale.DEFAULT)
     private var labelFont by mutableStateOf(LabelFont.INTER_MEDIUM)
     /** Null until the persisted grid arrives; the row must not flash the default. */
@@ -193,6 +194,11 @@ class SettingsActivity : ComponentActivity() {
                         onPageIndicatorChanged = { style ->
                             workspace.pageIndicator = style
                             pageIndicator = style
+                        },
+                        gestureBindings = gestureBindings,
+                        onGestureBindingChanged = { gesture, action ->
+                            workspace.setGestureBinding(gesture, action)
+                            gestureBindings = gestureBindings + (gesture to action)
                         },
                         wallpaperScroll = wallpaperScroll,
                         onWallpaperScrollChanged = { scroll ->
@@ -351,6 +357,7 @@ class SettingsActivity : ComponentActivity() {
         pageLoop = workspace.pageLoop
         pageIndicator = workspace.pageIndicator
         wallpaperScroll = workspace.wallpaperScroll
+        gestureBindings = GestureId.ALL.associateWith { workspace.gestureBinding(it) }
         labelFontScalePercent = workspace.labelFontScalePercent
         labelFont = workspace.labelFont
         pinNewApps = workspace.pinNewApps

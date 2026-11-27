@@ -51,6 +51,14 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean(WALLPAPER_SCROLL, true)
         set(value) = prefs.edit { putBoolean(WALLPAPER_SCROLL, value) }
 
+    /** #183: the action bound to a Home gesture (None unless the user assigns one). */
+    fun gestureBinding(gesture: GestureId): GestureAction =
+        GestureAction.fromPreference(prefs.getString(gesture.preferenceKey, null))
+
+    fun setGestureBinding(gesture: GestureId, action: GestureAction) {
+        prefs.edit { putString(gesture.preferenceKey, action.preferenceValue) }
+    }
+
     /**
      * #173: Home and dock label size, as a percent of the default text.
      */

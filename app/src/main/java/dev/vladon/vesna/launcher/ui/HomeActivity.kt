@@ -76,6 +76,8 @@ import dev.vladon.vesna.launcher.settings.AppearancePreferences
 import dev.vladon.vesna.launcher.settings.DockPreferences
 import dev.vladon.vesna.launcher.settings.DrawerPreferences
 import dev.vladon.vesna.launcher.settings.HomeOrientation
+import dev.vladon.vesna.launcher.settings.GestureAction
+import dev.vladon.vesna.launcher.settings.GestureId
 import dev.vladon.vesna.launcher.settings.HomeSearchBarPlacement
 import dev.vladon.vesna.launcher.settings.LabelFont
 import dev.vladon.vesna.launcher.settings.LabelFontScale
@@ -364,6 +366,7 @@ class HomeActivity : ComponentActivity() {
         }
         workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
+        workspace.onGesture = ::handleGesture
         workspace.onPageDrag = ::onPageDragProgress
         workspace.onPageDragEnd = ::onPageDragEnded
         workspace.onDragStarted = { cell, app, _ ->
@@ -754,6 +757,20 @@ class HomeActivity : ComponentActivity() {
     private fun openDrawerWithSearch() {
         if (dragSource == null && !workspace.isDragging && edgePageDrag == null && !renderedState.isDragPagePreview) {
             drawer.open(showKeyboard = true)
+        }
+    }
+
+    /** #183: runs the action bound to a recognised Home gesture. */
+    private fun handleGesture(gesture: GestureId) {
+        // The gestures never fire over an open dialog, popup, folder or drag session.
+        if (dragSource != null || workspace.isDragging || edgePageDrag != null ||
+            folderDialog != null || activePopup != null || backCallback.isEnabled
+        ) return
+        when (workspacePreferences.gestureBinding(gesture)) {
+            GestureAction.OPEN_DRAWER -> drawer.open()
+            GestureAction.OPEN_SEARCH -> openDrawerWithSearch()
+            GestureAction.OPEN_SETTINGS -> startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
+            GestureAction.EXPAND_NOTIFICATIONS, GestureAction.NONE -> {}
         }
     }
 
