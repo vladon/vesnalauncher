@@ -101,6 +101,38 @@ The Android package name is `dev.vladon.vesna.launcher`.
   put its shortcuts back on that page, or **Remove folder and shortcuts** to
   unpin them without uninstalling any apps. Use **Undo** while it's offered
   to bring the folder back to its original cell.
+- **Notification badges.** A dot on app icons marks packages with active
+  notifications (the per-profile dots need the notification access granted
+  inside that profile). Turn **Notification badges** off in Vesna settings;
+  the toggle deep-links to the system notification-access grant.
+- **Work tab.** On devices with a managed profile the app drawer shows an
+  **Apps | Work** tab bar: the Work tab lists only managed-profile apps
+  alphabetically with badges, the Apps tab excludes them, and the pause
+  affordance rides the tab.
+- **Label typography.** A slider (80–130%) and a font choice (Inter Medium,
+  Inter Regular, Nunito) for Home and dock labels; the drawer keeps its own
+  appearance, and icons, cells and touch targets are unaffected.
+- **Main page.** Use **Make this the main page** in Home options to choose
+  which page opens on a launcher start or restart. Go to page… and
+  Reorder… keep working.
+- **Page looping and indicator.** Turn on **Loop pages** to wrap outward
+  swipes across the first and last pages (supersedes the drawer edge on the
+  first page while it is on). Pick the page indicator style: the counter,
+  dots, or a line.
+- **Wallpaper scrolling.** The wallpaper shifts with the pages so the first
+  page shows its left edge and the last its right edge; turn it off to keep
+  the wallpaper centered on every page.
+- **Home gestures.** Assign actions to the double-tap, the two-finger swipe
+  up, the pinch in and out (the drawer, search, Settings, or none) in
+  Settings › Gestures & input. A swipe down on an empty cell expands the
+  notification shade by default; every gesture is reassignable and never
+  fires mid-drag or over an open dialog.
+- **Search bar on Home.** An optional persistent bar opens the drawer's
+  app search with the keyboard focused; place it below or above the dock,
+  or turn it off.
+- **Session unlock.** When the Home layout is locked, the notice offers an
+  **Unlock** action for the current session; **Automatically relock**
+  (on by default) relocks after launching an app or turning the screen off.
 - **Work profiles.** Launch work apps from badged icons. Removing a work copy
   leaves its personal counterpart's pins in place.
 - **Appearance and accessibility.** Choose System, Light, or Dark, pick the
@@ -113,6 +145,105 @@ The Android package name is `dev.vladon.vesna.launcher`.
 
 <details>
 <summary>Feature history</summary>
+
+### 0.4.107
+
+- The up-navigation arrow on every Settings subpage is now announced to
+  TalkBack («Назад к настройкам Vesna») instead of reading as an unlabeled
+  button.
+
+### 0.4.106
+
+- «Не назначено» (None) on a Home gesture now stays assigned: the default
+  notification expansion applies only until you explicitly turn the
+  gesture off.
+
+### 0.4.105
+
+- A swipe down on an empty Home cell expands the notification shade by
+  default. The gesture is reassignable in Settings › Gestures & input
+  (None, expand notifications, the drawer, search, Settings).
+
+### 0.4.104
+
+- New **Gestures & input** settings page: bind the double-tap, the
+  two-finger swipe up, the pinch in and out to opening the drawer, search,
+  Settings, or nothing. Each gesture starts unassigned and never fires
+  mid-drag or over an open dialog.
+
+### 0.4.103
+
+- The wallpaper now scrolls with the pages: the first page shows its left
+  edge and the last its right edge. Turn **Прокрутка обоев** off to keep
+  the wallpaper centered on every page.
+
+### 0.4.102
+
+- **Loop pages** wraps outward swipes across the first and last pages.
+  The page indicator offers the counter, dots, or a line.
+
+### 0.4.101
+
+- Work-tab and badge refinements on managed-profile devices.
+
+### 0.4.100
+
+- The drawer's **Apps | Work** tab bar shows whenever a managed profile
+  exists (no separate switch; the Work tab lists managed-profile apps with
+  badges).
+
+### 0.4.99
+
+- Dock labels keep their correct size and no longer collide with the Home
+  pills while the search bar is shown.
+
+### 0.4.98
+
+- (Released without notes; see the GitHub release.)
+
+### 0.4.97
+
+- On the first Home page a horizontal outward swipe opens the app drawer.
+  With page looping on, outward swipes wrap pages instead.
+
+### 0.4.96
+
+- **Make this the main page** in Home options chooses which page opens on
+  a launcher start or restart.
+
+### 0.4.95
+
+- **Размер подписей** (80–130%) and a font choice for Home and dock labels.
+
+### 0.4.94
+
+- The persistent search bar on Home (below or above the dock, or off)
+  opens the drawer's app search with the keyboard focused.
+
+### 0.4.93
+
+- The locked-workspace notice gains **Unlock** for the current session,
+  with an automatic relock after launching an app or turning the screen
+  off.
+
+### 0.4.92
+
+- A page left with no pins and no folders is removed automatically (the
+  default page and the only remaining page stay).
+
+### 0.4.91
+
+- Dropping a closed folder onto an occupied cell displaces the single app
+  to the nearest free cell.
+
+### 0.4.90
+
+- (Released without notes; see the GitHub release.)
+
+### 0.4.89
+
+- Notification dots on app icons, with a settings toggle and a
+  notification-access deep link.
 
 ### 0.4.45
 
