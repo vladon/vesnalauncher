@@ -1,6 +1,8 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.accessibilityservice.AccessibilityService
 import android.app.WallpaperManager
+import dev.vladon.vesna.launcher.accessibility.GestureAccessibilityService
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -786,8 +788,11 @@ class HomeActivity : ComponentActivity() {
             val statusBar = getSystemService("statusbar") ?: return
             statusBar.javaClass.getMethod("expandNotificationsPanel").invoke(statusBar)
         } catch (e: Exception) {
-            // The shade expansion is best-effort; an unavailable service or a
-            // restricted reflection leaves the launcher untouched.
+            // The reflection failed (a tightened platform): fall back to the
+            // gesture-only accessibility service if the user enabled it.
+            GestureAccessibilityService.instance?.performGlobalAction(
+                1, // AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS.
+            )
         }
     }
 

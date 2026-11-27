@@ -117,6 +117,9 @@
     <string name="settings_gesture_action_drawer">Open the app drawer</string>
     <string name="settings_gesture_action_search">Open search</string>
     <string name="settings_gesture_action_settings">Open Settings</string>
+    <string name="gesture_service_label">Vesna gestures (actions only)</string>
+    <string name="gesture_service_description">Actions only: expands the notification shade on the swipe-down gesture. Reads no screen content.</string>
+    <string name="settings_gesture_service_hint">If the swipe down does not expand the notification shade (some manufacturers block the system call), enable «Vesna gestures» in Accessibility — the service performs gestures only and reads no screen content.</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>

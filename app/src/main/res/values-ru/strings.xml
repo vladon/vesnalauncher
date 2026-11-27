@@ -121,6 +121,9 @@
     <string name="settings_gesture_action_drawer">Открыть список приложений</string>
     <string name="settings_gesture_action_search">Открыть поиск</string>
     <string name="settings_gesture_action_settings">Открыть настройки</string>
+    <string name="gesture_service_label">Жесты Vesna (только действия)</string>
+    <string name="gesture_service_description">Только выполнение жестов: расширяет шторку уведомлений по свайпу вниз. Не читает экран.</string>
+    <string name="settings_gesture_service_hint">Если свайп вниз не раскрывает шторку уведомлений (некоторые производители блокируют системный вызов), включите «Жесты Vesna» в Специальных возможностях — сервис только выполняет жесты и не читает экран.</string>
     <string name="settings_app_drawer">Список приложений</string>
     <string name="settings_app_drawer_detail">Какие приложения видны при просмотре</string>
     <string name="settings_drawer_layout">Вид списка приложений</string>

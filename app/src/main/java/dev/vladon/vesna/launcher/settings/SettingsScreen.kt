@@ -826,6 +826,12 @@ private fun GesturesSettings(
     onBind: (GestureId, GestureAction) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        val hint = stringResource(R.string.settings_gesture_service_hint)
+        Text(
+            text = hint,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         val gestures = listOf(
             GestureId.SWIPE_DOWN to R.string.settings_gesture_swipe_down,
             GestureId.DOUBLE_TAP to R.string.settings_gesture_double_tap,
