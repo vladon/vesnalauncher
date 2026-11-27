@@ -75,6 +75,7 @@ class SettingsActivity : ComponentActivity() {
     private var pageTransition by mutableStateOf(PageTransition.INSTANT)
     private var pageLoop by mutableStateOf(false)
     private var pageIndicator by mutableStateOf(PageIndicator.COUNTER)
+    private var wallpaperScroll by mutableStateOf(true)
     private var labelFontScalePercent by mutableStateOf(LabelFontScale.DEFAULT)
     private var labelFont by mutableStateOf(LabelFont.INTER_MEDIUM)
     /** Null until the persisted grid arrives; the row must not flash the default. */
@@ -192,6 +193,11 @@ class SettingsActivity : ComponentActivity() {
                         onPageIndicatorChanged = { style ->
                             workspace.pageIndicator = style
                             pageIndicator = style
+                        },
+                        wallpaperScroll = wallpaperScroll,
+                        onWallpaperScrollChanged = { scroll ->
+                            workspace.wallpaperScroll = scroll
+                            wallpaperScroll = scroll
                         },
                         labelFontScalePercent = labelFontScalePercent,
                         onLabelFontScaleChanged = { percent ->
@@ -344,6 +350,7 @@ class SettingsActivity : ComponentActivity() {
         pageTransition = workspace.pageTransition
         pageLoop = workspace.pageLoop
         pageIndicator = workspace.pageIndicator
+        wallpaperScroll = workspace.wallpaperScroll
         labelFontScalePercent = workspace.labelFontScalePercent
         labelFont = workspace.labelFont
         pinNewApps = workspace.pinNewApps
