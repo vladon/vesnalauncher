@@ -5381,3 +5381,44 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
 - End state on the AVD: release v0.4.95, fresh-seeded workspace (the 17-pin parity
   layout was consumed by the bisect wipes; the exact layout is restorable from the
   `parity161-baseline.json` map + the saved snapshot lineage if needed).
+
+## OBS-VESNA-176 — v0.4.96-107 upgrade: the parity batch landed; full A/B verification
+
+- Upgrade: signed v0.4.107 (112) installed over the bisect-fresh-seed state (asset
+  SHA-256 `220dd870…c0012d`, release cert `21a9fb9c…e1c58`). Releases 96-107 carried the
+  dev's implementation of the parity audit: work tab always-on (#236, my 42287ae
+  cherry-picked — device-verified by the dev per VESNA-QA-WORK-TAB-ALWAYS-ON), #231 dock
+  label px fix + controls lift (#235), page transition slide (#234), pages follow finger
+  (#238), page loop + indicator choice (#240), wallpaper scroll with off (#241), outward
+  swipe opens the drawer (#233), make-this-page-main (#230), gesture bindings +
+  swipe-down notifications + None binding (#242-244), a11y up-navigation label (#246),
+  orphan work-tab strings dropped (#239).
+- **#199 RESOLVED on 0.4.107**: the drawer is always tabbed now (no merged-inline
+  mode left to omit entries) — the Apps tab lists all 23 personal apps **including
+  YouTube and YT Music** (the omitted pair), the Work tab lists the full 17-entry
+  managed set; both verified by dump + screenshot.
+- **Work tab always-on VERIFIED**: the Apps | Work bar renders with the switch gone;
+  the Work tab carries the Turn-off row; the Apps tab keeps the bar (my parity
+  semantics adopted: "Apps keeps the bar + merged list").
+- **#231 VERIFIED fixed**: dock labels render FULL («Calendar», «Camera», «Camera» with
+  work briefcase badges co-rendering) after re-adding dock pins on the fresh-seed dock;
+  the px/sp density-times-size truncation is gone (dev implemented the px-unit fix per
+  my #231 diagnosis).
+- **Settings surfaces verified present**: Gestures & input page (Double-tap on empty
+  space, Expand notifications, Swipe down on empty space, Open the app drawer, Open
+  Settings, Open search, Two-finger swipe up, Unassigned); Home screen page rows: Loop
+  pages, Page indicator, Page transition effect, Wallpaper scrolling, Label font (Inter
+  Medium default/Inter Regular/Nunito), Label size (100%), Search bar on Home
+  (Below/Above/Off), Dock/Home icon size, Lock workspace layout + Automatically relock.
+- **Settings search gap persists on 0.4.107**: `notification` → No settings found
+  (the dots/style rows still do not surface via search).
+- **Pills still render** (Home options + Open app drawer) — the #228 removal is not in
+  96-107; implementation map stands.
+- Snapshots: `baseline_research_0.4.107` saved (settled post-verification state) and
+  prove-loaded (versionName 0.4.107, Vesna focused); `baseline_research_0.4.95`
+  deleted. The AVD workspace is the fresh-seeded layout (bisect wipes consumed the
+  restored 17-pin layout; the exact map stays in `parity161-baseline.json`).
+- Audit statuses updated: NOVA-PARITY-AUDIT §1 items 3/5/6 re-scoped (work tab shipped
+  + always-on; #199 moot-resolved by the tabbed architecture; settings-search persists);
+  §2 items 8/11/12 partially landed (work tab, page extras, gesture bindings phase 1).
+- Evidence: `EVI-VESNA-003/parity162-*`.
