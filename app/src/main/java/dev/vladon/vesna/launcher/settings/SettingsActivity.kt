@@ -93,7 +93,6 @@ class SettingsActivity : ComponentActivity() {
     private var drawerBackground by mutableStateOf(DrawerBackgroundMode.THEME)
     private var drawerIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerFollowsHome by mutableStateOf(true)
-    private var workTabEnabled by mutableStateOf(false)
     private var hasWorkProfile by mutableStateOf(false)
     private var notificationDots by mutableStateOf(false)
     private var notificationAccessGranted by mutableStateOf(false)
@@ -268,12 +267,7 @@ class SettingsActivity : ComponentActivity() {
                             drawerPreferences.followsHomeIconScale = follow
                             drawerFollowsHome = follow
                         },
-                        workTabEnabled = workTabEnabled,
                         hasWorkProfile = hasWorkProfile,
-                        onWorkTabEnabledChanged = { enabled ->
-                            drawerPreferences.workTabEnabled = enabled
-                            workTabEnabled = enabled
-                        },
                         notificationDots = notificationDots,
                         onNotificationDotsChanged = { enabled ->
                             // One pref writer: the badge store owns the key and
@@ -354,7 +348,6 @@ class SettingsActivity : ComponentActivity() {
         dockIconPercent = dockPreferences.iconScalePercent
         drawerIconPercent = drawerPreferences.iconScalePercent
         drawerFollowsHome = drawerPreferences.followsHomeIconScale
-        workTabEnabled = drawerPreferences.workTabEnabled
         hasWorkProfile = userManager.userProfiles.any { it != android.os.Process.myUserHandle() }
         notificationDots = drawerPreferences.notificationDots
         hiddenDrawerApps = drawerPreferences.hiddenApps

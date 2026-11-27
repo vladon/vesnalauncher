@@ -6,9 +6,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * The Work tab slice (#197): with the switch on, the Work tab lists only
- * managed-profile apps and the Apps tab excludes them; without the switch or a
- * profile the list passes through unchanged.
+ * The Work tab slice: the Work tab lists only managed-profile apps and the
+ * Apps tab excludes them; without a managed profile the list passes through
+ * unchanged (the drawer is tabbed on every managed profile — full Nova parity).
  */
 class DrawerWorkTabSliceTest {
 
@@ -18,21 +18,16 @@ class DrawerWorkTabSliceTest {
 
     @Test
     fun workTabKeepsManagedAppsOnly() {
-        assertEquals(listOf(work), WorkTabSlice.apply(apps, tabEnabled = true, workProfileUserSerial = 11L, workTabActive = true))
+        assertEquals(listOf(work), WorkTabSlice.apply(apps, workProfileUserSerial = 11L, workTabActive = true))
     }
 
     @Test
     fun appsTabExcludesManagedApps() {
-        assertEquals(listOf(personal), WorkTabSlice.apply(apps, tabEnabled = true, workProfileUserSerial = 11L, workTabActive = false))
-    }
-
-    @Test
-    fun switchOffPassesEverythingThrough() {
-        assertEquals(apps, WorkTabSlice.apply(apps, tabEnabled = false, workProfileUserSerial = 11L, workTabActive = true))
+        assertEquals(listOf(personal), WorkTabSlice.apply(apps, workProfileUserSerial = 11L, workTabActive = false))
     }
 
     @Test
     fun noProfilePassesEverythingThrough() {
-        assertEquals(apps, WorkTabSlice.apply(apps, tabEnabled = true, workProfileUserSerial = null, workTabActive = true))
+        assertEquals(apps, WorkTabSlice.apply(apps, workProfileUserSerial = null, workTabActive = true))
     }
 }
