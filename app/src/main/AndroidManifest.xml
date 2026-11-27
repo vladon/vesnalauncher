@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- #183: the swipe-down gesture expands the notification shade through the
+         status bar service; EXPAND_STATUS_BAR is a normal install-time permission
+         with no user data access. -->
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+
     <!-- Package visibility (Android 10+): Vesna queries launchable apps through
          PackageManager using this single intent declaration. It does not and will
          not request QUERY_ALL_PACKAGES. -->

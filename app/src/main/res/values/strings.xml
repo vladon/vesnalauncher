@@ -107,7 +107,9 @@
     <string name="settings_wallpaper_scroll_detail">The wallpaper shifts with the pages: the first page shows its left edge, the last one its right edge.</string>
     <string name="settings_gestures">Gestures &amp; input</string>
     <string name="settings_gestures_detail">Assign actions to Home screen gestures.</string>
+    <string name="settings_gesture_swipe_down">Swipe down on empty space</string>
     <string name="settings_gesture_double_tap">Double-tap on empty space</string>
+    <string name="settings_gesture_action_notifications">Expand notifications</string>
     <string name="settings_gesture_two_finger_up">Two-finger swipe up</string>
     <string name="settings_gesture_pinch_in">Pinch in</string>
     <string name="settings_gesture_pinch_out">Pinch out</string>
