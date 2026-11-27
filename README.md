@@ -154,7 +154,7 @@ The Android package name is `dev.vladon.vesna.launcher`.
 
 ### 0.4.106
 
-- \*\*Unassigned\*\* (None) on a Home gesture now stays assigned: the default
+- **Unassigned** (None) on a Home gesture now stays assigned: the default
   notification expansion applies only until you explicitly turn the
   gesture off.
 
@@ -174,7 +174,7 @@ The Android package name is `dev.vladon.vesna.launcher`.
 ### 0.4.103
 
 - The wallpaper now scrolls with the pages: the first page shows its left
-  edge and the last its right edge. Turn \*\*Wallpaper scrolling\*\* off to keep
+  edge and the last its right edge. Turn **Wallpaper scrolling** off to keep
   the wallpaper centered on every page.
 
 ### 0.4.102
@@ -213,7 +213,7 @@ The Android package name is `dev.vladon.vesna.launcher`.
 
 ### 0.4.95
 
-- \*\*Label size\*\* (80–130%) and a font choice for Home and dock labels.
+- **Label size** (80–130%) and a font choice for Home and dock labels.
 
 ### 0.4.94
 
