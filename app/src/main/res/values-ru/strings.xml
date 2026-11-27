@@ -270,4 +270,8 @@
     <string name="about_tagline">Быстрый, бесплатный Android-лаунчер с открытым исходным кодом.</string>
     <string name="about_license">Распространяется по лицензии MIT.</string>
     <string name="about_github">Исходный код на GitHub</string>
+    <string name="menu_add_widget">Добавить виджет</string>
+    <string name="widget_picker_empty">Нет доступных виджетов</string>
+    <string name="widget_picker_no_room">Нет места для этого виджета</string>
+    <string name="widget_cell_description">Виджет</string>
 </resources>

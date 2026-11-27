@@ -71,6 +71,7 @@ class LauncherController(
     private val discovery: AppDiscovery,
     private val appLauncher: AppLauncher,
     private val workspaceRepository: WorkspaceRepository,
+    private val widgetDao: dev.vladon.vesna.launcher.data.WidgetDao,
     packageEvents: SharedFlow<PackageEvent>,
 ) {
 
@@ -164,8 +165,11 @@ class LauncherController(
         return apps
     }
 
+    private val widgetPlacements: StateFlow<List<dev.vladon.vesna.launcher.data.WidgetEntity>> =
+        widgetDao.observeAll().stateIn(scope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val state: StateFlow<LauncherUiState> =
-        combine(layout, pageSelection) { layout, pages ->
+        combine(layout, pageSelection, widgetPlacements) { layout, pages, widgets ->
             val saved = layout.saved
             val orderedIds = saved.pageIds
             // The stored ID can outlive a deleted page if the process stopped
@@ -178,6 +182,7 @@ class LauncherController(
                 ?: orderedIds.firstOrNull() ?: DEFAULT_WORKSPACE_PAGE_ID
             val workspace = if (appendAfter != null) null else WorkspaceResolver.workspaceLayout(
                 saved.items, layout.renderedApps, saved.folders, selection, saved.grid,
+                widgets.filter { it.pageId == selection },
             )
             LauncherUiState(
                 apps = layout.catalogue.apps,

@@ -58,6 +58,9 @@ class WorkspaceView @JvmOverloads constructor(
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
 
+    /** Creates the live host view for a committed widget (ENG-102 slice 2). */
+    var widgetViewProvider: ((appWidgetId: Int) -> View?)? = null
+
     /** #228: the gesture-only desktop — the workspace exposes the drawer and
      *  the Home options as custom accessibility actions for TalkBack users. */
     var onGestureOpenDrawer: (() -> Unit)? = null
@@ -438,6 +441,7 @@ class WorkspaceView @JvmOverloads constructor(
     private fun reportDragProgress(x: Float, y: Float) {
         when (dragContent) {
             is CellContent.App -> onDragProgress?.invoke(x, y)
+            is CellContent.WidgetCell -> {}
             is CellContent.FolderCell -> {
                 val ready = onFolderDragProgress?.invoke(x, y) != false
                 showDropHighlight(if (ready) folderDropTarget(x, y) else null)
@@ -466,6 +470,8 @@ class WorkspaceView @JvmOverloads constructor(
             when (content) {
                 is CellContent.App -> onAppOptions?.invoke(cell, content.app, anchor)
                 is CellContent.FolderCell -> onFolderLongClick?.invoke(content.folder, anchor)
+                // The widget options surface lands with the placement interactions slice.
+                is CellContent.WidgetCell -> {}
             }
             return
         }
@@ -503,6 +509,7 @@ class WorkspaceView @JvmOverloads constructor(
             } else {
                 onFolderLongClick?.invoke(content.folder, anchor)
             }
+            is CellContent.WidgetCell -> {}
             null -> Unit
         }
     }
@@ -594,33 +601,52 @@ class WorkspaceView @JvmOverloads constructor(
         }
         for ((cell, content) in cells) {
             val existing = findChildForCell(cell)
-            val view = existing ?: AppIconView(context).also {
-                // The grid already insets each cell. Keep the tile's vertical
-                // space for the icon and a complete line of scaled label text.
-                it.setPadding(it.paddingLeft, 0, it.paddingRight, 0)
-                it.tag = cell
-                it.artworkScale = iconScale
-                addView(it)
+            val view = existing ?: if (content is CellContent.WidgetCell) {
+                WidgetCellView(context).also {
+                    it.tag = cell
+                    addView(it)
+                }
+            } else {
+                AppIconView(context).also {
+                    // The grid already insets each cell. Keep the tile's vertical
+                    // space for the icon and a complete line of scaled label text.
+                    it.setPadding(it.paddingLeft, 0, it.paddingRight, 0)
+                    it.tag = cell
+                    it.artworkScale = iconScale
+                    addView(it)
+                }
             }
+            if (view is WidgetCellView && content is CellContent.WidgetCell) {
+                view.spanX = content.widget.spanX
+                view.spanY = content.widget.spanY
+                // A rebind keeps the live host view; only a fresh cell installs one.
+                if (view.childCount == 0) {
+                    widgetViewProvider?.invoke(content.widget.appWidgetId)?.let { view.installHost(it) }
+                }
+                view.contentDescription = context.getString(R.string.widget_cell_description)
+                continue
+            }
+            val iconView = view as AppIconView
             when (content) {
                 is CellContent.App -> {
-                    view.bind(content.app)
-                    view.setLabelTypography(labelFontScalePercent, labelFont)
-                    view.setAppNameVisible(showAppNames)
+                    iconView.bind(content.app)
+                    iconView.setLabelTypography(labelFontScalePercent, labelFont)
+                    iconView.setAppNameVisible(showAppNames)
                     view.setOnClickListener { onAppClick?.invoke(content.app) }
                     view.bindOptions(
                         onOptions = { anchor -> onAppOptions?.invoke(cell, content.app, anchor) },
                         onTouchHold = { anchor -> beginDrag(cell, content, anchor) },
                     )
                 }
+                is CellContent.WidgetCell -> {} // Unreachable: widgets continue above.
                 is CellContent.FolderCell -> {
-                    view.bindContent(
+                    iconView.bindContent(
                         icon = ContextCompat.getDrawable(context, R.drawable.ic_folder_cell),
                         label = content.folder.title,
                         description = content.folder.title,
                     )
                     // A tile reused from an app still needs to show the folder's own name.
-                    view.setAppNameVisible(true)
+                    iconView.setAppNameVisible(true)
                     view.setOnClickListener { onCellClick?.invoke(content) }
                     view.bindOptions(
                         onOptions = { anchor -> onFolderLongClick?.invoke(content.folder, anchor) },
@@ -689,9 +715,12 @@ class WorkspaceView @JvmOverloads constructor(
         val childH = (cellH - 2 * cellVPadPx).coerceAtLeast(1)
         for (i in 0 until childCount) {
             val child = getChildAt(i)
+            val spans = child as? WidgetCellView
+            val childWSpan = if (spans == null) childW else spans.spanX * cellW - 2 * cellHPadPx
+            val childHSpan = if (spans == null) childH else spans.spanY * cellH - 2 * cellVPadPx
             child.measure(
-                MeasureSpec.makeMeasureSpec(childW, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(childH, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(childWSpan.coerceAtLeast(1), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(childHSpan.coerceAtLeast(1), MeasureSpec.EXACTLY),
             )
         }
     }
@@ -704,8 +733,11 @@ class WorkspaceView @JvmOverloads constructor(
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             val cell = child.tag as? Int ?: continue
-            val x = cellLeft(cell, cellW) + cellHPadPx
-            val y = paddingTop + gutterPx + grid.rowOf(cell) * cellH + cellVPadPx
+            val spans = child as? WidgetCellView
+            val xPad = if (spans == null) cellHPadPx else 0
+            val yPad = if (spans == null) cellVPadPx else 0
+            val x = cellLeft(cell, cellW) + xPad
+            val y = paddingTop + gutterPx + grid.rowOf(cell) * cellH + yPad
             child.layout(x, y, x + child.measuredWidth, y + child.measuredHeight)
         }
     }
