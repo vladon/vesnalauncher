@@ -36,6 +36,16 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = PageTransition.fromPreference(prefs.getString(PAGE_TRANSITION, null))
         set(value) = prefs.edit { putString(PAGE_TRANSITION, value.preferenceValue) }
 
+    /** #174: wraps the last-page forward swipe onto the first page (off by default). */
+    var pageLoop: Boolean
+        get() = prefs.getBoolean(PAGE_LOOP, false)
+        set(value) = prefs.edit { putBoolean(PAGE_LOOP, value) }
+
+    /** #174: the workspace page indicator style (today's counter dots by default). */
+    var pageIndicator: PageIndicator
+        get() = PageIndicator.fromPreference(prefs.getString(PAGE_INDICATOR, null))
+        set(value) = prefs.edit { putString(PAGE_INDICATOR, value.preferenceValue) }
+
     /**
      * #173: Home and dock label size, as a percent of the default text.
      */
@@ -86,6 +96,8 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         const val AUTO_RELOCK = "workspace_auto_relock"
         const val SEARCH_BAR_PLACEMENT = "home_search_bar_placement"
         const val PAGE_TRANSITION = "home_page_transition"
+        const val PAGE_LOOP = "home_page_loop"
+        const val PAGE_INDICATOR = "home_page_indicator"
         const val LABEL_FONT_SCALE_PERCENT = "home_label_font_scale_percent"
         const val LABEL_FONT = "home_label_font"
     }

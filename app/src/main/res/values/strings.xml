@@ -97,6 +97,12 @@
     <string name="settings_page_transition">Page transition effect</string>
     <string name="settings_page_transition_instant">Instant (default)</string>
     <string name="settings_page_transition_slide">Slide</string>
+    <string name="settings_page_loop">Loop pages</string>
+    <string name="settings_page_loop_detail">Swiping past the last page returns to the first one, and the other way around.</string>
+    <string name="settings_page_indicator">Page indicator</string>
+    <string name="settings_page_indicator_counter">Counter (default)</string>
+    <string name="settings_page_indicator_dot">Dots</string>
+    <string name="settings_page_indicator_line">Line</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>
