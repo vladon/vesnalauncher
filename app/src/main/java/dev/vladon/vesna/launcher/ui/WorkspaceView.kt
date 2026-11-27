@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.GestureDetector
+import android.view.ScaleGestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
@@ -54,6 +55,41 @@ class WorkspaceView @JvmOverloads constructor(
     var labelFont: LabelFont = LabelFont.INTER_MEDIUM
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
+
+    /** #183: a bound gesture was recognised on an empty Home cell. */
+    var onGesture: ((dev.vladon.vesna.launcher.settings.GestureId) -> Unit)? = null
+
+    private var twoFingerActive = false
+    private var twoFingerStartY = 0f
+    private var twoFingerFired = false
+    private val scaleDetector = ScaleGestureDetector(
+        context,
+        object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScaleEnd(detector: ScaleGestureDetector) {
+                if (!twoFingerFired && twoFingerActive) {
+                    if (detector.scaleFactor < 0.85f) {
+                        twoFingerFired = true
+                        onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.PINCH_IN)
+                    } else if (detector.scaleFactor > 1.15f) {
+                        twoFingerFired = true
+                        onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.PINCH_OUT)
+                    }
+                }
+            }
+        },
+    )
+
+    /** The gesture stream gate: the empty-grid two-finger play only, never drags or page swipes. */
+    private fun twoFingerGestureAllowed(): Boolean =
+        emptyAreaPressed && !dragPromoted && !pageSwipe && !longPressed
+
+    /**
+     * Whether the LAST ACTION_DOWN landed on the empty grid. The detector's
+     * onDoubleTap fires at the second DOWN, before that down's own empty flag
+     * is set — so the double-tap gate reads the previous down's result.
+     */
+    private var lastDownEmpty = false
+
     var onSwipePage: ((forward: Boolean) -> Unit)? = null
 
     /** Raw horizontal drag delta while a page swipe is in progress (#180 phase 2). */
@@ -159,6 +195,14 @@ class WorkspaceView @JvmOverloads constructor(
     private val gestureDetector = GestureDetector(
         context,
         object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                // #183: the double tap binds on the empty grid only; tiles own their taps.
+                if (lastDownEmpty && !dragPromoted) {
+                    onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.DOUBLE_TAP)
+                }
+                return true
+            }
+
             override fun onFling(
                 e1: MotionEvent?,
                 e2: MotionEvent,
@@ -201,12 +245,26 @@ class WorkspaceView @JvmOverloads constructor(
         } else if (action == MotionEvent.ACTION_POINTER_DOWN) {
             // A different finger may occupy index zero later in this stream.
             pageSwipeInterrupted = true
+            // #183: an empty-grid two-finger gesture session (never during a
+            // drag or a one-finger page swipe).
+            if (twoFingerGestureAllowed() && ev.pointerCount == 2) {
+                twoFingerActive = true
+                twoFingerFired = false
+                twoFingerStartY = minOf(ev.getY(0), ev.getY(1))
+            }
         } else if (action == MotionEvent.ACTION_MOVE) {
             // Android keeps the empty grid's long press pending until the pointer leaves the
             // whole view, so a slow swipe must end it as soon as it passes the slop. A tile's
             // own long press keeps Android's tolerance for a finger that wanders while holding.
             if (emptyAreaPressed && !longPressed && hypot(ev.x - downX, ev.y - downY) > dragSlop) {
                 super.cancelLongPress()
+            }
+            if (twoFingerActive && ev.pointerCount >= 2 && !twoFingerFired) {
+                scaleDetector.onTouchEvent(ev)
+                if (minOf(ev.getY(0), ev.getY(1)) <= twoFingerStartY - TWO_FINGER_SWIPE_DP * density) {
+                    twoFingerFired = true
+                    onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.TWO_FINGER_SWIPE_UP)
+                }
             }
             if (!longPressed && !pageSwipe && !pageSwipeInterrupted) {
                 val dx = abs(ev.x - downX)
@@ -265,6 +323,7 @@ class WorkspaceView @JvmOverloads constructor(
             super.dispatchTouchEvent(cancel)
             cancel.recycle()
         }
+        if (action == MotionEvent.ACTION_DOWN) lastDownEmpty = emptyAreaPressed
         return handled
     }
 
@@ -606,6 +665,7 @@ class WorkspaceView @JvmOverloads constructor(
         const val FLING_VELOCITY = 1200f
         const val MAX_FLING_DRIFT_DP = 100f
         const val PAGE_SWIPE_DP = 56f
+        const val TWO_FINGER_SWIPE_DP = 80f
         const val SWIPE_UP_DISTANCE_DP = 360f
         const val DRAGGED_ALPHA = 0.45f
         const val HIGHLIGHT_INSET_DP = 6

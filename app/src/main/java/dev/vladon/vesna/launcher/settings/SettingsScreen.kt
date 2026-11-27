@@ -154,6 +154,8 @@ internal fun SettingsScreen(
     onPageLoopChanged: (Boolean) -> Unit,
     wallpaperScroll: Boolean,
     onWallpaperScrollChanged: (Boolean) -> Unit,
+    gestureBindings: Map<GestureId, GestureAction>,
+    onGestureBindingChanged: (GestureId, GestureAction) -> Unit,
     pageIndicator: PageIndicator,
     onPageIndicatorChanged: (PageIndicator) -> Unit,
     grid: GridCanvas?,
@@ -453,6 +455,7 @@ internal fun SettingsScreen(
                                     )
                                 }
                             }
+                            SettingsPage.GESTURES -> GesturesSettings(gestureBindings, onGestureBindingChanged)
                             SettingsPage.ABOUT -> AboutContent(versionName)
                         }
                     }
@@ -582,6 +585,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_icon_shape, R.string.settings_icon_shape_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_icon_pack, R.string.settings_icon_pack_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_palette, R.string.settings_palette_detail),
+                    SearchEntry(SettingsPage.GESTURES, R.string.settings_gestures, R.string.settings_gestures_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_show_app_names, R.string.settings_show_app_names_detail),
                 )
                 for (entry in entries) {
@@ -612,6 +616,7 @@ private fun SettingsDirectory(
                     SettingsPage.HOME_SCREEN -> R.string.settings_home_screen_detail
                     SettingsPage.APP_DRAWER -> R.string.settings_app_drawer_detail
                     SettingsPage.APPEARANCE -> R.string.settings_appearance_detail
+                    SettingsPage.GESTURES -> R.string.settings_gestures_detail
                     SettingsPage.ABOUT -> R.string.settings_about_detail
                 })
                 val title = stringResource(page.title)
@@ -806,6 +811,52 @@ private fun SettingsSwitch(
             .vesnaFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
+}
+
+/** #183: the Home gesture bindings (each gesture unassigned by default). */
+@Composable
+private fun GesturesSettings(
+    bindings: Map<GestureId, GestureAction>,
+    onBind: (GestureId, GestureAction) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        val gestures = listOf(
+            GestureId.DOUBLE_TAP to R.string.settings_gesture_double_tap,
+            GestureId.TWO_FINGER_SWIPE_UP to R.string.settings_gesture_two_finger_up,
+            GestureId.PINCH_IN to R.string.settings_gesture_pinch_in,
+            GestureId.PINCH_OUT to R.string.settings_gesture_pinch_out,
+        )
+        val actions = listOf(
+            GestureAction.NONE to R.string.settings_gesture_action_none,
+            GestureAction.OPEN_DRAWER to R.string.settings_gesture_action_drawer,
+            GestureAction.OPEN_SEARCH to R.string.settings_gesture_action_search,
+            GestureAction.OPEN_SETTINGS to R.string.settings_gesture_action_settings,
+        )
+        for ((gesture, label) in gestures) {
+            Text(
+                text = stringResource(label),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.semantics { heading() },
+            )
+            Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                for ((action, actionLabel) in actions) {
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .selectable(
+                                selected = bindings[gesture] == action,
+                                role = Role.RadioButton,
+                                onClick = { onBind(gesture, action) },
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = bindings[gesture] == action, onClick = null)
+                        Text(stringResource(actionLabel), Modifier.padding(start = 8.dp))
+                    }
+                }
+            }
+        }
+    }
 }
 
 /** #174: the workspace page indicator style choice (radio rows). */
