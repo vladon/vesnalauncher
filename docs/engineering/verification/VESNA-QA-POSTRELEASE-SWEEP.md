@@ -68,3 +68,26 @@ failures are therefore environmental (the wedged-and-relaunched AVD
 session), not caused by the shipped code. Documented here instead of
 being chased; the suite re-verification belongs to the AVD baseline
 restoration.
+
+
+## CAND-205 accessibility audit (phase 1, v0.4.107)
+
+The audit method: the accessibility-tree dumps of the shipped surfaces
+(Home, the drawer, the settings root and subpages, the Gestures & input
+page) walked for the interactive nodes without a text or a content
+description (the TalkBack-unreadable controls).
+
+Findings: the surfaces are otherwise clean — the Compose list rows
+carry their labels through the merged descendant semantics (verified
+not defects); the ONE real defect: the settings subpages'
+up-navigation IconButton was unlabeled in the accessibility tree (the
+Icon's contentDescription did not project onto the clickable node —
+TalkBack read an unlabeled button on every settings subpage). Fixed in
+v0.4.107: the label moves to the IconButton's modifier semantics (the
+canonical Compose pattern), verified in the accessibility tree on the
+published artifact («Назад к настройкам Vesна» on the up node, the
+fresh-install strict chain).
+
+The remaining CAND-205 scope (the deeper TalkBack navigation
+walkthrough with the service running) continues when the audit
+resumes.
