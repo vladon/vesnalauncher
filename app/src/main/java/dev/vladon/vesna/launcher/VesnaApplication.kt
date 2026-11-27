@@ -29,6 +29,7 @@ class LauncherGraph(appContext: Context) {
     val applicationScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val database: LauncherDatabase = LauncherDatabase.build(appContext)
+    val widgetDao: dev.vladon.vesna.launcher.data.WidgetDao = database.widgetDao()
 
     val workspaceRepository: WorkspaceRepository =
         WorkspaceRepository(

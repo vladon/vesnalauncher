@@ -1,6 +1,6 @@
 # ADR-WIDGET-1 — Widget host ownership and cleanup
 
-**Status:** Proposed for review. This is a lifecycle contract, not a shipped widget feature.
+**Status:** Accepted for the mechanism phase (slice 1: host manager, Room table, reconcile — shipped in v0.4.110). The placement UI (slice 2: picker, add flow) is still pending; no user-facing widget placement ships until slice 2.
 
 **Gates:** [ENG-102](../engineering/BACKLOG.md#eng-102-widget-host--lifecycle-only).
 

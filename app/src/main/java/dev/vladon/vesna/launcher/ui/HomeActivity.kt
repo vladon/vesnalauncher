@@ -143,6 +143,9 @@ class HomeActivity : ComponentActivity() {
     private lateinit var nextPage: View
     private lateinit var pageIndicator: WorkspacePageIndicator
     private val wallpaperManager by lazy { getSystemService(WallpaperManager::class.java) }
+    private val widgetHostManager by lazy {
+        dev.vladon.vesna.launcher.workspace.WidgetHostManager(this, VesnaApplication.graph(this).widgetDao)
+    }
 
     /** The icon currently being dragged across workspace and dock. */
     private data class DragSource(
@@ -367,6 +370,8 @@ class HomeActivity : ComponentActivity() {
         workspace.onGesture = ::handleGesture
         workspace.onGestureOpenDrawer = ::openDrawer
         workspace.onGestureHomeOptions = ::showLauncherMenu
+        widgetHostManager.startListening()
+        lifecycleScope.launch { widgetHostManager.reconcile() }
         workspace.onPageDrag = ::onPageDragProgress
         workspace.onPageDragEnd = ::onPageDragEnded
         workspace.onDragStarted = { cell, app, _ ->

@@ -12,8 +12,8 @@ import dev.vladon.vesna.launcher.workspace.DEFAULT_WORKSPACE_PAGE_ID
 import dev.vladon.vesna.launcher.workspace.WorkspaceItem
 
 @Database(
-    entities = [WorkspaceItemEntity::class, FolderEntity::class, WorkspacePageEntity::class, WorkspaceGridEntity::class],
-    version = 6,
+    entities = [WorkspaceItemEntity::class, FolderEntity::class, WorkspacePageEntity::class, WorkspaceGridEntity::class, WidgetEntity::class],
+    version = 7,
     exportSchema = true,
 )
 abstract class LauncherDatabase : RoomDatabase() {
@@ -25,6 +25,8 @@ abstract class LauncherDatabase : RoomDatabase() {
     abstract fun workspacePageDao(): WorkspacePageDao
 
     internal abstract fun workspaceGridDao(): WorkspaceGridDao
+
+    internal abstract fun widgetDao(): WidgetDao
 
     companion object {
         /** Room DDL for `workspace_pages` (fresh installs get it from the entity). */
@@ -50,6 +52,26 @@ abstract class LauncherDatabase : RoomDatabase() {
         }
 
         /** 1 → 2: added per-profile ownership of layout entries. */
+        /** 6 → 7: the widget placements table (ENG-102; additive, no fallback). */
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `widgets` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`appWidgetId` INTEGER NOT NULL, " +
+                        "`providerPackage` TEXT NOT NULL, " +
+                        "`providerClass` TEXT NOT NULL, " +
+                        "`pageId` INTEGER NOT NULL, " +
+                        "`cellIndex` INTEGER NOT NULL, " +
+                        "`spanX` INTEGER NOT NULL DEFAULT 2, " +
+                        "`spanY` INTEGER NOT NULL DEFAULT 2, " +
+                        "`userSerial` INTEGER NOT NULL DEFAULT 0)",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_widgets_pageId` ON `widgets` (`pageId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_widgets_appWidgetId` ON `widgets` (`appWidgetId`)")
+            }
+        }
+
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE workspace_items ADD COLUMN userSerial INTEGER NOT NULL DEFAULT 0")
@@ -130,7 +152,7 @@ abstract class LauncherDatabase : RoomDatabase() {
 
         fun build(appContext: Context): LauncherDatabase =
             Room.databaseBuilder(appContext, LauncherDatabase::class.java, "vesna-launcher.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                 .addCallback(DEFAULT_PAGE_SEED_CALLBACK)
                 .build()
     }

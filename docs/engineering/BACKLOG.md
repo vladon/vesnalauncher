@@ -154,10 +154,14 @@ candidate. See the [migration evidence](REQUIREMENTS_TRACEABILITY.md#data-and-pl
 
 Add/update/remove widgets; host cleanup on package removal and after restore.
 Stable page IDs from ENG-101 are available. The
-[widget lifecycle ADR](../adr/0003-widget-host-lifecycle.md) proposes the
-ownership and cleanup contract. Before enabling placement, verify provider
-configuration cancellation, restart recovery, and restore behavior against
-that contract. Removal with undo (`WIDGET-102`) is a separate interaction.
+[widget lifecycle ADR](../adr/0004-widget-host-lifecycle.md) proposes the
+ownership and cleanup contract. **Slice 1 (mechanism) shipped in v0.4.110:**
+`WidgetHostManager`, the additive `widgets` Room table (schema 7), the startup
+reconcile, and the ADR contract checks (`WidgetHostLifecycleTest`, 4/4 green
+on the emulator). Slice 2 (picker, add flow, placement UI) is still open.
+Before enabling placement, verify provider configuration cancellation,
+restart recovery, and restore behavior against that contract. Removal with
+undo (`WIDGET-102`) is a separate interaction.
 
 ### ENG-103: Folder pagination and drag-into verification
 
@@ -281,7 +285,7 @@ checks, or ADR gates.
 | [#174](https://github.com/vladon/vesnalauncher/issues/174) — Page looping and a page indicator choice | Shipped in v0.4.102 (PR #240): the optional page loop (off by default; looping wraps BOTH outward edges — the last page onto the first and, while the loop is on, the first page onto the last (superseding the #179 drawer edge; the drawer returns when the loop is off)) and the indicator choice — Counter (today's default), Dots, Line — under Settings › Home screen, found via search; both persist after restart; page order, pins, the cap and the counter a11y stay unchanged. Verified on the API 35 AVD ([VESNA-QA-PAGE-LOOP-INDICATOR](../verification/VESNA-QA-PAGE-LOOP-INDICATOR.md)). |
 | [#181](https://github.com/vladon/vesnalauncher/issues/181) — Scroll the wallpaper between Home pages, with an option to turn it off | Shipped in v0.4.103 (PR #241): the wallpaper scrolls with the pages via the system offsets (the first page shows the left edge, the last the right; the default on), with a Settings switch to turn it off (the wallpaper stays centered). The tiles, the counter and the dock never move with it; the alignment holds across page-count changes and restarts. Verified on the API 35 AVD with a synthetic wide-gradient wallpaper and a wallpaper-setter fixture ([VESNA-QA-WALLPAPER-SCROLL](../verification/VESNA-QA-WALLPAPER-SCROLL.md)). |
 | [#183](https://github.com/vladon/vesnalauncher/issues/183) — Offer Home screen gestures and a way to assign them | Phase 1 shipped in v0.4.104 (PR #242): the gesture framework + the assignment surface (Settings › Gestures & input) + the double-tap, two-finger swipe up, pinch in and out bindings to the internal actions (the drawer, search, Settings; each unassigned by default; the suppression rules and the #170/#179/long-press compat verified). Phase 2 shipped in v0.4.105 (PR #243): the swipe-down gesture binds to the notification expansion BY DEFAULT (Nova's default) via the status-bar-service reflection with `EXPAND_STATUS_BAR` (the normal install-time permission — no accessibility service shipped, per the privacy adjudication; the invocation degrades to a no-op if the platform tightens), reassignable on the Gestures page. Verified on the API 35 AVD ([VESNA-QA-SWIPE-DOWN-NOTIFICATIONS](../verification/VESNA-QA-SWIPE-DOWN-NOTIFICATIONS.md)); the phase-1 record: [VESNA-QA-GESTURE-BINDINGS](../verification/VESNA-QA-GESTURE-BINDINGS.md). |
-| [#228](https://github.com/vladon/vesnalauncher/issues/228) — Workspace bottom pills: gesture-only desktop | Decision documented in [ADR-0003](adr/0003-workspace-gesture-only.md): the workspace goes gesture-only (Nova-style) — the persistent bottom pills (Home options, Open app drawer) are removed; the same capabilities stay reachable (the swipe-up drawer, the long-press Home options, the workspace a11y actions for TalkBack). Shipped in v0.4.109 (PR #254). The removal surfaced the launcher-menu popup ANR (the popup anchored to a removed view rendering at 97810 px) — fixed with the dedicated 1 dp menu anchor. Verified on the API 35 AVD ([VESNA-QA-GESTURE-ONLY-WORKSPACE](verification/VESNA-QA-GESTURE-ONLY-WORKSPACE.md)). |
+| [#228](https://github.com/vladon/vesnalauncher/issues/228) — Workspace bottom pills: gesture-only desktop | Decision documented in [ADR-0003](adr/0005-workspace-gesture-only.md): the workspace goes gesture-only (Nova-style) — the persistent bottom pills (Home options, Open app drawer) are removed; the same capabilities stay reachable (the swipe-up drawer, the long-press Home options, the workspace a11y actions for TalkBack). Shipped in v0.4.109 (PR #254). The removal surfaced the launcher-menu popup ANR (the popup anchored to a removed view rendering at 97810 px) — fixed with the dedicated 1 dp menu anchor. Verified on the API 35 AVD ([VESNA-QA-GESTURE-ONLY-WORKSPACE](verification/VESNA-QA-GESTURE-ONLY-WORKSPACE.md)). |
 
 The first suggested implementation, once work resumes, is the keyboard-only
 scope from #112. Independent icon sizes (#146) and local layout export/restore
