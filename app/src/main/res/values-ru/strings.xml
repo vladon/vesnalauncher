@@ -61,8 +61,6 @@
     <string name="drawer_turn_off_work">Отключить рабочие приложения</string>
     <string name="drawer_tab_apps">Приложения</string>
     <string name="drawer_tab_work">Работа</string>
-    <string name="settings_work_tab">Рабочие приложения на отдельной вкладке</string>
-    <string name="settings_work_tab_detail">Перенести приложения рабочего профиля на отдельную вкладку «Работа» в списке.</string>
     <string name="settings_home_orientation">Ориентация главного экрана</string>
     <string name="settings_home_orientation_detail">Рабочий стол, док и кнопки страниц поворачиваются вместе с устройством, или главный экран остаётся портретным. Запущенные из него приложения сохраняют ориентацию устройства.</string>
     <string name="settings_home_orientation_follow">Следовать устройству</string>

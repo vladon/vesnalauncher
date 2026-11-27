@@ -61,8 +61,6 @@
     <string name="drawer_turn_off_work">Turn off work apps</string>
     <string name="drawer_tab_apps">Apps</string>
     <string name="drawer_tab_work">Work</string>
-    <string name="settings_work_tab">Work apps in their own tab</string>
-    <string name="settings_work_tab_detail">Move work-profile apps to a dedicated Work tab in the drawer.</string>
     <string name="settings_home_orientation">Home screen orientation</string>
     <string name="settings_home_orientation_detail">Rotate the workspace, dock and page controls with the device, or keep Home portrait. Apps launched from Home keep the device orientation.</string>
     <string name="settings_home_orientation_follow">Follow device</string>
