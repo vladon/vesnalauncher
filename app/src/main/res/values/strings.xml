@@ -278,4 +278,9 @@
     <string name="widget_move">Move</string>
     <string name="widget_move_pick_cell">Tap a free cell to place the widget</string>
     <string name="widget_move_no_room">No room for the widget here</string>
+    <string name="widget_resize_wider">Widen</string>
+    <string name="widget_resize_narrower">Narrow</string>
+    <string name="widget_resize_taller">Make taller</string>
+    <string name="widget_resize_shorter">Make shorter</string>
+    <string name="widget_resize_no_room">No room to resize here</string>
 </resources>

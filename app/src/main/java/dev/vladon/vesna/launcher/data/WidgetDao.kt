@@ -23,6 +23,9 @@ interface WidgetDao {
     @Query("UPDATE widgets SET cellIndex = :cell WHERE id = :id")
     suspend fun updateCell(id: Long, cell: Int)
 
+    @Query("UPDATE widgets SET spanX = :spanX, spanY = :spanY WHERE id = :id")
+    suspend fun updateSpan(id: Long, spanX: Int, spanY: Int)
+
     @Query("DELETE FROM widgets WHERE id = :id")
     suspend fun deleteById(id: Long)
 

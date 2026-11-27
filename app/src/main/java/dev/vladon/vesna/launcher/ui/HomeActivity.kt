@@ -2294,9 +2294,62 @@ class HomeActivity : ComponentActivity() {
     /** The placed-widget options (ENG-102 slice 2b): remove with undo. */
     private fun showWidgetOptions(widget: dev.vladon.vesna.launcher.data.WidgetEntity, anchor: View) {
         val popup = VesnaPopupMenu(anchor)
+        val grid = renderedState.grid
+        if (widget.spanX < grid.columns) {
+            popup.add(R.string.widget_resize_wider) { resizeWidget(widget, spanDeltaX = 1, spanDeltaY = 0) }
+        }
+        if (widget.spanX > 1) {
+            popup.add(R.string.widget_resize_narrower) { resizeWidget(widget, spanDeltaX = -1, spanDeltaY = 0) }
+        }
+        if (widget.spanY < grid.rows) {
+            popup.add(R.string.widget_resize_taller) { resizeWidget(widget, spanDeltaX = 0, spanDeltaY = 1) }
+        }
+        if (widget.spanY > 1) {
+            popup.add(R.string.widget_resize_shorter) { resizeWidget(widget, spanDeltaX = 0, spanDeltaY = -1) }
+        }
         popup.add(R.string.widget_move) { beginWidgetMove(widget) }
         popup.add(R.string.widget_remove) { removeWidgetWithUndo(widget) }
         showPopup(popup)
+    }
+
+    /**
+     * Slice 2c resize: a one-step span change committed to Room only when
+     * the new rectangle fits the grid and every newly covered cell is free
+     * (the cells the widget already owns do not count as occupied).
+     */
+    private fun resizeWidget(
+        widget: dev.vladon.vesna.launcher.data.WidgetEntity,
+        spanDeltaX: Int,
+        spanDeltaY: Int,
+    ) {
+        val grid = renderedState.grid
+        val newSpanX = (widget.spanX + spanDeltaX).coerceIn(1, grid.columns)
+        val newSpanY = (widget.spanY + spanDeltaY).coerceIn(1, grid.rows)
+        if (newSpanX == widget.spanX && newSpanY == widget.spanY) return
+        val columns = grid.columns
+        val oldCovered = HashSet<Int>().also { set ->
+            for (row in 0 until widget.spanY) {
+                for (column in 0 until widget.spanX) {
+                    set.add(widget.cellIndex + row * columns + column)
+                }
+            }
+        }
+        for (row in 0 until newSpanY) {
+            for (column in 0 until newSpanX) {
+                val covered = widget.cellIndex + row * columns + column
+                if (covered in oldCovered) continue
+                if (!grid.isValidCell(covered) ||
+                    renderedState.reservedWorkspaceCellsMask and (1 shl covered) != 0 ||
+                    renderedState.workspaceCells.containsKey(covered)
+                ) {
+                    showSnackbar(R.string.widget_resize_no_room, null)
+                    return
+                }
+            }
+        }
+        lifecycleScope.launch {
+            VesnaApplication.graph(this@HomeActivity).widgetDao.updateSpan(widget.id, newSpanX, newSpanY)
+        }
     }
 
     /**
