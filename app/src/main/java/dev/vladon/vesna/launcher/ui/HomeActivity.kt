@@ -70,6 +70,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.vladon.vesna.launcher.R
@@ -2324,25 +2326,91 @@ class HomeActivity : ComponentActivity() {
             }
         }
     }
-    /** The add-widget picker (ENG-102 slice 2): one Vesna popup row per provider. */
+    /**
+     * The searchable widget catalog (#149): the installed widgets grouped by
+     * provider with a preview, a name, and the grid size. Browsing binds
+     * nothing; picking runs the same placement flow as the slice-2a popup.
+     */
     private fun showWidgetPicker(anchor: View) {
         val manager = AppWidgetManager.getInstance(this)
-        val providers = manager.getInstalledProvidersForProfile(processUserHandle())
+        val density = resources.displayMetrics.densityDpi
+        val appContext: android.content.Context = this
+        val entries = manager.getInstalledProvidersForProfile(processUserHandle())
             .filter { it.provider != null }
-        if (providers.isEmpty()) {
+            .mapNotNull { info ->
+                val providerLabel = info.loadLabel(packageManager)?.toString() ?: return@mapNotNull null
+                val widgetLabel = info.loadLabel(packageManager)?.toString() ?: providerLabel
+                val preview = if (android.os.Build.VERSION.SDK_INT >= 31) {
+                    try {
+                        info.loadPreviewImage(appContext, density)
+                    } catch (t: Throwable) {
+                        null
+                    }
+                } else null
+                WidgetPickerEntry(
+                    info = info,
+                    providerLabel = providerLabel,
+                    widgetLabel = widgetLabel,
+                    icon = info.loadIcon(appContext, density),
+                    preview = preview,
+                    spanText = widgetSpanText(info, 4, 5),
+                )
+            }
+        if (entries.isEmpty()) {
             showSnackbar(R.string.widget_picker_empty, null)
             return
         }
-        val popup = VesnaPopupMenu(anchor)
-        for (info in providers) {
-            val label = info.loadLabel(packageManager) ?: continue
-            popup.add(label.toString()) { placeWidget(info) }
+        // The Compose content needs the ViewTree owners a plain Dialog window
+        // does not install; share Home's so the recomposer resolves.
+        val pickerCompose = androidx.compose.ui.platform.ComposeView(this).apply {
+            setViewTreeLifecycleOwner(this@HomeActivity)
+            setViewTreeSavedStateRegistryOwner(this@HomeActivity)
+            setViewCompositionStrategy(
+                androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed,
+            )
+            setContent {
+                VesnaTheme(dark = themeMode.isDark(isSystemInDarkTheme()), palette = palette) {
+                    WidgetPickerDialog(
+                        entries = entries,
+                        onPick = { info ->
+                            placeWidget(info)
+                        },
+                        onDismiss = { },
+                    )
+                }
+            }
         }
-        showPopup(popup)
+        val dialog = android.app.Dialog(this).apply {
+            setContentView(pickerCompose)
+            window?.setLayout(
+                android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                android.view.WindowManager.LayoutParams.WRAP_CONTENT,
+            )
+            setOnDismissListener { pickerCompose.disposeComposition() }
+        }
+        dialog.show()
     }
 
     private fun processUserHandle(): android.os.UserHandle =
         android.os.Process.myUserHandle()
+
+    /** The human grid size of a widget, from the modern spans or the dp fallback. */
+    private fun widgetSpanText(
+        info: android.appwidget.AppWidgetProviderInfo,
+        columns: Int,
+        rows: Int,
+    ): String {
+        if (android.os.Build.VERSION.SDK_INT >= 31) {
+            val w = info.targetCellWidth
+            val h = info.targetCellHeight
+            if (w > 0 && h > 0) return "$w × $h"
+        }
+        val cellDp = 70
+        val spanW = ((info.minWidth + cellDp - 1) / cellDp).coerceAtMost(columns)
+        val spanH = ((info.minHeight + cellDp - 1) / cellDp).coerceAtMost(rows)
+        return "$spanW × $spanH"
+    }
+
 
     /** Allocates a host ID, binds the provider, then commits the placement. */
     private fun placeWidget(info: android.appwidget.AppWidgetProviderInfo) {
