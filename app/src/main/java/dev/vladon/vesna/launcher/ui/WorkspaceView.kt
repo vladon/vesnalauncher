@@ -59,29 +59,41 @@ class WorkspaceView @JvmOverloads constructor(
     /** #183: a bound gesture was recognised on an empty Home cell. */
     var onGesture: ((dev.vladon.vesna.launcher.settings.GestureId) -> Unit)? = null
 
+    /** Test/inspection probe: the last gesture this view recognised. */
+    internal var lastFiredGesture: dev.vladon.vesna.launcher.settings.GestureId? = null
+        private set
+
+    private fun fireGesture(gesture: dev.vladon.vesna.launcher.settings.GestureId) {
+        lastFiredGesture = gesture
+        onGesture?.invoke(gesture)
+    }
+
     private var twoFingerActive = false
     private var twoFingerStartY = 0f
     private var twoFingerFired = false
-    private val scaleDetector = ScaleGestureDetector(
-        context,
-        object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-            override fun onScaleEnd(detector: ScaleGestureDetector) {
-                if (!twoFingerFired && twoFingerActive) {
-                    if (detector.scaleFactor < 0.85f) {
-                        twoFingerFired = true
-                        onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.PINCH_IN)
-                    } else if (detector.scaleFactor > 1.15f) {
-                        twoFingerFired = true
-                        onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.PINCH_OUT)
-                    }
-                }
-            }
-        },
-    )
+    private var twoFingerStartSpan = 0f
+    private var twoFingerLastSpan = 0f
 
-    /** The gesture stream gate: the empty-grid two-finger play only, never drags or page swipes. */
+    /** The pinch verdict at the stream end: the span ratio against the start. */
+    private fun resolvePinch() {
+        if (twoFingerFired || !twoFingerActive || twoFingerStartSpan <= 0f) return
+        twoFingerFired = true
+        val ratio = twoFingerLastSpan / twoFingerStartSpan
+        if (ratio < 0.85f) {
+            fireGesture(dev.vladon.vesna.launcher.settings.GestureId.PINCH_IN)
+        } else if (ratio > 1.15f) {
+            fireGesture(dev.vladon.vesna.launcher.settings.GestureId.PINCH_OUT)
+        }
+    }
+
+    /**
+     * The gesture stream gate: never during a drag, a one-finger page swipe or a
+     * long press. The empty-grid requirement is deliberately NOT here — a dense
+     * grid lands the first DOWN on a tile, and the two-finger gestures must work
+     * over tiles (the double-tap keeps its empty-grid rule via lastDownEmpty).
+     */
     private fun twoFingerGestureAllowed(): Boolean =
-        emptyAreaPressed && !dragPromoted && !pageSwipe && !longPressed
+        !dragPromoted && !pageSwipe && !longPressed
 
     /**
      * Whether the LAST ACTION_DOWN landed on the empty grid. The detector's
@@ -198,7 +210,7 @@ class WorkspaceView @JvmOverloads constructor(
             override fun onDoubleTap(e: MotionEvent): Boolean {
                 // #183: the double tap binds on the empty grid only; tiles own their taps.
                 if (lastDownEmpty && !dragPromoted) {
-                    onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.DOUBLE_TAP)
+                    fireGesture(dev.vladon.vesna.launcher.settings.GestureId.DOUBLE_TAP)
                 }
                 return true
             }
@@ -233,6 +245,8 @@ class WorkspaceView @JvmOverloads constructor(
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         val action = ev.actionMasked
+        // The pinch resolves at the stream end before any branch returns early.
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) resolvePinch()
         if (action == MotionEvent.ACTION_DOWN) {
             downX = ev.x
             downY = ev.y
@@ -247,10 +261,13 @@ class WorkspaceView @JvmOverloads constructor(
             pageSwipeInterrupted = true
             // #183: an empty-grid two-finger gesture session (never during a
             // drag or a one-finger page swipe).
+
             if (twoFingerGestureAllowed() && ev.pointerCount == 2) {
                 twoFingerActive = true
                 twoFingerFired = false
                 twoFingerStartY = minOf(ev.getY(0), ev.getY(1))
+                twoFingerStartSpan = abs(ev.getX(0) - ev.getX(1))
+                twoFingerLastSpan = twoFingerStartSpan
             }
         } else if (action == MotionEvent.ACTION_MOVE) {
             // Android keeps the empty grid's long press pending until the pointer leaves the
@@ -260,10 +277,10 @@ class WorkspaceView @JvmOverloads constructor(
                 super.cancelLongPress()
             }
             if (twoFingerActive && ev.pointerCount >= 2 && !twoFingerFired) {
-                scaleDetector.onTouchEvent(ev)
+                twoFingerLastSpan = abs(ev.getX(0) - ev.getX(1))
                 if (minOf(ev.getY(0), ev.getY(1)) <= twoFingerStartY - TWO_FINGER_SWIPE_DP * density) {
                     twoFingerFired = true
-                    onGesture?.invoke(dev.vladon.vesna.launcher.settings.GestureId.TWO_FINGER_SWIPE_UP)
+                    fireGesture(dev.vladon.vesna.launcher.settings.GestureId.TWO_FINGER_SWIPE_UP)
                 }
             }
             if (!longPressed && !pageSwipe && !pageSwipeInterrupted) {

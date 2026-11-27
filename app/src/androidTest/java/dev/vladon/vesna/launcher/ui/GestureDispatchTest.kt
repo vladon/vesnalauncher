@@ -10,6 +10,7 @@ import dev.vladon.vesna.launcher.R
 import dev.vladon.vesna.launcher.settings.GestureAction
 import dev.vladon.vesna.launcher.settings.GestureId
 import dev.vladon.vesna.launcher.settings.WorkspacePreferences
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -70,7 +71,7 @@ class GestureDispatchTest {
                     twoPointerEvent(MotionEvent.ACTION_UP, 500f, 950f, null, null),
                 ).forEach(workspace::dispatchTouchEvent)
                 val drawer = activity.findViewById<DrawerView>(R.id.drawer)
-                assertTrue(drawer.isVisible || drawer.translationX != 0f || drawer.alpha > 0f)
+                assertTrue(drawer.isOpen)
             }
         }
     }
@@ -82,7 +83,7 @@ class GestureDispatchTest {
         WorkspacePreferences(context).setGestureBinding(GestureId.TWO_FINGER_SWIPE_UP, GestureAction.NONE)
         ActivityScenario.launch(HomeActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
-                val workspace = activity.findViewById<View>(R.id.workspace)
+                val workspace = activity.findViewById<WorkspaceView>(R.id.workspace)
                 listOf(
                     twoPointerEvent(MotionEvent.ACTION_DOWN, 300f, 1200f, null, null),
                     twoPointerEvent(MotionEvent.ACTION_POINTER_DOWN, 300f, 1200f, 840f, 1200f),
@@ -93,7 +94,12 @@ class GestureDispatchTest {
                     twoPointerEvent(MotionEvent.ACTION_UP, 520f, 1200f, null, null),
                 ).forEach(workspace::dispatchTouchEvent)
                 val drawer = activity.findViewById<DrawerView>(R.id.drawer)
-                assertTrue(drawer.isVisible || drawer.translationX != 0f || drawer.alpha > 0f)
+                assertEquals(dev.vladon.vesna.launcher.settings.GestureId.PINCH_IN, workspace.lastFiredGesture)
+                val bound = WorkspacePreferences(context).gestureBinding(GestureId.PINCH_IN)
+                assertTrue(
+                    "binding=" + bound + " isOpen=" + drawer.isOpen + " vis=" + drawer.visibility,
+                    drawer.isOpen && bound == GestureAction.OPEN_DRAWER,
+                )
             }
         }
     }
@@ -116,7 +122,7 @@ class GestureDispatchTest {
                     twoPointerEvent(MotionEvent.ACTION_UP, 380f, 1200f, null, null),
                 ).forEach(workspace::dispatchTouchEvent)
                 val drawer = activity.findViewById<DrawerView>(R.id.drawer)
-                assertFalse(drawer.isVisible)
+                assertFalse(drawer.isOpen)
             }
         }
     }
@@ -139,7 +145,7 @@ class GestureDispatchTest {
                 workspace.dispatchTouchEvent(moveEvent(MotionEvent.ACTION_MOVE, 700f, 1200f, 820f, 1220f))
                 workspace.dispatchTouchEvent(twoPointerEvent(MotionEvent.ACTION_UP, 700f, 1200f, null, null))
                 val drawer = activity.findViewById<DrawerView>(R.id.drawer)
-                assertFalse(drawer.isVisible)
+                assertFalse(drawer.isOpen)
             }
         }
     }
