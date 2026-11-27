@@ -91,3 +91,16 @@ fresh-install strict chain).
 The remaining CAND-205 scope (the deeper TalkBack navigation
 walkthrough with the service running) continues when the audit
 resumes.
+
+
+## TalkBack walkthrough (phase 2, partial)
+
+TalkBack enabled live and navigated: the TalkBack focus cursor parks on
+the up-navigation arrow of a settings subpage — the node the phase-1 fix
+labeled — confirming at the TalkBack level that the node is focusable
+and carries its label (the announcement reads «Назад к настройкам
+Vesна»). The full linear traversal of every surface is not automatable
+(injected swipes are not recognized as TalkBack gestures — the
+documented limitation); the traversal walkthrough remains a manual
+follow-up. The capture: `tbs-strip.png` (the cursor parked on the
+labeled up arrow).
