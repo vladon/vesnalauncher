@@ -1,5 +1,6 @@
 package dev.vladon.vesna.launcher.ui
 
+import android.app.WallpaperManager
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -138,6 +139,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var previousPage: View
     private lateinit var nextPage: View
     private lateinit var pageIndicator: WorkspacePageIndicator
+    private val wallpaperManager by lazy { getSystemService(WallpaperManager::class.java) }
 
     /** The icon currently being dragged across workspace and dock. */
     private data class DragSource(
@@ -245,6 +247,7 @@ class HomeActivity : ComponentActivity() {
         if (key == WorkspacePreferences.LAYOUT_LOCKED) applyWorkspaceLock()
         if (key == WorkspacePreferences.SEARCH_BAR_PLACEMENT) applySearchBarPlacement()
         if (key == WorkspacePreferences.PAGE_INDICATOR) applyPageIndicatorStyle()
+        if (key == WorkspacePreferences.WALLPAPER_SCROLL) applyWallpaperOffset()
         if (key == WorkspacePreferences.LABEL_FONT_SCALE_PERCENT || key == WorkspacePreferences.LABEL_FONT) applyLabelTypography()
     }
     private lateinit var appearance: AppearancePreferences
@@ -759,6 +762,23 @@ class HomeActivity : ComponentActivity() {
         pageIndicator.mode = workspacePreferences.pageIndicator
     }
 
+    /**
+     * #181: scrolls the wallpaper with the shown page — the first page shows
+     * the wallpaper's left edge, the last its right edge; with the option off
+     * (or a single page) the wallpaper stays centered.
+     */
+    private fun applyWallpaperOffset() {
+        val token = window?.decorView?.windowToken ?: return
+        val state = renderedState
+        val position = state.pageIds.indexOf(state.activePageId)
+        val xOffset = if (workspacePreferences.wallpaperScroll && state.pageIds.size > 1 && position >= 0) {
+            position.toFloat() / (state.pageIds.size - 1)
+        } else {
+            0.5f
+        }
+        wallpaperManager.setWallpaperOffsets(token, xOffset, 0.5f)
+    }
+
     /** #173: applies the label typography to the workspace and dock tiles. */
     private fun applyLabelTypography() {
         labelFontScalePercent = workspacePreferences.labelFontScalePercent
@@ -890,6 +910,7 @@ class HomeActivity : ComponentActivity() {
                 openDrawerButton.requestFocus()
             }
             pageIndicator.bind(position, count)
+            applyWallpaperOffset()
         }
         renderFolderUi(state)
         restoreHomeShortcut(state)

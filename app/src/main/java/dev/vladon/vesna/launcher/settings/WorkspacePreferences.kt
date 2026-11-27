@@ -46,6 +46,11 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         get() = PageIndicator.fromPreference(prefs.getString(PAGE_INDICATOR, null))
         set(value) = prefs.edit { putString(PAGE_INDICATOR, value.preferenceValue) }
 
+    /** #181: scrolls the wallpaper with the pages (on by default, Nova's default). */
+    var wallpaperScroll: Boolean
+        get() = prefs.getBoolean(WALLPAPER_SCROLL, true)
+        set(value) = prefs.edit { putBoolean(WALLPAPER_SCROLL, value) }
+
     /**
      * #173: Home and dock label size, as a percent of the default text.
      */
@@ -98,6 +103,7 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
         const val PAGE_TRANSITION = "home_page_transition"
         const val PAGE_LOOP = "home_page_loop"
         const val PAGE_INDICATOR = "home_page_indicator"
+        const val WALLPAPER_SCROLL = "home_wallpaper_scroll"
         const val LABEL_FONT_SCALE_PERCENT = "home_label_font_scale_percent"
         const val LABEL_FONT = "home_label_font"
     }

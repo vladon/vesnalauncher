@@ -152,6 +152,8 @@ internal fun SettingsScreen(
     onPageTransitionChanged: (PageTransition) -> Unit,
     pageLoop: Boolean,
     onPageLoopChanged: (Boolean) -> Unit,
+    wallpaperScroll: Boolean,
+    onWallpaperScrollChanged: (Boolean) -> Unit,
     pageIndicator: PageIndicator,
     onPageIndicatorChanged: (PageIndicator) -> Unit,
     grid: GridCanvas?,
@@ -348,6 +350,13 @@ internal fun SettingsScreen(
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_page_indicator) {
                                     PageIndicatorRow(pageIndicator, onPageIndicatorChanged)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_wallpaper_scroll) {
+                                    SettingsSwitch(
+                                        R.string.settings_wallpaper_scroll, R.string.settings_wallpaper_scroll_detail,
+                                        wallpaperScroll, onWallpaperScrollChanged,
+                                    )
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_pin_new_apps) {
@@ -557,6 +566,7 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_page_loop, R.string.settings_page_loop_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_page_indicator, R.string.settings_page_indicator_counter),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_wallpaper_scroll, R.string.settings_wallpaper_scroll_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_icon_size, R.string.settings_home_icon_size_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_icon_size, R.string.settings_dock_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),

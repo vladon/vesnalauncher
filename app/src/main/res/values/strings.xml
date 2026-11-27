@@ -103,6 +103,8 @@
     <string name="settings_page_indicator_counter">Counter (default)</string>
     <string name="settings_page_indicator_dot">Dots</string>
     <string name="settings_page_indicator_line">Line</string>
+    <string name="settings_wallpaper_scroll">Wallpaper scrolling</string>
+    <string name="settings_wallpaper_scroll_detail">The wallpaper shifts with the pages: the first page shows its left edge, the last one its right edge.</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>
