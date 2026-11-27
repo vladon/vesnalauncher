@@ -302,7 +302,9 @@ class AppIconView @JvmOverloads constructor(
     }
 
     private fun applyLabelTypography() {
-        labelView.textSize = baseLabelTextSizePx * labelFontScalePercent / 100f
+        // setTextSize(float) reads SP units; the base size was captured in px, so
+        // pass it back as px or every scale above 0 blows the labels up ~2.6x.
+        labelView.setTextSize(TypedValue.COMPLEX_UNIT_PX, baseLabelTextSizePx * labelFontScalePercent / 100f)
         labelView.typeface = labelTypeface
     }
 
