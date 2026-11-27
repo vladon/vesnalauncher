@@ -61,6 +61,9 @@ class WorkspaceView @JvmOverloads constructor(
     /** Creates the live host view for a committed widget (ENG-102 slice 2). */
     var widgetViewProvider: ((appWidgetId: Int) -> View?)? = null
 
+    /** The long-press options for a placed widget (ENG-102 slice 2b). */
+    var onWidgetOptions: ((dev.vladon.vesna.launcher.data.WidgetEntity, View) -> Unit)? = null
+
     /** #228: the gesture-only desktop — the workspace exposes the drawer and
      *  the Home options as custom accessibility actions for TalkBack users. */
     var onGestureOpenDrawer: (() -> Unit)? = null
@@ -470,8 +473,7 @@ class WorkspaceView @JvmOverloads constructor(
             when (content) {
                 is CellContent.App -> onAppOptions?.invoke(cell, content.app, anchor)
                 is CellContent.FolderCell -> onFolderLongClick?.invoke(content.folder, anchor)
-                // The widget options surface lands with the placement interactions slice.
-                is CellContent.WidgetCell -> {}
+                is CellContent.WidgetCell -> onWidgetOptions?.invoke(content.widget, anchor)
             }
             return
         }
@@ -624,6 +626,9 @@ class WorkspaceView @JvmOverloads constructor(
                     widgetViewProvider?.invoke(content.widget.appWidgetId)?.let { view.installHost(it) }
                 }
                 view.contentDescription = context.getString(R.string.widget_cell_description)
+                // The long press arrives through the cell's own gesture
+                // detector: the host view consumes ordinary taps.
+                view.onWidgetLongPress = { onWidgetOptions?.invoke(content.widget, view) }
                 continue
             }
             val iconView = view as AppIconView
@@ -691,10 +696,10 @@ class WorkspaceView @JvmOverloads constructor(
     /** The visible content bound to [cell], if any. */
     fun contentAt(cell: Int): CellContent? = boundContent[cell]
 
-    internal fun findChildForCell(cell: Int): AppIconView? {
+    internal fun findChildForCell(cell: Int): View? {
         for (i in 0 until childCount) {
             val child = getChildAt(i)
-            if ((child.tag as? Int) == cell) return child as AppIconView
+            if ((child.tag as? Int) == cell) return child
         }
         return null
     }

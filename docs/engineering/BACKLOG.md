@@ -162,6 +162,10 @@ on the emulator). **Slice 2a (minimal add flow) shipped in v0.4.112:** the
 Home-menu picker, the `ACTION_APPWIDGET_BIND` grant, the commit at the first
 free 2x2 cell, and the live `AppWidgetHostView` render (recorded in
 [VESNA-QA-WIDGET-PLACEMENT](verification/VESNA-QA-WIDGET-PLACEMENT.md)).
+**Slice 2b (removal with undo, `WIDGET-102`) shipped in v0.4.113:** the
+widget long-press options, the remove with undo (the record first, the
+binding released after the undo window), recorded in
+[VESNA-QA-WIDGET-REMOVAL](verification/VESNA-QA-WIDGET-REMOVAL.md).
 Before enabling placement, verify provider configuration cancellation,
 restart recovery, and restore behavior against that contract. Removal with
 undo (`WIDGET-102`) is a separate interaction.

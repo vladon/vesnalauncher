@@ -270,4 +270,7 @@
     <string name="menu_add_widget">Add widget</string>
     <string name="widget_picker_empty">No widgets available</string>
     <string name="widget_picker_no_room">No room for this widget</string>
+    <string name="widget_remove">Remove widget</string>
+    <string name="widget_removed">Widget removed</string>
+    <string name="widget_removed_undo">Undo</string>
 </resources>
