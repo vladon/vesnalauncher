@@ -41,3 +41,11 @@ theme).
   to a no-op (the binding stays reassignable). The a11y route remains the
   documented fallback if that ever happens.
 - The release build and physical devices need separate runs.
+- CORRECTION (v0.4.106): the v0.4.105 default logic mapped an EXPLICIT
+  «Не назначено» to the notifications default (the unset and the stored
+  "none" were indistinguishable through the enum reader), so the gesture
+  could not be turned off. Fixed in v0.4.106: the notifications default
+  applies only while the preference is unset; a stored none wins. The
+  verified cases: the unset -> the shade expands; the explicit none ->
+  the swipe-down does nothing (the home stays, the shade does not
+  appear).
