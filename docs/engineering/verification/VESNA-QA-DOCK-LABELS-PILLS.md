@@ -52,3 +52,12 @@ locale, fresh default state after `pm clear`):
   `setLabelTypography`), unaffected before and after.
 - The release build and the physical devices need separate runs; the
   published APK is verified by digest/cert/badging in the release chain.
+- CORRECTION (2026-11-27): the on-device re-verification of the default
+  state ran on the DEBUG build of the same commit, not the release APK —
+  the `install -r` of the release over the debug-signed build silently
+  failed on the signature mismatch, and a `flags=0x0` line read from the
+  wrong dumpsys section masked it. The published release APK itself is
+  verified by digest/cert/badging; the first properly installed release
+  live check (uninstall + fresh install + the authoritative flags line
+  + the run-as refusal) happened on v0.4.100 — see
+  [VESNA-QA-WORK-TAB-ALWAYS-ON](VESNA-QA-WORK-TAB-ALWAYS-ON.md).
