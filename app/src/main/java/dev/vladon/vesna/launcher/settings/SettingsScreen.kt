@@ -239,10 +239,16 @@ internal fun SettingsScreen(
                     },
                     navigationIcon = {
                         if (inSubpage) {
-                            IconButton(onClick = up, modifier = Modifier.vesnaFocusRing()) {
+                            val backLabel = stringResource(R.string.settings_back_to_root)
+                            IconButton(
+                                onClick = up,
+                                modifier = Modifier
+                                    .vesnaFocusRing()
+                                    .semantics { contentDescription = backLabel },
+                            ) {
                                 Icon(
                                     painterResource(R.drawable.ic_settings_back),
-                                    contentDescription = stringResource(R.string.settings_back_to_root),
+                                    contentDescription = null,
                                 )
                             }
                         }
