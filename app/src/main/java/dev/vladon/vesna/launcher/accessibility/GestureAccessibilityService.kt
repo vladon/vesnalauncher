@@ -16,14 +16,18 @@ class GestureAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
-    override fun onDestroy() {
-        if (instance === this) instance = null
-        super.onDestroy()
-    }
-
     companion object {
         /** The connected instance, or null while the service is unbound. */
         internal var instance: GestureAccessibilityService? = null
             private set
+    }
+
+    override fun onServiceConnected() {
+        instance = this
+    }
+
+    override fun onDestroy() {
+        if (instance === this) instance = null
+        super.onDestroy()
     }
 }

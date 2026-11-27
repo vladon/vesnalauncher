@@ -51,19 +51,6 @@
             android:layout_gravity="bottom|center_horizontal"
             android:orientation="horizontal">
 
-            <ImageButton
-                android:id="@+id/home_options"
-                android:layout_width="@dimen/home_control_target"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="@dimen/home_control_gap"
-                android:background="@drawable/home_control_icon_button"
-                android:contentDescription="@string/home_options"
-                android:focusable="true"
-                android:padding="0dp"
-                android:scaleType="center"
-                android:src="@drawable/ic_home_options"
-                android:tooltipText="@string/home_options" />
-
             <LinearLayout
                 android:id="@+id/workspace_page_controls"
                 android:layout_width="wrap_content"
@@ -106,19 +93,13 @@
                     android:scaleType="center"
                     android:src="@drawable/ic_workspace_next_page" />
             </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/home_open_drawer"
-                android:layout_width="@dimen/home_control_target"
-                android:layout_height="match_parent"
-                android:background="@drawable/home_control_icon_button"
-                android:contentDescription="@string/drawer_open"
-                android:focusable="true"
-                android:padding="0dp"
-                android:scaleType="center"
-                android:src="@drawable/ic_open_drawer"
-                android:tooltipText="@string/drawer_open" />
         </dev.vladon.vesna.launcher.ui.HomeControls>
+
+        <View
+            android:id="@+id/menu_anchor"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:layout_gravity="center" />
     </FrameLayout>
 
     <dev.vladon.vesna.launcher.ui.DrawerView

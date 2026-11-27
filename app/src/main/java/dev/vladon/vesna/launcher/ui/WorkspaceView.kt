@@ -7,7 +7,9 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.ScaleGestureDetector
+import android.os.Bundle
 import android.view.HapticFeedbackConstants
+import android.view.accessibility.AccessibilityNodeInfo
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -55,6 +57,41 @@ class WorkspaceView @JvmOverloads constructor(
     var labelFont: LabelFont = LabelFont.INTER_MEDIUM
     var onEmptyAreaLongClick: (() -> Unit)? = null
     var onSwipeUp: (() -> Unit)? = null
+
+    /** #228: the gesture-only desktop — the workspace exposes the drawer and
+     *  the Home options as custom accessibility actions for TalkBack users. */
+    var onGestureOpenDrawer: (() -> Unit)? = null
+    var onGestureHomeOptions: (() -> Unit)? = null
+
+    override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
+        super.onInitializeAccessibilityNodeInfo(info)
+        info.addAction(
+            AccessibilityNodeInfo.AccessibilityAction(
+                AccessibilityNodeInfo.ACTION_CLICK,
+                context.getString(R.string.a11y_open_drawer),
+            ),
+        )
+        info.addAction(
+            AccessibilityNodeInfo.AccessibilityAction(
+                AccessibilityNodeInfo.ACTION_LONG_CLICK,
+                context.getString(R.string.a11y_home_options),
+            ),
+        )
+    }
+
+    override fun performAccessibilityAction(action: Int, arguments: Bundle?): Boolean {
+        when (action) {
+            AccessibilityNodeInfo.ACTION_CLICK -> {
+                onGestureOpenDrawer?.invoke()
+                return true
+            }
+            AccessibilityNodeInfo.ACTION_LONG_CLICK -> {
+                onGestureHomeOptions?.invoke()
+                return true
+            }
+        }
+        return super.performAccessibilityAction(action, arguments)
+    }
 
     /** #183: a bound gesture was recognised on an empty Home cell. */
     var onGesture: ((dev.vladon.vesna.launcher.settings.GestureId) -> Unit)? = null
