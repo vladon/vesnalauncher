@@ -392,6 +392,7 @@ class HomeActivity : ComponentActivity() {
         workspace.onGestureOpenDrawer = ::openDrawer
         workspace.onGestureHomeOptions = ::showLauncherMenu
         workspace.widgetViewProvider = { id -> widgetHostManager.createHostView(id) }
+        workspace.onWidgetOptions = ::showWidgetOptions
         lifecycleScope.launch { widgetHostManager.reconcile() }
         workspace.onPageDrag = ::onPageDragProgress
         workspace.onPageDragEnd = ::onPageDragEnded
@@ -2285,6 +2286,44 @@ class HomeActivity : ComponentActivity() {
         showPopup(popup)
     }
 
+    /** The placed-widget options (ENG-102 slice 2b): remove with undo. */
+    private fun showWidgetOptions(widget: dev.vladon.vesna.launcher.data.WidgetEntity, anchor: View) {
+        val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.widget_remove) { removeWidgetWithUndo(widget) }
+        showPopup(popup)
+    }
+
+    /**
+     * ADR-WIDGET-1 removal order: the Room record goes first (the widget
+     * disappears immediately), the host binding is released only after the
+     * undo window closes. Undo re-inserts the same record; the live binding
+     * makes the widget reappear with no rebind dialog.
+     */
+    private fun removeWidgetWithUndo(widget: dev.vladon.vesna.launcher.data.WidgetEntity) {
+        snackbarJob?.cancel()
+        snackbarJob = lifecycleScope.launch {
+            val dao = VesnaApplication.graph(this@HomeActivity).widgetDao
+            withContext(NonCancellable) { dao.deleteById(widget.id) }
+            var undo = false
+            try {
+                if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                    undo = homeSnackbar.showSnackbar(
+                        FolderUndoVisuals(
+                            getString(R.string.widget_removed),
+                            getString(R.string.widget_removed_undo),
+                            focusAction = false,
+                        ),
+                    ) == SnackbarResult.ActionPerformed
+                }
+            } finally {
+                if (undo) {
+                    withContext(NonCancellable) { dao.insert(widget) }
+                } else {
+                    widgetHostManager.deleteId(widget.appWidgetId)
+                }
+            }
+        }
+    }
     /** The add-widget picker (ENG-102 slice 2): one Vesna popup row per provider. */
     private fun showWidgetPicker(anchor: View) {
         val manager = AppWidgetManager.getInstance(this)

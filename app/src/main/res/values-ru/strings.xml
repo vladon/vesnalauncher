@@ -274,4 +274,7 @@
     <string name="widget_picker_empty">Нет доступных виджетов</string>
     <string name="widget_picker_no_room">Нет места для этого виджета</string>
     <string name="widget_cell_description">Виджет</string>
+    <string name="widget_remove">Удалить виджет</string>
+    <string name="widget_removed">Виджет удалён</string>
+    <string name="widget_removed_undo">Отменить</string>
 </resources>
