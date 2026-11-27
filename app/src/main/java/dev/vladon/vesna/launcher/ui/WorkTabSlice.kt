@@ -9,11 +9,10 @@ import dev.vladon.vesna.launcher.apps.LauncherApp
 internal object WorkTabSlice {
     fun apply(
         apps: List<LauncherApp>,
-        tabEnabled: Boolean,
         workProfileUserSerial: Long?,
         workTabActive: Boolean,
     ): List<LauncherApp> {
-        if (!tabEnabled || workProfileUserSerial == null) return apps
+        if (workProfileUserSerial == null) return apps
         return apps.filter { (it.key.userSerial == workProfileUserSerial) == workTabActive }
     }
 }

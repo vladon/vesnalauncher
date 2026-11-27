@@ -150,19 +150,7 @@ class DrawerView @JvmOverloads constructor(
         set(value) {
             if (field == value) return
             field = value
-            workTabBar.isVisible = value != null && workTabEnabled
-            if (workTabActive) {
-                workTabActive = false
-                applyFilter(resetScroll = true)
-            }
-        }
-
-    /** Whether the drawer shows the Apps | Work tab bar (the #197 opt-in switch). */
-    internal var workTabEnabled: Boolean = false
-        set(value) {
-            if (field == value) return
-            field = value
-            workTabBar.isVisible = value && workProfileUserSerial != null
+            workTabBar.isVisible = value != null
             if (workTabActive) {
                 workTabActive = false
                 applyFilter(resetScroll = true)
@@ -439,7 +427,7 @@ class DrawerView @JvmOverloads constructor(
         val search = appSearch
         var filtered = search?.filter(query).orEmpty()
         // The Work tab lists only managed-profile apps; Apps shows everything else.
-        filtered = WorkTabSlice.apply(filtered, workTabEnabled, workProfileUserSerial, workTabActive)
+        filtered = WorkTabSlice.apply(filtered, workProfileUserSerial, workTabActive)
         val showPages = layoutMode == DrawerLayoutMode.PAGED && query.isEmpty()
         pager.isVisible = showPages
         list.isVisible = !showPages
