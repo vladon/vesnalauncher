@@ -3,6 +3,8 @@ package dev.vladon.vesna.launcher.ui
 import android.accessibilityservice.AccessibilityService
 import android.app.WallpaperManager
 import dev.vladon.vesna.launcher.accessibility.GestureAccessibilityService
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -282,6 +284,25 @@ class HomeActivity : ComponentActivity() {
     private val defaultHomeRequest =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
+    /** Holds the host ID while the system bind-grant dialog is open. */
+    private var pendingWidgetBind: Int = 0
+
+    private val widgetBindRequest =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val id = pendingWidgetBind
+            pendingWidgetBind = 0
+            if (result.resultCode != RESULT_OK || id == 0) {
+                if (id != 0) widgetHostManager.deleteId(id)
+                return@registerForActivityResult
+            }
+            val info = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)
+            if (info == null) {
+                widgetHostManager.deleteId(id)
+            } else {
+                commitWidget(id, info)
+            }
+        }
+
     override fun attachBaseContext(newBase: Context) {
         appearance = AppearancePreferences(newBase)
         themeMode = appearance.themeMode
@@ -370,6 +391,7 @@ class HomeActivity : ComponentActivity() {
         workspace.onGesture = ::handleGesture
         workspace.onGestureOpenDrawer = ::openDrawer
         workspace.onGestureHomeOptions = ::showLauncherMenu
+        workspace.widgetViewProvider = { id -> widgetHostManager.createHostView(id) }
         lifecycleScope.launch { widgetHostManager.reconcile() }
         workspace.onPageDrag = ::onPageDragProgress
         workspace.onPageDragEnd = ::onPageDragEnded
@@ -1000,6 +1022,7 @@ class HomeActivity : ComponentActivity() {
             return when (val content = state.workspaceCells[cell]) {
                 is CellContent.App -> ShortcutFocus.WorkspaceApp(state.activePageId, cell, content.app.key)
                 is CellContent.FolderCell -> ShortcutFocus.WorkspaceFolder(state.activePageId, cell, content.folder.id)
+                is CellContent.WidgetCell -> null
                 null -> null
             }
         }
@@ -1432,6 +1455,9 @@ class HomeActivity : ComponentActivity() {
                 } else {
                     controller.moveWorkspacePinToCell(pinId, source.pageId, source.fromCell, destination, cell)
                 }
+                // A widget cell is covered/reserved; a drop that slips past the
+                // mask must not place a pin over a live widget.
+                is CellContent.WidgetCell -> false
             }
         })
     }
@@ -1565,7 +1591,7 @@ class HomeActivity : ComponentActivity() {
             null -> false
             is CellContent.App -> content.app.key == key
             is CellContent.FolderCell -> renderedState.folderContents[content.folder.id].orEmpty().any { it.app.key == key }
-        }
+            is CellContent.WidgetCell -> false        }
         return if (duplicate) null else cell
     }
 
@@ -1964,6 +1990,8 @@ class HomeActivity : ComponentActivity() {
                 source.pageId,
             )
             is CellContent.FolderCell -> controller.addToFolder(app, content.folder.id, source.folderDropSource())
+            // A committed widget cell is reserved; drops never legitimately land here.
+            is CellContent.WidgetCell -> {}
         }
     }
 
@@ -2257,6 +2285,95 @@ class HomeActivity : ComponentActivity() {
         showPopup(popup)
     }
 
+    /** The add-widget picker (ENG-102 slice 2): one Vesna popup row per provider. */
+    private fun showWidgetPicker(anchor: View) {
+        val manager = AppWidgetManager.getInstance(this)
+        val providers = manager.getInstalledProvidersForProfile(processUserHandle())
+            .filter { it.provider != null }
+        if (providers.isEmpty()) {
+            showSnackbar(R.string.widget_picker_empty, null)
+            return
+        }
+        val popup = VesnaPopupMenu(anchor)
+        for (info in providers) {
+            val label = info.loadLabel(packageManager) ?: continue
+            popup.add(label.toString()) { placeWidget(info) }
+        }
+        showPopup(popup)
+    }
+
+    private fun processUserHandle(): android.os.UserHandle =
+        android.os.Process.myUserHandle()
+
+    /** Allocates a host ID, binds the provider, then commits the placement. */
+    private fun placeWidget(info: android.appwidget.AppWidgetProviderInfo) {
+        if (!menuAnchor.isShown) return
+        val id = widgetHostManager.allocateId()
+        val manager = AppWidgetManager.getInstance(this)
+        val bound = manager.bindAppWidgetIdIfAllowed(id, info.provider)
+        if (!bound) {
+            pendingWidgetBind = id
+            val grant = Intent(AppWidgetManager.ACTION_APPWIDGET_BIND)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, info.provider)
+            widgetBindRequest.launch(grant)
+            return
+        }
+        commitWidget(id, info)
+    }
+
+    /** ADR-WIDGET-1 order: bind first, then the Room row; cancellation releases the ID. */
+    private fun commitWidget(id: Int, info: android.appwidget.AppWidgetProviderInfo) {
+        lifecycleScope.launch {
+            val state = renderedState
+            val grid = state.grid
+            // API 31+ reports the provider default spans; earlier devices fall back to 2x2.
+            val defaultSpanX = if (android.os.Build.VERSION.SDK_INT >= 31) info.targetCellWidth else 0
+            val defaultSpanY = if (android.os.Build.VERSION.SDK_INT >= 31) info.targetCellHeight else 0
+            val spanX = defaultSpanX.takeIf { it > 0 }?.coerceIn(1, grid.columns) ?: 2
+            val spanY = defaultSpanY.takeIf { it > 0 }?.coerceIn(1, grid.rows) ?: 2
+            val anchor = firstFreeCellForWidget(state, spanX, spanY)
+            if (anchor == null) {
+                widgetHostManager.deleteId(id)
+                showSnackbar(R.string.widget_picker_no_room, null)
+                return@launch
+            }
+            VesnaApplication.graph(this@HomeActivity).widgetDao.insert(
+                dev.vladon.vesna.launcher.data.WidgetEntity(
+                    appWidgetId = id,
+                    providerPackage = info.provider.packageName,
+                    providerClass = info.provider.className,
+                    pageId = state.activePageId,
+                    cellIndex = anchor,
+                    spanX = spanX,
+                    spanY = spanY,
+                ),
+            )
+        }
+    }
+
+    /** First row-major 2x2-fitting anchor clear of visible cells and reservations. */
+    private fun firstFreeCellForWidget(state: dev.vladon.vesna.launcher.workspace.LauncherUiState, spanX: Int, spanY: Int): Int? {
+        val grid = state.grid
+        val columns = grid.columns
+        val reserved = state.reservedWorkspaceCellsMask
+        for (cell in 0 until columns * grid.rows) {
+            if (grid.rowOf(cell) + spanY > grid.rows) continue
+            if (grid.columnOf(cell) + spanX > columns) continue
+            var fits = true
+            loop@ for (row in 0 until spanY) {
+                for (column in 0 until spanX) {
+                    val covered = cell + row * columns + column
+                    if (reserved and (1 shl covered) != 0 || state.workspaceCells.containsKey(covered)) {
+                        fits = false
+                        break@loop
+                    }
+                }
+            }
+            if (fits) return cell
+        }
+        return null
+    }
     private fun showLauncherMenu() {
         if (renderedState.isDragPagePreview) return
         val popup = VesnaPopupMenu(menuAnchor)
@@ -2284,6 +2401,7 @@ class HomeActivity : ComponentActivity() {
             }
         }
         if (!layoutLocked) {
+            popup.add(R.string.menu_add_widget) { showWidgetPicker(menuAnchor) }
             if (page.pageIds.size in 1 until MAX_WORKSPACE_PAGES) {
                 popup.add(R.string.menu_add_workspace_page) { controller.createWorkspacePage() }
             }

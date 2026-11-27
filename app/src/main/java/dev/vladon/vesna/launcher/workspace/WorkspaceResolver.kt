@@ -2,6 +2,7 @@ package dev.vladon.vesna.launcher.workspace
 
 import dev.vladon.vesna.launcher.apps.AppKey
 import dev.vladon.vesna.launcher.apps.LauncherApp
+import dev.vladon.vesna.launcher.data.WidgetEntity
 
 /** A rendered dock tile keeps the ID of its persisted pin. */
 data class DockPin(val id: Long, val app: LauncherApp)
@@ -48,6 +49,8 @@ internal object WorkspaceResolver {
     /**
      * Project one page's visible shortcuts and folders while keeping unavailable
      * top-level shortcuts reserved. Folder members do not occupy grid cells.
+     * A committed widget occupies its anchor cell and reserves every covered
+     * cell (its spans), so drag targets reject them.
      */
     fun workspaceLayout(
         items: List<WorkspaceItem>,
@@ -55,6 +58,7 @@ internal object WorkspaceResolver {
         folders: List<Folder>,
         pageId: Long = DEFAULT_WORKSPACE_PAGE_ID,
         grid: GridCanvas = GridCanvas.DEFAULT,
+        widgets: List<WidgetEntity> = emptyList(),
     ): WorkspaceLayout {
         val cells = LinkedHashMap<Int, CellContent>()
         var reservedCellsMask = 0
@@ -79,6 +83,22 @@ internal object WorkspaceResolver {
             val members = items.count { it.folderId == folder.id }
             cells[folder.cellIndex] = CellContent.FolderCell(folder, members)
             reservedCellsMask = reservedCellsMask and (1 shl folder.cellIndex).inv()
+        }
+        for (widget in widgets) {
+            if (widget.pageId != pageId) continue
+            if (!grid.isValidCell(widget.cellIndex)) continue
+            // Every covered cell is reserved regardless of the anchor occupancy:
+            // the anchor plus the span neighbours reject drag targets.
+            for (row in 0 until widget.spanY) {
+                for (column in 0 until widget.spanX) {
+                    val covered = widget.cellIndex + row * grid.columns + column
+                    if (grid.isValidCell(covered)) {
+                        reservedCellsMask = reservedCellsMask or (1 shl covered)
+                    }
+                }
+            }
+            if (cells.containsKey(widget.cellIndex)) continue
+            cells[widget.cellIndex] = CellContent.WidgetCell(widget)
         }
         return WorkspaceLayout(cells, reservedCellsMask)
     }

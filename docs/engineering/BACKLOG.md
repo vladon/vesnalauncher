@@ -158,7 +158,10 @@ Stable page IDs from ENG-101 are available. The
 ownership and cleanup contract. **Slice 1 (mechanism) shipped in v0.4.110:**
 `WidgetHostManager`, the additive `widgets` Room table (schema 7), the startup
 reconcile, and the ADR contract checks (`WidgetHostLifecycleTest`, 4/4 green
-on the emulator). Slice 2 (picker, add flow, placement UI) is still open.
+on the emulator). **Slice 2a (minimal add flow) shipped in v0.4.112:** the
+Home-menu picker, the `ACTION_APPWIDGET_BIND` grant, the commit at the first
+free 2x2 cell, and the live `AppWidgetHostView` render (recorded in
+[VESNA-QA-WIDGET-PLACEMENT](verification/VESNA-QA-WIDGET-PLACEMENT.md)).
 Before enabling placement, verify provider configuration cancellation,
 restart recovery, and restore behavior against that contract. Removal with
 undo (`WIDGET-102`) is a separate interaction.

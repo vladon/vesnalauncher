@@ -53,6 +53,7 @@ class LauncherGraph(appContext: Context) {
         discovery = discovery,
         appLauncher = appLauncher,
         workspaceRepository = workspaceRepository,
+        widgetDao = widgetDao,
         packageEvents = packageChangeMonitor.events,
     )
 }

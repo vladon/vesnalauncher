@@ -417,6 +417,7 @@ class WorkspaceRepositoryPagesTest {
                 discovery,
                 AppLauncher(context),
                 repository,
+                db.widgetDao(),
                 MutableSharedFlow<PackageEvent>(),
             )
             // First run: the seed lands on the default page and page metadata emits.
@@ -512,7 +513,7 @@ class WorkspaceRepositoryPagesTest {
 
             val discovery = CountingDiscovery(listOf(work, personal))
             val events = MutableSharedFlow<PackageEvent>()
-            val controller = LauncherController(scope, discovery, AppLauncher(context), repository, events)
+            val controller = LauncherController(scope, discovery, AppLauncher(context), repository, db.widgetDao(), events)
             events.subscriptionCount.first { it > 0 }
             controller.selectWorkspacePage(second)
             val both = controller.state.first { it.activePageId == second && it.folderContents[folder]?.size == 2 }
@@ -570,7 +571,7 @@ class WorkspaceRepositoryPagesTest {
             assertFalse(repository.seedOrAdopt(emptyList()))
             val controller = LauncherController(
                 scope, CountingDiscovery(listOf(first, second)), AppLauncher(context),
-                repository, MutableSharedFlow<PackageEvent>(),
+                repository, db.widgetDao(), MutableSharedFlow<PackageEvent>(),
             )
             val separate = mapOf(0 to CellContent.App(first), 1 to CellContent.App(second))
             controller.state.first { it.workspaceCells == separate }

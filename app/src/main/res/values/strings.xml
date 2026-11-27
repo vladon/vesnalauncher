@@ -266,4 +266,8 @@
     <string name="about_tagline">A fast, free, and open-source Android launcher.</string>
     <string name="about_license">Distributed under the MIT license.</string>
     <string name="about_github">Source code on GitHub</string>
+    <string name="widget_cell_description">Widget</string>
+    <string name="menu_add_widget">Add widget</string>
+    <string name="widget_picker_empty">No widgets available</string>
+    <string name="widget_picker_no_room">No room for this widget</string>
 </resources>

@@ -42,6 +42,12 @@ class WidgetHostManager(context: Context, private val widgetDao: WidgetDao) {
         host.deleteAppWidgetId(appWidgetId)
     }
 
+    /** Creates the live host view for a committed widget, or null when the binding is lost. */
+    fun createHostView(appWidgetId: Int): android.view.View? {
+        val info = manager.getAppWidgetInfo(appWidgetId) ?: return null
+        return host.createView(appContext, appWidgetId, info)
+    }
+
     /** True when Android still knows the provider for this binding. */
     fun isBound(appWidgetId: Int): Boolean =
         manager.getAppWidgetInfo(appWidgetId) != null
