@@ -53,14 +53,15 @@ internal class WorkspacePreferences(private val prefs: SharedPreferences) {
 
     /**
      * #183: the action bound to a Home gesture. The swipe-down default is the
-     * notification expansion (Nova's default); every other gesture starts None.
+     * notification expansion (Nova's default) ONLY while the preference is
+     * unset — an explicit «Не назначено» (none) persists as "none" and wins.
      */
     fun gestureBinding(gesture: GestureId): GestureAction {
-        val stored = GestureAction.fromPreference(prefs.getString(gesture.preferenceKey, null))
-        if (gesture == GestureId.SWIPE_DOWN && stored == GestureAction.NONE) {
+        val stored = prefs.getString(gesture.preferenceKey, null)
+        if (stored == null && gesture == GestureId.SWIPE_DOWN) {
             return GestureAction.EXPAND_NOTIFICATIONS
         }
-        return stored
+        return GestureAction.fromPreference(stored)
     }
 
     fun setGestureBinding(gesture: GestureId, action: GestureAction) {
