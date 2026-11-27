@@ -30,6 +30,12 @@ dark theme).
 - The 50 ms-captured mid-animation frame shows the outgoing overlay mid-
   slide; frame-perfect capture tooling was not used.
 - Release builds and physical devices need separate runs.
+- CORRECTION (2026-11-27): the live page-change check on the QA AVD ran
+  on the DEBUG build of this commit; the release-over-debug install had
+  silently failed (signature mismatch) and a misread flags line masked
+  it. The published APK is verified by digest/cert/badging; the first
+  properly installed release live check is on v0.4.100 — see
+  [VESNA-QA-WORK-TAB-ALWAYS-ON](VESNA-QA-WORK-TAB-ALWAYS-ON.md).
 
 ## Regression coverage
 
