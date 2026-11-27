@@ -900,6 +900,7 @@ class HomeActivity : ComponentActivity() {
 
     override fun onStop() {
         workspace.widgetMoveTarget = null
+        workspace.isLongClickable = true
         widgetHostManager.stopListening()
         workspace.cancelDrag()
         folderDialog?.cancelMemberDrag()
@@ -2305,6 +2306,9 @@ class HomeActivity : ComponentActivity() {
      */
     private fun beginWidgetMove(widget: dev.vladon.vesna.launcher.data.WidgetEntity) {
         workspace.widgetMoveTarget = widget
+        // The framework empty-area long press opens the launcher menu;
+        // in the pick mode a long press selects the cell instead.
+        workspace.isLongClickable = false
         showSnackbar(R.string.widget_move_pick_cell, null)
     }
 
@@ -2314,6 +2318,7 @@ class HomeActivity : ComponentActivity() {
         val grid = renderedState.grid
         val state = renderedState
         val columns = grid.columns
+        workspace.isLongClickable = true
         if (grid.rowOf(cell) + widget.spanY > grid.rows || grid.columnOf(cell) + widget.spanX > columns) {
             showSnackbar(R.string.widget_move_no_room, null)
             return
