@@ -5422,3 +5422,26 @@ exercised on an isolated Android 15 AVD with Nova 9.0.1 as system Home.
   + always-on; #199 moot-resolved by the tabbed architecture; settings-search persists);
   §2 items 8/11/12 partially landed (work tab, page extras, gesture bindings phase 1).
 - Evidence: `EVI-VESNA-003/parity162-*`.
+
+### OBS-176 addendum — re-checks on v0.4.107: #176 persists; #199 moot-resolved; intermittent not reproduced
+
+- **#176 re-confirmed broken on v0.4.107**: an injected edge-drag moved the last pin
+  (EnumDiag) off a freshly created secondary page; the emptied page persisted
+  (pager 2 dots after the move). Restore: the pin was extracted from an accidental
+  folder join (drop onto the Folder cell) and the empty page removed via the manual
+  Remove empty page keeper. Caveat recorded: injected-swipe limitation (the dev's
+  #249 walkthrough hit the same wall) — real-finger drags may behave differently.
+- **#199 moot-resolved by the architecture**: the always-tabbed drawer leaves no
+  merged-inline surface for the omission; Apps tab = all 23 personal apps (YouTube +
+  YT Music present), Work tab = the full 17. #199 stays closed.
+- **Intermittent Work-tab render: not reproduced on 0.4.107** — Work/Apps toggles and
+  the work-tab passes this cycle rendered clean slices (Work tab: work-only + Turn-off
+  row; Apps tab: personal-only). The 0.4.95-era capture stands as the only occurrence.
+- **Fresh-seed layout note (v0.4.107 seed)**: the default workspace seeds personal and
+  work-app pins as inline pairs with badges (Chrome/Clock/Contacts/Drive/Files/Gmail/
+  IconProbe/Maps/Messages twins + Folder + dock Calendar/Camera twins) — 24 tiles on
+  one page; different from the v0.4.92-era seed. Post-verification the state was
+  restored to this exact seed layout (EnumDiag pair in place, single page).
+- Item re-verified: **Work tab always-on** (bar without the switch) and **#231 dock
+  labels** (full «Calendar»/«Camera» after re-adding dock pins — the px/sp fix works
+  on the release).
