@@ -285,7 +285,9 @@ class WorkspaceView @JvmOverloads constructor(
         isLongClickable = true
         setOnLongClickListener {
             longPressed = true
-            onEmptyAreaLongClick?.invoke()
+            // In the widget-move pick mode a long press selects the cell
+            // instead of opening the empty-area menu.
+            if (widgetMoveTarget == null) onEmptyAreaLongClick?.invoke()
             true
         }
     }
@@ -375,7 +377,9 @@ class WorkspaceView @JvmOverloads constructor(
             }
             return true
         }
-        if (!longPressed) gestureDetector.onTouchEvent(ev)
+        // In the widget-move pick mode the tap belongs to the pick, not to the
+        // empty-grid gesture pipeline (swipes/flings must not fire).
+        if (widgetMoveTarget == null && !longPressed) gestureDetector.onTouchEvent(ev)
         if (action == MotionEvent.ACTION_UP && !longPressed && !swipeUpSent) longSwipeUp(ev)
         if (action == MotionEvent.ACTION_UP && !longPressed && !swipeUpSent && !pageSwipeInterrupted) longSwipeDown(ev)
         val alreadyPromoted = dragPromoted

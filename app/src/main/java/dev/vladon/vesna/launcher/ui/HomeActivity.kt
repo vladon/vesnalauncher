@@ -2403,6 +2403,9 @@ class HomeActivity : ComponentActivity() {
             showSnackbar(R.string.widget_picker_empty, null)
             return
         }
+        // The dialog is created before the Compose content so the callbacks
+        // can dismiss it.
+        val dialog = android.app.Dialog(this)
         // The Compose content needs the ViewTree owners a plain Dialog window
         // does not install; share Home's so the recomposer resolves.
         val pickerCompose = androidx.compose.ui.platform.ComposeView(this).apply {
@@ -2416,22 +2419,23 @@ class HomeActivity : ComponentActivity() {
                     WidgetPickerDialog(
                         entries = entries,
                         onPick = { info ->
+                            dialog.dismiss()
                             placeWidget(info)
                         },
-                        onDismiss = { },
+                        onDismiss = { dialog.dismiss() },
                     )
                 }
             }
         }
-        val dialog = android.app.Dialog(this).apply {
+        dialog.apply {
             setContentView(pickerCompose)
             window?.setLayout(
                 android.view.WindowManager.LayoutParams.MATCH_PARENT,
                 android.view.WindowManager.LayoutParams.WRAP_CONTENT,
             )
             setOnDismissListener { pickerCompose.disposeComposition() }
+            show()
         }
-        dialog.show()
     }
 
     private fun processUserHandle(): android.os.UserHandle =
