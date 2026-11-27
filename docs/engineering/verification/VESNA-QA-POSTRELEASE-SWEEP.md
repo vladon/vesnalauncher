@@ -21,10 +21,28 @@ interactive-row touch-target heights read from the accessibility tree
 The text-only detail paragraphs render below 48 dp by design (they are
 not touch targets); every tappable row passes.
 
+## Core flows at 1.5×
+
+The functional flows re-verified at the enlarged font (the captures
+`150-p1/150-p2`, `150-doubletap`):
+
+- **The loop wrap, both edges** (the loop ON via the shipped switch): the
+  first-page backward wrapped onto the last page, and the last-page
+  forward wrapped onto page 1 — the live content switched both times
+  (the dumps).
+- **The wallpaper shift**: the page-1 vs page-2 wallpaper zones differ by
+  163/142 channel points (the full span) at 1.5×; the visual capture
+  shows page 2 over the shifted (orange) gradient side.
+- **The double-tap with no binding** (the fresh install): produces no
+  action — the unassigned default verified live; the assigned
+  double-tap → the drawer was verified on the same surfaces at 1.0× and
+  through GestureDispatchTest.
+
 ## Captures
 
 `sweep-150-home.png`, `sweep-150-homescreen.png`,
-`sweep-150-loop-indicator.png`, `sweep-150-gestures.png` (EVI-VESNA-003).
+`sweep-150-loop-indicator.png`, `sweep-150-gestures.png`,
+`sweep-150-doubletap.png` (EVI-VESNA-003).
 
 ## Notes
 
