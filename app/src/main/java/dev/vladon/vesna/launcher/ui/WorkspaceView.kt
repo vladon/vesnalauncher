@@ -378,7 +378,21 @@ class WorkspaceView @JvmOverloads constructor(
             return true
         }
         // In the widget-move pick mode the tap belongs to the pick, not to the
-        // empty-grid gesture pipeline (swipes/flings must not fire).
+        // empty-grid gesture pipeline. The pick commits on the DOWN, which is
+        // the one event reliably delivered to the view while the empty-area
+        // long-click is gated off.
+        if (widgetMoveTarget != null) {
+            if (action == MotionEvent.ACTION_DOWN) {
+                val target = widgetMoveTarget
+                widgetMoveTarget = null
+                isLongClickable = true
+                val cell = cellAtLocal(ev.x, ev.y)
+                if (cell != null && target != null) {
+                    onWidgetMoveCellPicked?.invoke(target, cell)
+                }
+            }
+            return super.dispatchTouchEvent(ev)
+        }
         if (widgetMoveTarget == null && !longPressed) gestureDetector.onTouchEvent(ev)
         if (action == MotionEvent.ACTION_UP && !longPressed && !swipeUpSent) longSwipeUp(ev)
         if (action == MotionEvent.ACTION_UP && !longPressed && !swipeUpSent && !pageSwipeInterrupted) longSwipeDown(ev)
@@ -397,17 +411,6 @@ class WorkspaceView @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        // The widget-move pick mode consumes a tap on any cell, including the
-        // empty ones that own no child view.
-        if (widgetMoveTarget != null && event.actionMasked == MotionEvent.ACTION_UP) {
-            val target = widgetMoveTarget ?: return super.onTouchEvent(event)
-            val cell = cellAtLocal(event.x, event.y)
-            if (cell != null) {
-                widgetMoveTarget = null
-                onWidgetMoveCellPicked?.invoke(target, cell)
-                return true
-            }
-        }
         // Only the empty grid reaches this path; a tile owns and consumes its own stream.
         if (event.actionMasked == MotionEvent.ACTION_DOWN) emptyAreaPressed = true
         return super.onTouchEvent(event)
