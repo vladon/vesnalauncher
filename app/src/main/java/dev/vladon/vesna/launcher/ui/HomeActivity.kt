@@ -299,6 +299,9 @@ class HomeActivity : ComponentActivity() {
         dock = findViewById(R.id.dock)
         drawer = findViewById(R.id.drawer)
         setupSearchBar()
+        // The saved label typography must apply at startup, not only when the
+        // settings write it while Home is resumed (#231 restart case).
+        applyLabelTypography()
         drawer.applyDrawerBackground(
             drawerPreferences.background,
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES,
@@ -1839,7 +1842,9 @@ class HomeActivity : ComponentActivity() {
             insets
         }
         // The dock overlays the workspace and includes the navigation inset.
-        dock.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+        // The lift must follow the whole dock area: the search bar (#186) stacks
+        // below the dock and changes the bottom zone without touching the dock.
+        findViewById<View>(R.id.home_dock_area).addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
             if (bottom - top != oldBottom - oldTop) updateWorkspaceBottom()
         }
     }
@@ -1857,14 +1862,15 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun updateWorkspaceBottom() {
-        // A hidden dock gives its space back; its stale height must not reserve anything.
-        val dockHeight = if (dock.isVisible) dock.height else 0
+        // The whole dock area (dock plus the optional search bar) owns the bottom;
+        // a hidden dock or a hidden bar gives its space back automatically.
+        val areaHeight = findViewById<View>(R.id.home_dock_area).height
         val params = homeControls.layoutParams as FrameLayout.LayoutParams
-        if (params.bottomMargin != dockHeight) {
-            params.bottomMargin = dockHeight
+        if (params.bottomMargin != areaHeight) {
+            params.bottomMargin = areaHeight
             homeControls.layoutParams = params
         }
-        val bottom = dockHeight + params.height
+        val bottom = areaHeight + params.height
         if (workspace.paddingBottom != bottom) {
             workspace.setPadding(0, workspace.paddingTop, 0, bottom)
         }
