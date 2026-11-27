@@ -370,7 +370,6 @@ class HomeActivity : ComponentActivity() {
         workspace.onGesture = ::handleGesture
         workspace.onGestureOpenDrawer = ::openDrawer
         workspace.onGestureHomeOptions = ::showLauncherMenu
-        widgetHostManager.startListening()
         lifecycleScope.launch { widgetHostManager.reconcile() }
         workspace.onPageDrag = ::onPageDragProgress
         workspace.onPageDragEnd = ::onPageDragEnded
@@ -868,7 +867,13 @@ class HomeActivity : ComponentActivity() {
         emptyHint.setText(if (locked) R.string.workspace_layout_locked else R.string.workspace_empty_hint)
     }
 
+    override fun onStart() {
+        super.onStart()
+        widgetHostManager.startListening()
+    }
+
     override fun onStop() {
+        widgetHostManager.stopListening()
         workspace.cancelDrag()
         folderDialog?.cancelMemberDrag()
         snackbarJob?.cancel()
