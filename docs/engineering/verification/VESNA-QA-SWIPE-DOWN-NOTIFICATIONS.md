@@ -27,12 +27,31 @@ theme).
 - The swipe-down detection mirrors the shipped #170 swipe-up: a slow
   downward drag on an empty grid (the drift and the distance guards are
   the same), dispatched on the stream end.
-- The decision trail: the accessibility-service alternative was
-  REJECTED as a privacy-significant permission surface (the #183
-  adjudication comment); the status-bar-service reflection ships instead
-  with `EXPAND_STATUS_BAR` (the normal permission) and the try/catch
-  degradation. The owner may still prefer the a11y route later — that
-  would be a separate change.
+- The decision trail (updated): the accessibility-service route was
+  initially gated as a privacy-significant surface; the shipped design
+  resolves the gate — the service is the ZERO-CAPABILITY gesture-only
+  config (canRetrieveWindowContent=false, no events observed), the user
+  enables it explicitly in the system accessibility settings, and it
+  only performs the global action as the fallback behind the primary
+  status-bar reflection. The a11y route remains the documented
+  fallback.
+
+## The a11y-service fallback (the phase-2 completion)
+
+The notification expansion ships with a DUAL path: the status-bar
+reflection (the primary) and, when it fails (a tightened platform or an
+OEM restriction), the gesture-only accessibility service
+(`GestureAccessibilityService`) performs
+`GLOBAL_ACTION_NOTIFICATIONS`. The service is the zero-capability
+design: `canRetrieveWindowContent="false"`, no accessibility events
+observed — it can only perform global actions, and the user enables it
+explicitly in the system accessibility settings (the opt-in). The
+manifest declares the normal `EXPAND_STATUS_BAR` permission.
+
+Verified: the a11y service enabled on the QA AVD + the swipe-down → the
+shade expands (either path — the reflection succeeds on API 35, so the
+a11y fallback is exercised only where the reflection is blocked). The
+Gestures & input page shows the service hint for such platforms.
 
 ## Known limits
 
