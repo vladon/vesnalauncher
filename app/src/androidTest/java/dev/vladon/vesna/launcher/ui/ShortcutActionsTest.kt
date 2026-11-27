@@ -35,7 +35,7 @@ class ShortcutActionsTest {
         val menuItem = instrumentation.targetContext.getString(R.string.menu_add_to_workspace)
         val actionLabel = instrumentation.targetContext.getString(R.string.shortcut_options)
         ActivityScenario.launch(HomeActivity::class.java).use { home ->
-            home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+            home.onActivity { it.findViewById<DrawerView>(R.id.drawer).open() }
             val action = AccessibilityNodeInfo.AccessibilityAction.ACTION_LONG_CLICK
             var acted = false
             assertTrue("No drawer tile accepted the accessibility action", until {
@@ -67,7 +67,7 @@ class ShortcutActionsTest {
         var performed = false
         ActivityScenario.launch(HomeActivity::class.java).use { home ->
             home.onActivity { activity ->
-                val anchor = activity.findViewById<View>(R.id.home_options)
+                val anchor = activity.findViewById<View>(R.id.menu_anchor)
                 VesnaPopupMenu(anchor).apply {
                     add(label) { performed = true }
                     add(shortLabel) {}
@@ -96,7 +96,7 @@ class ShortcutActionsTest {
             lateinit var original: HomeActivity
             home.onActivity {
                 original = it
-                it.findViewById<View>(R.id.home_options).performClick()
+                it.findViewById<DrawerView>(R.id.drawer).open()
             }
             fun originalHasWindowFocus(): Boolean {
                 var focused = false
@@ -132,7 +132,7 @@ class ShortcutActionsTest {
         // The actual Home click handler still calls Android to start the activity.
         val stale = LauncherApp(AppKey("dev.vladon.qa.missing", "dev.vladon.qa.missing.Main"), "Stale app")
         ActivityScenario.launch(HomeActivity::class.java).use { home ->
-            home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+            home.onActivity { it.findViewById<DrawerView>(R.id.drawer).open() }
             assertTrue("The installed app list did not load", until {
                 var catalogueLoaded = false
                 home.onActivity {
@@ -175,7 +175,7 @@ class ShortcutActionsTest {
             LauncherApp(AppKey(pkg, "$pkg.Main"), "Fixture $index")
         }
         ActivityScenario.launch(HomeActivity::class.java).use { home ->
-            home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+            home.onActivity { it.findViewById<DrawerView>(R.id.drawer).open() }
             fun withList(action: (RecyclerView) -> Unit) {
                 home.onActivity { action(it.findViewById(R.id.drawer_list)) }
             }
@@ -255,7 +255,7 @@ class ShortcutActionsTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val menu = instrumentation.targetContext.getString(R.string.menu_add_to_workspace)
         ActivityScenario.launch(HomeActivity::class.java).use { home ->
-            home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+            home.onActivity { it.findViewById<DrawerView>(R.id.drawer).open() }
             assertTrue("The drawer is ready for touch", until {
                 var ready = false
                 home.onActivity {
@@ -321,7 +321,7 @@ class ShortcutActionsTest {
         val menu = instrumentation.targetContext.getString(R.string.menu_add_to_workspace)
         for (dragging in listOf(false, true)) {
             ActivityScenario.launch(HomeActivity::class.java).use { home ->
-                home.onActivity { it.findViewById<View>(R.id.home_open_drawer).performClick() }
+                home.onActivity { it.findViewById<DrawerView>(R.id.drawer).open() }
                 assertTrue("Drawer must be ready before testing Back (dragging=$dragging)", until {
                     var ready = false
                     home.onActivity {
@@ -362,7 +362,7 @@ class ShortcutActionsTest {
                 }
                 assertTrue("Home must regain focus without a shortcut menu", until {
                     var homeFocused = false
-                    home.onActivity { homeFocused = it.findViewById<View>(R.id.home_open_drawer).hasWindowFocus() }
+                    home.onActivity { homeFocused = it.findViewById<DrawerView>(R.id.drawer).hasWindowFocus() }
                     homeFocused && instrumentation.uiAutomation.rootInActiveWindow?.hasVisibleText(menu) == false
                 })
             }

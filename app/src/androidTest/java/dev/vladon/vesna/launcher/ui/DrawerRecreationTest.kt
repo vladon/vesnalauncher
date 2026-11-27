@@ -26,7 +26,7 @@ class DrawerRecreationTest {
         val query = "Несуществующее приложение 314159"
         ActivityScenario.launch(HomeActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
-                activity.findViewById<View>(R.id.home_open_drawer).performClick()
+                activity.findViewById<DrawerView>(R.id.drawer).open()
                 val search = activity.findViewById<EditText>(R.id.drawer_search)
                 assertTrue(search.requestFocus())
                 search.setText(query)
@@ -48,7 +48,7 @@ class DrawerRecreationTest {
             scenario.onActivity { activity ->
                 val search = activity.findViewById<EditText>(R.id.drawer_search)
                 assertFalse("A dismissed drawer must stay closed", search.isShown)
-                activity.findViewById<View>(R.id.home_open_drawer).performClick()
+                activity.findViewById<DrawerView>(R.id.drawer).open()
                 assertTrue(search.text.isEmpty())
             }
         }
@@ -62,7 +62,7 @@ class DrawerRecreationTest {
         val query = app.label
         ActivityScenario.launch(HomeActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
-                activity.findViewById<View>(R.id.home_open_drawer).performClick()
+                activity.findViewById<DrawerView>(R.id.drawer).open()
                 activity.findViewById<EditText>(R.id.drawer_search).setText(query)
             }
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_TAB)
