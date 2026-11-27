@@ -94,7 +94,9 @@ class SettingsActivity : ComponentActivity() {
     private var drawerIconPercent by mutableStateOf(IconScale.DEFAULT)
     private var drawerFollowsHome by mutableStateOf(true)
     private var hasWorkProfile by mutableStateOf(false)
-    private var notificationDots by mutableStateOf(false)
+    private var badgeStyle by mutableStateOf(NotificationBadges.BadgeStyle.NOTIFICATION_DOTS)
+    private var badgeSize by mutableStateOf(NotificationBadges.BadgeSize.MEDIUM)
+    private var notificationDots by mutableStateOf(true)
     private var notificationAccessGranted by mutableStateOf(false)
     private var showAppNames by mutableStateOf(true)
     private var drawerApps by mutableStateOf<List<LauncherApp>>(emptyList())
@@ -268,6 +270,16 @@ class SettingsActivity : ComponentActivity() {
                             drawerFollowsHome = follow
                         },
                         hasWorkProfile = hasWorkProfile,
+                        badgeStyle = badgeStyle,
+                        onBadgeStyleChanged = { style ->
+                            NotificationBadges.style = style
+                            badgeStyle = style
+                        },
+                        badgeSize = badgeSize,
+                        onBadgeSizeChanged = { size ->
+                            NotificationBadges.size = size
+                            badgeSize = size
+                        },
                         notificationDots = notificationDots,
                         onNotificationDotsChanged = { enabled ->
                             // One pref writer: the badge store owns the key and
@@ -349,6 +361,8 @@ class SettingsActivity : ComponentActivity() {
         drawerIconPercent = drawerPreferences.iconScalePercent
         drawerFollowsHome = drawerPreferences.followsHomeIconScale
         hasWorkProfile = userManager.userProfiles.any { it != android.os.Process.myUserHandle() }
+        badgeStyle = NotificationBadges.style
+        badgeSize = NotificationBadges.size
         notificationDots = drawerPreferences.notificationDots
         hiddenDrawerApps = drawerPreferences.hiddenApps
         lifecycleScope.launch {

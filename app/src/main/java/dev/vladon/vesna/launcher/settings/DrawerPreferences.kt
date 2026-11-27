@@ -42,9 +42,9 @@ internal class DrawerPreferences(context: Context) {
         get() = prefs.getBoolean(EXTERNAL_SEARCH_ACTIONS, false)
         set(value) = prefs.edit { putBoolean(EXTERNAL_SEARCH_ACTIONS, value) }
 
-    /** Notification badge dots (#200); dots render only with the listener granted. */
+    /** Notification badge dots (#200/#228); badges render only with the listener granted. Default ON like Nova. */
     var notificationDots: Boolean
-        get() = prefs.getBoolean(NOTIFICATION_DOTS, false)
+        get() = prefs.getBoolean(NOTIFICATION_DOTS, true)
         set(value) = prefs.edit { putBoolean(NOTIFICATION_DOTS, value) }
 
     var background: DrawerBackgroundMode

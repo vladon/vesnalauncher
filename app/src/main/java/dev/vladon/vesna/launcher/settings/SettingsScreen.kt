@@ -186,6 +186,12 @@ internal fun SettingsScreen(
     drawerFollowsHome: Boolean,
     onDrawerFollowsHomeChanged: (Boolean) -> Unit,
     hasWorkProfile: Boolean,
+    badgeStyle: dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle =
+        dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle.NOTIFICATION_DOTS,
+    onBadgeStyleChanged: (dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle) -> Unit = {},
+    badgeSize: dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize =
+        dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize.MEDIUM,
+    onBadgeSizeChanged: (dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize) -> Unit = {},
     notificationDots: Boolean,
     onNotificationDotsChanged: (Boolean) -> Unit,
     notificationAccessGranted: Boolean,
@@ -393,6 +399,10 @@ internal fun SettingsScreen(
                                 drawerSearchActions, onDrawerSearchActionsChanged,
                                 drawerIconPercent, onDrawerIconPercentChanged,
                                 drawerFollowsHome, onDrawerFollowsHomeChanged,
+                                badgeStyle = badgeStyle,
+                                onBadgeStyleChanged = onBadgeStyleChanged,
+                                badgeSize = badgeSize,
+                                onBadgeSizeChanged = onBadgeSizeChanged,
                                 notificationDots, onNotificationDotsChanged,
                                 notificationAccessGranted, onNotificationAccessClicked,
                                 drawerApps, hiddenDrawerApps, onDrawerAppHiddenChanged,
@@ -404,6 +414,8 @@ internal fun SettingsScreen(
                                 searchTarget == R.string.settings_drawer_show_keyboard,
                                 searchTarget == R.string.settings_search_actions,
                                 searchTarget == R.string.settings_drawer_follow_home,
+                                searchTarget == R.string.settings_badge_style,
+                                searchTarget == R.string.settings_badge_size,
                                 searchTarget == R.string.settings_notification_dots,
                                 searchTarget == R.string.settings_drawer_icon_size,
                             )
@@ -549,6 +561,8 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_search_actions, R.string.settings_search_actions_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_background, R.string.settings_drawer_background_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_follow_home, R.string.settings_drawer_follow_home_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_badge_style, R.string.settings_badge_style_detail),
+                    SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_badge_size, R.string.settings_badge_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_icon_size, R.string.settings_drawer_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_hide_drawer_apps, R.string.settings_hide_drawer_apps_detail),
                     SearchEntry(SettingsPage.APPEARANCE, R.string.settings_theme, R.string.settings_theme_detail),
@@ -1194,6 +1208,10 @@ private fun DrawerAppSettings(
     onIconPercentChanged: (Int) -> Unit,
     followHome: Boolean,
     onFollowHomeChanged: (Boolean) -> Unit,
+    badgeStyle: dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle,
+    onBadgeStyleChanged: (dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle) -> Unit,
+    badgeSize: dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize,
+    onBadgeSizeChanged: (dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize) -> Unit,
     notificationDots: Boolean,
     onNotificationDotsChanged: (Boolean) -> Unit,
     notificationAccessGranted: Boolean,
@@ -1209,13 +1227,18 @@ private fun DrawerAppSettings(
     showKeyboardHighlighted: Boolean,
     searchActionsHighlighted: Boolean,
     followHomeHighlighted: Boolean,
+    badgeStyleHighlighted: Boolean,
+    badgeSizeHighlighted: Boolean,
     notificationDotsHighlighted: Boolean,
     iconSizeHighlighted: Boolean,
 ) {
     // A search target may not be composed yet in a short, scaled viewport.
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = when {
-        hideHighlighted -> 8
-        iconSizeHighlighted -> 7
+        hideHighlighted -> 11
+        iconSizeHighlighted -> 10
+        badgeSizeHighlighted -> 8
+        badgeStyleHighlighted -> 7
+        notificationDotsHighlighted -> 9
         followHomeHighlighted -> 6
         searchActionsHighlighted -> 5
         showKeyboardHighlighted -> 4
@@ -1294,6 +1317,82 @@ private fun DrawerAppSettings(
                 ),
                 onClick = onNotificationAccessClicked,
             )
+        }
+        item(key = "badge-style") {
+            SearchTarget(badgeStyleHighlighted) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        stringResource(R.string.settings_badge_style),
+                        Modifier.semantics { heading() },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.settings_badge_style_detail),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for (choice in dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle.entries) {
+                            val selected = choice == badgeStyle
+                            val label = stringResource(
+                                when (choice) {
+                                    dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle.NOTIFICATION_DOTS ->
+                                        R.string.settings_badge_style_dots
+                                    dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeStyle.NUMERIC_DOTS ->
+                                        R.string.settings_badge_style_numeric
+                                },
+                            )
+                            ListItem(
+                                headlineContent = { Text(label) },
+                                leadingContent = { RadioButton(selected = selected, onClick = null) },
+                                modifier = Modifier
+                                    .vesnaFocusRing(radius = 12.dp)
+                                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onBadgeStyleChanged(choice) }),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        item(key = "badge-size") {
+            SearchTarget(badgeSizeHighlighted) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        stringResource(R.string.settings_badge_size),
+                        Modifier.semantics { heading() },
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.settings_badge_size_detail),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for (choice in dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize.entries) {
+                            val selected = choice == badgeSize
+                            val label = stringResource(
+                                when (choice) {
+                                    dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize.SMALL ->
+                                        R.string.settings_badge_size_small
+                                    dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize.MEDIUM ->
+                                        R.string.settings_badge_size_medium
+                                    dev.vladon.vesna.launcher.notifications.NotificationBadges.BadgeSize.LARGE ->
+                                        R.string.settings_badge_size_large
+                                },
+                            )
+                            ListItem(
+                                headlineContent = { Text(label) },
+                                leadingContent = { RadioButton(selected = selected, onClick = null) },
+                                modifier = Modifier
+                                    .vesnaFocusRing(radius = 12.dp)
+                                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onBadgeSizeChanged(choice) }),
+                            )
+                        }
+                    }
+                }
+            }
         }
         item(key = "icon-size") {
             SearchTarget(iconSizeHighlighted) {

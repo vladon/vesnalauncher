@@ -512,7 +512,10 @@ class WorkspaceView @JvmOverloads constructor(
             val cell = view.tag as? Int ?: continue
             val content = boundContent[cell] ?: continue
             if (content is CellContent.App) {
-                view.setNotificationDot(NotificationBadges.shows(content.app.packageName))
+                view.setNotificationDot(
+                    show = NotificationBadges.shows(content.app.packageName),
+                    count = NotificationBadges.count(content.app.packageName),
+                )
             }
         }
     }

@@ -19,6 +19,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import dev.vladon.vesna.launcher.apps.LauncherApp
 
 /**
@@ -267,17 +268,30 @@ class AppIconView @JvmOverloads constructor(
             label = app.label,
             description = app.accessibilityLabel,
         )
-        setNotificationDot(dev.vladon.vesna.launcher.notifications.NotificationBadges.shows(app.packageName))
+        setNotificationDot(
+            show = dev.vladon.vesna.launcher.notifications.NotificationBadges.shows(app.packageName),
+            count = dev.vladon.vesna.launcher.notifications.NotificationBadges.count(app.packageName),
+        )
     }
 
     /**
-     * Draws the notification badge dot at the artwork's top-end corner
-     * (#200: dots only — one dot per package, no counts and no text).
+     * Draws the notification badge at the artwork's top-end corner (#228
+     * full-copy surface): presence dot in the dots style, the active
+     * notification count in the numeric style, scaled by the size setting.
      */
-    fun setNotificationDot(show: Boolean) {
+    fun setNotificationDot(
+        show: Boolean,
+        count: Int = 0,
+    ) {
         notificationDotVisible = show
         iconView.foreground = if (show) {
-            context.getDrawable(R.drawable.notification_dot)
+            val badges = dev.vladon.vesna.launcher.notifications.NotificationBadges
+            dev.vladon.vesna.launcher.notifications.BadgeDotDrawable(
+                count = if (badges.style == NotificationBadges.BadgeStyle.NUMERIC_DOTS) count else null,
+                scale = badges.size.scale,
+                density = resources.displayMetrics.density,
+                badgeColor = androidx.core.content.ContextCompat.getColor(context, R.color.notification_dot),
+            )
         } else {
             null
         }
