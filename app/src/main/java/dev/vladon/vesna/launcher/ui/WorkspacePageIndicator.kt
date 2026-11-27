@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.Button
 import dev.vladon.vesna.launcher.R
+import dev.vladon.vesna.launcher.settings.PageIndicator
 import kotlin.math.ceil
 
 /** A page picker button whose dots show the current page and total count. */
@@ -17,6 +18,14 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
     private val outline = context.vesnaPaletteColor(R.attr.vesna_outline)
     private var selected = -1
     private var count = 0
+
+    /** #174: the drawing style; Counter keeps today's dots plus the bar. */
+    internal var mode: PageIndicator = PageIndicator.COUNTER
+        set(value) {
+            if (field == value) return
+            field = value
+            invalidate()
+        }
 
     internal val preferredWidth: Int
         get() = ceil(((count + 1) * STEP_DP).coerceAtMost(MAX_WIDTH_DP) * density)
@@ -46,13 +55,32 @@ class WorkspacePageIndicator(context: Context, attrs: AttributeSet) : View(conte
         val step = minOf(STEP_DP * density, width / (count + 1f))
         val y = height / 2f
         val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+        if (mode == PageIndicator.LINE) {
+            // A thin baseline with the active page's segment highlighted.
+            val start = width / 2f - count * step / 2f
+            paint.color = outline
+            paint.strokeWidth = 2f * density
+            canvas.drawLine(start, y, start + count * step, y, paint)
+            val slot = if (rtl) count - 1 - selected else selected
+            if (selected in 0 until count) {
+                paint.color = primary
+                paint.strokeWidth = 3.5f * density
+                val segmentStart = start + slot * step + step * 0.2f
+                canvas.drawLine(segmentStart, y, segmentStart + step * 0.6f, y, paint)
+            }
+            return
+        }
         for (index in 0 until count) {
             val slot = if (rtl) count - 1 - index else index
             val x = width / 2f + (slot - (count - 1) / 2f) * step
             if (index == selected) {
                 paint.color = primary
-                val radius = 3f * density
-                canvas.drawRoundRect(x - step / 2, y - radius, x + step / 2, y + radius, radius, radius, paint)
+                if (mode == PageIndicator.DOT) {
+                    canvas.drawCircle(x, y, 3f * density, paint)
+                } else {
+                    val radius = 3f * density
+                    canvas.drawRoundRect(x - step / 2, y - radius, x + step / 2, y + radius, radius, radius, paint)
+                }
             } else {
                 paint.color = outline
                 canvas.drawCircle(x, y, 2.5f * density, paint)

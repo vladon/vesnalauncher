@@ -101,6 +101,12 @@
     <string name="settings_page_transition">Эффект перехода страниц</string>
     <string name="settings_page_transition_instant">Мгновенно (по умолчанию)</string>
     <string name="settings_page_transition_slide">Скольжение</string>
+    <string name="settings_page_loop">Зацикливать страницы</string>
+    <string name="settings_page_loop_detail">Свайп за краем последней страницы вернёт на первую, и наоборот.</string>
+    <string name="settings_page_indicator">Индикатор страниц</string>
+    <string name="settings_page_indicator_counter">Счётчик (по умолчанию)</string>
+    <string name="settings_page_indicator_dot">Точки</string>
+    <string name="settings_page_indicator_line">Линия</string>
     <string name="settings_app_drawer">Список приложений</string>
     <string name="settings_app_drawer_detail">Какие приложения видны при просмотре</string>
     <string name="settings_drawer_layout">Вид списка приложений</string>

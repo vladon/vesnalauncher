@@ -244,6 +244,7 @@ class HomeActivity : ComponentActivity() {
     private val workspacePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == WorkspacePreferences.LAYOUT_LOCKED) applyWorkspaceLock()
         if (key == WorkspacePreferences.SEARCH_BAR_PLACEMENT) applySearchBarPlacement()
+        if (key == WorkspacePreferences.PAGE_INDICATOR) applyPageIndicatorStyle()
         if (key == WorkspacePreferences.LABEL_FONT_SCALE_PERCENT || key == WorkspacePreferences.LABEL_FONT) applyLabelTypography()
     }
     private lateinit var appearance: AppearancePreferences
@@ -445,6 +446,7 @@ class HomeActivity : ComponentActivity() {
         applyDockCapacity()
         applyHomeOrientation()
         applyIconScales()
+        applyPageIndicatorStyle()
 
         // Open before hierarchy restoration so Android can restore the search text and focus.
         if (savedInstanceState?.getBoolean(DRAWER_OPEN_STATE) == true) drawer.open(showKeyboard = false)
@@ -752,6 +754,11 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    /** #174: applies the saved page indicator style to the workspace indicator. */
+    private fun applyPageIndicatorStyle() {
+        pageIndicator.mode = workspacePreferences.pageIndicator
+    }
+
     /** #173: applies the label typography to the workspace and dock tiles. */
     private fun applyLabelTypography() {
         labelFontScalePercent = workspacePreferences.labelFontScalePercent
@@ -985,14 +992,20 @@ class HomeActivity : ComponentActivity() {
         val state = renderedState
         val current = state.pageIds.indexOf(state.activePageId)
         if (current < 0) return
-        // #179: the outward swipe on the first page opens the drawer (the
-        // mirrored direction is handled by the view's RTL-aware forward).
-        if (!forward && current == 0) {
-            drawer.open()
+        val step = if (forward) 1 else -1
+        var target = state.pageIds.getOrNull(current + step)
+        if (target == null && workspacePreferences.pageLoop && state.pageIds.size > 1) {
+            // #174: looping wraps BOTH outward edges — the last page forward
+            // onto the first, and (superseding the #179 drawer edge while the
+            // loop is on) the first page backward onto the last.
+            target = if (forward) state.pageIds.firstOrNull() else state.pageIds.lastOrNull()
+        }
+        if (target == null) {
+            // #179: the outward swipe on the first page opens the drawer (the
+            // mirrored direction is handled by the view's RTL-aware forward).
+            if (!forward && current == 0) drawer.open()
             return
         }
-        val step = if (forward) 1 else -1
-        val target = state.pageIds.getOrNull(current + step) ?: return
         // #180: the Slide effect animates the outgoing page over the incoming
         // one; Instant switches as before. Both respect the animator scale
         // and the Remove animations accessibility setting.
@@ -1105,7 +1118,14 @@ class HomeActivity : ComponentActivity() {
         val rtl = workspace.layoutDirection == View.LAYOUT_DIRECTION_RTL
         val forward = (firstDx < 0f) != rtl
         val current = state.pageIds.indexOf(state.activePageId)
-        val target = state.pageIds.getOrNull(current + if (forward) 1 else -1) ?: return
+        val step = if (forward) 1 else -1
+        var adjacent = state.pageIds.getOrNull(current + step)
+        if (adjacent == null && workspacePreferences.pageLoop && state.pageIds.size > 1) {
+            // #174: the same both-edges wrap as stepPage; a one-page home
+            // never starts a same-page follow.
+            adjacent = if (forward) state.pageIds.firstOrNull() else state.pageIds.lastOrNull()
+        }
+        val target = adjacent ?: return
         val scale = Settings.Global.getFloat(
             contentResolver,
             Settings.Global.ANIMATOR_DURATION_SCALE,

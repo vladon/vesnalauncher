@@ -150,6 +150,10 @@ internal fun SettingsScreen(
     onSearchBarPlacementChanged: (HomeSearchBarPlacement) -> Unit,
     pageTransition: PageTransition,
     onPageTransitionChanged: (PageTransition) -> Unit,
+    pageLoop: Boolean,
+    onPageLoopChanged: (Boolean) -> Unit,
+    pageIndicator: PageIndicator,
+    onPageIndicatorChanged: (PageIndicator) -> Unit,
     grid: GridCanvas?,
     onApplyGridResize: suspend (GridCanvas) -> GridResizeResult,
     pinNewApps: Boolean,
@@ -333,6 +337,17 @@ internal fun SettingsScreen(
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_page_transition) {
                                     PageTransitionRow(pageTransition, onPageTransitionChanged)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_page_loop) {
+                                    SettingsSwitch(
+                                        R.string.settings_page_loop, R.string.settings_page_loop_detail,
+                                        pageLoop, onPageLoopChanged,
+                                    )
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                SearchTarget(searchTarget == R.string.settings_page_indicator) {
+                                    PageIndicatorRow(pageIndicator, onPageIndicatorChanged)
                                 }
                                 Spacer(Modifier.height(8.dp))
                                 SearchTarget(searchTarget == R.string.settings_pin_new_apps) {
@@ -540,6 +555,8 @@ private fun SettingsDirectory(
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_capacity, R.string.settings_dock_capacity_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_orientation, R.string.settings_home_orientation_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_hide_home_app_names, R.string.settings_hide_home_app_names_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_page_loop, R.string.settings_page_loop_detail),
+                    SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_page_indicator, R.string.settings_page_indicator_counter),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_home_icon_size, R.string.settings_home_icon_size_detail),
                     SearchEntry(SettingsPage.HOME_SCREEN, R.string.settings_dock_icon_size, R.string.settings_dock_icon_size_detail),
                     SearchEntry(SettingsPage.APP_DRAWER, R.string.settings_drawer_layout, R.string.settings_drawer_layout_detail),
@@ -779,6 +796,41 @@ private fun SettingsSwitch(
             .vesnaFocusRing(radius = 12.dp)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
     )
+}
+
+/** #174: the workspace page indicator style choice (radio rows). */
+@Composable
+private fun PageIndicatorRow(style: PageIndicator, onSelect: (PageIndicator) -> Unit) {
+    Column {
+        Text(
+            text = stringResource(R.string.settings_page_indicator),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        Spacer(Modifier.height(4.dp))
+        Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val choices = listOf(
+                PageIndicator.COUNTER to R.string.settings_page_indicator_counter,
+                PageIndicator.DOT to R.string.settings_page_indicator_dot,
+                PageIndicator.LINE to R.string.settings_page_indicator_line,
+            )
+            for ((choice, label) in choices) {
+                Row(
+                    Modifier.fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .selectable(
+                            selected = style == choice,
+                            role = Role.RadioButton,
+                            onClick = { onSelect(choice) },
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = style == choice, onClick = null)
+                    Text(stringResource(label), Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+    }
 }
 
 /** #180: the Home page transition effect choice (radio rows). */
