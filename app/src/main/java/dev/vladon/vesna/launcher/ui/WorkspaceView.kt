@@ -330,6 +330,7 @@ class WorkspaceView @JvmOverloads constructor(
         }
         if (!longPressed) gestureDetector.onTouchEvent(ev)
         if (action == MotionEvent.ACTION_UP && !longPressed && !swipeUpSent) longSwipeUp(ev)
+        if (action == MotionEvent.ACTION_UP && !longPressed && !swipeUpSent && !pageSwipeInterrupted) longSwipeDown(ev)
         val alreadyPromoted = dragPromoted
         val handled = super.dispatchTouchEvent(ev)
         if (!alreadyPromoted && dragPromoted) {
@@ -361,6 +362,18 @@ class WorkspaceView @JvmOverloads constructor(
         )
         if (!pageSwipeInterrupted && downY - up.y >= distance && drift < MAX_FLING_DRIFT_DP * density) {
             onSwipeUp?.invoke()
+        }
+    }
+
+    /** #183: the slow downward drag on an empty grid fires the bound swipe-down gesture. */
+    private fun longSwipeDown(up: MotionEvent) {
+        val drift = abs(up.x - downX)
+        val distance = max(
+            dragSlop.toFloat(),
+            min(SWIPE_UP_DISTANCE_DP * density, (height - paddingTop - paddingBottom) / 2f),
+        )
+        if (!pageSwipeInterrupted && up.y - downY >= distance && drift < MAX_FLING_DRIFT_DP * density) {
+            fireGesture(dev.vladon.vesna.launcher.settings.GestureId.SWIPE_DOWN)
         }
     }
 

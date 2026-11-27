@@ -821,6 +821,7 @@ private fun GesturesSettings(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         val gestures = listOf(
+            GestureId.SWIPE_DOWN to R.string.settings_gesture_swipe_down,
             GestureId.DOUBLE_TAP to R.string.settings_gesture_double_tap,
             GestureId.TWO_FINGER_SWIPE_UP to R.string.settings_gesture_two_finger_up,
             GestureId.PINCH_IN to R.string.settings_gesture_pinch_in,
@@ -828,6 +829,7 @@ private fun GesturesSettings(
         )
         val actions = listOf(
             GestureAction.NONE to R.string.settings_gesture_action_none,
+            GestureAction.EXPAND_NOTIFICATIONS to R.string.settings_gesture_action_notifications,
             GestureAction.OPEN_DRAWER to R.string.settings_gesture_action_drawer,
             GestureAction.OPEN_SEARCH to R.string.settings_gesture_action_search,
             GestureAction.OPEN_SETTINGS to R.string.settings_gesture_action_settings,

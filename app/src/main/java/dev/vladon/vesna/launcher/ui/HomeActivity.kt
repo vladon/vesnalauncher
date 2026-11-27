@@ -770,7 +770,24 @@ class HomeActivity : ComponentActivity() {
             GestureAction.OPEN_DRAWER -> drawer.open()
             GestureAction.OPEN_SEARCH -> openDrawerWithSearch()
             GestureAction.OPEN_SETTINGS -> startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
-            GestureAction.EXPAND_NOTIFICATIONS, GestureAction.NONE -> {}
+            GestureAction.EXPAND_NOTIFICATIONS -> expandNotifications()
+            GestureAction.NONE -> {}
+        }
+    }
+
+    /**
+     * #183: expands the notification shade from the swipe-down gesture via the
+     * status bar service. The accessor is a greylist reflection — wrapped so a
+     * future platform change degrades the gesture to a no-op instead of
+     * crashing the launcher.
+     */
+    private fun expandNotifications() {
+        try {
+            val statusBar = getSystemService("statusbar") ?: return
+            statusBar.javaClass.getMethod("expandNotificationsPanel").invoke(statusBar)
+        } catch (e: Exception) {
+            // The shade expansion is best-effort; an unavailable service or a
+            // restricted reflection leaves the launcher untouched.
         }
     }
 
