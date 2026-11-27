@@ -64,6 +64,10 @@ class WorkspaceView @JvmOverloads constructor(
     /** The long-press options for a placed widget (ENG-102 slice 2b). */
     var onWidgetOptions: ((dev.vladon.vesna.launcher.data.WidgetEntity, View) -> Unit)? = null
 
+    /** The pending widget move: set by the options, consumed by the next cell tap. */
+    var widgetMoveTarget: dev.vladon.vesna.launcher.data.WidgetEntity? = null
+    var onWidgetMoveCellPicked: ((dev.vladon.vesna.launcher.data.WidgetEntity, Int) -> Unit)? = null
+
     /** #228: the gesture-only desktop — the workspace exposes the drawer and
      *  the Home options as custom accessibility actions for TalkBack users. */
     var onGestureOpenDrawer: (() -> Unit)? = null
@@ -389,6 +393,17 @@ class WorkspaceView @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        // The widget-move pick mode consumes a tap on any cell, including the
+        // empty ones that own no child view.
+        if (widgetMoveTarget != null && event.actionMasked == MotionEvent.ACTION_UP) {
+            val target = widgetMoveTarget ?: return super.onTouchEvent(event)
+            val cell = cellAtLocal(event.x, event.y)
+            if (cell != null) {
+                widgetMoveTarget = null
+                onWidgetMoveCellPicked?.invoke(target, cell)
+                return true
+            }
+        }
         // Only the empty grid reaches this path; a tile owns and consumes its own stream.
         if (event.actionMasked == MotionEvent.ACTION_DOWN) emptyAreaPressed = true
         return super.onTouchEvent(event)
@@ -629,6 +644,12 @@ class WorkspaceView @JvmOverloads constructor(
                 // The long press arrives through the cell's own gesture
                 // detector: the host view consumes ordinary taps.
                 view.onWidgetLongPress = { onWidgetOptions?.invoke(content.widget, view) }
+                val moveTarget = widgetMoveTarget
+                view.setOnClickListener {
+                    if (moveTarget != null) {
+                        onWidgetMoveCellPicked?.invoke(moveTarget, cell)
+                    }
+                }
                 continue
             }
             val iconView = view as AppIconView

@@ -279,4 +279,7 @@
     <string name="widget_removed_undo">Отменить</string>
     <string name="widget_picker_close">Закрыть</string>
     <string name="widget_picker_search_hint">Поиск виджетов</string>
+    <string name="widget_move">Переместить</string>
+    <string name="widget_move_pick_cell">Коснитесь свободной ячейки, чтобы переместить виджет</string>
+    <string name="widget_move_no_room">Здесь нет места для виджета</string>
 </resources>

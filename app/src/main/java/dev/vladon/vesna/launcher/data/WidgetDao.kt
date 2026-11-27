@@ -20,6 +20,9 @@ interface WidgetDao {
     @Insert
     suspend fun insert(widget: WidgetEntity): Long
 
+    @Query("UPDATE widgets SET cellIndex = :cell WHERE id = :id")
+    suspend fun updateCell(id: Long, cell: Int)
+
     @Query("DELETE FROM widgets WHERE id = :id")
     suspend fun deleteById(id: Long)
 

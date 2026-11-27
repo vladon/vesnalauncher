@@ -395,6 +395,7 @@ class HomeActivity : ComponentActivity() {
         workspace.onGestureHomeOptions = ::showLauncherMenu
         workspace.widgetViewProvider = { id -> widgetHostManager.createHostView(id) }
         workspace.onWidgetOptions = ::showWidgetOptions
+        workspace.onWidgetMoveCellPicked = ::commitWidgetMove
         lifecycleScope.launch { widgetHostManager.reconcile() }
         workspace.onPageDrag = ::onPageDragProgress
         workspace.onPageDragEnd = ::onPageDragEnded
@@ -898,6 +899,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        workspace.widgetMoveTarget = null
         widgetHostManager.stopListening()
         workspace.cancelDrag()
         folderDialog?.cancelMemberDrag()
@@ -2291,8 +2293,49 @@ class HomeActivity : ComponentActivity() {
     /** The placed-widget options (ENG-102 slice 2b): remove with undo. */
     private fun showWidgetOptions(widget: dev.vladon.vesna.launcher.data.WidgetEntity, anchor: View) {
         val popup = VesnaPopupMenu(anchor)
+        popup.add(R.string.widget_move) { beginWidgetMove(widget) }
         popup.add(R.string.widget_remove) { removeWidgetWithUndo(widget) }
         showPopup(popup)
+    }
+
+    /**
+     * Slice 2c move step 1: arm the pick mode; the next workspace-cell tap
+     * commits the move. The grid highlights nothing yet (the placement keeps
+     * its current cell until the pick lands on a free anchor).
+     */
+    private fun beginWidgetMove(widget: dev.vladon.vesna.launcher.data.WidgetEntity) {
+        workspace.widgetMoveTarget = widget
+        showSnackbar(R.string.widget_move_pick_cell, null)
+    }
+
+    /** Slice 2c move step 2: validate the picked anchor and commit the move. */
+    private fun commitWidgetMove(widget: dev.vladon.vesna.launcher.data.WidgetEntity, cell: Int) {
+        workspace.widgetMoveTarget = null
+        val grid = renderedState.grid
+        val state = renderedState
+        val columns = grid.columns
+        if (grid.rowOf(cell) + widget.spanY > grid.rows || grid.columnOf(cell) + widget.spanX > columns) {
+            showSnackbar(R.string.widget_move_no_room, null)
+            return
+        }
+        // Every cell the widget would cover must be free of visible content,
+        // except its own current anchor (covered cells stay reserved).
+        val occupiedBySelf = widget.cellIndex
+        for (row in 0 until widget.spanY) {
+            for (column in 0 until widget.spanX) {
+                val covered = cell + row * columns + column
+                if (covered == occupiedBySelf) continue
+                if (state.reservedWorkspaceCellsMask and (1 shl covered) != 0 ||
+                    state.workspaceCells.containsKey(covered)
+                ) {
+                    showSnackbar(R.string.widget_move_no_room, null)
+                    return
+                }
+            }
+        }
+        lifecycleScope.launch {
+            VesnaApplication.graph(this@HomeActivity).widgetDao.updateCell(widget.id, cell)
+        }
     }
 
     /**
