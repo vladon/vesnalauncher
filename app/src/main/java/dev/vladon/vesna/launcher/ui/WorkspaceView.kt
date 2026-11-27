@@ -56,6 +56,16 @@ class WorkspaceView @JvmOverloads constructor(
     var onSwipeUp: (() -> Unit)? = null
     var onSwipePage: ((forward: Boolean) -> Unit)? = null
 
+    /** Raw horizontal drag delta while a page swipe is in progress (#180 phase 2). */
+    var onPageDrag: ((dx: Float) -> Unit)? = null
+
+    /** The swipe stream ended (UP or CANCEL); dx is the final delta. */
+    var onPageDragEnd: ((dx: Float) -> Unit)? = null
+
+    /** The displacement that commits a page swipe, in pixels. */
+    internal val pageSwipeThresholdPx: Int
+        get() = (PAGE_SWIPE_DP * density).toInt()
+
     /** Opens folder options after a hold without drag, or from keyboard/accessibility. */
     var onFolderLongClick: ((Folder, View) -> Unit)? = null
     /** Reports movement and returns whether the currently bound page accepts folder drops. */
@@ -227,10 +237,19 @@ class WorkspaceView @JvmOverloads constructor(
         }
         if (pageSwipe) {
             // Once intercepted, consume the rest of the stream even if it cannot page.
-            if (action == MotionEvent.ACTION_UP && !pageSwipeInterrupted) {
+            if (action == MotionEvent.ACTION_MOVE && !pageSwipeInterrupted) {
+                onPageDrag?.invoke(ev.x - downX)
+            }
+            if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
                 val dx = ev.x - downX
-                val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
-                if (abs(dx) >= PAGE_SWIPE_DP * density) onSwipePage?.invoke((dx < 0f) != rtl)
+                if (action == MotionEvent.ACTION_UP && !pageSwipeInterrupted &&
+                    abs(dx) >= PAGE_SWIPE_DP * density
+                ) {
+                    val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
+                    onSwipePage?.invoke((dx < 0f) != rtl)
+                }
+                // The follow layer settles whether or not the page commits.
+                onPageDragEnd?.invoke(dx)
             }
             return true
         }

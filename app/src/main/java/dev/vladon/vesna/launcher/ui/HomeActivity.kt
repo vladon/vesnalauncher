@@ -99,7 +99,10 @@ import dev.vladon.vesna.launcher.workspace.WorkspaceRepository.FolderDropSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
+import kotlin.math.abs
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withTimeoutOrNull
 import dev.vladon.vesna.launcher.notifications.NotificationBadges
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -357,6 +360,8 @@ class HomeActivity : ComponentActivity() {
         }
         workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
+        workspace.onPageDrag = ::onPageDragProgress
+        workspace.onPageDragEnd = ::onPageDragEnded
         workspace.onDragStarted = { cell, app, _ ->
             if (edgePageDrag == null && !renderedState.isDragPagePreview) {
                 val source = DragSource(app, Container.WORKSPACE, cell, renderedState.activePageId, fromDrawer = false)
@@ -975,6 +980,8 @@ class HomeActivity : ComponentActivity() {
 
     private fun stepPage(forward: Boolean) {
         if (dragSource != null || workspace.isDragging || backCallback.isEnabled || edgePageDrag != null) return
+        // A finger-follow session owns the release; its settle path commits.
+        if (pageDragSession != null) return
         val state = renderedState
         val current = state.pageIds.indexOf(state.activePageId)
         if (current < 0) return
@@ -1015,6 +1022,172 @@ class HomeActivity : ComponentActivity() {
                 .withEndAction { (overlay.parent as? ViewGroup)?.removeView(overlay) }
                 .start()
         }
+    }
+
+    // ---- #180 phase 2: the pages follow the finger and settle on release. ----
+
+    /** The live finger-follow session; null while no page swipe layers exist. */
+    private var pageDragSession: PageDragSession? = null
+
+    /** One finger-follow session: the outgoing and incoming page bitmaps plus overlays. */
+    private inner class PageDragSession(
+        val forward: Boolean,
+        val targetPageId: Long,
+        val scale: Float,
+        val workspaceWidth: Int,
+    ) {
+        val content = findViewById<ViewGroup>(R.id.home_content)
+        val incomingView = ImageView(this@HomeActivity).apply {
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+        val outgoingView = ImageView(this@HomeActivity).apply {
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+        /** The drag delta the layers were prepared for; progress before readiness lands here. */
+        var pendingDx: Float? = null
+        var ready = false
+
+        /** The swipe ended while the capture window was still running. */
+        @Volatile var released = false
+
+        /** The release committed to the target page: the capture must not flip back. */
+        @Volatile var committed = false
+
+        init {
+            incomingView.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            )
+            outgoingView.layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            )
+            content.addView(incomingView)
+            content.addView(outgoingView)
+        }
+
+        /** Positions both layers for [dx]: the outgoing page follows the finger. */
+        fun translate(dx: Float) {
+            if (!ready) {
+                pendingDx = dx
+                return
+            }
+            outgoingView.translationX = dx
+            incomingView.translationX = dx + (if (forward) workspaceWidth else -workspaceWidth)
+        }
+
+        fun removeFromParent() {
+            (incomingView.parent as? ViewGroup)?.removeView(incomingView)
+            (outgoingView.parent as? ViewGroup)?.removeView(outgoingView)
+        }
+    }
+
+    /** First horizontal MOVE past the swipe slop: prepare the follow layers. */
+    private fun onPageDragProgress(dx: Float) {
+        val session = pageDragSession
+        if (session != null) {
+            session.translate(dx)
+            return
+        }
+        startPageDragFollow(dx)
+    }
+
+    /**
+     * Prepares the two-layer follow: the outgoing snapshot covers the workspace
+     * while the live binding flips to the adjacent page for its bitmap and back.
+     * Without an adjacent page (or with the Instant effect) nothing starts and
+     * the release falls back to today's switch.
+     */
+    private fun startPageDragFollow(firstDx: Float) {
+        val state = renderedState
+        if (workspacePreferences.pageTransition != PageTransition.SLIDE) return
+        if (state.isDragPagePreview || dragSource != null || workspace.isDragging) return
+        val rtl = workspace.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val forward = (firstDx < 0f) != rtl
+        val current = state.pageIds.indexOf(state.activePageId)
+        val target = state.pageIds.getOrNull(current + if (forward) 1 else -1) ?: return
+        val scale = Settings.Global.getFloat(
+            contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        ) * if (Settings.Secure.getInt(contentResolver, "accessibility_remove_animations", 0) == 1) 0f else 1f
+        val session = PageDragSession(forward, target, scale, workspace.width)
+        pageDragSession = session
+        val currentId = state.activePageId
+        val width = workspace.width
+        val indicator = findViewById<WorkspacePageIndicator>(R.id.workspace_page_indicator)
+        lifecycleScope.launch {
+            try {
+                // The outgoing snapshot hides the capture rebinds from the user.
+                session.outgoingView.setImageBitmap(workspace.capturePageBitmap())
+                indicator.isVisible = false
+                controller.selectWorkspacePage(target)
+                var flipped = withTimeoutOrNull(600L) {
+                    while (renderedState.activePageId != target) delay(8)
+                    true
+                } ?: false
+                if (!flipped) error("the adjacent page never rendered")
+                session.incomingView.setImageBitmap(workspace.capturePageBitmap())
+                if (!session.committed) {
+                    controller.selectWorkspacePage(currentId)
+                    flipped = withTimeoutOrNull(600L) {
+                        while (renderedState.activePageId != currentId) delay(8)
+                        true
+                    } ?: false
+                    if (!flipped) error("the original page never rendered back")
+                }
+                indicator.isVisible = true
+                session.incomingView.translationX = (if (session.forward) width else -width).toFloat()
+                if (session.released) {
+                    session.removeFromParent()
+                    return@launch
+                }
+                session.ready = true
+                session.pendingDx?.let { session.translate(it) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                pageDragSession = null
+                session.removeFromParent()
+                indicator.isVisible = true
+                if (!session.committed) controller.selectWorkspacePage(currentId)
+            }
+        }
+    }
+
+    /** The swipe stream ended: commit and settle, or spring the layers back. */
+    private fun onPageDragEnded(dx: Float) {
+        val session = pageDragSession ?: return
+        pageDragSession = null
+        session.released = true
+        val rtl = workspace.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val forward = (dx < 0f) != rtl
+        val commits = abs(dx) >= workspace.pageSwipeThresholdPx
+        val currentId = renderedState.activePageId
+        if (!session.ready) {
+            // The capture window lost the race with the release: switch with
+            // today's plain visuals (or spring nothing back) and let the
+            // capture job restore the selection unless the commit wins.
+            session.committed = commits
+            session.removeFromParent()
+            findViewById<WorkspacePageIndicator>(R.id.workspace_page_indicator).isVisible = true
+            if (commits) controller.selectWorkspacePage(session.targetPageId)
+            return
+        }
+        session.committed = commits && session.targetPageId != currentId
+        val settleTo = when {
+            commits && forward -> -workspace.width.toFloat()
+            commits -> workspace.width.toFloat()
+            else -> 0f
+        }
+        val distance = abs(settleTo - session.outgoingView.translationX).coerceAtLeast(1f)
+        val duration = (distance / workspace.width * 300 * session.scale).toLong().coerceAtMost(300L)
+        session.outgoingView.animate().translationX(settleTo).setDuration(duration)
+            .withEndAction { session.removeFromParent() }.start()
+        session.incomingView.animate()
+            .translationX(settleTo + (if (session.forward) workspace.width else -workspace.width))
+            .setDuration(duration).start()
+        if (session.committed) controller.selectWorkspacePage(session.targetPageId)
     }
 
     private fun showPagePicker(anchor: View) {
