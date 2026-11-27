@@ -282,4 +282,9 @@
     <string name="widget_move">Переместить</string>
     <string name="widget_move_pick_cell">Коснитесь свободной ячейки, чтобы переместить виджет</string>
     <string name="widget_move_no_room">Здесь нет места для виджета</string>
+    <string name="widget_resize_wider">Сделать шире</string>
+    <string name="widget_resize_narrower">Сделать уже</string>
+    <string name="widget_resize_taller">Сделать выше</string>
+    <string name="widget_resize_shorter">Сделать ниже</string>
+    <string name="widget_resize_no_room">Здесь нет места для изменения размера</string>
 </resources>
