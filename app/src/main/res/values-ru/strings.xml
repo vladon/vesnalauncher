@@ -279,5 +279,4 @@
     <string name="widget_removed_undo">Отменить</string>
     <string name="widget_picker_close">Закрыть</string>
     <string name="widget_picker_search_hint">Поиск виджетов</string>
-    <string name="widget_picker_add">Добавить</string>
 </resources>

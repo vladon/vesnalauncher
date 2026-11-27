@@ -275,5 +275,4 @@
     <string name="widget_removed_undo">Undo</string>
     <string name="widget_picker_close">Close</string>
     <string name="widget_picker_search_hint">Search widgets</string>
-    <string name="widget_picker_add">Add</string>
 </resources>

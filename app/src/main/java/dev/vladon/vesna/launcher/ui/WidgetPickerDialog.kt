@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -111,9 +112,14 @@ fun WidgetPickerDialog(
                                 )
                             }
                             items(rows, key = { it.info.provider.flattenToString() }) { entry ->
+                                // The whole row places the widget: no squeezed
+                                // per-row button (it collapsed to a vertical
+                                // letter column on narrow widths).
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                        .clickable { onPick(entry.info) }
+                                        .padding(vertical = 10.dp),
                                 ) {
                                     AndroidView(
                                         factory = { context ->
@@ -136,10 +142,6 @@ fun WidgetPickerDialog(
                                             style = MaterialTheme.typography.bodySmall,
                                         )
                                     }
-                                    TextButton(
-                                        onClick = { onPick(entry.info) },
-                                        modifier = Modifier.padding(start = 12.dp),
-                                    ) { Text(stringResource(R.string.widget_picker_add)) }
                                 }
                             }
                         }
