@@ -108,6 +108,7 @@
     <string name="settings_gestures">Gestures &amp; input</string>
     <string name="settings_gestures_detail">Assign actions to Home screen gestures.</string>
     <string name="settings_gesture_swipe_down">Swipe down on empty space</string>
+    <string name="gesture_hint_message">Swipe up for apps, long-press on empty space for options</string>
     <string name="settings_gesture_double_tap">Double-tap on empty space</string>
     <string name="settings_gesture_action_notifications">Expand notifications</string>
     <string name="settings_gesture_two_finger_up">Two-finger swipe up</string>
@@ -120,6 +121,8 @@
     <string name="gesture_service_label">Vesna gestures (actions only)</string>
     <string name="gesture_service_description">Actions only: expands the notification shade on the swipe-down gesture. Reads no screen content.</string>
     <string name="settings_gesture_service_hint">If the swipe down does not expand the notification shade (some manufacturers block the system call), enable «Vesna gestures» in Accessibility — the service performs gestures only and reads no screen content.</string>
+    <string name="a11y_open_drawer">Open app drawer</string>
+    <string name="a11y_home_options">Home options</string>
     <string name="settings_app_drawer">App drawer</string>
     <string name="settings_app_drawer_detail">Choose which apps appear while browsing</string>
     <string name="settings_drawer_layout">Drawer layout</string>

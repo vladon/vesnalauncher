@@ -136,8 +136,7 @@ class HomeActivity : ComponentActivity() {
     private lateinit var drawer: DrawerView
     private lateinit var homeContent: FrameLayout
     private lateinit var homeControls: View
-    private lateinit var homeOptionsButton: View
-    private lateinit var openDrawerButton: View
+    private lateinit var menuAnchor: View
     private lateinit var emptyHint: TextView
     private lateinit var pageControls: View
     private lateinit var previousPage: View
@@ -320,10 +319,7 @@ class HomeActivity : ComponentActivity() {
         applyAppNameVisibility(appearance.showAppNames)
         homeContent = findViewById(R.id.home_content)
         homeControls = findViewById(R.id.home_controls)
-        homeOptionsButton = findViewById(R.id.home_options)
-        homeOptionsButton.setOnClickListener { showLauncherMenu() }
-        openDrawerButton = findViewById(R.id.home_open_drawer)
-        openDrawerButton.setOnClickListener { openDrawer() }
+        menuAnchor = findViewById(R.id.menu_anchor)
         emptyHint = findViewById(R.id.workspace_empty_hint)
         pageControls = findViewById(R.id.workspace_page_controls)
         previousPage = findViewById(R.id.workspace_previous_page)
@@ -369,6 +365,8 @@ class HomeActivity : ComponentActivity() {
         workspace.onSwipeUp = ::openDrawer
         workspace.onSwipePage = ::stepPage
         workspace.onGesture = ::handleGesture
+        workspace.onGestureOpenDrawer = ::openDrawer
+        workspace.onGestureHomeOptions = ::showLauncherMenu
         workspace.onPageDrag = ::onPageDragProgress
         workspace.onPageDragEnd = ::onPageDragEnded
         workspace.onDragStarted = { cell, app, _ ->
@@ -515,6 +513,7 @@ class HomeActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        maybeShowGestureHint()
         // Android delivers a Home intent before resume. Returning via Back
         // does not confirm the viewport staged by an auto-closed launch.
         drawer.discardUnconfirmedAutoCloseViewport()
@@ -762,6 +761,23 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    /** #228: a one-time hint compensating the removed bottom pills. */
+    private var gestureHintShown = false
+
+    private fun maybeShowGestureHint() {
+        if (gestureHintShown) return
+        val prefs = getSharedPreferences("vesna_launcher", MODE_PRIVATE)
+        if (prefs.getBoolean("gesture_hint_shown", false)) return
+        gestureHintShown = true
+        prefs.edit().putBoolean("gesture_hint_shown", true).apply()
+        lifecycleScope.launch {
+            homeSnackbar.showSnackbar(
+                getString(R.string.gesture_hint_message),
+                duration = SnackbarDuration.Long,
+            )
+        }
+    }
+
     /** #183: runs the action bound to a recognised Home gesture. */
     private fun handleGesture(gesture: GestureId) {
         // The gestures never fire over an open dialog, popup, folder or drag session.
@@ -946,7 +962,7 @@ class HomeActivity : ComponentActivity() {
                 if (hadPreviousFocus && !previousPage.isEnabled) nextPage.requestFocus()
                 if (hadNextFocus && !nextPage.isEnabled) previousPage.requestFocus()
             } else if (hadPreviousFocus || hadNextFocus || hadIndicatorFocus) {
-                openDrawerButton.requestFocus()
+                workspace.requestFocus()
             }
             pageIndicator.bind(position, count)
             applyWallpaperOffset()
@@ -1032,7 +1048,7 @@ class HomeActivity : ComponentActivity() {
         if (!opened) {
             val target = drawerReturnFocus
             drawerReturnFocus = null
-            if (target?.isShown != true || !target.requestFocus()) openDrawerButton.requestFocus()
+            if (target?.isShown != true || !target.requestFocus()) workspace.requestFocus()
         }
     }
 
@@ -2233,7 +2249,7 @@ class HomeActivity : ComponentActivity() {
 
     private fun showLauncherMenu() {
         if (renderedState.isDragPagePreview) return
-        val popup = VesnaPopupMenu(homeOptionsButton)
+        val popup = VesnaPopupMenu(menuAnchor)
         popup.add(R.string.menu_launcher_settings) {
             startActivity(Intent(this, dev.vladon.vesna.launcher.settings.SettingsActivity::class.java))
         }
@@ -2248,7 +2264,7 @@ class HomeActivity : ComponentActivity() {
         }
         val page = renderedState
         if (page.pageIds.size > 1) {
-            popup.add(R.string.workspace_choose_page) { schedulePageMenu { showPagePicker(homeOptionsButton) } }
+            popup.add(R.string.workspace_choose_page) { schedulePageMenu { showPagePicker(menuAnchor) } }
         }
         val mainPage = controller.mainPageId()
         if (page.activePageId != mainPage) {
@@ -2275,9 +2291,9 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun showReorderPageMenu(page: LauncherUiState, position: Int) {
-        if (layoutLocked || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !homeOptionsButton.isShown) return
+        if (layoutLocked || !lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) || !workspace.isShown) return
 
-        val popup = VesnaPopupMenu(homeOptionsButton)
+        val popup = VesnaPopupMenu(menuAnchor)
         for (index in 1..page.pageIds.lastIndex) {
             if (index == position) continue
             val number = index + 1
