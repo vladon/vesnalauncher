@@ -53,3 +53,18 @@ The functional flows re-verified at the enlarged font (the captures
 - The gesture dispatch (the two-finger, the pinch) was verified through
   the instrumented programmatic events; the enlarged-font sweep covers
   the assignment surface the gestures read.
+
+
+## A/B note (the SettingsSearchLayoutTest failures are environmental)
+
+During the same session the SettingsSearchLayoutTest instrumentation
+suite failed 2-4 of its 15 tests on THIS emulator state (the
+post-wedge cold boot: the short-directory search-expansion assert, the
+two scroll-limit asserts, the icon-size search-count assert). The A/B
+prescribed by the QA-avd procedure was run: the v0.4.104 TAG build
+(the unmodified baseline, the same code the suite passed on earlier)
+reproduces the SAME failures identically on this emulator state. The
+failures are therefore environmental (the wedged-and-relaunched AVD
+session), not caused by the shipped code. Documented here instead of
+being chased; the suite re-verification belongs to the AVD baseline
+restoration.
